@@ -20,31 +20,95 @@ package com.microfocus.fas.worker.prioritization.redistribution;
 
 import com.microfocus.fas.worker.prioritization.management.Queue;
 import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.ConfirmListener;
+import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ShutdownSignalException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentNavigableMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class MessageTarget {
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageTarget.class);
     private final long targetQueueCapacity;
-    private final Channel channel;
+    private final Connection connection;
+    private Channel channel;
     private final Set<String> activeQueueConsumers = ConcurrentHashMap.newKeySet();
     private final Queue targetQueue;
     private final ConcurrentHashMap<String, Queue> messageSources = new ConcurrentHashMap<>();
     private ShutdownSignalException shutdownSignalException = null;
+    final ConcurrentNavigableMap<Long, Long> outstandingConfirms = new ConcurrentSkipListMap<>();
     
-    public MessageTarget(final long targetQueueCapacity, final Channel channel, final Queue targetQueue) {
+    public MessageTarget(final long targetQueueCapacity, final Connection connection, final Queue targetQueue) {
         this.targetQueueCapacity = targetQueueCapacity;
-        this.channel = channel;
+        this.connection = connection;
         this.targetQueue = targetQueue;
     }
     
     public String getTargetQueueName() {
         return targetQueue.getName();
+    }
+    
+    public void initialise() throws IOException {
+        this.channel = connection.createChannel();
+        channel.confirmSelect();
+        channel.addConfirmListener(new ConfirmListener() {
+            @Override
+            public void handleAck(long deliveryTag, boolean multiple) throws IOException {
+                if (multiple) {
+                    final ConcurrentNavigableMap<Long, Long> confirmed = outstandingConfirms.headMap(
+                            deliveryTag, true
+                    );
+
+                    for(final Long messageDeliveryTagToAck: confirmed.values()) {
+                        try {
+                            channel.basicAck(messageDeliveryTagToAck, true);
+                        }
+                        catch (final IOException e) {
+                            //TODO Consider allowing a retry limit before escalating and removing this messageSource
+                            LOGGER.error("Exception ack'ing '{}' {}",
+                                    messageDeliveryTagToAck,
+                                    e.toString());
+                        }
+                    }
+
+                    confirmed.clear();
+                } else {
+                    channel.basicAck(outstandingConfirms.get(deliveryTag), false);
+                    outstandingConfirms.remove(deliveryTag);
+                }
+            }
+
+            @Override
+            public void handleNack(long deliveryTag, boolean multiple) throws IOException {
+                if (multiple) {
+                    final ConcurrentNavigableMap<Long, Long> confirmed = outstandingConfirms.headMap(
+                            deliveryTag, true
+                    );
+
+                    for(final Long messageDeliveryTagToAck: confirmed.values()) {
+                        try {
+                            channel.basicNack(messageDeliveryTagToAck, true, true);
+                        }
+                        catch (final IOException e) {
+                            //TODO Consider allowing a retry limit before escalating and removing this messageSource
+                            LOGGER.error("Exception ack'ing '{}' {}",
+                                    messageDeliveryTagToAck,
+                                    e.toString());
+                        }
+                    }
+
+                    confirmed.clear();
+                } else {
+                    channel.basicNack(outstandingConfirms.get(deliveryTag), false, true);
+                    outstandingConfirms.remove(deliveryTag);
+                }
+            }
+        });
     }
     
     public synchronized void start() {
@@ -128,6 +192,8 @@ public class MessageTarget {
             channel.basicConsume(messageSource.getName(),
                     (consumerTag, message) -> {
 
+                        final long nextPublishSequenceNumber = channel.getNextPublishSeqNo();
+                        outstandingConfirms.put(nextPublishSequenceNumber, message.getEnvelope().getDeliveryTag());
                         try {
                             channel.basicPublish("",
                                     targetQueue.getName(), message.getProperties(), message.getBody());
@@ -137,17 +203,8 @@ public class MessageTarget {
                             LOGGER.error("Exception publishing to '{}' {}", targetQueue.getName(),
                                     e.toString());
                         }
-                        try {
-                            channel.basicAck(message.getEnvelope().getDeliveryTag(), false);
-                            messageCount.incrementAndGet();
-                        }
-                        catch (final IOException e) {
-                            //TODO Consider allowing a retry limit before escalating and removing this messageSource
-                            LOGGER.error("Exception ack'ing '{}' from '{}' {}",
-                                    message.getEnvelope().getDeliveryTag(),
-                                    messageSource,
-                                    e.toString());
-                        }
+                        messageCount.incrementAndGet();
+
                         if(messageCount.get() > consumptionLimit) {
                             LOGGER.trace("Consumption target '{}' reached for '{}'.", consumptionLimit, 
                                     messageSource.getName());

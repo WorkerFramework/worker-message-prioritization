@@ -52,14 +52,13 @@ public class PocTests {
         connectionFactory.setVirtualHost("/");
         
         final Connection connection = connectionFactory.newConnection();
-        final Channel channel = connection.createChannel();
 
         final RabbitManagementApi<QueuesApi> queuesApi = 
                 new RabbitManagementApi<>(QueuesApi.class, 
                         "http://david-cent01.swinfra.net:15672/", "guest", "guest");
         
         final RoundRobinMessageDistributor roundRobinMessageDistributor = 
-                new RoundRobinMessageDistributor(queuesApi, channel, 1000);
+                new RoundRobinMessageDistributor(queuesApi, connection, 1000);
         
         roundRobinMessageDistributor.run();
     }

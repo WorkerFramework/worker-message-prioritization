@@ -23,6 +23,7 @@ import com.microfocus.fas.worker.prioritization.management.QueuesApi;
 import com.microfocus.fas.worker.prioritization.management.RabbitManagementApi;
 import com.microfocus.fas.worker.prioritization.rerouting.MessageRouter;
 import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.ConfirmListener;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.ShutdownSignalException;
@@ -46,14 +47,15 @@ public class RoundRobinMessageDistributor {
     private ShutdownSignalException shutdownSignalException = null;
     private final long targetQueueMessageLimit;
     private final RabbitManagementApi<QueuesApi> queuesApi;
-    private final Channel channel;
+    private final Connection connection;
     private final ConcurrentHashMap<String, MessageTarget> messageTargets = new ConcurrentHashMap<>();
 
     public RoundRobinMessageDistributor(final RabbitManagementApi<QueuesApi> queuesApi, 
-                                        final Channel channel, final long targetQueueMessageLimit) {
+                                        final Connection connection, final long targetQueueMessageLimit) {
         this.queuesApi = queuesApi;
-        this.channel = channel;
+        this.connection = connection;
         this.targetQueueMessageLimit = targetQueueMessageLimit;
+
     }
     
     public static void main(String[] args) throws IOException, TimeoutException {
@@ -69,7 +71,6 @@ public class RoundRobinMessageDistributor {
         final long targetQueueMessageLimit = Long.parseLong(args[5]);
 
         final Connection connection = connectionFactory.newConnection();
-        final Channel channel = connection.createChannel();
 
         //TODO ManagementApi does not necessarily have same host, username and password, nor use http
         final RabbitManagementApi<QueuesApi> queuesApi =
@@ -78,12 +79,12 @@ public class RoundRobinMessageDistributor {
                         connectionFactory.getUsername(), connectionFactory.getPassword());
 
         final RoundRobinMessageDistributor roundRobinMessageDistributor =
-                new RoundRobinMessageDistributor(queuesApi, channel, targetQueueMessageLimit);
+                new RoundRobinMessageDistributor(queuesApi, connection, targetQueueMessageLimit);
         
         roundRobinMessageDistributor.run();
     }
     
-    public void run() {
+    public void run() throws IOException {
         
         final ExecutorService executorService = Executors.newWorkStealingPool();
         
@@ -98,9 +99,10 @@ public class RoundRobinMessageDistributor {
             for(final Queue messageTargetQueue: messageTargetQueues) {
                 final MessageTarget messageTarget;
                 if(!messageTargets.containsKey(messageTargetQueue.getName())) {
-                    messageTarget = new MessageTarget(targetQueueMessageLimit, channel, messageTargetQueue);
+                    messageTarget = new MessageTarget(targetQueueMessageLimit, connection, messageTargetQueue);
                     messageTarget.updateMessageSources(getMessageSourceQueues(messageTarget, queues));
                     messageTargets.put(messageTargetQueue.getName(), messageTarget);
+                    messageTarget.initialise();
                     executorService.submit(messageTarget::start);
                 }
                 else {
