@@ -48,6 +48,9 @@ public class MessageRouterSingleton {
         final String mgmtEndpoint = System.getenv("CAF_RABBITMQ_MGMT_URL");
         final String mgmtUsername = System.getenv("CAF_RABBITMQ_MGMT_USERNAME");
         final String mgmtPassword = System.getenv("CAF_RABBITMQ_MGMT_PASSWORD");
+
+        final String targetQueueMessageLimit = System.getenv("CAF_TARGET_QUEUE_MESSAGE_LIMIT") == null 
+                ? "1000" : System.getenv("CAF_TARGET_QUEUE_MESSAGE_LIMIT");
         
         try {
             connection = connectionFactory.newConnection();
@@ -55,7 +58,8 @@ public class MessageRouterSingleton {
             final RabbitManagementApi<QueuesApi> queuesApi =
                     new RabbitManagementApi<>(QueuesApi.class, mgmtEndpoint, mgmtUsername, mgmtPassword);
 
-            messageRouter = new MessageRouter(queuesApi, "/", connection.createChannel(), 1000);
+            messageRouter = new MessageRouter(queuesApi, "/", connection.createChannel(), 
+                    Long.parseLong(targetQueueMessageLimit));
         } catch (final IOException | TimeoutException e) {
             LOGGER.error("Failed to initialise - {}", e.toString());
             throw new RuntimeException(e);
