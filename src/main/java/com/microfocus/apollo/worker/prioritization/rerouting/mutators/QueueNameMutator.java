@@ -16,29 +16,41 @@
  * Items are licensed to the U.S. Government under vendor's standard
  * commercial license.
  */
-package com.microfocus.fas.worker.prioritization.rerouting.mutators;
+package com.microfocus.apollo.worker.prioritization.rerouting.mutators;
 
 import com.google.common.base.Strings;
 import com.hpe.caf.worker.document.model.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TenantQueueNameMutator extends QueueNameMutator {
+import java.util.Objects;
+
+public abstract class QueueNameMutator {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(QueueNameMutator.class);    
     
-    private static final Logger LOGGER = LoggerFactory.getLogger(TenantQueueNameMutator.class);
+    public abstract void mutateSuccessQueueName(final Document document);
 
-    @Override
-    public void mutateSuccessQueueName(final Document document) {
-
-        final String tenantId = document.getCustomData("tenantId");
+    protected String getCurrentSuccessQueueName(final Document document) {
+        return document.getTask().getResponse().getSuccessQueue().getName();
+    }
+    
+    protected void setCurrentSuccessQueueName(final Document document, final String name) {
+        Objects.requireNonNull(document);
         
-        if(Strings.isNullOrEmpty(tenantId)) {
-            LOGGER.trace("No tenantId, unable to mutate queueName {}.",
+        if(Strings.isNullOrEmpty(name)) {
+            LOGGER.error("Cannot change success queue from {} to null or empty string.", 
                     document.getTask().getResponse().getSuccessQueue().getName());
             return;
         }
-
-        setCurrentSuccessQueueName(document, getCurrentSuccessQueueName(document) + "/" + tenantId);
-
+        
+        if(name.length() > 255) {
+            LOGGER.error(
+                "Cannot change success queue from {} to to {} as it will exceed the maximum queue name length of 255.",
+                document.getTask().getResponse().getSuccessQueue().getName(), name);
+            return;
+        }
+        
+        document.getTask().getResponse().getSuccessQueue().set(name);        
     }
 }

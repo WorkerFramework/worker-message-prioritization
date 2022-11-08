@@ -16,7 +16,7 @@
  * Items are licensed to the U.S. Government under vendor's standard
  * commercial license.
  */
-package com.microfocus.fas.worker.prioritization.management;
+package com.microfocus.apollo.worker.prioritization.management;
 
 import com.squareup.okhttp.OkHttpClient;
 import retrofit.ErrorHandler;

@@ -16,17 +16,29 @@
  * Items are licensed to the U.S. Government under vendor's standard
  * commercial license.
  */
-package com.microfocus.fas.worker.prioritization.management;
+package com.microfocus.apollo.worker.prioritization.rerouting.mutators;
 
-import retrofit.http.GET;
-import retrofit.http.Path;
+import com.google.common.base.Strings;
+import com.hpe.caf.worker.document.model.Document;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.List;
+public class TenantQueueNameMutator extends QueueNameMutator {
+    
+    private static final Logger LOGGER = LoggerFactory.getLogger(TenantQueueNameMutator.class);
 
-public interface QueuesApi {
-    @GET("/api/queues/")
-    List<Queue> getQueues();
+    @Override
+    public void mutateSuccessQueueName(final Document document) {
 
-    @GET("/api/queues/{vhost}/{queue}")
-    Queue getQueue(@Path("vhost") final String vhost, @Path("queue") final String queueName);
+        final String tenantId = document.getCustomData("tenantId");
+        
+        if(Strings.isNullOrEmpty(tenantId)) {
+            LOGGER.trace("No tenantId, unable to mutate queueName {}.",
+                    document.getTask().getResponse().getSuccessQueue().getName());
+            return;
+        }
+
+        setCurrentSuccessQueueName(document, getCurrentSuccessQueueName(document) + "/" + tenantId);
+
+    }
 }

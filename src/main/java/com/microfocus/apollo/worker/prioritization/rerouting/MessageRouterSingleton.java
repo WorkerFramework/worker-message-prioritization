@@ -16,11 +16,11 @@
  * Items are licensed to the U.S. Government under vendor's standard
  * commercial license.
  */
-package com.microfocus.fas.worker.prioritization.rerouting;
+package com.microfocus.apollo.worker.prioritization.rerouting;
 
 import com.hpe.caf.worker.document.model.Document;
-import com.microfocus.fas.worker.prioritization.management.QueuesApi;
-import com.microfocus.fas.worker.prioritization.management.RabbitManagementApi;
+import com.microfocus.apollo.worker.prioritization.management.QueuesApi;
+import com.microfocus.apollo.worker.prioritization.management.RabbitManagementApi;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import org.slf4j.Logger;

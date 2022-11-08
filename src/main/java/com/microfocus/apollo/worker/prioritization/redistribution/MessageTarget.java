@@ -16,9 +16,9 @@
  * Items are licensed to the U.S. Government under vendor's standard
  * commercial license.
  */
-package com.microfocus.fas.worker.prioritization.redistribution;
+package com.microfocus.apollo.worker.prioritization.redistribution;
 
-import com.microfocus.fas.worker.prioritization.management.Queue;
+import com.microfocus.apollo.worker.prioritization.management.Queue;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.ConfirmListener;
 import com.rabbitmq.client.Connection;

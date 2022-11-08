@@ -16,17 +16,17 @@
  * Items are licensed to the U.S. Government under vendor's standard
  * commercial license.
  */
-package com.microfocus.fas.worker.prioritization;
+package com.microfocus.apollo.worker.prioritization;
 
 import com.hpe.caf.worker.document.model.Application;
 import com.hpe.caf.worker.document.model.Document;
 import com.hpe.caf.worker.document.model.Response;
 import com.hpe.caf.worker.document.model.ResponseQueue;
 import com.hpe.caf.worker.document.model.Task;
-import com.microfocus.fas.worker.prioritization.management.QueuesApi;
-import com.microfocus.fas.worker.prioritization.management.RabbitManagementApi;
-import com.microfocus.fas.worker.prioritization.redistribution.RoundRobinMessageDistributor;
-import com.microfocus.fas.worker.prioritization.rerouting.MessageRouter;
+import com.microfocus.apollo.worker.prioritization.management.QueuesApi;
+import com.microfocus.apollo.worker.prioritization.management.RabbitManagementApi;
+import com.microfocus.apollo.worker.prioritization.redistribution.RoundRobinMessageDistributor;
+import com.microfocus.apollo.worker.prioritization.rerouting.MessageRouter;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;

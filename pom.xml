@@ -28,7 +28,7 @@
     <version>4.0.0-661</version>
   </parent>
   
-  <groupId>com.microfocus.fas</groupId>
+  <groupId>com.microfocus.apollo</groupId>
   <artifactId>worker-message-prioritization</artifactId>
   <version>1.0.0-SNAPSHOT</version>
   <packaging>jar</packaging>

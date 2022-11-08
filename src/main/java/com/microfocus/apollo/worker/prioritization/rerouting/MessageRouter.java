@@ -16,7 +16,7 @@
  * Items are licensed to the U.S. Government under vendor's standard
  * commercial license.
  */
-package com.microfocus.fas.worker.prioritization.rerouting;
+package com.microfocus.apollo.worker.prioritization.rerouting;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -24,12 +24,12 @@ import com.google.common.cache.LoadingCache;
 import com.hpe.caf.worker.document.model.Document;
 import com.hpe.caf.worker.document.model.Response;
 import com.hpe.caf.worker.document.model.ResponseQueue;
-import com.microfocus.fas.worker.prioritization.management.Queue;
-import com.microfocus.fas.worker.prioritization.management.QueuesApi;
-import com.microfocus.fas.worker.prioritization.management.RabbitManagementApi;
-import com.microfocus.fas.worker.prioritization.rerouting.mutators.QueueNameMutator;
-import com.microfocus.fas.worker.prioritization.rerouting.mutators.TenantQueueNameMutator;
-import com.microfocus.fas.worker.prioritization.rerouting.mutators.WorkflowQueueNameMutator;
+import com.microfocus.apollo.worker.prioritization.management.Queue;
+import com.microfocus.apollo.worker.prioritization.management.QueuesApi;
+import com.microfocus.apollo.worker.prioritization.management.RabbitManagementApi;
+import com.microfocus.apollo.worker.prioritization.rerouting.mutators.QueueNameMutator;
+import com.microfocus.apollo.worker.prioritization.rerouting.mutators.TenantQueueNameMutator;
+import com.microfocus.apollo.worker.prioritization.rerouting.mutators.WorkflowQueueNameMutator;
 import com.rabbitmq.client.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

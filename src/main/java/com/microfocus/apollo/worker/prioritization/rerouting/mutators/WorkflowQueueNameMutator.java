@@ -16,7 +16,7 @@
  * Items are licensed to the U.S. Government under vendor's standard
  * commercial license.
  */
-package com.microfocus.fas.worker.prioritization.rerouting.mutators;
+package com.microfocus.apollo.worker.prioritization.rerouting.mutators;
 
 import com.google.common.base.Strings;
 import com.hpe.caf.worker.document.model.Document;
