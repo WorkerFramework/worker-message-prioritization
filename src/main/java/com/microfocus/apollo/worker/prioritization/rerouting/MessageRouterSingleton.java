@@ -33,26 +33,26 @@ public class MessageRouterSingleton {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageRouterSingleton.class);
 
-    private static final Connection connection;    
-    private static final MessageRouter messageRouter;
+    private static Connection connection;    
+    private static MessageRouter messageRouter;
     
     static {
-        
-        final ConnectionFactory connectionFactory = new ConnectionFactory();
-        connectionFactory.setUsername(System.getenv("CAF_RABBITMQ_USERNAME"));
-        connectionFactory.setPassword(System.getenv("CAF_RABBITMQ_PASSWORD"));
-        connectionFactory.setHost(System.getenv("CAF_RABBITMQ_HOST"));
-        connectionFactory.setPort(Integer.parseInt(System.getenv("CAF_RABBITMQ_PORT")));
-        connectionFactory.setVirtualHost("/");
 
-        final String mgmtEndpoint = System.getenv("CAF_RABBITMQ_MGMT_URL");
-        final String mgmtUsername = System.getenv("CAF_RABBITMQ_MGMT_USERNAME");
-        final String mgmtPassword = System.getenv("CAF_RABBITMQ_MGMT_PASSWORD");
-
-        final String targetQueueMessageLimit = System.getenv("CAF_TARGET_QUEUE_MESSAGE_LIMIT") == null 
-                ? "1000" : System.getenv("CAF_TARGET_QUEUE_MESSAGE_LIMIT");
-        
         try {
+            final ConnectionFactory connectionFactory = new ConnectionFactory();
+            connectionFactory.setUsername(System.getenv("CAF_RABBITMQ_USERNAME"));
+            connectionFactory.setPassword(System.getenv("CAF_RABBITMQ_PASSWORD"));
+            connectionFactory.setHost(System.getenv("CAF_RABBITMQ_HOST"));
+            connectionFactory.setPort(Integer.parseInt(System.getenv("CAF_RABBITMQ_PORT")));
+            connectionFactory.setVirtualHost("/");
+
+            final String mgmtEndpoint = System.getenv("CAF_RABBITMQ_MGMT_URL");
+            final String mgmtUsername = System.getenv("CAF_RABBITMQ_MGMT_USERNAME");
+            final String mgmtPassword = System.getenv("CAF_RABBITMQ_MGMT_PASSWORD");
+
+            final String targetQueueMessageLimit = System.getenv("CAF_TARGET_QUEUE_MESSAGE_LIMIT") == null
+                    ? "1000" : System.getenv("CAF_TARGET_QUEUE_MESSAGE_LIMIT");
+
             connection = connectionFactory.newConnection();
 
             final RabbitManagementApi<QueuesApi> queuesApi =
@@ -60,10 +60,11 @@ public class MessageRouterSingleton {
 
             messageRouter = new MessageRouter(queuesApi, "/", connection.createChannel(), 
                     Long.parseLong(targetQueueMessageLimit));
-        } catch (final IOException | TimeoutException e) {
+        } 
+        catch (final Throwable e) {
             LOGGER.error("Failed to initialise - {}", e.toString());
-            throw new RuntimeException(e);
         }
+        
     }
     
     public static void route(final Document document) {
