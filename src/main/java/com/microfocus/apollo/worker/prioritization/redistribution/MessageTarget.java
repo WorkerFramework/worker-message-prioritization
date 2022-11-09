@@ -39,7 +39,6 @@ public class MessageTarget {
     private Channel channel;
     private final Set<String> activeQueueConsumers = ConcurrentHashMap.newKeySet();
     private final Queue targetQueue;
-    private final ConcurrentHashMap<String, Queue> messageSources = new ConcurrentHashMap<>();
     private ShutdownSignalException shutdownSignalException = null;
     final ConcurrentNavigableMap<Long, Long> outstandingConfirms = new ConcurrentSkipListMap<>();
     
@@ -111,74 +110,46 @@ public class MessageTarget {
         });
     }
     
-    public synchronized void start() {
+    public void run(final Queue targetQueue, final Set<Queue> messageSources) {
+
+        updateQueueMetadata(targetQueue);
         
-        while(true) {
+        final long lastKnownTargetQueueLength = targetQueue.getMessages();
 
-            final long lastKnownTargetQueueLength = targetQueue.getMessages();
+        final long totalKnownPendingMessages =
+                messageSources.stream().map(Queue::getMessages).mapToLong(Long::longValue).sum();
 
-            final long totalKnownPendingMessages =
-                    messageSources.values().stream().map(Queue::getMessages).mapToLong(Long::longValue).sum();
-           
-            final long consumptionTarget = targetQueueCapacity - lastKnownTargetQueueLength;
-            
-            final long sourceQueueConsumptionTarget;
-            if(messageSources.isEmpty()) {
-                sourceQueueConsumptionTarget = 0;
-            }
-            else {
-                sourceQueueConsumptionTarget = (long) Math.ceil((double)consumptionTarget / messageSources.size());
-            }
-            
-            LOGGER.info("TargetQueue {}, {} messages, SourceQueues {}, {} messages, " +
-                            "Overall consumption target: {}, Individual Source Queue consumption target: {}", 
-                    targetQueue.getName(), lastKnownTargetQueueLength,
-                    (long) messageSources.size(), totalKnownPendingMessages,
-                    consumptionTarget, sourceQueueConsumptionTarget);            
-            
-            if(consumptionTarget <= 0) {
-                LOGGER.info("Target queue '{}' consumption target is <= 0, no capacity for new messages, ignoring.", targetQueue.getName());
-            }
-            else {
-                for(final Queue messageSource: messageSources.values()) {
-                    wireup(messageSource, sourceQueueConsumptionTarget);
-                }
-            }
-            
-            if(shutdownSignalException != null) {
-                break;
-            }
-            
-            try {
-                //TODO This can be optimised to not wait so long if there is work to do
-                this.wait(1000 * 10);
-            } catch (final InterruptedException e) {
-                LOGGER.warn("Exiting {}", e.getMessage());
-                return;
+        final long consumptionTarget = targetQueueCapacity - lastKnownTargetQueueLength;
+
+        final long sourceQueueConsumptionTarget;
+        if(messageSources.isEmpty()) {
+            sourceQueueConsumptionTarget = 0;
+        }
+        else {
+            sourceQueueConsumptionTarget = (long) Math.ceil((double)consumptionTarget / messageSources.size());
+        }
+
+        LOGGER.info("TargetQueue {}, {} messages, SourceQueues {}, {} messages, " +
+                        "Overall consumption target: {}, Individual Source Queue consumption target: {}",
+                targetQueue.getName(), lastKnownTargetQueueLength,
+                (long) messageSources.size(), totalKnownPendingMessages,
+                consumptionTarget, sourceQueueConsumptionTarget);
+
+        if(consumptionTarget <= 0) {
+            LOGGER.info("Target queue '{}' consumption target is <= 0, no capacity for new messages, ignoring.", targetQueue.getName());
+        }
+        else {
+            for(final Queue messageSource: messageSources) {
+                wireup(messageSource, sourceQueueConsumptionTarget);
             }
         }
+
     }
     
     public void updateQueueMetadata(final Queue queue) {
         this.targetQueue.setMessages(queue.getMessages());
     }
-    
-    public synchronized void updateMessageSources(final Set<Queue> messageSources) {
-
-        boolean newSourcesDetected = false;
-        for(final Queue queue: messageSources) {
-            if (!this.messageSources.containsKey(queue.getName())) {
-                newSourcesDetected = true;
-            }
-            this.messageSources.put(queue.getName(), queue);
-        }
         
-        if (newSourcesDetected) {
-            LOGGER.info("New message sources have been detected.");
-            this.notify();
-        }
-    }
-    
     private void wireup(final Queue messageSource, final long consumptionLimit) {
 
         if(activeQueueConsumers.contains(messageSource.getName())) {

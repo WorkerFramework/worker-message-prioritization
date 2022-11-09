@@ -84,8 +84,6 @@ public class RoundRobinMessageDistributor {
     
     public void run() throws IOException {
         
-        final ExecutorService executorService = Executors.newWorkStealingPool();
-        
         //This loop retrieves the current list of queues from RabbitMQ
         //creating MessageTargets, when needed, and registering new MessageSources when encountered
         while(true) {
@@ -98,10 +96,8 @@ public class RoundRobinMessageDistributor {
                 final MessageTarget messageTarget;
                 if(!messageTargets.containsKey(messageTargetQueue.getName())) {
                     messageTarget = new MessageTarget(targetQueueMessageLimit, connection, messageTargetQueue);
-                    messageTarget.updateMessageSources(getMessageSourceQueues(messageTarget, queues));
                     messageTargets.put(messageTargetQueue.getName(), messageTarget);
                     messageTarget.initialise();
-                    executorService.submit(messageTarget::start);
                 }
                 else {
                     messageTarget = messageTargets.get(messageTargetQueue.getName());
@@ -110,20 +106,12 @@ public class RoundRobinMessageDistributor {
                         messageTargets.remove(messageTargetQueue.getName());
                         continue;
                     }
-                    messageTarget.updateQueueMetadata(messageTargetQueue);
-                    messageTarget.updateMessageSources(getMessageSourceQueues(messageTarget, queues));
                 }
+                messageTarget.run(messageTargetQueue, getMessageSourceQueues(messageTarget, queues));
+
             }
             
             if(shutdownSignalException != null) {
-                try {
-                    final boolean timedOut = executorService.awaitTermination(1, TimeUnit.MINUTES);
-                    if(timedOut) {
-                        LOGGER.warn("Timed out while awaiting completion.");
-                    }
-                } catch (final InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
                 break;
             }
             
