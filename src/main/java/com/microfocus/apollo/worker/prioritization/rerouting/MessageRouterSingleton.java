@@ -27,17 +27,25 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.concurrent.TimeoutException;
 
 public class MessageRouterSingleton {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageRouterSingleton.class);
-
     private static Connection connection;    
     private static MessageRouter messageRouter;
+    private static volatile boolean initIgnoredLogged = false;
     
-    static {
-
+    
+    public static void init() {
+        
+        if(!Boolean.parseBoolean(System.getenv("CAF_WMP_ENABLED"))) {
+            if (!initIgnoredLogged) {
+                LOGGER.error("Ignored WMP init request, CAF_WMP_ENABLED evaluated to false.");
+                initIgnoredLogged = true;
+            }
+            return;
+        }
+        
         try {
             final ConnectionFactory connectionFactory = new ConnectionFactory();
             connectionFactory.setUsername(System.getenv("CAF_RABBITMQ_USERNAME"));
@@ -58,11 +66,11 @@ public class MessageRouterSingleton {
             final RabbitManagementApi<QueuesApi> queuesApi =
                     new RabbitManagementApi<>(QueuesApi.class, mgmtEndpoint, mgmtUsername, mgmtPassword);
 
-            messageRouter = new MessageRouter(queuesApi, "/", connection.createChannel(), 
+            messageRouter = new MessageRouter(queuesApi, "/", connection.createChannel(),
                     Long.parseLong(targetQueueMessageLimit));
-        } 
+        }
         catch (final Throwable e) {
-            LOGGER.error("Failed to initialise - {}", e.toString());
+            LOGGER.error("Failed to initialise WMP - {}", e.toString());
         }
         
     }
