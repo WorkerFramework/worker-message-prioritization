@@ -25,7 +25,7 @@
   <parent>
     <groupId>com.microfocus.caf</groupId>
     <artifactId>caf-parent</artifactId>
-    <version>4.0.0-661</version>
+    <version>3.5.0-598</version>
   </parent>
   
   <groupId>com.microfocus.apollo</groupId>
@@ -38,8 +38,6 @@
   <inceptionYear>2022</inceptionYear>
   
   <properties>
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <copyrightYear>2022</copyrightYear>
     <enforceCorrectDependencies>true</enforceCorrectDependencies>
