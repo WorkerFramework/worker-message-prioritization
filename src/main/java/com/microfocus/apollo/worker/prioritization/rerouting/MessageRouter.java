@@ -51,7 +51,8 @@ public class MessageRouter {
     public static final String LOAD_BALANCED_INDICATOR = "»";
 
     private static final Map<String, Object>arguments = Stream.of(new Object[][]{
-                    {"queue-mode", "lazy"}
+                    {"queue-mode", "lazy"},
+                    {"x-max-priority", "5"}
             })
             .collect(Collectors.toMap(d -> (String) d[0], d -> d[1]));
     
