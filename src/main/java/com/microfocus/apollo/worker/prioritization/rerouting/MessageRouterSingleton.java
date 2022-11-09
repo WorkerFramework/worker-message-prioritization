@@ -33,20 +33,24 @@ public class MessageRouterSingleton {
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageRouterSingleton.class);
     private static Connection connection;    
     private static MessageRouter messageRouter;
-    private static volatile boolean initIgnoredLogged = false;
+    private static volatile boolean initAttempted = false;
     
     
     public static void init() {
         
+        if(messageRouter != null || initAttempted) {
+            return;
+        }
+
+        initAttempted = true;
+
         if(!Boolean.parseBoolean(System.getenv("CAF_WMP_ENABLED"))) {
-            if (!initIgnoredLogged) {
-                LOGGER.error("Ignored WMP init request, CAF_WMP_ENABLED evaluated to false.");
-                initIgnoredLogged = true;
-            }
+            LOGGER.error("Ignored WMP init request, CAF_WMP_ENABLED evaluated to false.");
             return;
         }
         
         try {
+
             final ConnectionFactory connectionFactory = new ConnectionFactory();
             connectionFactory.setUsername(System.getenv("CAF_RABBITMQ_USERNAME"));
             connectionFactory.setPassword(System.getenv("CAF_RABBITMQ_PASSWORD"));
