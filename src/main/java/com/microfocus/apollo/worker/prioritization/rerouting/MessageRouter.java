@@ -41,6 +41,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class MessageRouter {
     
@@ -48,10 +50,13 @@ public class MessageRouter {
     
     public static final String LOAD_BALANCED_INDICATOR = "»";
 
-    private static final Map<String, Object>arguments = Map.of("queue-mode", "lazy");
+    private static final Map<String, Object>arguments = Stream.of(new Object[][]{
+                    {"queue-mode", "lazy"}
+            })
+            .collect(Collectors.toMap(d -> (String) d[0], d -> d[1]));
     
-    private final List<QueueNameMutator> queueNameMutators = List.of(
-            new TenantQueueNameMutator(), new WorkflowQueueNameMutator());
+    private final List<QueueNameMutator> queueNameMutators = Stream.of(
+            new TenantQueueNameMutator(), new WorkflowQueueNameMutator()).collect(Collectors.toList());
     
     private final LoadingCache<String, Queue> queuesCache;
     private final HashSet<String> declaredQueues = new HashSet<>();
