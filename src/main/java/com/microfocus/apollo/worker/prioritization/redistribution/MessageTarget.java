@@ -19,32 +19,28 @@
 package com.microfocus.apollo.worker.prioritization.redistribution;
 
 import com.microfocus.apollo.worker.prioritization.management.Queue;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.ConfirmListener;
 import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.ShutdownSignalException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentNavigableMap;
-import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.TimeoutException;
+
 
 public class MessageTarget {
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageTarget.class);
     private final long targetQueueCapacity;
-    private final Connection connection;
-    private Channel channel;
-    private final Set<String> activeQueueConsumers = ConcurrentHashMap.newKeySet();
+    private final ConnectionFactory connectionFactory;
+    private final ConcurrentHashMap<String, MessageSource> messageSources = new ConcurrentHashMap<>();
     private final Queue targetQueue;
     private ShutdownSignalException shutdownSignalException = null;
-    final ConcurrentNavigableMap<Long, Long> outstandingConfirms = new ConcurrentSkipListMap<>();
     
-    public MessageTarget(final long targetQueueCapacity, final Connection connection, final Queue targetQueue) {
+    public MessageTarget(final long targetQueueCapacity, final ConnectionFactory connectionFactory, final Queue targetQueue) {
         this.targetQueueCapacity = targetQueueCapacity;
-        this.connection = connection;
+        this.connectionFactory = connectionFactory;
         this.targetQueue = targetQueue;
     }
     
@@ -52,75 +48,38 @@ public class MessageTarget {
         return targetQueue.getName();
     }
     
-    public void initialise() throws IOException {
-        this.channel = connection.createChannel();
-        channel.confirmSelect();
-        channel.addConfirmListener(new ConfirmListener() {
-            @Override
-            public void handleAck(long deliveryTag, boolean multiple) throws IOException {
-                if (multiple) {
-                    final ConcurrentNavigableMap<Long, Long> confirmed = outstandingConfirms.headMap(
-                            deliveryTag, true
-                    );
-
-                    for(final Long messageDeliveryTagToAck: confirmed.values()) {
-                        try {
-                            channel.basicAck(messageDeliveryTagToAck, true);
-                        }
-                        catch (final IOException e) {
-                            //TODO Consider allowing a retry limit before escalating and removing this messageSource
-                            LOGGER.error("Exception ack'ing '{}' {}",
-                                    messageDeliveryTagToAck,
-                                    e.toString());
-                        }
-                    }
-
-                    confirmed.clear();
-                } else {
-                    channel.basicAck(outstandingConfirms.get(deliveryTag), false);
-                    outstandingConfirms.remove(deliveryTag);
-                }
-            }
-
-            @Override
-            public void handleNack(long deliveryTag, boolean multiple) throws IOException {
-                if (multiple) {
-                    final ConcurrentNavigableMap<Long, Long> confirmed = outstandingConfirms.headMap(
-                            deliveryTag, true
-                    );
-
-                    for(final Long messageDeliveryTagToAck: confirmed.values()) {
-                        try {
-                            channel.basicNack(messageDeliveryTagToAck, true, true);
-                        }
-                        catch (final IOException e) {
-                            //TODO Consider allowing a retry limit before escalating and removing this messageSource
-                            LOGGER.error("Exception ack'ing '{}' {}",
-                                    messageDeliveryTagToAck,
-                                    e.toString());
-                        }
-                    }
-
-                    confirmed.clear();
-                } else {
-                    channel.basicNack(outstandingConfirms.get(deliveryTag), false, true);
-                    outstandingConfirms.remove(deliveryTag);
-                }
-            }
-        });
+    private void updateTargetQueueMetadata(final Queue targetQueue) {
+        this.targetQueue.setMessages(targetQueue.getMessages());
     }
     
-    public void run(final Queue targetQueue, final Set<Queue> messageSources) {
+    private void updateMessageSources(final Set<Queue> messageSourceQueues) {
+        for(final Queue messageSourceQueue: messageSourceQueues) {
+            messageSources.computeIfAbsent(messageSourceQueue.getName(), 
+                    k -> {
+                        final MessageSource m = new MessageSource(connectionFactory, messageSourceQueue, this);
+                        try {
+                            m.init();
+                        } catch (IOException | TimeoutException e) {
+                            throw new RuntimeException(e);
+                        }
+                        return m;
+                    }
+                );
+        }
+    }
+    
+    public void run(final Queue targetQueue, final Set<Queue> messageSourceQueues) {
 
-        updateQueueMetadata(targetQueue);
+        updateTargetQueueMetadata(targetQueue);
+        updateMessageSources(messageSourceQueues);
         
         final long lastKnownTargetQueueLength = targetQueue.getMessages();
 
         final long totalKnownPendingMessages =
-                messageSources.stream().map(Queue::getMessages).mapToLong(Long::longValue).sum();
+                messageSources.values().stream().map(ms 
+                        -> ms.getSourceQueue().getMessages()).mapToLong(Long::longValue).sum();
 
         final long consumptionTarget = targetQueueCapacity - lastKnownTargetQueueLength;
-
         final long sourceQueueConsumptionTarget;
         if(messageSources.isEmpty()) {
             sourceQueueConsumptionTarget = 0;
@@ -139,64 +98,13 @@ public class MessageTarget {
             LOGGER.info("Target queue '{}' consumption target is <= 0, no capacity for new messages, ignoring.", targetQueue.getName());
         }
         else {
-            for(final Queue messageSource: messageSources) {
-                wireup(messageSource, sourceQueueConsumptionTarget);
+            for(final MessageSource messageSource: messageSources.values()) {
+                messageSource.run(sourceQueueConsumptionTarget);
             }
         }
 
     }
     
-    public void updateQueueMetadata(final Queue queue) {
-        this.targetQueue.setMessages(queue.getMessages());
-    }
-        
-    private void wireup(final Queue messageSource, final long consumptionLimit) {
-
-        if(activeQueueConsumers.contains(messageSource.getName())) {
-            LOGGER.info("Source queue '{}' is still active, ignoring wireup request.", messageSource.getName());
-            return;
-        }
-
-        try {
-            final AtomicInteger messageCount = new AtomicInteger(0);
-            activeQueueConsumers.add(messageSource.getName());
-            channel.basicConsume(messageSource.getName(),
-                    (consumerTag, message) -> {
-
-                        final long nextPublishSequenceNumber = channel.getNextPublishSeqNo();
-                        outstandingConfirms.put(nextPublishSequenceNumber, message.getEnvelope().getDeliveryTag());
-                        try {
-                            channel.basicPublish("",
-                                    targetQueue.getName(), message.getProperties(), message.getBody());
-                        }
-                        catch (final IOException e) {
-                            //TODO Consider allowing a retry limit before escalating and stopping this MessageTarget
-                            LOGGER.error("Exception publishing to '{}' {}", targetQueue.getName(),
-                                    e.toString());
-                        }
-                        messageCount.incrementAndGet();
-
-                        if(messageCount.get() > consumptionLimit) {
-                            LOGGER.trace("Consumption target '{}' reached for '{}'.", consumptionLimit, 
-                                    messageSource.getName());
-                            channel.basicCancel(consumerTag);
-                        }
-                    },
-                    consumerTag -> {
-                        //Stop tracking that we are consuming from the consumerTag queue
-                        activeQueueConsumers.remove(messageSource.getName());
-                    },
-                    (consumerTag, sig) -> {
-                        //Connection lost, give up
-                        shutdownSignalException = sig;
-                    });
-        } catch (final IOException e) {
-            LOGGER.error("Exception registering consumers from '{}'", messageSource);
-            activeQueueConsumers.remove(messageSource.getName());
-        }
-
-    }
-
     public ShutdownSignalException getShutdownSignalException() {
         return shutdownSignalException;
     }

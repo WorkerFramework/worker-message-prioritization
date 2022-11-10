@@ -51,14 +51,14 @@ public class PocTests {
         connectionFactory.setPort(5672);
         connectionFactory.setVirtualHost("/");
         
-        final Connection connection = connectionFactory.newConnection();
+//        final Connection connection = connectionFactory.newConnection();
 
         final RabbitManagementApi<QueuesApi> queuesApi = 
                 new RabbitManagementApi<>(QueuesApi.class, 
                         "http://david-cent01.swinfra.net:15672/", "guest", "guest");
         
         final RoundRobinMessageDistributor roundRobinMessageDistributor = 
-                new RoundRobinMessageDistributor(queuesApi, connection, 1000);
+                new RoundRobinMessageDistributor(queuesApi, connectionFactory, 1000);
         
         roundRobinMessageDistributor.run();
     }
@@ -92,7 +92,8 @@ public class PocTests {
         final Response response = mock(Response.class);
         when(task.getResponse()).thenReturn(response);
         final ResponseQueue responseQueue = new MockResponseQueue();
-        responseQueue.set("dataprocessing-entity-extract-in");
+//        responseQueue.set("dataprocessing-entity-extract-in");
+        responseQueue.set("wmp-in");
         when(response.getSuccessQueue()).thenReturn(responseQueue);
         
         messageRouter.route(document);

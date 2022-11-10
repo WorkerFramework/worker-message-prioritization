@@ -32,9 +32,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
@@ -45,13 +42,13 @@ public class RoundRobinMessageDistributor {
     private ShutdownSignalException shutdownSignalException = null;
     private final long targetQueueMessageLimit;
     private final RabbitManagementApi<QueuesApi> queuesApi;
-    private final Connection connection;
+    private final ConnectionFactory connectionFactory;
     private final ConcurrentHashMap<String, MessageTarget> messageTargets = new ConcurrentHashMap<>();
 
     public RoundRobinMessageDistributor(final RabbitManagementApi<QueuesApi> queuesApi, 
-                                        final Connection connection, final long targetQueueMessageLimit) {
+                                        final ConnectionFactory connectionFactory, final long targetQueueMessageLimit) {
         this.queuesApi = queuesApi;
-        this.connection = connection;
+        this.connectionFactory = connectionFactory;
         this.targetQueueMessageLimit = targetQueueMessageLimit;
 
     }
@@ -68,7 +65,7 @@ public class RoundRobinMessageDistributor {
         final int managementPort = Integer.parseInt(args[4]);
         final long targetQueueMessageLimit = Long.parseLong(args[5]);
 
-        final Connection connection = connectionFactory.newConnection();
+//        final Connection connection = connectionFactory.newConnection();
 
         //TODO ManagementApi does not necessarily have same host, username and password, nor use http
         final RabbitManagementApi<QueuesApi> queuesApi =
@@ -77,12 +74,12 @@ public class RoundRobinMessageDistributor {
                         connectionFactory.getUsername(), connectionFactory.getPassword());
 
         final RoundRobinMessageDistributor roundRobinMessageDistributor =
-                new RoundRobinMessageDistributor(queuesApi, connection, targetQueueMessageLimit);
+                new RoundRobinMessageDistributor(queuesApi, connectionFactory, targetQueueMessageLimit);
         
         roundRobinMessageDistributor.run();
     }
     
-    public void run() throws IOException {
+    public void run() throws IOException, TimeoutException {
         
         //This loop retrieves the current list of queues from RabbitMQ
         //creating MessageTargets, when needed, and registering new MessageSources when encountered
@@ -95,9 +92,8 @@ public class RoundRobinMessageDistributor {
             for(final Queue messageTargetQueue: messageTargetQueues) {
                 final MessageTarget messageTarget;
                 if(!messageTargets.containsKey(messageTargetQueue.getName())) {
-                    messageTarget = new MessageTarget(targetQueueMessageLimit, connection, messageTargetQueue);
+                    messageTarget = new MessageTarget(targetQueueMessageLimit, connectionFactory, messageTargetQueue);
                     messageTargets.put(messageTargetQueue.getName(), messageTarget);
-                    messageTarget.initialise();
                 }
                 else {
                     messageTarget = messageTargets.get(messageTargetQueue.getName());
@@ -129,7 +125,7 @@ public class RoundRobinMessageDistributor {
 
         return queues.stream()
                 .filter(q ->
-                        !q.getName().contains(MessageRouter.LOAD_BALANCED_INDICATOR)
+                        !q.getName().contains(MessageRouter.LOAD_BALANCED_INDICATOR) && q.getName().contains("classification")
                 )
                 .collect(Collectors.toSet());
         
@@ -139,7 +135,7 @@ public class RoundRobinMessageDistributor {
 
         return queues.stream()
                 .filter(q -> 
-                        q.getName().startsWith(messageTarget.getTargetQueueName() + MessageRouter.LOAD_BALANCED_INDICATOR)
+                        q.getName().startsWith(messageTarget.getTargetQueueName() + MessageRouter.LOAD_BALANCED_INDICATOR)  && q.getName().contains("classification")
                 )
                 .collect(Collectors.toSet());
     }
