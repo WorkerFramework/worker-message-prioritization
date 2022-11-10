@@ -18,11 +18,14 @@
  */
 package com.microfocus.apollo.worker.prioritization.management;
 
+import com.google.gson.Gson;
 import com.squareup.okhttp.OkHttpClient;
 import retrofit.ErrorHandler;
 import retrofit.RestAdapter;
 import retrofit.RetrofitError;
 import retrofit.client.OkClient;
+import retrofit.converter.GsonConverter;
+
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -42,7 +45,8 @@ public class RabbitManagementApi <T> {
         okHttpClient.setReadTimeout(READ_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         okHttpClient.setConnectTimeout(CONNECT_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         final RestAdapter.Builder restAdapterBuilder
-                = new RestAdapter.Builder().setEndpoint(endpoint).setClient(new OkClient(okHttpClient));
+                = new RestAdapter.Builder().setEndpoint(endpoint).setClient(new OkClient(okHttpClient))
+                .setConverter(new GsonConverter(new Gson()));
         restAdapterBuilder.setRequestInterceptor(requestFacade -> {
             final String credentials = user + ":" + password;
             final String authorizationHeaderValue

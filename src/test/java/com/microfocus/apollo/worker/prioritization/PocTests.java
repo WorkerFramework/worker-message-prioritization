@@ -23,9 +23,14 @@ import com.hpe.caf.worker.document.model.Document;
 import com.hpe.caf.worker.document.model.Response;
 import com.hpe.caf.worker.document.model.ResponseQueue;
 import com.hpe.caf.worker.document.model.Task;
+import com.microfocus.apollo.worker.prioritization.management.Component;
 import com.microfocus.apollo.worker.prioritization.management.QueuesApi;
 import com.microfocus.apollo.worker.prioritization.management.RabbitManagementApi;
+import com.microfocus.apollo.worker.prioritization.management.RetrievedShovel;
+import com.microfocus.apollo.worker.prioritization.management.Shovel;
+import com.microfocus.apollo.worker.prioritization.management.ShovelsApi;
 import com.microfocus.apollo.worker.prioritization.redistribution.RoundRobinMessageDistributor;
+import com.microfocus.apollo.worker.prioritization.redistribution.ShovelDistributor;
 import com.microfocus.apollo.worker.prioritization.rerouting.MessageRouter;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
@@ -34,6 +39,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.TimeoutException;
 
 import static org.mockito.Mockito.mock;
@@ -64,6 +70,45 @@ public class PocTests {
     }
 
 
+    @Test
+    @Ignore
+    public void shovelTest() throws IOException, TimeoutException {
+
+        final RabbitManagementApi<ShovelsApi> shovelsApi =
+                new RabbitManagementApi<>(ShovelsApi.class,
+                        "http://david-cent01.swinfra.net:15672/", "guest", "guest");
+
+        final List<RetrievedShovel> s = shovelsApi.getApi().getShovels();
+
+
+        final Shovel shovel = new Shovel();
+//        shovel.setSrcDeleteAfter(1);
+        shovel.setAckMode("on-confirm");
+        shovel.setSrcQueue("dataprocessing-classification-in»/michaelb01/enrichment-workflow");
+        shovel.setSrcUri("amqp://david-cent01.swinfra.net:5672");
+        shovel.setDestQueue("dataprocessing-classification-in");
+        shovel.setDestUri("amqp://david-cent01.swinfra.net:5672");
+        
+        
+        final RetrievedShovel newShovel = shovelsApi.getApi().putShovel("/", "s1", new Component<>("shovel", "s1", shovel));
+    }
+
+    @Test
+    @Ignore
+    public void shovelDistributorTest() throws IOException, TimeoutException {
+
+        final RabbitManagementApi<QueuesApi> queuesApi =
+                new RabbitManagementApi<>(QueuesApi.class,
+                        "http://david-cent01.swinfra.net:15672/", "guest", "guest");
+
+        final RabbitManagementApi<ShovelsApi> shovelsApi =
+                new RabbitManagementApi<>(ShovelsApi.class,
+                        "http://david-cent01.swinfra.net:15672/", "guest", "guest");
+
+        final ShovelDistributor shovelDistributor = new ShovelDistributor(queuesApi, shovelsApi, 1000);
+        shovelDistributor.run();
+    }    
+    
     @Test
     @Ignore
     public void processDocumentMessageRouter() throws IOException, TimeoutException {
