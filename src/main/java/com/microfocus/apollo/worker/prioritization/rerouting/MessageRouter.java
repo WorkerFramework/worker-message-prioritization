@@ -52,7 +52,7 @@ public class MessageRouter {
 
     private static final Map<String, Object>arguments = Stream.of(new Object[][]{
                     {"queue-mode", "lazy"},
-                    {"x-max-priority", "5"}
+                    {"x-max-priority", 5}
             })
             .collect(Collectors.toMap(d -> (String) d[0], d -> d[1]));
     
