@@ -18,6 +18,8 @@
  */
 package com.microfocus.apollo.worker.prioritization.redistribution;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import com.microfocus.apollo.worker.prioritization.management.Queue;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.BasicProperties;
@@ -31,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.TimeoutException;
@@ -47,6 +50,9 @@ public class MessageSource {
     private final ConcurrentNavigableMap<Long, Long> outstandingConfirms = new ConcurrentSkipListMap<>();
 
     private boolean active;
+    
+    private final Gson gson = new Gson();
+
     public MessageSource(final ConnectionFactory connectionFactory, final Queue sourceQueue, final MessageTarget messageTarget) {
         this.connectionFactory = connectionFactory;
         this.messageTarget = messageTarget;
@@ -73,14 +79,14 @@ public class MessageSource {
                             confirmed.lastKey(), sourceQueue.getName(), outstandingConfirms.get(deliveryTag), 
                             messageTarget.getTargetQueueName());
 
-//                    incomingChannel.basicAck(confirmed.lastKey(), true);
+                    incomingChannel.basicAck(confirmed.lastKey(), true);
                     confirmed.clear();
                 } else {
                     LOGGER.info("Ack message source delivery {} from {} after publish confirm {} of message to {}",
                             outstandingConfirms.get(deliveryTag), sourceQueue.getName(), outstandingConfirms.get(deliveryTag),
                             messageTarget.getTargetQueueName());
                     
-//                    incomingChannel.basicAck(outstandingConfirms.get(deliveryTag), false);
+                    incomingChannel.basicAck(outstandingConfirms.get(deliveryTag), false);
                     outstandingConfirms.remove(deliveryTag);
                 }
             }
@@ -139,8 +145,15 @@ public class MessageSource {
                                     .deliveryMode(message.getProperties().getDeliveryMode())
                                     .priority(message.getProperties().getPriority())
                                     .build();
+                            
+                            //Hack the To
+                            final JsonObject jsonObject = 
+                                    gson.fromJson(new String(message.getBody(), StandardCharsets.UTF_8), JsonObject.class);
+                            jsonObject.remove("to");
+                            final String s = gson.toJson(jsonObject);
+                            
                             outgoingChannel.basicPublish("",
-                                    messageTarget.getTargetQueueName(), basicProperties, message.getBody());
+                                    messageTarget.getTargetQueueName(), basicProperties, s.getBytes(StandardCharsets.UTF_8));
                         }
                         catch (final IOException e) {
                             LOGGER.error("Exception publishing to '{}' {}", messageTarget.getTargetQueueName(),
