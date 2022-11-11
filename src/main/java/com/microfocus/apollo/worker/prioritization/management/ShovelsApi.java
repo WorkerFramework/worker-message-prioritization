@@ -19,6 +19,7 @@
 package com.microfocus.apollo.worker.prioritization.management;
 
 import retrofit.http.Body;
+import retrofit.http.DELETE;
 import retrofit.http.GET;
 import retrofit.http.PUT;
 import retrofit.http.Path;
@@ -34,4 +35,10 @@ public interface ShovelsApi {
 
     @GET("/api/shovels/vhost/{vhost}/{name}")
     RetrievedShovel getShovel(@Path("vhost") final String vhost, @Path("name") final String name);
+
+    @DELETE("/api/shovels/vhost/{vhost}/{name}/restart")
+    RetrievedShovel restartShovel(@Path("vhost") final String vhost, @Path("name") final String name);
+
+    @DELETE("/api/parameters/shovel/{vhost}/{name}")
+    RetrievedShovel delete(@Path("vhost") final String vhost, @Path("name") final String name);
 }

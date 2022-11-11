@@ -125,7 +125,7 @@ public class RoundRobinMessageDistributor {
 
         return queues.stream()
                 .filter(q ->
-                        !q.getName().contains(MessageRouter.LOAD_BALANCED_INDICATOR) && q.getName().contains("classification")
+                        !q.getName().contains(MessageRouter.LOAD_BALANCED_INDICATOR) /*&& q.getName().contains("classification")*/
                 )
                 .collect(Collectors.toSet());
         
@@ -135,7 +135,7 @@ public class RoundRobinMessageDistributor {
 
         return queues.stream()
                 .filter(q -> 
-                        q.getName().startsWith(messageTarget.getTargetQueueName() + MessageRouter.LOAD_BALANCED_INDICATOR)  && q.getName().contains("classification")
+                        q.getName().startsWith(messageTarget.getTargetQueueName() + MessageRouter.LOAD_BALANCED_INDICATOR)  /*&& q.getName().contains("classification")*/
                 )
                 .collect(Collectors.toSet());
     }

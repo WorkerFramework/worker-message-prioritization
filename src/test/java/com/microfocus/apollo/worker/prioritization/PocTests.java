@@ -80,14 +80,15 @@ public class PocTests {
 
         final List<RetrievedShovel> s = shovelsApi.getApi().getShovels();
 
+        shovelsApi.getApi().delete("/", "dataprocessing-classification-in»/michaelb01/enrichment-workflow");
 
         final Shovel shovel = new Shovel();
-//        shovel.setSrcDeleteAfter(1);
+        shovel.setSrcDeleteAfter(1);
         shovel.setAckMode("on-confirm");
         shovel.setSrcQueue("dataprocessing-classification-in»/michaelb01/enrichment-workflow");
-        shovel.setSrcUri("amqp://david-cent01.swinfra.net:5672");
+        shovel.setSrcUri("amqp://");
         shovel.setDestQueue("dataprocessing-classification-in");
-        shovel.setDestUri("amqp://david-cent01.swinfra.net:5672");
+        shovel.setDestUri("amqp://");
         
         
         final RetrievedShovel newShovel = shovelsApi.getApi().putShovel("/", "s1", new Component<>("shovel", "s1", shovel));
@@ -95,7 +96,7 @@ public class PocTests {
 
     @Test
     @Ignore
-    public void shovelDistributorTest() throws IOException, TimeoutException {
+    public void shovelDistributorTest() throws IOException, TimeoutException, InterruptedException {
 
         final RabbitManagementApi<QueuesApi> queuesApi =
                 new RabbitManagementApi<>(QueuesApi.class,
@@ -106,7 +107,18 @@ public class PocTests {
                         "http://david-cent01.swinfra.net:15672/", "guest", "guest");
 
         final ShovelDistributor shovelDistributor = new ShovelDistributor(queuesApi, shovelsApi, 1000);
-        shovelDistributor.run();
+
+        //                        final RetrievedShovel retrievedShovel = shovelsApi.getApi().getShovel("/", sourceQueue.getName());
+//                        shovelsApi.getApi().restartShovel("/", sourceQueue.getName());
+//        shovelsApi.getApi().delete("/", sourceQueue.getName());
+
+
+        while(true) {
+            shovelDistributor.run();
+            
+            Thread.sleep(1000 *10);
+            
+        }
     }    
     
     @Test

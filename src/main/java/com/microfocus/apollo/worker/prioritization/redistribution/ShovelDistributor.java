@@ -85,16 +85,25 @@ public class ShovelDistributor {
             }
             else {
                 for(final Queue sourceQueue: sourceQueues) {
-                    if(retrievedShovels.stream().anyMatch(s -> s.getName().endsWith(sourceQueue.getName()))) {
+                    if(sourceQueue.getMessages() == 0) {
+                        LOGGER.info("Source queue '{}' has no messages, ignoring.", targetQueue.getName());
+
                         continue;
+                    }
+                    if(retrievedShovels.stream().anyMatch(s -> s.getName().endsWith(sourceQueue.getName()))) {
+                        LOGGER.info("Shovel {} already exists, ignoring.", sourceQueue.getName());
                     } else {
                         final Shovel shovel = new Shovel();
-                        shovel.setSrcDeleteAfter(sourceQueueConsumptionTarget);
+//                        shovel.setSrcDeleteAfter(100);
+                        shovel.setSrcDeleteAfter((int)sourceQueue.getMessages());
                         shovel.setAckMode("on-confirm");
                         shovel.setSrcQueue(sourceQueue.getName());
-                        shovel.setSrcUri("amqp://david-cent01.swinfra.net:5672");
+                        shovel.setSrcUri("amqp://");
                         shovel.setDestQueue(targetQueue.getName());
-                        shovel.setDestUri("amqp://david-cent01.swinfra.net:5672");
+                        shovel.setDestUri("amqp://");
+
+                        LOGGER.info("Creating shovel {} to consume {} messages.", sourceQueue.getName(), sourceQueue.getMessages());
+
                         shovelsApi.getApi().putShovel("/", sourceQueue.getName(), 
                                 new Component<>("shovel", sourceQueue.getName(), shovel));
                     }
@@ -109,7 +118,7 @@ public class ShovelDistributor {
 
         return queues.stream()
                 .filter(q ->
-                        !q.getName().contains(MessageRouter.LOAD_BALANCED_INDICATOR) && q.getName().contains("classification")
+                        !q.getName().contains(MessageRouter.LOAD_BALANCED_INDICATOR)
                 )
                 .collect(Collectors.toSet());
 
@@ -119,7 +128,7 @@ public class ShovelDistributor {
 
         return queues.stream()
                 .filter(q ->
-                        q.getName().startsWith(targetQueue.getName() + MessageRouter.LOAD_BALANCED_INDICATOR)  && q.getName().contains("classification")
+                        q.getName().startsWith(targetQueue.getName() + MessageRouter.LOAD_BALANCED_INDICATOR)
                 )
                 .collect(Collectors.toSet());
     }
