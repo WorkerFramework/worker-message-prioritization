@@ -22,7 +22,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.microfocus.apollo.worker.prioritization.management.Queue;
 import com.rabbitmq.client.AMQP;
-import com.rabbitmq.client.BasicProperties;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.ConfirmListener;
 import com.rabbitmq.client.Connection;
@@ -50,6 +49,12 @@ public class MessageSource {
     private final ConcurrentNavigableMap<Long, Long> outstandingConfirms = new ConcurrentSkipListMap<>();
 
     private boolean active;
+
+    public boolean isCancelled() {
+        return cancelled;
+    }
+
+    private boolean cancelled;
     
     private final Gson gson = new Gson();
 
@@ -62,7 +67,7 @@ public class MessageSource {
     public void init() throws IOException, TimeoutException {
         final Connection connection = connectionFactory.newConnection();
         this.incomingChannel = connection.createChannel();
-        this.incomingChannel.basicQos(100);
+//        this.incomingChannel.basicQos(100);
         this.outgoingChannel = connection.createChannel();
         registerConfirmListener();
     }
@@ -162,14 +167,18 @@ public class MessageSource {
                             //TODO Consider allowing a retry limit before escalating and stopping this MessageTarget
                             outstandingConfirms.remove(nextPublishSequenceNumber);
                             incomingChannel.basicCancel(consumerTag);
+                            
                         }
                         
                         messageCount.incrementAndGet();
 
-                        if(messageCount.get() > consumptionLimit) {
+                        if(messageCount.get() >= consumptionLimit) {
                             LOGGER.info("Consumption target '{}' reached for '{}'.", consumptionLimit,
                                     sourceQueue.getName());
-                            incomingChannel.basicCancel(consumerTag);
+                            if (!cancelled) {
+                                incomingChannel.basicCancel(consumerTag);
+                                cancelled = true;
+                            }
                         }
                     },
                     consumerTag -> {

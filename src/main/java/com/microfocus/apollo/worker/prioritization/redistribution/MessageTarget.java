@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 
 public class MessageTarget {
@@ -53,6 +54,14 @@ public class MessageTarget {
     }
     
     private void updateMessageSources(final Set<Queue> messageSourceQueues) {
+
+        for(final MessageSource cancelledMessageSource: messageSources.values().stream()
+                .filter(MessageSource::isCancelled).collect(Collectors.toList())) {
+            
+            messageSources.remove(cancelledMessageSource.getSourceQueue().getName());
+            
+        }
+        
         for(final Queue messageSourceQueue: messageSourceQueues) {
             messageSources.computeIfAbsent(messageSourceQueue.getName(), 
                     k -> {
@@ -72,6 +81,9 @@ public class MessageTarget {
 
         updateTargetQueueMetadata(targetQueue);
         updateMessageSources(messageSourceQueues);
+        if(messageSources.isEmpty()) {
+            return;
+        }
         
         final long lastKnownTargetQueueLength = targetQueue.getMessages();
 
