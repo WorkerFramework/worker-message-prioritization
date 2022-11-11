@@ -61,7 +61,7 @@ public class MessageSource {
     
     public void init() throws IOException, TimeoutException {
         this.incomingChannel = connectionFactory.newConnection().createChannel();
-        this.incomingChannel.basicQos(1);
+        this.incomingChannel.basicQos(100);
         this.outgoingChannel = connectionFactory.newConnection().createChannel();
         registerConfirmListener();
     }
