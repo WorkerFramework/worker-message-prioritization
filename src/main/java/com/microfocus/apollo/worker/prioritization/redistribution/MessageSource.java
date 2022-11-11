@@ -60,9 +60,10 @@ public class MessageSource {
     }
     
     public void init() throws IOException, TimeoutException {
-        this.incomingChannel = connectionFactory.newConnection().createChannel();
+        final Connection connection = connectionFactory.newConnection();
+        this.incomingChannel = connection.createChannel();
         this.incomingChannel.basicQos(100);
-        this.outgoingChannel = connectionFactory.newConnection().createChannel();
+        this.outgoingChannel = connection.createChannel();
         registerConfirmListener();
     }
     
@@ -149,7 +150,7 @@ public class MessageSource {
                             //Hack the To
                             final JsonObject jsonObject = 
                                     gson.fromJson(new String(message.getBody(), StandardCharsets.UTF_8), JsonObject.class);
-                            jsonObject.remove("to");
+                            jsonObject.addProperty("to", messageTarget.getTargetQueueName());
                             final String s = gson.toJson(jsonObject);
                             
                             outgoingChannel.basicPublish("",
@@ -160,7 +161,7 @@ public class MessageSource {
                                     e.toString());
                             //TODO Consider allowing a retry limit before escalating and stopping this MessageTarget
                             outstandingConfirms.remove(nextPublishSequenceNumber);
-//                            incomingChannel.basicCancel(consumerTag);
+                            incomingChannel.basicCancel(consumerTag);
                         }
                         
                         messageCount.incrementAndGet();
