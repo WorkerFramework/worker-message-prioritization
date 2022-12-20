@@ -68,7 +68,7 @@ public class RabbitManagementApi <T> {
         @Override
         public Throwable handleError(final RetrofitError retrofitError)
         {
-            return new RuntimeException("RabbitMQ management API error ", retrofitError);
+            return new RuntimeException("RabbitMQ management API error " + retrofitError.getResponse().toString(), retrofitError);
         }
     }
 
