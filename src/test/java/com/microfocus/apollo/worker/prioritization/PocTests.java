@@ -30,7 +30,7 @@ import com.microfocus.apollo.worker.prioritization.management.RetrievedShovel;
 import com.microfocus.apollo.worker.prioritization.management.Shovel;
 import com.microfocus.apollo.worker.prioritization.management.ShovelsApi;
 import com.microfocus.apollo.worker.prioritization.redistribution.lowlevel.LowLevelDistributor;
-import com.microfocus.apollo.worker.prioritization.redistribution.shovel.shovel.ShovelDistributor;
+import com.microfocus.apollo.worker.prioritization.redistribution.shovel.ShovelDistributor;
 import com.microfocus.apollo.worker.prioritization.rerouting.MessageRouter;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
