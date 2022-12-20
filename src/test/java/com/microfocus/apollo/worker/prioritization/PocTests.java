@@ -29,8 +29,8 @@ import com.microfocus.apollo.worker.prioritization.management.RabbitManagementAp
 import com.microfocus.apollo.worker.prioritization.management.RetrievedShovel;
 import com.microfocus.apollo.worker.prioritization.management.Shovel;
 import com.microfocus.apollo.worker.prioritization.management.ShovelsApi;
-import com.microfocus.apollo.worker.prioritization.redistribution.RoundRobinMessageDistributor;
-import com.microfocus.apollo.worker.prioritization.redistribution.ShovelDistributor;
+import com.microfocus.apollo.worker.prioritization.redistribution.lowlevel.LowLevelDistributor;
+import com.microfocus.apollo.worker.prioritization.redistribution.shovel.shovel.ShovelDistributor;
 import com.microfocus.apollo.worker.prioritization.rerouting.MessageRouter;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
@@ -63,10 +63,10 @@ public class PocTests {
                 new RabbitManagementApi<>(QueuesApi.class, 
                         "http://david-cent01.swinfra.net:15672/", "guest", "guest");
         
-        final RoundRobinMessageDistributor roundRobinMessageDistributor = 
-                new RoundRobinMessageDistributor(queuesApi, connectionFactory, 1000);
+        final LowLevelDistributor lowLevelDistributor = 
+                new LowLevelDistributor(queuesApi, connectionFactory, 1000);
         
-        roundRobinMessageDistributor.run();
+        lowLevelDistributor.run();
     }
 
 

@@ -16,13 +16,12 @@
  * Items are licensed to the U.S. Government under vendor's standard
  * commercial license.
  */
-package com.microfocus.apollo.worker.prioritization.redistribution;
+package com.microfocus.apollo.worker.prioritization.redistribution.lowlevel;
 
 import com.microfocus.apollo.worker.prioritization.management.Queue;
 import com.microfocus.apollo.worker.prioritization.management.QueuesApi;
 import com.microfocus.apollo.worker.prioritization.management.RabbitManagementApi;
 import com.microfocus.apollo.worker.prioritization.rerouting.MessageRouter;
-import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.ShutdownSignalException;
 import org.slf4j.Logger;
@@ -35,9 +34,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-public class RoundRobinMessageDistributor {
+public class LowLevelDistributor {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(RoundRobinMessageDistributor.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(LowLevelDistributor.class);
 
     private ShutdownSignalException shutdownSignalException = null;
     private final long targetQueueMessageLimit;
@@ -45,8 +44,8 @@ public class RoundRobinMessageDistributor {
     private final ConnectionFactory connectionFactory;
     private final ConcurrentHashMap<String, MessageTarget> messageTargets = new ConcurrentHashMap<>();
 
-    public RoundRobinMessageDistributor(final RabbitManagementApi<QueuesApi> queuesApi, 
-                                        final ConnectionFactory connectionFactory, final long targetQueueMessageLimit) {
+    public LowLevelDistributor(final RabbitManagementApi<QueuesApi> queuesApi,
+                               final ConnectionFactory connectionFactory, final long targetQueueMessageLimit) {
         this.queuesApi = queuesApi;
         this.connectionFactory = connectionFactory;
         this.targetQueueMessageLimit = targetQueueMessageLimit;
@@ -73,10 +72,10 @@ public class RoundRobinMessageDistributor {
                         "http://" + connectionFactory.getHost() + ":" + managementPort + "/", 
                         connectionFactory.getUsername(), connectionFactory.getPassword());
 
-        final RoundRobinMessageDistributor roundRobinMessageDistributor =
-                new RoundRobinMessageDistributor(queuesApi, connectionFactory, targetQueueMessageLimit);
+        final LowLevelDistributor lowLevelDistributor =
+                new LowLevelDistributor(queuesApi, connectionFactory, targetQueueMessageLimit);
         
-        roundRobinMessageDistributor.run();
+        lowLevelDistributor.run();
     }
     
     public void run() throws IOException, TimeoutException {

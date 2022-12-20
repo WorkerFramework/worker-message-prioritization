@@ -16,7 +16,7 @@
  * Items are licensed to the U.S. Government under vendor's standard
  * commercial license.
  */
-package com.microfocus.apollo.worker.prioritization.redistribution;
+package com.microfocus.apollo.worker.prioritization.redistribution.shovel.shovel;
 
 import com.microfocus.apollo.worker.prioritization.management.Component;
 import com.microfocus.apollo.worker.prioritization.management.Queue;

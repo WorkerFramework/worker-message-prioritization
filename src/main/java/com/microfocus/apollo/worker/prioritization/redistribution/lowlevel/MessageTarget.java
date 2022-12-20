@@ -16,10 +16,9 @@
  * Items are licensed to the U.S. Government under vendor's standard
  * commercial license.
  */
-package com.microfocus.apollo.worker.prioritization.redistribution;
+package com.microfocus.apollo.worker.prioritization.redistribution.lowlevel;
 
 import com.microfocus.apollo.worker.prioritization.management.Queue;
-import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.ShutdownSignalException;
 import org.slf4j.Logger;
@@ -58,6 +57,13 @@ public class MessageTarget {
         for(final MessageSource cancelledMessageSource: messageSources.values().stream()
                 .filter(MessageSource::isCancelled).collect(Collectors.toList())) {
             
+            try {
+                cancelledMessageSource.close();
+            } catch (final IOException e) {
+                LOGGER.error("Closing cancelled MessageSource {} {}",
+                        cancelledMessageSource.getSourceQueue().getName(),
+                        e.toString());
+            }
             messageSources.remove(cancelledMessageSource.getSourceQueue().getName());
             
         }
@@ -91,7 +97,7 @@ public class MessageTarget {
                 messageSources.values().stream().map(ms 
                         -> ms.getSourceQueue().getMessages()).mapToLong(Long::longValue).sum();
 
-        final long consumptionTarget = targetQueueCapacity - lastKnownTargetQueueLength;
+        final long consumptionTarget = Math.max(0, targetQueueCapacity - lastKnownTargetQueueLength);
         final long sourceQueueConsumptionTarget;
         if(messageSources.isEmpty()) {
             sourceQueueConsumptionTarget = 0;

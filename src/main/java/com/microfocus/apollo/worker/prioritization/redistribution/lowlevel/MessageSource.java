@@ -16,7 +16,7 @@
  * Items are licensed to the U.S. Government under vendor's standard
  * commercial license.
  */
-package com.microfocus.apollo.worker.prioritization.redistribution;
+package com.microfocus.apollo.worker.prioritization.redistribution.lowlevel;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -41,6 +41,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class MessageSource {
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageSource.class);
     private final ConnectionFactory connectionFactory;
+    private Connection connection;
     private Channel incomingChannel;
     private Channel outgoingChannel;
     private final MessageTarget messageTarget;
@@ -65,7 +66,7 @@ public class MessageSource {
     }
     
     public void init() throws IOException, TimeoutException {
-        final Connection connection = connectionFactory.newConnection();
+        connection = connectionFactory.newConnection();
         this.incomingChannel = connection.createChannel();
 //        this.incomingChannel.basicQos(100);
         this.outgoingChannel = connection.createChannel();
@@ -81,14 +82,14 @@ public class MessageSource {
                             deliveryTag, true
                     );
                     
-                    LOGGER.info("Ack message source delivery {} from {} after publish confirm {} of message to {}",
+                    LOGGER.trace("Ack message source delivery {} from {} after publish confirm {} of message to {}",
                             confirmed.lastKey(), sourceQueue.getName(), outstandingConfirms.get(deliveryTag), 
                             messageTarget.getTargetQueueName());
 
                     incomingChannel.basicAck(confirmed.lastKey(), true);
                     confirmed.clear();
                 } else {
-                    LOGGER.info("Ack message source delivery {} from {} after publish confirm {} of message to {}",
+                    LOGGER.trace("Ack message source delivery {} from {} after publish confirm {} of message to {}",
                             outstandingConfirms.get(deliveryTag), sourceQueue.getName(), outstandingConfirms.get(deliveryTag),
                             messageTarget.getTargetQueueName());
                     
@@ -135,6 +136,9 @@ public class MessageSource {
 
         try {
             final AtomicInteger messageCount = new AtomicInteger(0);
+            //TODO long to int cast, consumption limit should really be int instead of long
+            //The following is to avoid prefetching more messages than we want.
+            incomingChannel.basicQos((int)consumptionLimit);
             incomingChannel.basicConsume(sourceQueue.getName(),
                     (consumerTag, message) -> {
 
@@ -204,5 +208,9 @@ public class MessageSource {
     
     public Queue getSourceQueue() {
         return sourceQueue;
+    }
+    
+    public void close () throws IOException {
+        this.connection.close();
     }
 }
