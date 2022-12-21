@@ -49,45 +49,6 @@
   </properties>
 
   <dependencies>
-<!--    <dependency>-->
-<!--      <groupId>com.github.cafapi.logging</groupId>-->
-<!--      <artifactId>caf-logging-logback</artifactId>-->
-<!--      <scope>runtime</scope>-->
-<!--    </dependency>-->
-<!--    <dependency>-->
-<!--      <groupId>com.github.cafdataprocessing</groupId>-->
-<!--      <artifactId>worker-document-interface</artifactId>-->
-<!--    </dependency>-->
-<!--    <dependency>-->
-<!--      <groupId>com.google.code.findbugs</groupId>-->
-<!--      <artifactId>jsr305</artifactId>-->
-<!--      <version>3.0.2</version>-->
-<!--    </dependency>-->
-
-<!--    -->
-<!--    <dependency>-->
-<!--      <groupId>com.google.guava</groupId>-->
-<!--      <artifactId>guava</artifactId>-->
-<!--    </dependency>-->
-
-
-<!--    -->
-<!--    <dependency>-->
-<!--      <groupId>org.slf4j</groupId>-->
-<!--      <artifactId>slf4j-api</artifactId>-->
-<!--    </dependency>-->
-<!--    -->
-<!--    <dependency>-->
-<!--      <groupId>org.mockito</groupId>-->
-<!--      <artifactId>mockito-core</artifactId>-->
-<!--      <scope>test</scope>-->
-<!--    </dependency>-->
-<!--    <dependency>-->
-<!--      <groupId>junit</groupId>-->
-<!--      <artifactId>junit</artifactId>-->
-<!--      <scope>test</scope>-->
-<!--    </dependency>-->
-    
   </dependencies>
   
   <dependencyManagement>
