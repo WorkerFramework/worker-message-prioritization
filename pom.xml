@@ -21,6 +21,11 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
+    <modules>
+        <module>worker-message-prioritization-distribution</module>
+      <module>worker-message-prioritization-rerouting</module>
+      <module>worker-message-prioritization-rabbitmq</module>
+    </modules>
 
   <parent>
     <groupId>com.microfocus.caf</groupId>
@@ -29,11 +34,11 @@
   </parent>
   
   <groupId>com.microfocus.apollo</groupId>
-  <artifactId>worker-message-prioritization</artifactId>
+  <artifactId>worker-message-prioritization-aggregator</artifactId>
   <version>1.0.0-SNAPSHOT</version>
-  <packaging>jar</packaging>
+  <packaging>pom</packaging>
 
-  <name>worker-message-prioritization</name>
+  <name>worker-message-prioritization-aggregator</name>
 
   <inceptionYear>2022</inceptionYear>
   
@@ -44,57 +49,44 @@
   </properties>
 
   <dependencies>
-    <dependency>
-      <groupId>com.github.cafapi.logging</groupId>
-      <artifactId>caf-logging-logback</artifactId>
-      <scope>runtime</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.github.cafdataprocessing</groupId>
-      <artifactId>worker-document-interface</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.google.code.findbugs</groupId>
-      <artifactId>jsr305</artifactId>
-      <version>3.0.2</version>
-    </dependency>
-    <dependency>
-      <groupId>com.google.code.gson</groupId>
-      <artifactId>gson</artifactId>
-    </dependency>
-    
-    <dependency>
-      <groupId>com.google.guava</groupId>
-      <artifactId>guava</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.rabbitmq</groupId>
-      <artifactId>amqp-client</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.squareup.okhttp</groupId>
-      <artifactId>okhttp</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.squareup.retrofit</groupId>
-      <artifactId>retrofit</artifactId>
-    </dependency>
-    
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-    </dependency>
-    
-    <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-core</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <scope>test</scope>
-    </dependency>
+<!--    <dependency>-->
+<!--      <groupId>com.github.cafapi.logging</groupId>-->
+<!--      <artifactId>caf-logging-logback</artifactId>-->
+<!--      <scope>runtime</scope>-->
+<!--    </dependency>-->
+<!--    <dependency>-->
+<!--      <groupId>com.github.cafdataprocessing</groupId>-->
+<!--      <artifactId>worker-document-interface</artifactId>-->
+<!--    </dependency>-->
+<!--    <dependency>-->
+<!--      <groupId>com.google.code.findbugs</groupId>-->
+<!--      <artifactId>jsr305</artifactId>-->
+<!--      <version>3.0.2</version>-->
+<!--    </dependency>-->
+
+<!--    -->
+<!--    <dependency>-->
+<!--      <groupId>com.google.guava</groupId>-->
+<!--      <artifactId>guava</artifactId>-->
+<!--    </dependency>-->
+
+
+<!--    -->
+<!--    <dependency>-->
+<!--      <groupId>org.slf4j</groupId>-->
+<!--      <artifactId>slf4j-api</artifactId>-->
+<!--    </dependency>-->
+<!--    -->
+<!--    <dependency>-->
+<!--      <groupId>org.mockito</groupId>-->
+<!--      <artifactId>mockito-core</artifactId>-->
+<!--      <scope>test</scope>-->
+<!--    </dependency>-->
+<!--    <dependency>-->
+<!--      <groupId>junit</groupId>-->
+<!--      <artifactId>junit</artifactId>-->
+<!--      <scope>test</scope>-->
+<!--    </dependency>-->
     
   </dependencies>
   
