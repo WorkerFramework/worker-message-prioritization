@@ -18,36 +18,32 @@
  */
 package com.microfocus.apollo.worker.prioritization.redistribution.lowlevel;
 
-import com.microfocus.apollo.worker.prioritization.rabbitmq.Queue;
 import com.microfocus.apollo.worker.prioritization.rabbitmq.QueuesApi;
 import com.microfocus.apollo.worker.prioritization.rabbitmq.RabbitManagementApi;
-//import com.microfocus.apollo.worker.prioritization.rerouting.MessageRouter;
+import com.microfocus.apollo.worker.prioritization.redistribution.DistributorWorkItem;
+import com.microfocus.apollo.worker.prioritization.redistribution.MessageDistributor;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.ShutdownSignalException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeoutException;
-import java.util.stream.Collectors;
 
-public class LowLevelDistributor {
-    private static final String LOAD_BALANCED_INDICATOR = "»";
+public class LowLevelDistributor extends MessageDistributor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LowLevelDistributor.class);
 
     private ShutdownSignalException shutdownSignalException = null;
     private final long targetQueueMessageLimit;
-    private final RabbitManagementApi<QueuesApi> queuesApi;
     private final ConnectionFactory connectionFactory;
     private final ConcurrentHashMap<String, MessageTarget> messageTargets = new ConcurrentHashMap<>();
 
     public LowLevelDistributor(final RabbitManagementApi<QueuesApi> queuesApi,
                                final ConnectionFactory connectionFactory, final long targetQueueMessageLimit) {
-        this.queuesApi = queuesApi;
+        super(queuesApi);
         this.connectionFactory = connectionFactory;
         this.targetQueueMessageLimit = targetQueueMessageLimit;
 
@@ -85,25 +81,23 @@ public class LowLevelDistributor {
         //creating MessageTargets, when needed, and registering new MessageSources when encountered
         while(true) {
 
-            final List<Queue> queues = queuesApi.getApi().getQueues();
+            final Set<DistributorWorkItem> distributorWorkItems = getDistributorTargets();
             
-            final Set<Queue> messageTargetQueues = getMesssageTargetsQueues(queues);
-            
-            for(final Queue messageTargetQueue: messageTargetQueues) {
+            for(final DistributorWorkItem distributorWorkItem : distributorWorkItems) {
                 final MessageTarget messageTarget;
-                if(!messageTargets.containsKey(messageTargetQueue.getName())) {
-                    messageTarget = new MessageTarget(targetQueueMessageLimit, connectionFactory, messageTargetQueue);
-                    messageTargets.put(messageTargetQueue.getName(), messageTarget);
+                if(!messageTargets.containsKey(distributorWorkItem.getTargetQueue().getName())) {
+                    messageTarget = new MessageTarget(targetQueueMessageLimit, connectionFactory, distributorWorkItem.getTargetQueue());
+                    messageTargets.put(distributorWorkItem.getTargetQueue().getName(), messageTarget);
                 }
                 else {
-                    messageTarget = messageTargets.get(messageTargetQueue.getName());
+                    messageTarget = messageTargets.get(distributorWorkItem.getTargetQueue().getName());
                     if (messageTarget.getShutdownSignalException() != null) {
                         shutdownSignalException = messageTarget.getShutdownSignalException();
-                        messageTargets.remove(messageTargetQueue.getName());
+                        messageTargets.remove(distributorWorkItem.getTargetQueue().getName());
                         continue;
                     }
                 }
-                messageTarget.run(messageTargetQueue, getMessageSourceQueues(messageTarget, queues));
+                messageTarget.run(distributorWorkItem.getTargetQueue(), distributorWorkItem.getStagingQueues());
 
             }
             
@@ -120,29 +114,4 @@ public class LowLevelDistributor {
         }
         
     }
-
-    private Set<Queue> getMesssageTargetsQueues(final List<Queue> queues) {
-
-        return queues.stream()
-                .filter(q ->
-                        !q.getName().contains(LOAD_BALANCED_INDICATOR) /*&& q.getName().contains("classification")*/
-                )
-                .collect(Collectors.toSet());
-        
-    }
-    
-    private Set<Queue> getMessageSourceQueues(final MessageTarget messageTarget, final List<Queue> queues) {
-
-        return queues.stream()
-                .filter(q -> 
-                        q.getName().startsWith(messageTarget.getTargetQueueName() + LOAD_BALANCED_INDICATOR)  /*&& q.getName().contains("classification")*/
-                )
-                .collect(Collectors.toSet());
-    }
-
-    // tq dataprocessing-worker-entity-extract-in
-    // sq dataprocessing-worker-entity-extract-in-t1-ingestion
-    // sq dataprocessing-worker-entity-extract-in-t1-enrichment
-    
-
 }

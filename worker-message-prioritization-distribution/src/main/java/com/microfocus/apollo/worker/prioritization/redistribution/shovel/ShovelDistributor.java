@@ -25,20 +25,17 @@ import com.microfocus.apollo.worker.prioritization.rabbitmq.RabbitManagementApi;
 import com.microfocus.apollo.worker.prioritization.rabbitmq.RetrievedShovel;
 import com.microfocus.apollo.worker.prioritization.rabbitmq.Shovel;
 import com.microfocus.apollo.worker.prioritization.rabbitmq.ShovelsApi;
-//import com.microfocus.apollo.worker.prioritization.rerouting.MessageRouter;
+import com.microfocus.apollo.worker.prioritization.redistribution.DistributorWorkItem;
+import com.microfocus.apollo.worker.prioritization.redistribution.MessageDistributor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
-public class ShovelDistributor {
-
-    private static final String LOAD_BALANCED_INDICATOR = "»";
+public class ShovelDistributor extends MessageDistributor {
     
     private static final Logger LOGGER = LoggerFactory.getLogger(ShovelDistributor.class);
-    private final RabbitManagementApi<QueuesApi> queuesApi;
     private final RabbitManagementApi<ShovelsApi> shovelsApi;
     private final long targetQueueMessageLimit;
 
@@ -46,49 +43,50 @@ public class ShovelDistributor {
                                         final RabbitManagementApi<ShovelsApi> shovelsApi, 
                                         final long targetQueueMessageLimit) {
 
-        this.queuesApi = queuesApi;
+        super(queuesApi);
         this.shovelsApi = shovelsApi;
         this.targetQueueMessageLimit = targetQueueMessageLimit;
     }
     
     public void run() {
         
-        final List<Queue> queues = queuesApi.getApi().getQueues();
-        final Set<Queue> targetQueues = getMesssageTargetsQueues(queues);
+        final Set<DistributorWorkItem> distributorWorkItems = getDistributorTargets();
         
         final List<RetrievedShovel> retrievedShovels = shovelsApi.getApi().getShovels();
         
-        for(final Queue targetQueue: targetQueues) {
+        for(final DistributorWorkItem distributorWorkItem : distributorWorkItems) {
             
-            final Set<Queue> sourceQueues = getSourceQueues(targetQueue, queues);
+            final long lastKnownTargetQueueLength = distributorWorkItem.getTargetQueue().getMessages();
 
-            final long lastKnownTargetQueueLength = targetQueue.getMessages();
-
-            final long totalKnownPendingMessages = 
-                    sourceQueues.stream().map(Queue::getMessages).mapToLong(Long::longValue).sum();
+            final long totalKnownPendingMessages =
+                    distributorWorkItem.getStagingQueues().stream()
+                            .map(Queue::getMessages).mapToLong(Long::longValue).sum();
 
             final long consumptionTarget = targetQueueMessageLimit - lastKnownTargetQueueLength;
             final long sourceQueueConsumptionTarget;
-            if(sourceQueues.isEmpty()) {
+            if(distributorWorkItem.getStagingQueues().isEmpty()) {
                 sourceQueueConsumptionTarget = 0;
             }
             else {
-                sourceQueueConsumptionTarget = (long) Math.ceil((double)consumptionTarget / sourceQueues.size());
+                sourceQueueConsumptionTarget = (long) Math.ceil((double)consumptionTarget / 
+                        distributorWorkItem.getStagingQueues().size());
             }
 
             LOGGER.info("TargetQueue {}, {} messages, SourceQueues {}, {} messages, " +
                             "Overall consumption target: {}, Individual Source Queue consumption target: {}",
-                    targetQueue.getName(), lastKnownTargetQueueLength,
-                    (long) sourceQueues.size(), totalKnownPendingMessages,
+                    distributorWorkItem.getTargetQueue().getName(), lastKnownTargetQueueLength,
+                    (long) distributorWorkItem.getStagingQueues().size(), totalKnownPendingMessages,
                     consumptionTarget, sourceQueueConsumptionTarget);
 
             if(consumptionTarget <= 0) {
-                LOGGER.info("Target queue '{}' consumption target is <= 0, no capacity for new messages, ignoring.", targetQueue.getName());
+                LOGGER.info("Target queue '{}' consumption target is <= 0, no capacity for new messages, ignoring.",
+                        distributorWorkItem.getTargetQueue().getName());
             }
             else {
-                for(final Queue sourceQueue: sourceQueues) {
+                for(final Queue sourceQueue: distributorWorkItem.getStagingQueues()) {
                     if(sourceQueue.getMessages() == 0) {
-                        LOGGER.info("Source queue '{}' has no messages, ignoring.", targetQueue.getName());
+                        LOGGER.info("Source queue '{}' has no messages, ignoring.", 
+                                distributorWorkItem.getTargetQueue().getName());
 
                         continue;
                     }
@@ -101,7 +99,7 @@ public class ShovelDistributor {
                         shovel.setAckMode("on-confirm");
                         shovel.setSrcQueue(sourceQueue.getName());
                         shovel.setSrcUri("amqp://");
-                        shovel.setDestQueue(targetQueue.getName());
+                        shovel.setDestQueue(distributorWorkItem.getTargetQueue().getName());
                         shovel.setDestUri("amqp://");
 
                         LOGGER.info("Creating shovel {} to consume {} messages.", sourceQueue.getName(), sourceQueue.getMessages());
@@ -116,25 +114,4 @@ public class ShovelDistributor {
         
     }
 
-    private Set<Queue> getMesssageTargetsQueues(final List<Queue> queues) {
-
-        return queues.stream()
-                .filter(q ->
-                        !q.getName().contains(LOAD_BALANCED_INDICATOR)
-                )
-                .collect(Collectors.toSet());
-
-    }
-
-    private Set<Queue> getSourceQueues(final Queue targetQueue, final List<Queue> queues) {
-
-        return queues.stream()
-                .filter(q ->
-                        q.getName().startsWith(targetQueue.getName() + LOAD_BALANCED_INDICATOR)
-                )
-                .collect(Collectors.toSet());
-    }
-    
-    
-    
 }
