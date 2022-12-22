@@ -42,7 +42,6 @@ public class LowLevelDistributor extends MessageDistributor {
     private ShutdownSignalException shutdownSignalException = null;
     private final ConsumptionTargetCalculator consumptionTargetCalculator;
     private final ConnectionFactory connectionFactory;
-    private final ConcurrentHashMap<String, MessageTarget> messageTargets = new ConcurrentHashMap<>();
 
     public LowLevelDistributor(final RabbitManagementApi<QueuesApi> queuesApi,
                                final ConnectionFactory connectionFactory,
