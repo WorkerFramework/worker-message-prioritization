@@ -19,7 +19,7 @@
 package com.microfocus.apollo.worker.prioritization.redistribution.lowlevel;
 
 import com.microfocus.apollo.worker.prioritization.rabbitmq.Queue;
-import com.microfocus.apollo.worker.prioritization.redistribution.ConsumptionTargetCalculator;
+import com.microfocus.apollo.worker.prioritization.redistribution.consumption.ConsumptionTargetCalculator;
 import com.microfocus.apollo.worker.prioritization.redistribution.DistributorWorkItem;
 import com.rabbitmq.client.Connection;
 

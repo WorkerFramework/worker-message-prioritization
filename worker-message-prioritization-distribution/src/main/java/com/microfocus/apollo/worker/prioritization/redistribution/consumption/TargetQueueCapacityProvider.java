@@ -16,14 +16,13 @@
  * Items are licensed to the U.S. Government under vendor's standard
  * commercial license.
  */
-package com.microfocus.apollo.worker.prioritization.redistribution;
+package com.microfocus.apollo.worker.prioritization.redistribution.consumption;
 
 import com.microfocus.apollo.worker.prioritization.rabbitmq.Queue;
 
-import java.util.Map;
-
-public interface ConsumptionTargetCalculator {
-    
-    Map<Queue, Long> calculateConsumptionTargets(final DistributorWorkItem distributorWorkItem);
-    
+/**
+ * Obtain the number of messages the target queue has capacity for
+ */
+public interface TargetQueueCapacityProvider {
+    long get(final Queue targetQueue);
 }

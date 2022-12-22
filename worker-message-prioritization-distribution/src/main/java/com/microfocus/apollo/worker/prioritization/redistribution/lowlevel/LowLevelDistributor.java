@@ -20,10 +20,11 @@ package com.microfocus.apollo.worker.prioritization.redistribution.lowlevel;
 
 import com.microfocus.apollo.worker.prioritization.rabbitmq.QueuesApi;
 import com.microfocus.apollo.worker.prioritization.rabbitmq.RabbitManagementApi;
-import com.microfocus.apollo.worker.prioritization.redistribution.ConsumptionTargetCalculator;
+import com.microfocus.apollo.worker.prioritization.redistribution.consumption.ConsumptionTargetCalculator;
 import com.microfocus.apollo.worker.prioritization.redistribution.DistributorWorkItem;
-import com.microfocus.apollo.worker.prioritization.redistribution.EqualConsumptionTargetCalculator;
+import com.microfocus.apollo.worker.prioritization.redistribution.consumption.EqualConsumptionTargetCalculator;
 import com.microfocus.apollo.worker.prioritization.redistribution.MessageDistributor;
+import com.microfocus.apollo.worker.prioritization.redistribution.consumption.FixedTargetQueueCapacityProvider;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.ShutdownSignalException;
@@ -32,7 +33,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeoutException;
 
 public class LowLevelDistributor extends MessageDistributor {
@@ -70,7 +70,8 @@ public class LowLevelDistributor extends MessageDistributor {
                         connectionFactory.getUsername(), connectionFactory.getPassword());
 
         final LowLevelDistributor lowLevelDistributor =
-                new LowLevelDistributor(queuesApi, connectionFactory, new EqualConsumptionTargetCalculator());
+                new LowLevelDistributor(queuesApi, connectionFactory, 
+                        new EqualConsumptionTargetCalculator(new FixedTargetQueueCapacityProvider()));
         
         lowLevelDistributor.run();
     }

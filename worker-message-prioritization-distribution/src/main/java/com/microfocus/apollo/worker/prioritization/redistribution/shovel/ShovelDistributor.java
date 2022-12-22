@@ -25,7 +25,7 @@ import com.microfocus.apollo.worker.prioritization.rabbitmq.RabbitManagementApi;
 import com.microfocus.apollo.worker.prioritization.rabbitmq.RetrievedShovel;
 import com.microfocus.apollo.worker.prioritization.rabbitmq.Shovel;
 import com.microfocus.apollo.worker.prioritization.rabbitmq.ShovelsApi;
-import com.microfocus.apollo.worker.prioritization.redistribution.ConsumptionTargetCalculator;
+import com.microfocus.apollo.worker.prioritization.redistribution.consumption.ConsumptionTargetCalculator;
 import com.microfocus.apollo.worker.prioritization.redistribution.DistributorWorkItem;
 import com.microfocus.apollo.worker.prioritization.redistribution.MessageDistributor;
 import org.slf4j.Logger;

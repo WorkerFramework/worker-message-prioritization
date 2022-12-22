@@ -16,9 +16,10 @@
  * Items are licensed to the U.S. Government under vendor's standard
  * commercial license.
  */
-package com.microfocus.apollo.worker.prioritization.redistribution;
+package com.microfocus.apollo.worker.prioritization.redistribution.consumption;
 
 import com.microfocus.apollo.worker.prioritization.rabbitmq.Queue;
+import com.microfocus.apollo.worker.prioritization.redistribution.DistributorWorkItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,12 +32,17 @@ import java.util.stream.Collectors;
 public class EqualConsumptionTargetCalculator implements ConsumptionTargetCalculator {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EqualConsumptionTargetCalculator.class);
+    private final TargetQueueCapacityProvider targetQueueCapacityProvider;
 
+    public EqualConsumptionTargetCalculator(final TargetQueueCapacityProvider targetQueueCapacityProvider) {
+
+        this.targetQueueCapacityProvider = targetQueueCapacityProvider;
+    }
+    
     @Override
     public Map<Queue, Long> calculateConsumptionTargets(final DistributorWorkItem distributorWorkItem) {
         
-        //TODO
-        final long targetQueueMessageLimit = 100;
+        final var targetQueueCapacity = targetQueueCapacityProvider.get(distributorWorkItem.getTargetQueue());
         
         final long lastKnownTargetQueueLength = distributorWorkItem.getTargetQueue().getMessages();
 
@@ -44,7 +50,7 @@ public class EqualConsumptionTargetCalculator implements ConsumptionTargetCalcul
                 distributorWorkItem.getStagingQueues().stream()
                         .map(Queue::getMessages).mapToLong(Long::longValue).sum();
 
-        final long consumptionTarget = targetQueueMessageLimit - lastKnownTargetQueueLength;
+        final long consumptionTarget = targetQueueCapacity - lastKnownTargetQueueLength;
         final long sourceQueueConsumptionTarget;
         if(distributorWorkItem.getStagingQueues().isEmpty()) {
             sourceQueueConsumptionTarget = 0;

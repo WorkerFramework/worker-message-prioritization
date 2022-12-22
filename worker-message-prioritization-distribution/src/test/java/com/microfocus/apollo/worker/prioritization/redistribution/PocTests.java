@@ -18,21 +18,16 @@
  */
 package com.microfocus.apollo.worker.prioritization.redistribution;
 
-import com.hpe.caf.worker.document.model.Application;
-import com.hpe.caf.worker.document.model.Document;
-import com.hpe.caf.worker.document.model.Response;
-import com.hpe.caf.worker.document.model.ResponseQueue;
-import com.hpe.caf.worker.document.model.Task;
 import com.microfocus.apollo.worker.prioritization.rabbitmq.Component;
 import com.microfocus.apollo.worker.prioritization.rabbitmq.QueuesApi;
 import com.microfocus.apollo.worker.prioritization.rabbitmq.RabbitManagementApi;
 import com.microfocus.apollo.worker.prioritization.rabbitmq.RetrievedShovel;
 import com.microfocus.apollo.worker.prioritization.rabbitmq.Shovel;
 import com.microfocus.apollo.worker.prioritization.rabbitmq.ShovelsApi;
+import com.microfocus.apollo.worker.prioritization.redistribution.consumption.EqualConsumptionTargetCalculator;
+import com.microfocus.apollo.worker.prioritization.redistribution.consumption.FixedTargetQueueCapacityProvider;
 import com.microfocus.apollo.worker.prioritization.redistribution.lowlevel.LowLevelDistributor;
 import com.microfocus.apollo.worker.prioritization.redistribution.shovel.ShovelDistributor;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -42,7 +37,6 @@ import java.util.List;
 import java.util.concurrent.TimeoutException;
 
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class PocTests {
 
@@ -63,7 +57,9 @@ public class PocTests {
                         "http://david-cent01.swinfra.net:15672/", "guest", "guest");
         
         final LowLevelDistributor lowLevelDistributor = 
-                new LowLevelDistributor(queuesApi, connectionFactory, new EqualConsumptionTargetCalculator());
+                new LowLevelDistributor(queuesApi, connectionFactory, new EqualConsumptionTargetCalculator(
+                        new FixedTargetQueueCapacityProvider()
+                ));
         
         lowLevelDistributor.run();
     }
@@ -106,7 +102,9 @@ public class PocTests {
                         "http://david-cent01.swinfra.net:15672/", "guest", "guest");
 
         final ShovelDistributor shovelDistributor = new ShovelDistributor(
-                queuesApi, shovelsApi, 1000, new EqualConsumptionTargetCalculator());
+                queuesApi, shovelsApi, 1000, new EqualConsumptionTargetCalculator(
+                new FixedTargetQueueCapacityProvider()
+        ));
 
         //                        final RetrievedShovel retrievedShovel = shovelsApi.getApi().getShovel("/", sourceQueue.getName());
 //                        shovelsApi.getApi().restartShovel("/", sourceQueue.getName());
