@@ -20,28 +20,10 @@ package com.microfocus.apollo.worker.prioritization.redistribution;
 
 import com.microfocus.apollo.worker.prioritization.rabbitmq.Queue;
 
-import java.util.Collections;
-import java.util.Set;
+import java.util.Map;
 
-/**
- * Represents the relationship between staging queues and their target queue.
- * A MessageDistributor implementation will schedule the transfer of messages on a staging queue to a target queue.
- */
-public class DistributorWorkItem {
+public interface ConsumptionTargetCalculator {
     
-    private final Queue targetQueue;
-    private final Set<Queue> stagingQueues;
-
-    public DistributorWorkItem(final Queue targetQueue, final Set<Queue> stagingQueues) {
-        this.targetQueue = targetQueue;
-        this.stagingQueues = Collections.unmodifiableSet(stagingQueues);
-    }
-
-    public Queue getTargetQueue() {
-        return targetQueue;
-    }
-
-    public Set<Queue> getStagingQueues() {
-        return stagingQueues;
-    }
+    Map<Queue, Long> calculateConsumptionTargets(final DistributorWorkItem distributorWorkItem);
+    
 }

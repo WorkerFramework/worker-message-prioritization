@@ -63,7 +63,7 @@ public class PocTests {
                         "http://david-cent01.swinfra.net:15672/", "guest", "guest");
         
         final LowLevelDistributor lowLevelDistributor = 
-                new LowLevelDistributor(queuesApi, connectionFactory, 1000);
+                new LowLevelDistributor(queuesApi, connectionFactory, new EqualConsumptionTargetCalculator());
         
         lowLevelDistributor.run();
     }
@@ -105,7 +105,8 @@ public class PocTests {
                 new RabbitManagementApi<>(ShovelsApi.class,
                         "http://david-cent01.swinfra.net:15672/", "guest", "guest");
 
-        final ShovelDistributor shovelDistributor = new ShovelDistributor(queuesApi, shovelsApi, 1000);
+        final ShovelDistributor shovelDistributor = new ShovelDistributor(
+                queuesApi, shovelsApi, 1000, new EqualConsumptionTargetCalculator());
 
         //                        final RetrievedShovel retrievedShovel = shovelsApi.getApi().getShovel("/", sourceQueue.getName());
 //                        shovelsApi.getApi().restartShovel("/", sourceQueue.getName());

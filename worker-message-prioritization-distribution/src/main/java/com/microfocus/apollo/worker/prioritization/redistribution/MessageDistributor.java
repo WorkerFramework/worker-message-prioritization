@@ -37,15 +37,17 @@ public abstract class MessageDistributor {
         this.queuesApi = queuesApi;
     }
     
-    protected Set<DistributorWorkItem> getDistributorTargets() {
+    protected Set<DistributorWorkItem> getDistributorWorkItems() {
         final List<Queue> queues = queuesApi.getApi().getQueues();
         final Set<DistributorWorkItem> distributorWorkItems = new HashSet<>();
         
         for(final Queue targetQueue: queues.stream().filter(q -> !q.getName().contains(LOAD_BALANCED_INDICATOR))
                 .collect(Collectors.toSet())) {
-            
+
             final Set<Queue> stagingQueues = queues.stream()
-                    .filter(q -> q.getName().startsWith(targetQueue + LOAD_BALANCED_INDICATOR))
+                    .filter(q ->
+                            q.getMessages() > 0 &&
+                                    q.getName().startsWith(targetQueue + LOAD_BALANCED_INDICATOR))
                     .collect(Collectors.toSet());
             
             if(stagingQueues.isEmpty()) {

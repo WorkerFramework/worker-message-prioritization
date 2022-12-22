@@ -25,12 +25,14 @@ import com.microfocus.apollo.worker.prioritization.rabbitmq.RabbitManagementApi;
 import com.microfocus.apollo.worker.prioritization.rabbitmq.RetrievedShovel;
 import com.microfocus.apollo.worker.prioritization.rabbitmq.Shovel;
 import com.microfocus.apollo.worker.prioritization.rabbitmq.ShovelsApi;
+import com.microfocus.apollo.worker.prioritization.redistribution.ConsumptionTargetCalculator;
 import com.microfocus.apollo.worker.prioritization.redistribution.DistributorWorkItem;
 import com.microfocus.apollo.worker.prioritization.redistribution.MessageDistributor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class ShovelDistributor extends MessageDistributor {
@@ -38,74 +40,65 @@ public class ShovelDistributor extends MessageDistributor {
     private static final Logger LOGGER = LoggerFactory.getLogger(ShovelDistributor.class);
     private final RabbitManagementApi<ShovelsApi> shovelsApi;
     private final long targetQueueMessageLimit;
+    private final ConsumptionTargetCalculator consumptionTargetCalculator;
 
-    public ShovelDistributor(final RabbitManagementApi<QueuesApi> queuesApi,
-                                        final RabbitManagementApi<ShovelsApi> shovelsApi, 
-                                        final long targetQueueMessageLimit) {
+    public ShovelDistributor(
+            final RabbitManagementApi<QueuesApi> queuesApi,
+            final RabbitManagementApi<ShovelsApi> shovelsApi,
+            final long targetQueueMessageLimit,
+            final ConsumptionTargetCalculator consumptionTargetCalculator) {
 
         super(queuesApi);
         this.shovelsApi = shovelsApi;
         this.targetQueueMessageLimit = targetQueueMessageLimit;
+        this.consumptionTargetCalculator = consumptionTargetCalculator;
     }
     
     public void run() {
         
-        final Set<DistributorWorkItem> distributorWorkItems = getDistributorTargets();
+        final Set<DistributorWorkItem> distributorWorkItems = getDistributorWorkItems();
         
         final List<RetrievedShovel> retrievedShovels = shovelsApi.getApi().getShovels();
         
         for(final DistributorWorkItem distributorWorkItem : distributorWorkItems) {
             
-            final long lastKnownTargetQueueLength = distributorWorkItem.getTargetQueue().getMessages();
-
-            final long totalKnownPendingMessages =
-                    distributorWorkItem.getStagingQueues().stream()
-                            .map(Queue::getMessages).mapToLong(Long::longValue).sum();
-
-            final long consumptionTarget = targetQueueMessageLimit - lastKnownTargetQueueLength;
-            final long sourceQueueConsumptionTarget;
-            if(distributorWorkItem.getStagingQueues().isEmpty()) {
-                sourceQueueConsumptionTarget = 0;
-            }
-            else {
-                sourceQueueConsumptionTarget = (long) Math.ceil((double)consumptionTarget / 
-                        distributorWorkItem.getStagingQueues().size());
-            }
-
-            LOGGER.info("TargetQueue {}, {} messages, SourceQueues {}, {} messages, " +
-                            "Overall consumption target: {}, Individual Source Queue consumption target: {}",
-                    distributorWorkItem.getTargetQueue().getName(), lastKnownTargetQueueLength,
-                    (long) distributorWorkItem.getStagingQueues().size(), totalKnownPendingMessages,
-                    consumptionTarget, sourceQueueConsumptionTarget);
-
-            if(consumptionTarget <= 0) {
+            final Map<Queue, Long> consumptionTarget = consumptionTargetCalculator.calculateConsumptionTargets(distributorWorkItem);
+            
+            final long overallConsumptionTarget = consumptionTarget.values().stream().mapToLong(Long::longValue).sum();
+            
+            if(overallConsumptionTarget <= 0) {
                 LOGGER.info("Target queue '{}' consumption target is <= 0, no capacity for new messages, ignoring.",
                         distributorWorkItem.getTargetQueue().getName());
             }
             else {
-                for(final Queue sourceQueue: distributorWorkItem.getStagingQueues()) {
-                    if(sourceQueue.getMessages() == 0) {
-                        LOGGER.info("Source queue '{}' has no messages, ignoring.", 
-                                distributorWorkItem.getTargetQueue().getName());
-
-                        continue;
-                    }
-                    if(retrievedShovels.stream().anyMatch(s -> s.getName().endsWith(sourceQueue.getName()))) {
-                        LOGGER.info("Shovel {} already exists, ignoring.", sourceQueue.getName());
+                for(final Map.Entry<Queue, Long> queueConsumptionTarget: consumptionTarget.entrySet()) {
+//                    if(sourceQueue.getMessages() == 0) {
+//                        LOGGER.info("Source queue '{}' has no messages, ignoring.", 
+//                                distributorWorkItem.getTargetQueue().getName());
+//
+//                        continue;
+//                    }
+                    if(retrievedShovels.stream().anyMatch(s -> s.getName()
+                            .endsWith(queueConsumptionTarget.getKey().getName()))) {
+                        LOGGER.info("Shovel {} already exists, ignoring.", queueConsumptionTarget.getKey().getName());
                     } else {
                         final Shovel shovel = new Shovel();
 //                        shovel.setSrcDeleteAfter(100);
-                        shovel.setSrcDeleteAfter((int)sourceQueue.getMessages());
+                        shovel.setSrcDeleteAfter((int)queueConsumptionTarget.getKey().getMessages());
                         shovel.setAckMode("on-confirm");
-                        shovel.setSrcQueue(sourceQueue.getName());
+                        shovel.setSrcQueue(queueConsumptionTarget.getKey().getName());
                         shovel.setSrcUri("amqp://");
                         shovel.setDestQueue(distributorWorkItem.getTargetQueue().getName());
                         shovel.setDestUri("amqp://");
 
-                        LOGGER.info("Creating shovel {} to consume {} messages.", sourceQueue.getName(), sourceQueue.getMessages());
+                        LOGGER.info("Creating shovel {} to consume {} messages.", 
+                                queueConsumptionTarget.getKey().getName(), 
+                                queueConsumptionTarget.getKey().getMessages());
 
-                        shovelsApi.getApi().putShovel("/", sourceQueue.getName(), 
-                                new Component<>("shovel", sourceQueue.getName(), shovel));
+                        shovelsApi.getApi().putShovel("/", queueConsumptionTarget.getKey().getName(),
+                                new Component<>("shovel",
+                                        queueConsumptionTarget.getKey().getName(),
+                                        shovel));
                     }
                 }
             }            

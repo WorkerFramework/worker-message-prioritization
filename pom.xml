@@ -46,6 +46,8 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <copyrightYear>2022</copyrightYear>
     <enforceCorrectDependencies>true</enforceCorrectDependencies>
+      <maven.compiler.source>11</maven.compiler.source>
+      <maven.compiler.target>11</maven.compiler.target>
   </properties>
 
   <dependencies>
