@@ -60,6 +60,9 @@ public class LowLevelDistributor extends MessageDistributor {
         connectionFactory.setPort(Integer.parseInt(args[3]));
         connectionFactory.setVirtualHost("/");
         
+        //https://www.rabbitmq.com/api-guide.html#java-nio
+        //connectionFactory.useNio();
+                
         final int managementPort = Integer.parseInt(args[4]);
         final long targetQueueMessageLimit = Long.parseLong(args[5]);
         
