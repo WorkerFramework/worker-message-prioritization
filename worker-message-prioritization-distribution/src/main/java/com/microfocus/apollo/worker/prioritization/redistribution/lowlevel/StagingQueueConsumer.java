@@ -19,7 +19,8 @@
 package com.microfocus.apollo.worker.prioritization.redistribution.lowlevel;
 
 import com.rabbitmq.client.AMQP;
-import com.rabbitmq.client.Consumer;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.ShutdownSignalException;
 import org.slf4j.Logger;
@@ -27,7 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-public class StagingQueueConsumer implements Consumer {
+public class StagingQueueConsumer extends DefaultConsumer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(StagingQueueConsumer.class);
     private final StagingQueueTargetQueuePair stagingQueueTargetQueuePair;
@@ -35,7 +36,8 @@ public class StagingQueueConsumer implements Consumer {
     private boolean active;
     private ShutdownSignalException shutdownSignalException;
 
-    public StagingQueueConsumer(final StagingQueueTargetQueuePair stagingQueueTargetQueuePair) {
+    public StagingQueueConsumer(final Channel channel, final StagingQueueTargetQueuePair stagingQueueTargetQueuePair) {
+        super(channel);
         this.stagingQueueTargetQueuePair = stagingQueueTargetQueuePair;
     }
 
@@ -43,7 +45,7 @@ public class StagingQueueConsumer implements Consumer {
         return active;
     }
 
-    public void setActive(boolean active) {
+    public void setActive(final boolean active) {
         this.active = active;
     }
     
@@ -52,17 +54,7 @@ public class StagingQueueConsumer implements Consumer {
     }
     
     @Override
-    public void handleConsumeOk(String consumerTag) {
-        
-    }
-
-    @Override
-    public void handleCancelOk(String consumerTag) {
-
-    }
-
-    @Override
-    public void handleCancel(String consumerTag) throws IOException {
+    public void handleCancel(final String consumerTag) throws IOException {
         //Stop tracking that we are consuming from the consumerTag queue
         active = false;
     }
@@ -72,11 +64,6 @@ public class StagingQueueConsumer implements Consumer {
         //Connection lost, give up
         shutdownSignalException = sig;
         active = false;
-    }
-
-    @Override
-    public void handleRecoverOk(final String consumerTag) {
-
     }
 
     @Override

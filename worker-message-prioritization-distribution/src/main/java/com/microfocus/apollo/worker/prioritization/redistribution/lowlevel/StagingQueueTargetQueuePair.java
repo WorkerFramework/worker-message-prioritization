@@ -64,7 +64,7 @@ public class StagingQueueTargetQueuePair {
         final var targetQueueConfirmListener = new TargetQueueConfirmListener(this);
         targetQueueChannel.addConfirmListener(targetQueueConfirmListener);
 
-        stagingQueueConsumer = new StagingQueueConsumer(this);
+        stagingQueueConsumer = new StagingQueueConsumer(stagingQueueChannel, this);
 
         stagingQueueChannel.basicConsume(stagingQueue.getName(), stagingQueueConsumer);
     }
