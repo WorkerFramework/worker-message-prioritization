@@ -24,5 +24,11 @@ import com.microfocus.apollo.worker.prioritization.rabbitmq.Queue;
  * Obtain the number of messages the target queue has capacity for
  */
 public interface TargetQueueCapacityProvider {
+
+    /**
+     * Obtain available capacity of the target queue
+     * @param targetQueue The target queue to obtain the available capacity
+     * @return The number of messages that can be sent to the target queue
+     */
     long get(final Queue targetQueue);
 }

@@ -20,6 +20,9 @@ package com.microfocus.apollo.worker.prioritization.redistribution.consumption;
 
 import com.microfocus.apollo.worker.prioritization.rabbitmq.Queue;
 
+/**
+ * An example implementation to be used as a reference for further, real world, implementations
+ */
 public class FixedTargetQueueCapacityProvider implements TargetQueueCapacityProvider {
     private static final long MAXIMUM_CAPACITY = 1000;
     @Override
