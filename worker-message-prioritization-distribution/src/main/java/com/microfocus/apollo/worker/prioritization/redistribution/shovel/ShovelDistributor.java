@@ -39,18 +39,15 @@ public class ShovelDistributor extends MessageDistributor {
     
     private static final Logger LOGGER = LoggerFactory.getLogger(ShovelDistributor.class);
     private final RabbitManagementApi<ShovelsApi> shovelsApi;
-    private final long targetQueueMessageLimit;
     private final ConsumptionTargetCalculator consumptionTargetCalculator;
 
     public ShovelDistributor(
             final RabbitManagementApi<QueuesApi> queuesApi,
             final RabbitManagementApi<ShovelsApi> shovelsApi,
-            final long targetQueueMessageLimit,
             final ConsumptionTargetCalculator consumptionTargetCalculator) {
 
         super(queuesApi);
         this.shovelsApi = shovelsApi;
-        this.targetQueueMessageLimit = targetQueueMessageLimit;
         this.consumptionTargetCalculator = consumptionTargetCalculator;
     }
     

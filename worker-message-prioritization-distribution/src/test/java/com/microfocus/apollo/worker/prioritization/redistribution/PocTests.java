@@ -102,7 +102,7 @@ public class PocTests {
                         "http://david-cent01.swinfra.net:15672/", "guest", "guest");
 
         final ShovelDistributor shovelDistributor = new ShovelDistributor(
-                queuesApi, shovelsApi, 1000, new EqualConsumptionTargetCalculator(
+                queuesApi, shovelsApi, new EqualConsumptionTargetCalculator(
                 new FixedTargetQueueCapacityProvider()
         ));
 
