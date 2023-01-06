@@ -47,7 +47,7 @@ public abstract class MessageDistributor {
             final Set<Queue> stagingQueues = queues.stream()
                     .filter(q ->
                             q.getMessages() > 0 &&
-                                    q.getName().startsWith(targetQueue + LOAD_BALANCED_INDICATOR))
+                                    q.getName().startsWith(targetQueue.getName() + LOAD_BALANCED_INDICATOR))
                     .collect(Collectors.toSet());
             
             if(stagingQueues.isEmpty()) {

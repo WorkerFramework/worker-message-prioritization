@@ -22,16 +22,14 @@ import com.microfocus.apollo.worker.prioritization.rabbitmq.QueuesApi;
 import com.microfocus.apollo.worker.prioritization.rabbitmq.RabbitManagementApi;
 import com.microfocus.apollo.worker.prioritization.redistribution.consumption.ConsumptionTargetCalculator;
 import com.microfocus.apollo.worker.prioritization.redistribution.DistributorWorkItem;
-import com.microfocus.apollo.worker.prioritization.redistribution.consumption.EqualConsumptionTargetCalculator;
 import com.microfocus.apollo.worker.prioritization.redistribution.MessageDistributor;
-import com.microfocus.apollo.worker.prioritization.redistribution.consumption.FixedTargetQueueCapacityProvider;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
-import com.rabbitmq.client.ShutdownSignalException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
 
@@ -39,74 +37,68 @@ public class LowLevelDistributor extends MessageDistributor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LowLevelDistributor.class);
 
-    private ShutdownSignalException shutdownSignalException = null;
+    private final HashMap<String, StagingQueueTargetQueuePair> existingStagingQueueTargetQueuePairs = new HashMap<>();
     private final ConsumptionTargetCalculator consumptionTargetCalculator;
+    private final StagingTargetPairProvider stagingTargetPairProvider;
     private final ConnectionFactory connectionFactory;
 
     public LowLevelDistributor(final RabbitManagementApi<QueuesApi> queuesApi,
                                final ConnectionFactory connectionFactory,
-                               final ConsumptionTargetCalculator consumptionTargetCalculator) {
+                               final ConsumptionTargetCalculator consumptionTargetCalculator,
+                               final StagingTargetPairProvider stagingTargetPairProvider) {
         super(queuesApi);
         this.connectionFactory = connectionFactory;
         this.consumptionTargetCalculator = consumptionTargetCalculator;
-    }
-    
-    public static void main(String[] args) throws IOException, TimeoutException {
-
-        final ConnectionFactory connectionFactory = new ConnectionFactory();
-        connectionFactory.setHost(args[0]);
-        connectionFactory.setUsername(args[1]);
-        connectionFactory.setPassword(args[2]);
-        connectionFactory.setPort(Integer.parseInt(args[3]));
-        connectionFactory.setVirtualHost("/");
-        
-        //https://www.rabbitmq.com/api-guide.html#java-nio
-        //connectionFactory.useNio();
-                
-        final int managementPort = Integer.parseInt(args[4]);
-        final long targetQueueMessageLimit = Long.parseLong(args[5]);
-        
-        //TODO ManagementApi does not necessarily have same host, username and password, nor use http
-        final RabbitManagementApi<QueuesApi> queuesApi =
-                new RabbitManagementApi<>(QueuesApi.class,
-                        "http://" + connectionFactory.getHost() + ":" + managementPort + "/", 
-                        connectionFactory.getUsername(), connectionFactory.getPassword());
-
-        final LowLevelDistributor lowLevelDistributor =
-                new LowLevelDistributor(queuesApi, connectionFactory, 
-                        new EqualConsumptionTargetCalculator(new FixedTargetQueueCapacityProvider()));
-        
-        lowLevelDistributor.run();
+        this.stagingTargetPairProvider = stagingTargetPairProvider;
     }
     
     public void run() throws IOException, TimeoutException {
         
-        final Connection connection = connectionFactory.newConnection();
-        
-        //This loop retrieves the current list of queues from RabbitMQ
-        //creating MessageTargets, when needed, and registering new MessageSources when encountered
-        while(true) {
+        try(final Connection connection = connectionFactory.newConnection()) {
 
-            final Set<DistributorWorkItem> distributorWorkItems = getDistributorWorkItems();
+            while (connection.isOpen()) {
 
-            for(final DistributorWorkItem distributorWorkItem : distributorWorkItems) {
-                final MessageMover messageMover = new MessageMover(connection, distributorWorkItem, 
-                        consumptionTargetCalculator);
-                
-                messageMover.start();
+                final Set<DistributorWorkItem> distributorWorkItems = getDistributorWorkItems();
 
+                for (final DistributorWorkItem distributorWorkItem : distributorWorkItems) {
+                    final var consumptionTargets = consumptionTargetCalculator.calculateConsumptionTargets(distributorWorkItem);
+                    final var stagingTargetPairs =
+                            stagingTargetPairProvider.provideStagingTargetPairs(
+                                    connection, distributorWorkItem, consumptionTargets);
+
+                    for (final var stagingTargetPair : stagingTargetPairs) {
+                        if (existingStagingQueueTargetQueuePairs.containsKey(stagingTargetPair.getIdentifier())) {
+                            final var existingStagingQueueTargetQueuePair =
+                                    existingStagingQueueTargetQueuePairs.get(stagingTargetPair.getIdentifier());
+
+                            if (!existingStagingQueueTargetQueuePair.isCompleted()) {
+                                LOGGER.warn("Existing StagingQueueTargetQueuePair '{}' was still running",
+                                        existingStagingQueueTargetQueuePair.getIdentifier());
+                                continue;
+                            } else {
+                                if (existingStagingQueueTargetQueuePair.getShutdownSignalException() != null) {
+                                    LOGGER.error("Exiting as '{}' recorded a shutdown exception.",
+                                            existingStagingQueueTargetQueuePair.getIdentifier());
+                                    return;
+                                }
+                                existingStagingQueueTargetQueuePairs.remove(stagingTargetPair.getIdentifier());
+                            }
+                        }
+                        existingStagingQueueTargetQueuePairs
+                                .put(stagingTargetPair.getIdentifier(), stagingTargetPair);
+                        stagingTargetPair.startConsuming();
+                    }
+
+                }
+
+                try {
+                    Thread.sleep(1000 * 10);
+                } catch (final InterruptedException e) {
+                    LOGGER.warn("Exiting {}", e.getMessage());
+                    return;
+                }
             }
-            
-            if(shutdownSignalException != null) {
-                break;
-            }
-            
-            try {
-                Thread.sleep(1000 * 10);
-            } catch (final InterruptedException e) {
-                LOGGER.warn("Exiting {}", e.getMessage());
-                return;
-            }
+
         }
         
     }

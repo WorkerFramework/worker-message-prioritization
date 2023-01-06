@@ -33,7 +33,7 @@ public class StagingQueueConsumer extends DefaultConsumer {
     private static final Logger LOGGER = LoggerFactory.getLogger(StagingQueueConsumer.class);
     private final StagingQueueTargetQueuePair stagingQueueTargetQueuePair;
 
-    private boolean active;
+    private boolean cancelled = false;
     private ShutdownSignalException shutdownSignalException;
 
     public StagingQueueConsumer(final Channel channel, final StagingQueueTargetQueuePair stagingQueueTargetQueuePair) {
@@ -41,12 +41,8 @@ public class StagingQueueConsumer extends DefaultConsumer {
         this.stagingQueueTargetQueuePair = stagingQueueTargetQueuePair;
     }
 
-    public boolean isActive() {
-        return active;
-    }
-
-    public void setActive(final boolean active) {
-        this.active = active;
+    public boolean isCancelled() {
+        return cancelled;
     }
     
     public ShutdownSignalException getShutdownSignalException() {
@@ -56,20 +52,20 @@ public class StagingQueueConsumer extends DefaultConsumer {
     @Override
     public void handleCancel(final String consumerTag) throws IOException {
         //Stop tracking that we are consuming from the consumerTag queue
-        active = false;
+        cancelled = true;
     }
 
     @Override
     public void handleShutdownSignal(final String consumerTag, final ShutdownSignalException sig) {
         //Connection lost, give up
         shutdownSignalException = sig;
-        active = false;
+        cancelled = true;
     }
 
     @Override
     public void handleDelivery(final String consumerTag, final Envelope envelope, 
                                final AMQP.BasicProperties properties, final byte[] body) throws IOException {
-        stagingQueueTargetQueuePair.publishToTarget(consumerTag, envelope, properties, body);
+        stagingQueueTargetQueuePair.handleStagedMessage(consumerTag, envelope, properties, body);
 
     }
 }

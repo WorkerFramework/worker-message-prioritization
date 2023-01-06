@@ -25,6 +25,7 @@ import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.Envelope;
+import com.rabbitmq.client.ShutdownSignalException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,9 +58,10 @@ public class StagingQueueTargetQueuePair {
         this.consumptionLimit = consumptionLimit;
     }
     
-    public void start() throws IOException {
+    public void startConsuming() throws IOException {
         stagingQueueChannel = connection.createChannel();
         targetQueueChannel = connection.createChannel();
+        targetQueueChannel.confirmSelect();
 
         final var targetQueueConfirmListener = new TargetQueueConfirmListener(this);
         targetQueueChannel.addConfirmListener(targetQueueConfirmListener);
@@ -69,12 +71,11 @@ public class StagingQueueTargetQueuePair {
         stagingQueueChannel.basicConsume(stagingQueue.getName(), stagingQueueConsumer);
     }
 
-    public void publishToTarget(final String consumerTag, final Envelope envelope, 
-                                final AMQP.BasicProperties properties, final byte[] body)
+    public void handleStagedMessage(final String consumerTag, final Envelope envelope,
+                                    final AMQP.BasicProperties properties, final byte[] body)
             throws IOException {
 
         long nextPublishSeqNo = targetQueueChannel.getNextPublishSeqNo();
-        targetQueueChannel.basicPublish("", targetQueue.getName(), properties, body);
         outstandingConfirms.put(nextPublishSeqNo, envelope.getDeliveryTag());
 
         try {
@@ -88,11 +89,12 @@ public class StagingQueueTargetQueuePair {
                     .priority(properties.getPriority())
                     .build();
 
-            //Hack the To
+            //Hack the To See https://internal.almoctane.com/ui/entity-navigation?p=131002/6001&entityType=work_item&id=614206
             final JsonObject jsonObject =
                     gson.fromJson(new String(body, StandardCharsets.UTF_8), JsonObject.class);
             jsonObject.addProperty("to", targetQueue.getName());
             final String s = gson.toJson(jsonObject);
+            //End Hack
 
             targetQueueChannel.basicPublish("", targetQueue.getName(), basicProperties, 
                     s.getBytes(StandardCharsets.UTF_8));
@@ -109,13 +111,10 @@ public class StagingQueueTargetQueuePair {
         if(messageCount.get() >= consumptionLimit) {
             LOGGER.info("Consumption target '{}' reached for '{}'.", consumptionLimit,
                     stagingQueue.getName());
-            if (stagingQueueConsumer.isActive()) {
+            if (stagingQueueConsumer.isCancelled()) {
                 stagingQueueChannel.basicCancel(consumerTag);
-                stagingQueueConsumer.setActive(false);
             }
-        }       
-        
-        
+        }
         
     }
     
@@ -142,6 +141,10 @@ public class StagingQueueTargetQueuePair {
     }
     
     public void handleDeliveryToTargetQueueNack(final long deliveryTag, final boolean multiple) throws IOException {
+        LOGGER.warn("Nack confirmation received for message(s) from '{}' published to '{}'",
+                stagingQueue.getName(),
+                targetQueue.getName());
+        
         if (multiple) {
             final var confirmed = outstandingConfirms.headMap(
                     deliveryTag, true
@@ -165,4 +168,17 @@ public class StagingQueueTargetQueuePair {
             outstandingConfirms.remove(deliveryTag);
         }        
     }
+
+    public String getIdentifier() {
+        return stagingQueue.getName() + ">" + targetQueue.getName();
+    }
+    
+    public boolean isCompleted() {
+        return stagingQueueConsumer.isCancelled();
+    }
+    
+    public ShutdownSignalException getShutdownSignalException() {
+        return stagingQueueConsumer.getShutdownSignalException();
+    }
+
 }

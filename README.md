@@ -13,7 +13,7 @@ to DocumentWorkerTask which uses the AfterProcessTaskEvent to route the output m
 in the workflow. The MessageRouter modifies this behaviour, choosing to reroute the message to a staging queue instead 
 of the original target queue.
 
-These **staging queue** names follow a naming convention which incorporates the original queue name followed by » and 
+These **staging queue** names follow a naming convention which incorporates the original queue name followed by "»" and 
 additional discriminators. For example a target queue **worker-input** could result in a staging queue with the tenant 
 id and workflow name added to it resulting **worker-input»tenant1/workflow1**. 
 This mutation of the original target queue is performed by QueueNameMutator implementations and is intended to be 

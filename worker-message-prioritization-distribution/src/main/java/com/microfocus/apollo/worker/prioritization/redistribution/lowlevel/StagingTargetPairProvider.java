@@ -19,11 +19,9 @@
 package com.microfocus.apollo.worker.prioritization.redistribution.lowlevel;
 
 import com.microfocus.apollo.worker.prioritization.rabbitmq.Queue;
-import com.microfocus.apollo.worker.prioritization.redistribution.consumption.ConsumptionTargetCalculator;
 import com.microfocus.apollo.worker.prioritization.redistribution.DistributorWorkItem;
 import com.rabbitmq.client.Connection;
 
-import java.io.IOException;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -31,30 +29,22 @@ import java.util.Set;
 /**
  * Moves messages from staging queues to the target queue
  */
-public class MessageMover {
-    
-    private final Connection connection;
-    private final DistributorWorkItem distributorWorkItem;
-    private final ConsumptionTargetCalculator consumptionTargetCalculator;
-    private Set<StagingQueueTargetQueuePair> stagingQueueTargetQueuePairs = new HashSet<>();
+public class StagingTargetPairProvider {
 
-    public MessageMover(final Connection connection,
-                        final DistributorWorkItem distributorWorkItem,
-                        final ConsumptionTargetCalculator consumptionTargetCalculator) {
-        this.connection = connection;
-        this.distributorWorkItem = distributorWorkItem;
-        this.consumptionTargetCalculator = consumptionTargetCalculator;
+    public StagingTargetPairProvider() {
     }
     
-    public void start() throws IOException {
+    public Set<StagingQueueTargetQueuePair> provideStagingTargetPairs(
+            final Connection connection,
+            final DistributorWorkItem distributorWorkItem,
+            final Map<Queue, Long> consumptionTargets) {
 
-        final Map<Queue, Long> consumptionTargets = consumptionTargetCalculator
-                .calculateConsumptionTargets(distributorWorkItem);
+        final Set<StagingQueueTargetQueuePair> stagingQueueTargetQueuePairs = new HashSet<>();
         
         final long overallConsumptionTarget = consumptionTargets.values().stream().mapToLong(Long::longValue).sum();
         
         if(overallConsumptionTarget <= 0) {
-            return;
+            return stagingQueueTargetQueuePairs;
         }
         
         for(final Queue stagingQueue: distributorWorkItem.getStagingQueues()) {
@@ -63,11 +53,11 @@ public class MessageMover {
             
             var stagingQueueTargetQueuePair = 
                     new StagingQueueTargetQueuePair(connection, 
-                            distributorWorkItem.getTargetQueue(), stagingQueue,
+                            stagingQueue, distributorWorkItem.getTargetQueue(),
                             consumptionTarget);
 
             stagingQueueTargetQueuePairs.add(stagingQueueTargetQueuePair);
-            stagingQueueTargetQueuePair.start();
         }
+        return stagingQueueTargetQueuePairs;
     }
 }

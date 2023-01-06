@@ -52,6 +52,12 @@ public class ShovelDistributor extends MessageDistributor {
     }
     
     public void run() {
+        while(true) {
+            runOnce();
+        }
+    }
+    
+    public void runOnce() {
         
         final Set<DistributorWorkItem> distributorWorkItems = getDistributorWorkItems();
         
