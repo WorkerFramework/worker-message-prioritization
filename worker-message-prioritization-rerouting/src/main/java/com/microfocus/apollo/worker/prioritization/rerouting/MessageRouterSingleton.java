@@ -21,6 +21,8 @@ package com.microfocus.apollo.worker.prioritization.rerouting;
 import com.hpe.caf.worker.document.model.Document;
 import com.microfocus.apollo.worker.prioritization.rabbitmq.QueuesApi;
 import com.microfocus.apollo.worker.prioritization.rabbitmq.RabbitManagementApi;
+import com.microfocus.apollo.worker.prioritization.targetcapacitycalculators.FixedTargetQueueCapacityProvider;
+import com.microfocus.apollo.worker.prioritization.targetcapacitycalculators.TargetQueueCapacityProvider;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import org.slf4j.Logger;
@@ -61,17 +63,14 @@ public class MessageRouterSingleton {
             final String mgmtEndpoint = System.getenv("CAF_RABBITMQ_MGMT_URL");
             final String mgmtUsername = System.getenv("CAF_RABBITMQ_MGMT_USERNAME");
             final String mgmtPassword = System.getenv("CAF_RABBITMQ_MGMT_PASSWORD");
-
-            final String targetQueueMessageLimit = System.getenv("CAF_TARGET_QUEUE_MESSAGE_LIMIT") == null
-                    ? "1000" : System.getenv("CAF_TARGET_QUEUE_MESSAGE_LIMIT");
+            final TargetQueueCapacityProvider targetQueueCapacityProvider = new FixedTargetQueueCapacityProvider();
 
             connection = connectionFactory.newConnection();
 
             final RabbitManagementApi<QueuesApi> queuesApi =
                     new RabbitManagementApi<>(QueuesApi.class, mgmtEndpoint, mgmtUsername, mgmtPassword);
 
-            messageRouter = new MessageRouter(queuesApi, "/", connection.createChannel(),
-                    Long.parseLong(targetQueueMessageLimit));
+            messageRouter = new MessageRouter(queuesApi, "/", connection.createChannel(), targetQueueCapacityProvider);
         }
         catch (final Throwable e) {
             LOGGER.error("Failed to initialise WMP - {}", e.toString());

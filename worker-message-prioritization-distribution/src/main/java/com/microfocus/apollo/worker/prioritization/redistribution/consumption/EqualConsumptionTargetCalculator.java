@@ -20,6 +20,7 @@ package com.microfocus.apollo.worker.prioritization.redistribution.consumption;
 
 import com.microfocus.apollo.worker.prioritization.rabbitmq.Queue;
 import com.microfocus.apollo.worker.prioritization.redistribution.DistributorWorkItem;
+import com.microfocus.apollo.worker.prioritization.targetcapacitycalculators.TargetQueueCapacityProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

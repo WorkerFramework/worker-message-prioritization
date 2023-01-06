@@ -30,6 +30,7 @@ import com.microfocus.apollo.worker.prioritization.rabbitmq.RabbitManagementApi;
 import com.microfocus.apollo.worker.prioritization.rerouting.mutators.QueueNameMutator;
 import com.microfocus.apollo.worker.prioritization.rerouting.mutators.TenantQueueNameMutator;
 import com.microfocus.apollo.worker.prioritization.rerouting.mutators.WorkflowQueueNameMutator;
+import com.microfocus.apollo.worker.prioritization.targetcapacitycalculators.TargetQueueCapacityProvider;
 import com.rabbitmq.client.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,12 +63,13 @@ public class MessageRouter {
     private final LoadingCache<String, Queue> queuesCache;
     private final HashSet<String> declaredQueues = new HashSet<>();
     private final Channel channel;
-    private final long targetQueueMessageLimit;
+    private final TargetQueueCapacityProvider targetQueueCapacityProvider;
 
     public MessageRouter(final RabbitManagementApi<QueuesApi> queuesApi, final String vhost, final Channel channel,
-                         final long targetQueueMessageLimit) {
-        this.targetQueueMessageLimit = targetQueueMessageLimit;
+                         final TargetQueueCapacityProvider targetQueueCapacityProvider) {
 
+        this.targetQueueCapacityProvider = targetQueueCapacityProvider;
+        
         this.queuesCache = CacheBuilder.newBuilder()
                 .expireAfterWrite(1, TimeUnit.MINUTES)
                 .build(new CacheLoader<String, Queue>() {
@@ -121,8 +123,8 @@ public class MessageRouter {
             
             return false;
         }
-
-        return queue.getMessages() > targetQueueMessageLimit;
+        
+        return queue.getMessages() > targetQueueCapacityProvider.get(queue);
     }
     
     private void ensureQueueExists(final String reroutedQueueName) 

@@ -21,7 +21,7 @@ package com.microfocus.apollo.worker.prioritization.redistribution.lowlevel;
 import com.microfocus.apollo.worker.prioritization.rabbitmq.QueuesApi;
 import com.microfocus.apollo.worker.prioritization.rabbitmq.RabbitManagementApi;
 import com.microfocus.apollo.worker.prioritization.redistribution.consumption.EqualConsumptionTargetCalculator;
-import com.microfocus.apollo.worker.prioritization.redistribution.consumption.FixedTargetQueueCapacityProvider;
+import com.microfocus.apollo.worker.prioritization.targetcapacitycalculators.FixedTargetQueueCapacityProvider;
 import com.rabbitmq.client.ConnectionFactory;
 
 import java.io.IOException;

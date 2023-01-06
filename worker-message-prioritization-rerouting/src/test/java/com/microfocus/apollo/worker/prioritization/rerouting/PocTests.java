@@ -23,9 +23,9 @@ import com.hpe.caf.worker.document.model.Document;
 import com.hpe.caf.worker.document.model.Response;
 import com.hpe.caf.worker.document.model.ResponseQueue;
 import com.hpe.caf.worker.document.model.Task;
-import com.microfocus.apollo.worker.prioritization.rabbitmq.Component;
 import com.microfocus.apollo.worker.prioritization.rabbitmq.QueuesApi;
 import com.microfocus.apollo.worker.prioritization.rabbitmq.RabbitManagementApi;
+import com.microfocus.apollo.worker.prioritization.targetcapacitycalculators.FixedTargetQueueCapacityProvider;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
@@ -58,8 +58,8 @@ public class PocTests {
         final RabbitManagementApi<QueuesApi> queuesApi =
                 new RabbitManagementApi<>(QueuesApi.class,
                         "http://david-cent01.swinfra.net:15672/", "guest", "guest");
-        
-        final MessageRouter messageRouter = new MessageRouter(queuesApi,  "/", channel, -1);
+        final var targetQueueCapacityProvider = new FixedTargetQueueCapacityProvider();
+        final MessageRouter messageRouter = new MessageRouter(queuesApi,  "/", channel, targetQueueCapacityProvider);
 
         final Document document = mock(Document.class);
         when(document.getCustomData("tenantId")).thenReturn("poc-tenant");

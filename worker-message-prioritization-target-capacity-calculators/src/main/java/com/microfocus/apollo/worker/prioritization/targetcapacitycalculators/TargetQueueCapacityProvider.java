@@ -16,17 +16,19 @@
  * Items are licensed to the U.S. Government under vendor's standard
  * commercial license.
  */
-package com.microfocus.apollo.worker.prioritization.redistribution.consumption;
+package com.microfocus.apollo.worker.prioritization.targetcapacitycalculators;
 
 import com.microfocus.apollo.worker.prioritization.rabbitmq.Queue;
 
 /**
- * An example implementation to be used as a reference for further, real world, implementations
+ * Obtain the number of messages the target queue has capacity for
  */
-public class FixedTargetQueueCapacityProvider implements TargetQueueCapacityProvider {
-    private static final long MAXIMUM_CAPACITY = 1000;
-    @Override
-    public long get(final Queue targetQueue) {
-        return MAXIMUM_CAPACITY - targetQueue.getMessages();
-    }
+public interface TargetQueueCapacityProvider {
+
+    /**
+     * Obtain available capacity of the target queue
+     * @param targetQueue The target queue to obtain the available capacity
+     * @return The number of messages that can be sent to the target queue
+     */
+    long get(final Queue targetQueue);
 }
