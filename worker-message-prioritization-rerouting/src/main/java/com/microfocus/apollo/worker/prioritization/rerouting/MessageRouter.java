@@ -110,7 +110,6 @@ public class MessageRouter {
                         response.getSuccessQueue().getName(), e);
 
                 response.getSuccessQueue().set(originalQueueName);
-                return;
             }
             
         }

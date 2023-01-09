@@ -26,13 +26,9 @@ import com.hpe.caf.worker.document.model.Task;
 import com.microfocus.apollo.worker.prioritization.rabbitmq.Queue;
 import com.microfocus.apollo.worker.prioritization.rabbitmq.QueuesApi;
 import com.microfocus.apollo.worker.prioritization.rabbitmq.RabbitManagementApi;
-import com.microfocus.apollo.worker.prioritization.targetcapacitycalculators.FixedTargetQueueCapacityProvider;
 import com.microfocus.apollo.worker.prioritization.targetcapacitycalculators.TargetQueueCapacityProvider;
 import org.junit.Assert;
 import org.junit.Test;
-
-import java.io.IOException;
-import java.util.concurrent.TimeoutException;
 
 import static com.microfocus.apollo.worker.prioritization.rerouting.MessageRouter.LOAD_BALANCED_INDICATOR;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -42,7 +38,7 @@ import static org.mockito.Mockito.when;
 public class MessageRouterTests {
     
     @Test
-    public void processDocumentMessageRouter() throws IOException, TimeoutException {
+    public void processDocumentMessageRouter() {
         
         @SuppressWarnings("unchecked")
         final var queuesApiWrapper = (RabbitManagementApi<QueuesApi>)mock(RabbitManagementApi.class);
