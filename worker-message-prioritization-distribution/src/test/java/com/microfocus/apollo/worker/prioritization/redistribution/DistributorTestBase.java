@@ -24,10 +24,12 @@ import com.microfocus.apollo.worker.prioritization.rabbitmq.RabbitManagementApi;
 import com.microfocus.apollo.worker.prioritization.rabbitmq.ShovelsApi;
 import com.rabbitmq.client.ConnectionFactory;
 
+import static com.microfocus.apollo.worker.prioritization.redistribution.MessageDistributor.LOAD_BALANCED_INDICATOR;
+
 public class DistributorTestBase {
 
-    protected static final String T1_STAGING_QUEUE_NAME = "target»tenant1";
-    protected static final String T2_STAGING_QUEUE_NAME = "target»tenant2";
+    protected static final String T1_STAGING_QUEUE_NAME = "tenant1";
+    protected static final String T2_STAGING_QUEUE_NAME = "tenant2";
     protected static final String TARGET_QUEUE_NAME = "target";
     
     protected final Gson gson = new Gson();
@@ -57,5 +59,14 @@ public class DistributorTestBase {
                 connectionFactory.getUsername(), connectionFactory.getPassword());
 
     }
+    
+    protected String getUniqueTargetQueueName(final String targetQueueName) {
+        return targetQueueName + System.currentTimeMillis();
+    }
+    
+    protected String getStagingQueueName(final String targetQueueName, final String stagingQueueName) {
+        return targetQueueName + LOAD_BALANCED_INDICATOR + stagingQueueName;
+    }
+    
     
 }

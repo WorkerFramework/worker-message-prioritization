@@ -23,43 +23,38 @@ import com.hpe.caf.worker.document.model.Document;
 import com.hpe.caf.worker.document.model.Response;
 import com.hpe.caf.worker.document.model.ResponseQueue;
 import com.hpe.caf.worker.document.model.Task;
+import com.microfocus.apollo.worker.prioritization.rabbitmq.Queue;
 import com.microfocus.apollo.worker.prioritization.rabbitmq.QueuesApi;
 import com.microfocus.apollo.worker.prioritization.rabbitmq.RabbitManagementApi;
 import com.microfocus.apollo.worker.prioritization.targetcapacitycalculators.FixedTargetQueueCapacityProvider;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
-import org.junit.Ignore;
+import com.microfocus.apollo.worker.prioritization.targetcapacitycalculators.TargetQueueCapacityProvider;
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.concurrent.TimeoutException;
 
+import static com.microfocus.apollo.worker.prioritization.rerouting.MessageRouter.LOAD_BALANCED_INDICATOR;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class PocTests {
+public class MessageRouterTests {
     
     @Test
-    @Ignore
     public void processDocumentMessageRouter() throws IOException, TimeoutException {
-
-        final ConnectionFactory connectionFactory = new ConnectionFactory();
-        connectionFactory.setUsername("guest");
-        connectionFactory.setPassword("guest");
-        connectionFactory.setHost("david-cent01.swinfra.net");
-        connectionFactory.setPort(5672);
-        connectionFactory.setVirtualHost("/");
-
-        final Connection connection = connectionFactory.newConnection();
-        final Channel channel = connection.createChannel();
-
-        final RabbitManagementApi<QueuesApi> queuesApi =
-                new RabbitManagementApi<>(QueuesApi.class,
-                        "http://david-cent01.swinfra.net:15672/", "guest", "guest");
-        final var targetQueueCapacityProvider = new FixedTargetQueueCapacityProvider();
-        final MessageRouter messageRouter = new MessageRouter(queuesApi,  "/", channel, targetQueueCapacityProvider);
+        
+        @SuppressWarnings("unchecked")
+        final var queuesApiWrapper = (RabbitManagementApi<QueuesApi>)mock(RabbitManagementApi.class);
+        final var queuesApi = mock(QueuesApi.class);
+        final var mockQueue = mock(Queue.class);
+        when(queuesApi.getQueue(anyString(), anyString())).thenReturn(mockQueue);
+        when(queuesApiWrapper.getApi()).thenReturn(queuesApi);
+        
+        final var targetQueueCapacityProvider = mock(TargetQueueCapacityProvider.class) ;
+        final var stagingQueueCreator = mock(StagingQueueCreator.class);
+        final MessageRouter messageRouter = new MessageRouter(queuesApiWrapper,  "/", stagingQueueCreator, 
+                targetQueueCapacityProvider);
 
         final Document document = mock(Document.class);
         when(document.getCustomData("tenantId")).thenReturn("poc-tenant");
@@ -69,15 +64,18 @@ public class PocTests {
         final Response response = mock(Response.class);
         when(task.getResponse()).thenReturn(response);
         final ResponseQueue responseQueue = new MockResponseQueue();
-//        responseQueue.set("dataprocessing-entity-extract-in");
-        responseQueue.set("wmp-in");
+        responseQueue.set("dataprocessing-entity-extract-in");
         when(response.getSuccessQueue()).thenReturn(responseQueue);
         
         messageRouter.route(document);
 
+        final var expectedSuccessQueue = 
+                "dataprocessing-entity-extract-in" + LOAD_BALANCED_INDICATOR + "/poc-tenant/enrichment";
+        Assert.assertEquals("New success queue is incorrect.", expectedSuccessQueue, responseQueue.getName());
+
     }
     
-    private class MockResponseQueue implements ResponseQueue {
+    private static class MockResponseQueue implements ResponseQueue {
         
         private String name;
 

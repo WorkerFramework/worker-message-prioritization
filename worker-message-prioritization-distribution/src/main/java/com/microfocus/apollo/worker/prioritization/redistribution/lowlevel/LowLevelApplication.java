@@ -28,7 +28,7 @@ import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
 public class LowLevelApplication {
-    public static void main(String[] args) throws IOException, TimeoutException {
+    public static void main(String[] args) throws IOException, TimeoutException, InterruptedException {
 
         final ConnectionFactory connectionFactory = new ConnectionFactory();
         connectionFactory.setHost(args[0]);

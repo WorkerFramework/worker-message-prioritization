@@ -52,54 +52,56 @@ public class LowLevelDistributor extends MessageDistributor {
         this.stagingTargetPairProvider = stagingTargetPairProvider;
     }
     
-    public void run() throws IOException, TimeoutException {
+    public void run() throws IOException, TimeoutException, InterruptedException {
         
         try(final Connection connection = connectionFactory.newConnection()) {
-
             while (connection.isOpen()) {
-
-                final Set<DistributorWorkItem> distributorWorkItems = getDistributorWorkItems();
-
-                for (final DistributorWorkItem distributorWorkItem : distributorWorkItems) {
-                    final var consumptionTargets = consumptionTargetCalculator.calculateConsumptionTargets(distributorWorkItem);
-                    final var stagingTargetPairs =
-                            stagingTargetPairProvider.provideStagingTargetPairs(
-                                    connection, distributorWorkItem, consumptionTargets);
-
-                    for (final var stagingTargetPair : stagingTargetPairs) {
-                        if (existingStagingQueueTargetQueuePairs.containsKey(stagingTargetPair.getIdentifier())) {
-                            final var existingStagingQueueTargetQueuePair =
-                                    existingStagingQueueTargetQueuePairs.get(stagingTargetPair.getIdentifier());
-
-                            if (!existingStagingQueueTargetQueuePair.isCompleted()) {
-                                LOGGER.warn("Existing StagingQueueTargetQueuePair '{}' was still running",
-                                        existingStagingQueueTargetQueuePair.getIdentifier());
-                                continue;
-                            } else {
-                                if (existingStagingQueueTargetQueuePair.getShutdownSignalException() != null) {
-                                    LOGGER.error("Exiting as '{}' recorded a shutdown exception.",
-                                            existingStagingQueueTargetQueuePair.getIdentifier());
-                                    return;
-                                }
-                                existingStagingQueueTargetQueuePairs.remove(stagingTargetPair.getIdentifier());
-                            }
-                        }
-                        existingStagingQueueTargetQueuePairs
-                                .put(stagingTargetPair.getIdentifier(), stagingTargetPair);
-                        stagingTargetPair.startConsuming();
-                    }
-
-                }
+                runOnce(connection);
 
                 try {
                     Thread.sleep(1000 * 10);
                 } catch (final InterruptedException e) {
-                    LOGGER.warn("Exiting {}", e.getMessage());
-                    return;
+                    LOGGER.warn("Interrupted {}", e.getMessage());
+                    throw e;
                 }
+
+            }
+        }
+        
+    }
+    
+    public void runOnce(final Connection connection) throws IOException {
+        final Set<DistributorWorkItem> distributorWorkItems = getDistributorWorkItems();
+
+        for (final DistributorWorkItem distributorWorkItem : distributorWorkItems) {
+            final var consumptionTargets = consumptionTargetCalculator.calculateConsumptionTargets(distributorWorkItem);
+            final var stagingTargetPairs =
+                    stagingTargetPairProvider.provideStagingTargetPairs(
+                            connection, distributorWorkItem, consumptionTargets);
+
+            for (final var stagingTargetPair : stagingTargetPairs) {
+                if (existingStagingQueueTargetQueuePairs.containsKey(stagingTargetPair.getIdentifier())) {
+                    final var existingStagingQueueTargetQueuePair =
+                            existingStagingQueueTargetQueuePairs.get(stagingTargetPair.getIdentifier());
+
+                    if (!existingStagingQueueTargetQueuePair.isCompleted()) {
+                        LOGGER.warn("Existing StagingQueueTargetQueuePair '{}' was still running",
+                                existingStagingQueueTargetQueuePair.getIdentifier());
+                        continue;
+                    } else {
+                        if (existingStagingQueueTargetQueuePair.getShutdownSignalException() != null) {
+                            LOGGER.error("Exiting as '{}' recorded a shutdown exception.",
+                                    existingStagingQueueTargetQueuePair.getIdentifier());
+                            return;
+                        }
+                        existingStagingQueueTargetQueuePairs.remove(stagingTargetPair.getIdentifier());
+                    }
+                }
+                existingStagingQueueTargetQueuePairs
+                        .put(stagingTargetPair.getIdentifier(), stagingTargetPair);
+                stagingTargetPair.startConsuming();
             }
 
         }
-        
     }
 }

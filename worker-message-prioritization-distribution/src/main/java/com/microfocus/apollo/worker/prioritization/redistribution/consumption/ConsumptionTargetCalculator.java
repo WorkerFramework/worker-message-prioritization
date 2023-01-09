@@ -25,7 +25,7 @@ import java.util.Map;
 
 public interface ConsumptionTargetCalculator {
     /**
-     * Calculate how many messsages should be consumed from the staging queues
+     * Calculate how many messages should be consumed from the staging queues
      * @param distributorWorkItem The target queue and the staging queues containing messages to be sent to the target 
      *                            queue.
      * @return A map containing the staging queues for a target queue and how many messages to consume from each 

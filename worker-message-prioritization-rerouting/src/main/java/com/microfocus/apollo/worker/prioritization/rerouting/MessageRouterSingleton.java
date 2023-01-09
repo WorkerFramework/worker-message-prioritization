@@ -69,8 +69,10 @@ public class MessageRouterSingleton {
 
             final RabbitManagementApi<QueuesApi> queuesApi =
                     new RabbitManagementApi<>(QueuesApi.class, mgmtEndpoint, mgmtUsername, mgmtPassword);
+            
+            final var stagingQueueCreator = new StagingQueueCreator(connection.createChannel());
 
-            messageRouter = new MessageRouter(queuesApi, "/", connection.createChannel(), targetQueueCapacityProvider);
+            messageRouter = new MessageRouter(queuesApi, "/", stagingQueueCreator, targetQueueCapacityProvider);
         }
         catch (final Throwable e) {
             LOGGER.error("Failed to initialise WMP - {}", e.toString());

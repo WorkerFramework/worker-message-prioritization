@@ -18,13 +18,15 @@
  */
 package com.microfocus.apollo.worker.prioritization.redistribution;
 
+import com.microfocus.apollo.worker.prioritization.rabbitmq.Queue;
 import com.microfocus.apollo.worker.prioritization.redistribution.consumption.EqualConsumptionTargetCalculator;
 import com.microfocus.apollo.worker.prioritization.redistribution.shovel.ShovelDistributor;
 import com.microfocus.apollo.worker.prioritization.targetcapacitycalculators.FixedTargetQueueCapacityProvider;
 import com.rabbitmq.client.AMQP;
 
-import org.junit.Ignore;
+import org.junit.Assert;
 import org.junit.Test;
+import retrofit.RetrofitError;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -34,16 +36,18 @@ import java.util.concurrent.TimeoutException;
 public class ShovelDistributorIT extends DistributorTestBase {
 
     @Test
-    @Ignore
-    public void twoStagingQueuesTest() throws TimeoutException, IOException {
+    public void twoStagingQueuesTest() throws TimeoutException, IOException, InterruptedException {
 
+        final var targetQueueName = getUniqueTargetQueueName(TARGET_QUEUE_NAME);
+        final var stagingQueue1Name = getStagingQueueName(targetQueueName, T1_STAGING_QUEUE_NAME);
+        final var stagingQueue2Name = getStagingQueueName(targetQueueName, T2_STAGING_QUEUE_NAME);
+        
         try(final var connection = connectionFactory.newConnection()) {
             final var channel = connection.createChannel();
 
-            channel.queueDeclare(T1_STAGING_QUEUE_NAME, true, false, false, Collections.emptyMap());
-            channel.queueDeclare(T2_STAGING_QUEUE_NAME, true, false, false, Collections.emptyMap());
-            channel.queueDeclare(TARGET_QUEUE_NAME, true, false, false, Collections.emptyMap());
-
+            channel.queueDeclare(stagingQueue1Name, true, false, false, Collections.emptyMap());
+            channel.queueDeclare(stagingQueue2Name, true, false, false, Collections.emptyMap());
+            channel.queueDeclare(targetQueueName, true, false, false, Collections.emptyMap());
             final var properties = new AMQP.BasicProperties.Builder()
                     .contentType("application/json")
                     .deliveryMode(2)
@@ -52,8 +56,8 @@ public class ShovelDistributorIT extends DistributorTestBase {
 
             final var body = gson.toJson(new Object());
 
-            channel.basicPublish("", T1_STAGING_QUEUE_NAME, properties, body.getBytes(StandardCharsets.UTF_8));
-            channel.basicPublish("", T2_STAGING_QUEUE_NAME, properties, body.getBytes(StandardCharsets.UTF_8));
+            channel.basicPublish("", stagingQueue1Name, properties, body.getBytes(StandardCharsets.UTF_8));
+            channel.basicPublish("", stagingQueue2Name, properties, body.getBytes(StandardCharsets.UTF_8));
 
             //TODO Await publish confirms to ensure messages are published before running the test.
         }
@@ -64,7 +68,24 @@ public class ShovelDistributorIT extends DistributorTestBase {
         final var shovelDistributor = new ShovelDistributor(queuesApi, shovelsApi,
                 consumptionTargetCalculator);
 
-        //TODO Stop the distributor?
-        shovelDistributor.run();
+        Queue targetQueue = null;
+        for(var attempt = 0; attempt < 10; attempt ++) {
+            shovelDistributor.runOnce();
+
+            targetQueue = queuesApi.getApi().getQueue("/", targetQueueName);
+            if(targetQueue.getMessages() > 0) {
+                break;
+            }
+            
+            Thread.sleep(1000 * 10);
+        }
+
+        Assert.assertNotNull("Target queue was not found via REST API", targetQueue);
+        final var stagingQueue1 = queuesApi.getApi().getQueue("/", stagingQueue1Name);
+        final var stagingQueue2 = queuesApi.getApi().getQueue("/", stagingQueue2Name);
+        Assert.assertEquals("Two staged messages should be on target queue", 2L, targetQueue.getMessages());
+        Assert.assertEquals("1st Staging queue should be empty", 0L, stagingQueue1.getMessages());
+        Assert.assertEquals("2n Staging queue should be empty", 0L, stagingQueue2.getMessages());
+        
     }
 }

@@ -31,15 +31,12 @@ import com.microfocus.apollo.worker.prioritization.rerouting.mutators.QueueNameM
 import com.microfocus.apollo.worker.prioritization.rerouting.mutators.TenantQueueNameMutator;
 import com.microfocus.apollo.worker.prioritization.rerouting.mutators.WorkflowQueueNameMutator;
 import com.microfocus.apollo.worker.prioritization.targetcapacitycalculators.TargetQueueCapacityProvider;
-import com.rabbitmq.client.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -50,23 +47,18 @@ public class MessageRouter {
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageRouter.class);
     
     public static final String LOAD_BALANCED_INDICATOR = "»";
-
-    private static final Map<String, Object>arguments = Stream.of(new Object[][]{
-//                    {"queue-mode", "lazy"},
-                    {"x-max-priority", 5}
-            })
-            .collect(Collectors.toMap(d -> (String) d[0], d -> d[1]));
     
     private final List<QueueNameMutator> queueNameMutators = Stream.of(
             new TenantQueueNameMutator(), new WorkflowQueueNameMutator()).collect(Collectors.toList());
-    
     private final LoadingCache<String, Queue> queuesCache;
-    private final HashSet<String> declaredQueues = new HashSet<>();
-    private final Channel channel;
+    private final StagingQueueCreator stagingQueueCreator;
     private final TargetQueueCapacityProvider targetQueueCapacityProvider;
 
-    public MessageRouter(final RabbitManagementApi<QueuesApi> queuesApi, final String vhost, final Channel channel,
+    public MessageRouter(final RabbitManagementApi<QueuesApi> queuesApi, final String vhost, 
+                         final StagingQueueCreator stagingQueueCreator,
                          final TargetQueueCapacityProvider targetQueueCapacityProvider) {
+
+        this.stagingQueueCreator = stagingQueueCreator;
 
         this.targetQueueCapacityProvider = targetQueueCapacityProvider;
         
@@ -78,14 +70,24 @@ public class MessageRouter {
                         return queuesApi.getApi().getQueue(vhost, queueName);
                     }
                 });
-        
-        this.channel = channel;
     }
     
     public void route(final Document document) {
         final Response response = document.getTask().getResponse();
         final String originalQueueName = response.getSuccessQueue().getName();
-        
+
+        final Queue originalQueue;
+        try {
+             originalQueue = queuesCache.get(originalQueueName);
+        } catch (final ExecutionException e) {
+            LOGGER.error(
+                    "Unable to retrieve the definition of original queue '{}' exists, reverting to original queue. {}",
+                    response.getSuccessQueue().getName(), e);
+
+            response.getSuccessQueue().set(originalQueueName);
+            return;
+        }
+
         if(shouldReroute(response.getSuccessQueue())) {
             
             response.getSuccessQueue().set(originalQueueName + LOAD_BALANCED_INDICATOR);
@@ -101,12 +103,14 @@ public class MessageRouter {
             }
 
             try {
-                ensureQueueExists(response.getSuccessQueue().getName());
+                stagingQueueCreator.createStagingQueue(originalQueue, response.getSuccessQueue().getName());
             } catch (final IOException e) {
-                LOGGER.error("Unable to verify the new target queue '{}' exists, reverting to original queue. {}",
+                LOGGER.error(
+                        "Unable to create the new staging queue '{}' exists, reverting to original queue. {}",
                         response.getSuccessQueue().getName(), e);
 
                 response.getSuccessQueue().set(originalQueueName);
+                return;
             }
             
         }
@@ -124,21 +128,7 @@ public class MessageRouter {
             return false;
         }
         
-        return queue.getMessages() > targetQueueCapacityProvider.get(queue);
+        return queue.getMessages() >= targetQueueCapacityProvider.get(queue);
     }
     
-    private void ensureQueueExists(final String reroutedQueueName) 
-            throws IOException {
-        
-        if(declaredQueues.contains(reroutedQueueName)) {
-            return;
-        }
-        
-        //Durable lazy queue
-        //This is a basic implementation for the POC, we may want to retrieve the definition of the originalQueue and
-        //use that to ensure the lazy queue has the same configuration.
-        channel.queueDeclare(reroutedQueueName, true, false, false, arguments);
-
-        declaredQueues.add(reroutedQueueName);
-    }
 }

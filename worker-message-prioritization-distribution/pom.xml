@@ -91,9 +91,6 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <includes>
-                        <include>**/neo/**/*.java</include>
-                    </includes>
                     <systemPropertyVariables>
                         <docker.host.address>${docker.host.address}</docker.host.address>
                         <rabbitmq.node.address>${docker.host.address}</rabbitmq.node.address>
