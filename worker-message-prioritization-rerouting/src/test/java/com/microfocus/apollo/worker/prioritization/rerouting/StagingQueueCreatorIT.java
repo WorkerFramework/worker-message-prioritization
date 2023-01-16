@@ -60,11 +60,11 @@ public final class StagingQueueCreatorIT extends RerouterTestBase {
                 Assert.assertNotNull("Staging queue was not found via REST API", stagingQueue);
                 Assert.assertEquals("Staging queue should have been created with the supplied name",
                                     stagingQueueName, stagingQueue.getName());
-                Assert.assertEquals("Staging queue should have been created with the same durable setting as the targetQueue",
+                Assert.assertEquals("Staging queue should have been created with the same durable setting as the target queue",
                                     targetQueueDurable, stagingQueue.isDurable());
-                Assert.assertEquals("Staging queue should have been created with the same exclusive setting as the targetQueue",
+                Assert.assertEquals("Staging queue should have been created with the same exclusive setting as the target queue",
                                     targetQueueExclusive, stagingQueue.isExclusive());
-                Assert.assertEquals("Staging queue should have been created with the same auto_delete setting as the targetQueue",
+                Assert.assertEquals("Staging queue should have been created with the same auto_delete setting as the target queue",
                                     targetQueueAutoDelete, stagingQueue.isAuto_delete());
                 Assert.assertEquals("Staging queue should have been created with the same arguments as the target queue",
                                     targetQueueArguments, stagingQueue.getArguments());
