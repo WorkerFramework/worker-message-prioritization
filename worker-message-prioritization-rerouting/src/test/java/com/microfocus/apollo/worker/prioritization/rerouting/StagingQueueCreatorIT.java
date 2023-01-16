@@ -40,8 +40,12 @@ public final class StagingQueueCreatorIT extends RerouterTestBase {
             try (final var channel = connection.createChannel()) {
 
                 // Create a target queue
+                final boolean targetQueueDurable = true;
+                final boolean targetQueueExclusive = false;
+                final boolean targetQueueAutoDelete = false;
                 final Map<String, Object> targetQueueArguments = Collections.singletonMap("x-max-priority", 5L);
-                channel.queueDeclare(targetQueueName, true, false, false, targetQueueArguments);
+                channel.queueDeclare(
+                    targetQueueName, targetQueueDurable, targetQueueExclusive, targetQueueAutoDelete, targetQueueArguments);
 
                 // Verify the target queue was created successfully
                 final Queue targetQueue = queuesApi.getApi().getQueue("/", targetQueueName);
@@ -56,6 +60,12 @@ public final class StagingQueueCreatorIT extends RerouterTestBase {
                 Assert.assertNotNull("Staging queue was not found via REST API", stagingQueue);
                 Assert.assertEquals("Staging queue should have been created with the supplied name",
                                     stagingQueueName, stagingQueue.getName());
+                Assert.assertEquals("Staging queue should have been created with the same durable setting as the targetQueue",
+                                    targetQueueDurable, stagingQueue.isDurable());
+                Assert.assertEquals("Staging queue should have been created with the same exclusive setting as the targetQueue",
+                                    targetQueueExclusive, stagingQueue.isExclusive());
+                Assert.assertEquals("Staging queue should have been created with the same auto_delete setting as the targetQueue",
+                                    targetQueueAutoDelete, stagingQueue.isAuto_delete());
                 Assert.assertEquals("Staging queue should have been created with the same arguments as the target queue",
                                     targetQueueArguments, stagingQueue.getArguments());
             }

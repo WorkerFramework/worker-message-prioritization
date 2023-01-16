@@ -40,8 +40,12 @@ public class StagingQueueCreator {
             return;
         }
 
-        //Durable lazy queue
-        channel.queueDeclare(stagingQueueName, true, false, false, targetQueue.getArguments());
+        channel.queueDeclare(
+            stagingQueueName,
+            targetQueue.isDurable(),
+            targetQueue.isExclusive(),
+            targetQueue.isAuto_delete(),
+            targetQueue.getArguments());
 
         declaredQueues.add(stagingQueueName);
     }
