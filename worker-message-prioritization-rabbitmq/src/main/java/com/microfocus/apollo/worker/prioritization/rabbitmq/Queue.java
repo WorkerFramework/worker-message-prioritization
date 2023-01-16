@@ -18,10 +18,13 @@
  */
 package com.microfocus.apollo.worker.prioritization.rabbitmq;
 
+import java.util.Map;
+
 public class Queue {
     private String name;
     private long messages;
     private long messages_ready;
+    private Map<String, Object> arguments;
 
     public String getName() {
         return name;
@@ -45,5 +48,13 @@ public class Queue {
 
     public void setMessages_ready(long messages_ready) {
         this.messages_ready = messages_ready;
+    }
+
+    public Map<String, Object> getArguments() {
+        return arguments;
+    }
+
+    public void setArguments(final Map<String, Object> arguments) {
+        this.arguments = arguments;
     }
 }

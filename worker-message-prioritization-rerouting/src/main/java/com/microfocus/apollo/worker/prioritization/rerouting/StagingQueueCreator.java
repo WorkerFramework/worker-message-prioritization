@@ -23,17 +23,8 @@ import com.rabbitmq.client.Channel;
 
 import java.io.IOException;
 import java.util.HashSet;
-import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class StagingQueueCreator {
-
-    private static final Map<String, Object> arguments = Stream.of(new Object[][]{
-//                    {"queue-mode", "lazy"},
-                    {"x-max-priority", 5}
-            })
-            .collect(Collectors.toMap(d -> (String) d[0], d -> d[1]));
     
     private final HashSet<String> declaredQueues = new HashSet<>();
     private final Channel channel;
@@ -50,11 +41,8 @@ public class StagingQueueCreator {
         }
 
         //Durable lazy queue
-        //This is a basic implementation for the POC, we may want to retrieve the definition of the originalQueue and
-        //use that to ensure the lazy queue has the same configuration.
-        channel.queueDeclare(stagingQueueName, true, false, false, arguments);
+        channel.queueDeclare(stagingQueueName, true, false, false, targetQueue.getArguments());
 
         declaredQueues.add(stagingQueueName);
-
     }
 }
