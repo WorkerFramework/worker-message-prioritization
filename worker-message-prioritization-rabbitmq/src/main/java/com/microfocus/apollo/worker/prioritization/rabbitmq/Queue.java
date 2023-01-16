@@ -18,10 +18,16 @@
  */
 package com.microfocus.apollo.worker.prioritization.rabbitmq;
 
+import java.util.Map;
+
 public class Queue {
     private String name;
     private long messages;
     private long messages_ready;
+    private boolean durable;
+    private boolean exclusive;
+    private boolean auto_delete;
+    private Map<String, Object> arguments;
 
     public String getName() {
         return name;
@@ -45,5 +51,37 @@ public class Queue {
 
     public void setMessages_ready(long messages_ready) {
         this.messages_ready = messages_ready;
+    }
+
+    public boolean isDurable() {
+        return durable;
+    }
+
+    public void setDurable(final boolean durable) {
+        this.durable = durable;
+    }
+
+    public boolean isExclusive() {
+        return exclusive;
+    }
+
+    public void setExclusive(final boolean exclusive) {
+        this.exclusive = exclusive;
+    }
+
+    public boolean isAuto_delete() {
+        return auto_delete;
+    }
+
+    public void setAuto_delete(final boolean auto_delete) {
+        this.auto_delete = auto_delete;
+    }
+
+    public Map<String, Object> getArguments() {
+        return arguments;
+    }
+
+    public void setArguments(final Map<String, Object> arguments) {
+        this.arguments = arguments;
     }
 }

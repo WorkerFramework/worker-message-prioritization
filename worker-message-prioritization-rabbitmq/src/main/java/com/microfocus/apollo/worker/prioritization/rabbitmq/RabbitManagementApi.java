@@ -19,6 +19,8 @@
 package com.microfocus.apollo.worker.prioritization.rabbitmq;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.ToNumberPolicy;
 import com.squareup.okhttp.OkHttpClient;
 import retrofit.ErrorHandler;
 import retrofit.RestAdapter;
@@ -46,7 +48,7 @@ public class RabbitManagementApi <T> {
         okHttpClient.setConnectTimeout(CONNECT_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         final RestAdapter.Builder restAdapterBuilder
                 = new RestAdapter.Builder().setEndpoint(endpoint).setClient(new OkClient(okHttpClient))
-                .setConverter(new GsonConverter(new Gson()));
+                .setConverter(new GsonConverter(createGson()));
         restAdapterBuilder.setRequestInterceptor(requestFacade -> {
             final String credentials = user + ":" + password;
             final String authorizationHeaderValue
@@ -61,6 +63,27 @@ public class RabbitManagementApi <T> {
     
     public T getApi() {
         return api;
+    }
+
+    private static Gson createGson() {
+
+        // By default, GSON will read all numbers as Float/Double, so a response from RabbitMQ containing a property like this:
+        //
+        // "x-max-priority": 5
+        //
+        // will be read as:
+        //
+        // "x-max-priority": 5.0
+        //
+        // This is not acceptable, as RabbitMQ has defined this particular property as an integer, and will not accept a double if we
+        // then try to create a staging queue with this property.
+        //
+        // As such, we are customizing GSON to use the LONG_OR_DOUBLE number policy, which ensures numbers will be read as Long or Double
+        // values depending on how JSON numbers are represented.
+
+        return new GsonBuilder()
+            .setObjectToNumberStrategy(ToNumberPolicy.LONG_OR_DOUBLE)
+            .create();
     }
 
     private static class RabbitApiErrorHandler implements ErrorHandler
