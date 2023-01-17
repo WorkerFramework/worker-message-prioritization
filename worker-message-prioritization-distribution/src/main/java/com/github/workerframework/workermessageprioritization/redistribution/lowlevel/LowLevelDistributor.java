@@ -1,23 +1,21 @@
 /*
  * Copyright 2022-2022 Micro Focus or one of its affiliates.
  *
- * The only warranties for products and services of Micro Focus and its
- * affiliates and licensors ("Micro Focus") are set forth in the express
- * warranty statements accompanying such products and services. Nothing
- * herein should be construed as constituting an additional warranty.
- * Micro Focus shall not be liable for technical or editorial errors or
- * omissions contained herein. The information contained herein is subject
- * to change without notice.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * Contains Confidential Information. Except as specifically indicated
- * otherwise, a valid license is required for possession, use or copying.
- * Consistent with FAR 12.211 and 12.212, Commercial Computer Software,
- * Computer Software Documentation, and Technical Data for Commercial
- * Items are licensed to the U.S. Government under vendor's standard
- * commercial license.
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package com.github.workerframework.workermessageprioritization.redistribution.lowlevel;
 
+import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 import com.github.workerframework.workermessageprioritization.redistribution.consumption.ConsumptionTargetCalculator;
 import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApi;
 import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitManagementApi;
@@ -30,6 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
 
@@ -74,14 +73,14 @@ public class LowLevelDistributor extends MessageDistributor {
         final Set<DistributorWorkItem> distributorWorkItems = getDistributorWorkItems();
 
         for (final DistributorWorkItem distributorWorkItem : distributorWorkItems) {
-            final var consumptionTargets = consumptionTargetCalculator.calculateConsumptionTargets(distributorWorkItem);
-            final var stagingTargetPairs =
+            final Map<Queue, Long> consumptionTargets = consumptionTargetCalculator.calculateConsumptionTargets(distributorWorkItem);
+            final Set<StagingQueueTargetQueuePair> stagingTargetPairs =
                     stagingTargetPairProvider.provideStagingTargetPairs(
                             connection, distributorWorkItem, consumptionTargets);
 
-            for (final var stagingTargetPair : stagingTargetPairs) {
+            for (final StagingQueueTargetQueuePair stagingTargetPair : stagingTargetPairs) {
                 if (existingStagingQueueTargetQueuePairs.containsKey(stagingTargetPair.getIdentifier())) {
-                    final var existingStagingQueueTargetQueuePair =
+                    final StagingQueueTargetQueuePair existingStagingQueueTargetQueuePair =
                             existingStagingQueueTargetQueuePairs.get(stagingTargetPair.getIdentifier());
 
                     if (!existingStagingQueueTargetQueuePair.isCompleted()) {
