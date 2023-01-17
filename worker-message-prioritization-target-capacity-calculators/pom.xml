@@ -32,7 +32,6 @@
         <dependency>
             <groupId>com.github.workerframework</groupId>
             <artifactId>worker-message-prioritization-rabbitmq</artifactId>
-            <version>${project.version}</version>
         </dependency>
     </dependencies>
 
