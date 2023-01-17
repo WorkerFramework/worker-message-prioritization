@@ -16,6 +16,8 @@
 package com.github.workerframework.workermessageprioritization.rerouting;
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -29,12 +31,12 @@ public final class StagingQueueCreatorIT extends RerouterTestBase {
     @Test
     public void createStagingQueueTest() throws TimeoutException, IOException, InterruptedException {
 
-        final var targetQueueName = getUniqueTargetQueueName(TARGET_QUEUE_NAME);
-        final var stagingQueueName = getStagingQueueName(targetQueueName, T1_STAGING_QUEUE_NAME);
+        final String targetQueueName = getUniqueTargetQueueName(TARGET_QUEUE_NAME);
+        final String stagingQueueName = getStagingQueueName(targetQueueName, T1_STAGING_QUEUE_NAME);
 
-        try (final var connection = connectionFactory.newConnection()) {
+        try (final Connection connection = connectionFactory.newConnection()) {
 
-            try (final var channel = connection.createChannel()) {
+            try (final Channel channel = connection.createChannel()) {
 
                 // Create a target queue
                 final boolean targetQueueDurable = true;

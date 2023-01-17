@@ -37,14 +37,14 @@ public class MessageRouterTests {
     public void processDocumentMessageRouter() {
         
         @SuppressWarnings("unchecked")
-        final var queuesApiWrapper = (RabbitManagementApi<QueuesApi>)mock(RabbitManagementApi.class);
-        final var queuesApi = mock(QueuesApi.class);
-        final var mockQueue = mock(Queue.class);
+        final RabbitManagementApi<QueuesApi> queuesApiWrapper = (RabbitManagementApi<QueuesApi>)mock(RabbitManagementApi.class);
+        final QueuesApi queuesApi = mock(QueuesApi.class);
+        final Queue mockQueue = mock(Queue.class);
         when(queuesApi.getQueue(anyString(), anyString())).thenReturn(mockQueue);
         when(queuesApiWrapper.getApi()).thenReturn(queuesApi);
         
-        final var targetQueueCapacityProvider = mock(TargetQueueCapacityProvider.class) ;
-        final var stagingQueueCreator = mock(StagingQueueCreator.class);
+        final TargetQueueCapacityProvider targetQueueCapacityProvider = mock(TargetQueueCapacityProvider.class) ;
+        final StagingQueueCreator stagingQueueCreator = mock(StagingQueueCreator.class);
         final MessageRouter messageRouter = new MessageRouter(queuesApiWrapper,  "/", stagingQueueCreator, 
                 targetQueueCapacityProvider);
 
@@ -61,7 +61,7 @@ public class MessageRouterTests {
         
         messageRouter.route(document);
 
-        final var expectedSuccessQueue = 
+        final String expectedSuccessQueue = 
                 "dataprocessing-entity-extract-in" + MessageRouter.LOAD_BALANCED_INDICATOR + "/poc-tenant/enrichment";
         Assert.assertEquals("New success queue is incorrect.", expectedSuccessQueue, responseQueue.getName());
 

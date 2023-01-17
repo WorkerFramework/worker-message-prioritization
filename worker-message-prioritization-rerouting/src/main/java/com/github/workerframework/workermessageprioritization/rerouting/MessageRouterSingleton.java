@@ -67,7 +67,7 @@ public class MessageRouterSingleton {
             final RabbitManagementApi<QueuesApi> queuesApi =
                     new RabbitManagementApi<>(QueuesApi.class, mgmtEndpoint, mgmtUsername, mgmtPassword);
             
-            final var stagingQueueCreator = new StagingQueueCreator(connection.createChannel());
+            final StagingQueueCreator stagingQueueCreator = new StagingQueueCreator(connection.createChannel());
 
             messageRouter = new MessageRouter(queuesApi, "/", stagingQueueCreator, targetQueueCapacityProvider);
         }
