@@ -1,0 +1,248 @@
+<!--
+
+    Copyright 2022-2023 Micro Focus or one of its affiliates.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+         http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>worker-message-prioritization-aggregator</artifactId>
+        <groupId>com.github.workerframework</groupId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>worker-message-prioritization-distribution-container</artifactId>
+
+    <packaging>pom</packaging>
+
+    <name>worker-message-prioritization-distribution-container</name>
+    <url>http://maven.apache.org</url> 
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.install.skip>true</maven.install.skip>
+        <skipNexusStagingDeployMojo>true</skipNexusStagingDeployMojo>
+        <dockerHubOrganization>workerframework</dockerHubOrganization>
+        <dockerWorkerFrameworkOrg>${dockerImagePrefix}${dockerHubOrganization}${dockerOrgSeperator}</dockerWorkerFrameworkOrg>
+        <dockerProjectVersion>${dockerVersionSeperator}${project.version}</dockerProjectVersion>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.github.workerframework</groupId>
+            <artifactId>worker-message-prioritization-distribution</artifactId>
+        </dependency>
+    </dependencies>
+    
+    <build>
+        <plugins>
+
+            <!--
+                 Trick maven into creating an empty property so that the ${rabbitmq.node.port} property is resolved properly when it 
+                 is referenced in the <run><env> section of the worker-message-prioritization-distribution image below.
+                 Without doing this, ${rabbitmq.node.port} will resolve to null. See https://stackoverflow.com/a/38785671/12177456
+            -->
+            <plugin>
+                <groupId>org.codehaus.gmaven</groupId>
+                <artifactId>groovy-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>set-empty-property</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>execute</goal>
+                        </goals>
+                        <configuration>
+                            <source>
+                            <![CDATA[
+                        project.properties.setProperty('empty', '');
+                        ]]>
+                            </source>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>2.19.1</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <systemPropertyVariables>
+                        <docker.host.address>${docker.host.address}</docker.host.address>
+                        <rabbitmq.node.address>${docker.host.address}</rabbitmq.node.address>
+                        <rabbitmq.node.port>${rabbitmq.node.port}</rabbitmq.node.port>
+                        <rabbitmq.ctrl.port>${rabbitmq.ctrl.port}</rabbitmq.ctrl.port>
+                        <rabbitmq.username>guest</rabbitmq.username>
+                        <rabbitmq.password>guest</rabbitmq.password>
+                        <timeout.ms>120000</timeout.ms>
+                    </systemPropertyVariables>
+                    <environmentVariables>
+                    </environmentVariables>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>io.fabric8</groupId>
+                <artifactId>docker-maven-plugin</artifactId>
+                <executions>
+
+                    <!-- Build the containers in compile phase. -->
+                    <execution>
+                        <id>build-docker-container</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>build</goal>
+                        </goals>
+                    </execution>
+
+                    <!-- Start the containers in pre-integration-test phase. -->
+                    <execution>
+                        <id>start-docker-containers</id>
+                        <phase>pre-integration-test</phase>
+                        <goals>
+                            <goal>start</goal>
+                        </goals>
+                    </execution>
+
+                    <!-- Stop the containers in post-integration-test phase. -->
+                    <execution>
+                        <id>stop-docker-containers</id>
+                        <phase>post-integration-test</phase>
+                        <goals>
+                            <goal>stop</goal>
+                            <goal>volume-remove</goal>
+                        </goals>
+                    </execution>
+
+                    <!-- Push the docker image to the registry in the deploy phase-->
+                    <execution>
+                        <id>docker-image-push</id>
+                        <phase>deploy</phase>
+                        <goals>
+                            <goal>push</goal>
+                        </goals>
+                    </execution>
+
+                </executions>
+
+                <configuration>
+                    <autoPull>on</autoPull>
+                    <containerNamePattern>%a-%t</containerNamePattern>
+                    <verbose>true</verbose>
+                    <images>
+
+                        <!-- Run a RabbitMQ image -->
+                        <image>
+                            <alias>rabbitmq</alias>
+                            <name>${dockerHubPublic}/library/rabbitmq:3-management</name>
+                            <run>
+                                <ports>
+                                    <port>${rabbitmq.ctrl.port}:15672</port>
+                                    <port>${rabbitmq.node.port}:5672</port>
+                                </ports>
+                                <wait>
+                                    <log>Server startup complete</log>
+                                    <http>
+                                        <url>http://${docker.host.address}:${rabbitmq.ctrl.port}</url>
+                                    </http>
+                                    <time>120000</time>
+                                    <shutdown>500</shutdown>
+                                </wait>
+                                <log>
+                                    <enabled>true</enabled>
+                                </log>
+                            </run>
+                        </image>
+
+                        <!-- Build and run the worker-message-prioritization-distribution image -->
+                        <image>
+                            <name>${dockerWorkerFrameworkOrg}worker-message-prioritization-distribution${dockerProjectVersion}</name>
+                            <build>
+                                <from>${dockerHubPublic}/cafapi/opensuse-jre11:3</from>
+                                <labels>
+                                    <Build.Number>${project.version}</Build.Number>
+                                    <Build.Date>${maven.build.timestamp}</Build.Date>
+                                    <Git.Repo>https://github.com/WorkerFramework/worker-message-prioritization</Git.Repo>
+                                    <Git.Branch>${git.branch}</Git.Branch>
+                                    <Git.Commit>${git.revision}</Git.Commit>
+                                </labels>
+                                <entryPoint>
+                                    <arg>/tini</arg>
+                                    <arg>--</arg>
+                                    <arg>java</arg>
+                                    <arg>-jar</arg>
+                                    <arg>/maven/worker-message-prioritization-distribution-${project.version}.jar</arg>
+                                </entryPoint>
+                                <assembly>
+                                    <mode>tar</mode>
+                                    <descriptor>assembly.xml</descriptor>
+                                </assembly>
+                            </build>
+                            <run>
+                                <env>
+                                    <RABBITMQ_HOST>${docker.host.address}</RABBITMQ_HOST>
+                                    <RABBITMQ_PORT>${rabbitmq.node.port}${empty}</RABBITMQ_PORT>
+                                    <RABBITMQ_USERNAME>guest</RABBITMQ_USERNAME>
+                                    <RABBITMQ_PASSWORD>guest</RABBITMQ_PASSWORD>
+
+                                    <RABBITMQ_MANAGEMENT_PROTOCOL>http</RABBITMQ_MANAGEMENT_PROTOCOL>
+                                    <RABBITMQ_MANAGEMENT_HOST>${docker.host.address}</RABBITMQ_MANAGEMENT_HOST>
+                                    <RABBITMQ_MANAGEMENT_PORT>${rabbitmq.ctrl.port}${empty}</RABBITMQ_MANAGEMENT_PORT>
+                                    <RABBITMQ_MANAGEMENT_USERNAME>guest</RABBITMQ_MANAGEMENT_USERNAME>
+                                    <RABBITMQ_MANAGEMENT_PASSWORD>guest</RABBITMQ_MANAGEMENT_PASSWORD>
+<!--                                    <_JAVA_OPTIONS>-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:6005</_JAVA_OPTIONS>-->
+                                </env>
+                                <links>
+                                    <link>rabbitmq</link>
+                                </links>
+                                <log>
+                                    <enabled>true</enabled>
+                                </log>
+                                <wait>
+<!--                                    <http>
+                                        <url>http://${docker.host.address}:${worker.adminport}/healthcheck</url>
+                                    </http>-->
+<!--                                    <time>12000000</time>
+                                    <shutdown>500</shutdown>-->
+                                </wait>
+                            </run>
+                        </image>
+                    </images>
+                </configuration>
+            </plugin>
+
+       
+        </plugins>
+    </build>
+    
+    <profiles>
+        <profile>
+            <id>use-default-fixed-ports</id>
+            <properties>
+                <rabbitmq.ctrl.port>15672</rabbitmq.ctrl.port>
+                <rabbitmq.node.port>5672</rabbitmq.node.port>
+            </properties>
+        </profile>
+    </profiles>
+</project>

@@ -18,6 +18,7 @@ package com.github.workerframework.workermessageprioritization.redistribution.lo
 import com.github.workerframework.workermessageprioritization.redistribution.consumption.EqualConsumptionTargetCalculator;
 import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApi;
 import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitManagementApi;
+import com.github.workerframework.workermessageprioritization.redistribution.config.MessageDistributorConfig;
 import com.github.workerframework.workermessageprioritization.targetcapacitycalculators.FixedTargetQueueCapacityProvider;
 import com.rabbitmq.client.ConnectionFactory;
 
@@ -28,22 +29,27 @@ public class LowLevelApplication {
     public static void main(String[] args) throws IOException, TimeoutException, InterruptedException {
 
         final ConnectionFactory connectionFactory = new ConnectionFactory();
-        connectionFactory.setHost(args[0]);
-        connectionFactory.setUsername(args[1]);
-        connectionFactory.setPassword(args[2]);
-        connectionFactory.setPort(Integer.parseInt(args[3]));
+
+        connectionFactory.setHost(MessageDistributorConfig.getEnv(MessageDistributorConfig.RABBITMQ_HOST));
+        connectionFactory.setUsername(MessageDistributorConfig.getEnv(MessageDistributorConfig.RABBITMQ_USERNAME));
+        connectionFactory.setPassword(MessageDistributorConfig.getEnv(MessageDistributorConfig.RABBITMQ_PASSWORD));
+        connectionFactory.setPort(Integer.parseInt(MessageDistributorConfig.getEnv(MessageDistributorConfig.RABBITMQ_PORT)));
         connectionFactory.setVirtualHost("/");
 
         //https://www.rabbitmq.com/api-guide.html#java-nio
         //connectionFactory.useNio();
 
-        final int managementPort = Integer.parseInt(args[4]);
+        final String rabbitMqManagementProtocol = MessageDistributorConfig.getEnv(MessageDistributorConfig.RABBITMQ_MANAGEMENT_PROTOCOL);
+        final String rabbitMqManagementHost = MessageDistributorConfig.getEnv(MessageDistributorConfig.RABBITMQ_MANAGEMENT_HOST);
+        final String rabbitMqManagementPort = MessageDistributorConfig.getEnv(MessageDistributorConfig.RABBITMQ_MANAGEMENT_PORT);
+        final String rabbitMqManagementUsername = MessageDistributorConfig.getEnv(MessageDistributorConfig.RABBITMQ_MANAGEMENT_USERNAME);
+        final String rabbitMqManagementPassword = MessageDistributorConfig.getEnv(MessageDistributorConfig.RABBITMQ_MANAGEMENT_PASSWORD);
 
-        //TODO ManagementApi does not necessarily have same host, username and password, nor use http
-        final RabbitManagementApi<QueuesApi> queuesApi =
-                new RabbitManagementApi<>(QueuesApi.class,
-                        "http://" + connectionFactory.getHost() + ":" + managementPort + "/",
-                        connectionFactory.getUsername(), connectionFactory.getPassword());
+        final String rabbitMqManagementEndpoint = String.format(
+            "%s://%s:%s/", rabbitMqManagementProtocol, rabbitMqManagementHost, rabbitMqManagementPort);
+
+        final RabbitManagementApi<QueuesApi> queuesApi = new RabbitManagementApi<>(
+            QueuesApi.class, rabbitMqManagementEndpoint, rabbitMqManagementUsername, rabbitMqManagementPassword);
 
         final LowLevelDistributor lowLevelDistributor =
                 new LowLevelDistributor(queuesApi, connectionFactory,

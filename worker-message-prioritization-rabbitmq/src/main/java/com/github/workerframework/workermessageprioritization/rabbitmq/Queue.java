@@ -15,6 +15,7 @@
  */
 package com.github.workerframework.workermessageprioritization.rabbitmq;
 
+import com.google.common.base.MoreObjects;
 import java.util.Map;
 
 public class Queue {
@@ -80,5 +81,18 @@ public class Queue {
 
     public void setArguments(final Map<String, Object> arguments) {
         this.arguments = arguments;
+    }
+    
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("name", name)
+            .add("messages", messages)
+            .add("messages_ready", messages_ready)
+            .add("durable", durable)
+            .add("exclusive", exclusive)
+            .add("auto_delete", auto_delete)
+            .add("arguments", arguments)
+            .toString();
     }
 }

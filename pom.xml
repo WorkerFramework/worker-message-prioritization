@@ -20,6 +20,7 @@
   <modelVersion>4.0.0</modelVersion>
     <modules>
       <module>worker-message-prioritization-distribution</module>
+      <module>worker-message-prioritization-distribution-container</module>
       <module>worker-message-prioritization-rerouting</module>
       <module>worker-message-prioritization-rabbitmq</module>
       <module>worker-message-prioritization-target-capacity-calculators</module>
@@ -55,6 +56,11 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>30.1.1-jre</version>
+      </dependency>
+      <dependency>
         <groupId>com.github.cafapi</groupId>
         <artifactId>caf-dependency-management-bom</artifactId>
         <version>3.3.0-SNAPSHOT</version>
@@ -69,6 +75,11 @@
         <scope>import</scope>
       </dependency>
       <dependency>
+          <groupId>com.github.workerframework</groupId>
+          <artifactId>worker-message-prioritization-distribution</artifactId>
+          <version>${project.version}</version>
+      </dependency>
+      <dependency>
         <groupId>com.github.workerframework</groupId>
         <artifactId>worker-message-prioritization-rabbitmq</artifactId>
         <version>${project.version}</version>
@@ -80,4 +91,21 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>io.fabric8</groupId>
+          <artifactId>docker-maven-plugin</artifactId>
+          <version>0.40.2</version>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.gmaven</groupId>
+          <artifactId>groovy-maven-plugin</artifactId>
+          <version>2.1.1</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
 </project>
