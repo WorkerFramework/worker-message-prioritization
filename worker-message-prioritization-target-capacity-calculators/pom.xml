@@ -39,7 +39,7 @@
     
     <dependencies>
         <dependency>
-            <groupId>com.microfocus.apollo</groupId>
+            <groupId>com.github.workerframework</groupId>
             <artifactId>worker-message-prioritization-rabbitmq</artifactId>
             <version>${project.version}</version>
         </dependency>

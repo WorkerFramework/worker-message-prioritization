@@ -43,12 +43,12 @@
             <artifactId>gson</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.microfocus.apollo</groupId>
+            <groupId>com.github.workerframework</groupId>
             <artifactId>worker-message-prioritization-rabbitmq</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.microfocus.apollo</groupId>
+            <groupId>com.github.workerframework</groupId>
             <artifactId>worker-message-prioritization-target-capacity-calculators</artifactId>
             <version>${project.version}</version>
         </dependency>
