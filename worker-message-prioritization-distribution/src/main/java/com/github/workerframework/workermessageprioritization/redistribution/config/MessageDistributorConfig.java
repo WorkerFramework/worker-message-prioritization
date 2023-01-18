@@ -60,11 +60,11 @@ public final class MessageDistributorConfig {
     private final int rabbitMQPort;
     private final String rabbitMQUsername;
     private final String rabbitMQPassword;
-    final String rabbitMQMgmtProtocol;
-    final String rabbitMQMgmtHost;
-    final int rabbitMQMgmtPort;
-    final String rabbitMQMgmtUsername;
-    final String rabbitMQMgmtPassword;
+    private final String rabbitMQMgmtProtocol;
+    private final String rabbitMQMgmtHost;
+    private final int rabbitMQMgmtPort;
+    private final String rabbitMQMgmtUsername;
+    private final String rabbitMQMgmtPassword;
 
     public MessageDistributorConfig() {
         rabbitMQHost = getEnvOrDefault(
