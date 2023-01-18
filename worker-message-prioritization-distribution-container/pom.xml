@@ -26,8 +26,6 @@
 
     <artifactId>worker-message-prioritization-distribution-container</artifactId>
 
-    <packaging>pom</packaging>
-
     <name>worker-message-prioritization-distribution-container</name>
     <url>http://maven.apache.org</url> 
 
@@ -45,36 +43,27 @@
             <groupId>com.github.workerframework</groupId>
             <artifactId>worker-message-prioritization-distribution</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.github.workerframework</groupId>
+            <artifactId>worker-message-prioritization-rabbitmq</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.rabbitmq</groupId>
+            <artifactId>amqp-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
-    
+
     <build>
         <plugins>
-
-            <!--
-                 Trick maven into creating an empty property so that the ${rabbitmq.node.port} property is resolved properly when it 
-                 is referenced in the <run><env> section of the worker-message-prioritization-distribution image below.
-                 Without doing this, ${rabbitmq.node.port} will resolve to null. See https://stackoverflow.com/a/38785671/12177456
-            -->
-            <plugin>
-                <groupId>org.codehaus.gmaven</groupId>
-                <artifactId>groovy-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>set-empty-property</id>
-                        <phase>initialize</phase>
-                        <goals>
-                            <goal>execute</goal>
-                        </goals>
-                        <configuration>
-                            <source>
-                            <![CDATA[
-                        project.properties.setProperty('empty', '');
-                        ]]>
-                            </source>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
 
             <plugin>
                 <artifactId>maven-failsafe-plugin</artifactId>
@@ -95,7 +84,7 @@
                         <rabbitmq.ctrl.port>${rabbitmq.ctrl.port}</rabbitmq.ctrl.port>
                         <rabbitmq.username>guest</rabbitmq.username>
                         <rabbitmq.password>guest</rabbitmq.password>
-                        <timeout.ms>120000</timeout.ms>
+                        <timeout.ms>120000</timeout.ms>  
                     </systemPropertyVariables>
                     <environmentVariables>
                     </environmentVariables>
@@ -107,7 +96,7 @@
                 <artifactId>docker-maven-plugin</artifactId>
                 <executions>
 
-                    <!-- Build the containers in compile phase. -->
+                    <!-- Build the containers in compile phase -->
                     <execution>
                         <id>build-docker-container</id>
                         <phase>compile</phase>
@@ -116,7 +105,7 @@
                         </goals>
                     </execution>
 
-                    <!-- Start the containers in pre-integration-test phase. -->
+                    <!-- Start the containers in pre-integration-test phase -->
                     <execution>
                         <id>start-docker-containers</id>
                         <phase>pre-integration-test</phase>
@@ -125,7 +114,7 @@
                         </goals>
                     </execution>
 
-                    <!-- Stop the containers in post-integration-test phase. -->
+                    <!-- Stop the containers in post-integration-test phase -->
                     <execution>
                         <id>stop-docker-containers</id>
                         <phase>post-integration-test</phase>
@@ -135,7 +124,7 @@
                         </goals>
                     </execution>
 
-                    <!-- Push the docker image to the registry in the deploy phase-->
+                    <!-- Push the docker image to the registry in the deploy phase -->
                     <execution>
                         <id>docker-image-push</id>
                         <phase>deploy</phase>
@@ -152,7 +141,7 @@
                     <verbose>true</verbose>
                     <images>
 
-                        <!-- Run a RabbitMQ image -->
+                        <!-- Run the RabbitMQ image -->
                         <image>
                             <alias>rabbitmq</alias>
                             <name>${dockerHubPublic}/library/rabbitmq:3-management</name>
@@ -175,11 +164,12 @@
                             </run>
                         </image>
 
-                        <!-- Build and run the worker-message-prioritization-distribution image -->
                         <image>
                             <name>${dockerWorkerFrameworkOrg}worker-message-prioritization-distribution${dockerProjectVersion}</name>
+                            <!-- Build the image for this module -->
                             <build>
                                 <from>${dockerHubPublic}/cafapi/opensuse-jre11:3</from>
+<!--                                <copy>COPY scripts /scripts</copy>-->
                                 <labels>
                                     <Build.Number>${project.version}</Build.Number>
                                     <Build.Date>${maven.build.timestamp}</Build.Date>
@@ -187,9 +177,17 @@
                                     <Git.Branch>${git.branch}</Git.Branch>
                                     <Git.Commit>${git.revision}</Git.Commit>
                                 </labels>
+                                <healthCheck>
+                                    <!--
+                                        Check if the Java process is running. This also indirectly verifies that the connection to
+                                        RabbitMQ is ok, since the Java process will exit if it cannot connect to RabbitMQ.
+                                    -->
+                                    <cmd>/maven/healthcheck/healthcheck.sh || exit 1</cmd>
+                                </healthCheck>
                                 <entryPoint>
                                     <arg>/tini</arg>
                                     <arg>--</arg>
+                                    <arg>/startup/startup.sh</arg>
                                     <arg>java</arg>
                                     <arg>-jar</arg>
                                     <arg>/maven/worker-message-prioritization-distribution-${project.version}.jar</arg>
@@ -199,20 +197,11 @@
                                     <descriptor>assembly.xml</descriptor>
                                 </assembly>
                             </build>
+                            <!-- Run the image for this module -->
                             <run>
-                                <env>
-                                    <RABBITMQ_HOST>${docker.host.address}</RABBITMQ_HOST>
-                                    <RABBITMQ_PORT>${rabbitmq.node.port}${empty}</RABBITMQ_PORT>
-                                    <RABBITMQ_USERNAME>guest</RABBITMQ_USERNAME>
-                                    <RABBITMQ_PASSWORD>guest</RABBITMQ_PASSWORD>
-
-                                    <RABBITMQ_MANAGEMENT_PROTOCOL>http</RABBITMQ_MANAGEMENT_PROTOCOL>
-                                    <RABBITMQ_MANAGEMENT_HOST>${docker.host.address}</RABBITMQ_MANAGEMENT_HOST>
-                                    <RABBITMQ_MANAGEMENT_PORT>${rabbitmq.ctrl.port}${empty}</RABBITMQ_MANAGEMENT_PORT>
-                                    <RABBITMQ_MANAGEMENT_USERNAME>guest</RABBITMQ_MANAGEMENT_USERNAME>
-                                    <RABBITMQ_MANAGEMENT_PASSWORD>guest</RABBITMQ_MANAGEMENT_PASSWORD>
-<!--                                    <_JAVA_OPTIONS>-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:6005</_JAVA_OPTIONS>-->
-                                </env>
+                                <dependsOn>
+                                    <container>rabbitmq</container>
+                                </dependsOn>
                                 <links>
                                     <link>rabbitmq</link>
                                 </links>
@@ -220,11 +209,9 @@
                                     <enabled>true</enabled>
                                 </log>
                                 <wait>
-<!--                                    <http>
-                                        <url>http://${docker.host.address}:${worker.adminport}/healthcheck</url>
-                                    </http>-->
-<!--                                    <time>12000000</time>
-                                    <shutdown>500</shutdown>-->
+                                    <log>Read the following list of queues from the RabbitMQ API: </log>
+                                    <time>120000</time>
+                                    <shutdown>500</shutdown>
                                 </wait>
                             </run>
                         </image>
@@ -232,7 +219,6 @@
                 </configuration>
             </plugin>
 
-       
         </plugins>
     </build>
     

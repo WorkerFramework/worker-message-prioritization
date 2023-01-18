@@ -29,3 +29,42 @@ messages from a staging queue and publish them to the worker input queue. The se
 shovel plugin to achieve the same goal. Ultimately a much simpler approach but with the requirement of an additional 
 RabbitMq plugin. **During the POC phase some instability was observed with this plugin which should be revisted.**
 
+## Configuration
+
+### Environment Variables
+
+* `WORKER_MESSAGE_PRIORITIZATION_RABBITMQ_HOST`  
+    **Default**: `rabbitmq`  
+    **Description**: The RabbitMQ host.
+
+* `WORKER_MESSAGE_PRIORITIZATION_RABBITMQ_PORT`  
+    **Default**: `5672`  
+    **Description**: The RabbitMQ port.
+
+* `WORKER_MESSAGE_PRIORITIZATION_RABBITMQ_USERNAME`  
+    **Default**: `guest`  
+    **Description**: The RabbitMQ username.
+
+* `WORKER_MESSAGE_PRIORITIZATION_RABBITMQ_PASSWORD`  
+    **Default**: `guest`  
+    **Description**: The RabbitMQ password.
+
+* `WORKER_MESSAGE_PRIORITIZATION_RABBITMQ_MGMT_PROTOCOL`  
+    **Default**: `http`  
+    **Description**: The RabbitMQ management protocol.
+
+* `WORKER_MESSAGE_PRIORITIZATION_RABBITMQ_MGMT_HOST`  
+    **Default**: `rabbitmq`  
+    **Description**: The RabbitMQ management host.
+
+* `WORKER_MESSAGE_PRIORITIZATION_RABBITMQ_MGMT_PORT`  
+    **Default**: `15672`  
+    **Description**: The RabbitMQ management port.
+
+* `WORKER_MESSAGE_PRIORITIZATION_RABBITMQ_MGMT_USERNAME`  
+    **Default**: `guest`  
+    **Description**: The RabbitMQ management username.
+
+* `WORKER_MESSAGE_PRIORITIZATION_RABBITMQ_MGMT_PASSWORD`  
+    **Default**: `guest`  
+    **Description**: The RabbitMQ management password.

@@ -26,4 +26,15 @@
             <useProjectArtifact>false</useProjectArtifact>
         </dependencySet>
     </dependencySets>
+    <fileSets>
+        <fileSet>
+            <directory>${project.basedir}/src/main/docker/</directory>
+            <includes>
+                <include>healthcheck.sh</include>
+            </includes>
+            <fileMode>0755</fileMode>
+            <lineEnding>unix</lineEnding>
+            <outputDirectory>healthcheck</outputDirectory>
+        </fileSet>
+    </fileSets>
 </assembly>
