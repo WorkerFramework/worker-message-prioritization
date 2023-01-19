@@ -48,12 +48,6 @@ public class LowLevelApplication {
         //https://www.rabbitmq.com/api-guide.html#java-nio
         //connectionFactory.useNio();
 
-//        final String rabbitMQMgmtEndpoint = String.format(
-//            "%s://%s:%s/",
-//            messageDistributorConfig.getRabbitMQMgmtProtocol(),
-//            messageDistributorConfig.getRabbitMQMgmtHost(),
-//            messageDistributorConfig.getRabbitMQMgmtPort());
-
         final RabbitManagementApi<QueuesApi> queuesApi = new RabbitManagementApi<>(
             QueuesApi.class,
             messageDistributorConfig.getRabbitMQMgmtUrl(),
