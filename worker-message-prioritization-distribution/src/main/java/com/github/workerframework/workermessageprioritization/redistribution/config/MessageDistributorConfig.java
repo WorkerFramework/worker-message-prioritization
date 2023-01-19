@@ -20,32 +20,25 @@ import com.google.common.base.Strings;
 
 public final class MessageDistributorConfig {
 
-    private static final String CAF_RABBITMQ_HOST
-        = "CAF_RABBITMQ_HOST";
+    private static final String CAF_RABBITMQ_HOST = "CAF_RABBITMQ_HOST";
     private static final String CAF_RABBITMQ_HOST_DEFAULT = "rabbitmq";
 
-    private static final String CAF_RABBITMQ_PORT
-        = "CAF_RABBITMQ_PORT";
+    private static final String CAF_RABBITMQ_PORT = "CAF_RABBITMQ_PORT";
     private static final int CAF_RABBITMQ_PORT_DEFAULT = 5672;
 
-    private static final String CAF_RABBITMQ_USERNAME
-        = "CAF_RABBITMQ_USERNAME";
+    private static final String CAF_RABBITMQ_USERNAME = "CAF_RABBITMQ_USERNAME";
     private static final String CAF_RABBITMQ_USERNAME_DEFAULT = "guest";
 
-    private static final String CAF_RABBITMQ_PASSWORD
-        = "CAF_RABBITMQ_PASSWORD";
+    private static final String CAF_RABBITMQ_PASSWORD = "CAF_RABBITMQ_PASSWORD";
     private static final String CAF_RABBITMQ_PASSWORD_DEFAULT = "guest";
 
-    private static final String CAF_RABBITMQ_MGMT_URL
-        = "CAF_RABBITMQ_MGMT_URL";
+    private static final String CAF_RABBITMQ_MGMT_URL = "CAF_RABBITMQ_MGMT_URL";
     private static final String CAF_RABBITMQ_MGMT_URL_DEFAULT = "http://rabbitmq:15672";
 
-    private static final String CAF_RABBITMQ_MGMT_USERNAME
-        = "CAF_RABBITMQ_MGMT_USERNAME";
+    private static final String CAF_RABBITMQ_MGMT_USERNAME = "CAF_RABBITMQ_MGMT_USERNAME";
     private static final String CAF_RABBITMQ_MGMT_USERNAME_DEFAULT = "guest";
 
-    private static final String CAF_RABBITMQ_MGMT_PASSWORD
-        = "CAF_RABBITMQ_MGMT_PASSWORD";
+    private static final String CAF_RABBITMQ_MGMT_PASSWORD = "CAF_RABBITMQ_MGMT_PASSWORD";
     private static final String CAF_RABBITMQ_MGMT_PASSWORD_DEFAULT = "guest";
 
     private final String rabbitMQHost;
@@ -57,21 +50,14 @@ public final class MessageDistributorConfig {
     private final String rabbitMQMgmtPassword;
 
     public MessageDistributorConfig() {
-        rabbitMQHost = getEnvOrDefault(
-            CAF_RABBITMQ_HOST, CAF_RABBITMQ_HOST_DEFAULT);
-        rabbitMQPort = getEnvOrDefault(
-            CAF_RABBITMQ_PORT, CAF_RABBITMQ_PORT_DEFAULT);
-        rabbitMQUsername = getEnvOrDefault(
-            CAF_RABBITMQ_USERNAME, CAF_RABBITMQ_USERNAME_DEFAULT);
-        rabbitMQPassword = getEnvOrDefault(
-            CAF_RABBITMQ_PASSWORD, CAF_RABBITMQ_PASSWORD_DEFAULT);
+        rabbitMQHost = getEnvOrDefault(CAF_RABBITMQ_HOST, CAF_RABBITMQ_HOST_DEFAULT);
+        rabbitMQPort = getEnvOrDefault(CAF_RABBITMQ_PORT, CAF_RABBITMQ_PORT_DEFAULT);
+        rabbitMQUsername = getEnvOrDefault(CAF_RABBITMQ_USERNAME, CAF_RABBITMQ_USERNAME_DEFAULT);
+        rabbitMQPassword = getEnvOrDefault(CAF_RABBITMQ_PASSWORD, CAF_RABBITMQ_PASSWORD_DEFAULT);
 
-        rabbitMQMgmtUrl = getEnvOrDefault(
-            CAF_RABBITMQ_MGMT_URL, CAF_RABBITMQ_MGMT_URL_DEFAULT);
-        rabbitMQMgmtUsername = getEnvOrDefault(
-            CAF_RABBITMQ_MGMT_USERNAME, CAF_RABBITMQ_MGMT_USERNAME_DEFAULT);
-        rabbitMQMgmtPassword = getEnvOrDefault(
-            CAF_RABBITMQ_MGMT_PASSWORD, CAF_RABBITMQ_MGMT_PASSWORD_DEFAULT);
+        rabbitMQMgmtUrl = getEnvOrDefault(CAF_RABBITMQ_MGMT_URL, CAF_RABBITMQ_MGMT_URL_DEFAULT);
+        rabbitMQMgmtUsername = getEnvOrDefault(CAF_RABBITMQ_MGMT_USERNAME, CAF_RABBITMQ_MGMT_USERNAME_DEFAULT);
+        rabbitMQMgmtPassword = getEnvOrDefault(CAF_RABBITMQ_MGMT_PASSWORD, CAF_RABBITMQ_MGMT_PASSWORD_DEFAULT);
     }
 
     public String getRabbitMQHost() {
