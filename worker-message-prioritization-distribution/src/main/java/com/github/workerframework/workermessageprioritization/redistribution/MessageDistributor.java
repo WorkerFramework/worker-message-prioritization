@@ -23,8 +23,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class MessageDistributor {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(MessageDistributor.class);
 
     public static final String LOAD_BALANCED_INDICATOR = "»";
 
@@ -36,6 +40,9 @@ public abstract class MessageDistributor {
     
     protected Set<DistributorWorkItem> getDistributorWorkItems() {
         final List<Queue> queues = queuesApi.getApi().getQueues();
+
+        LOGGER.debug("Read the following list of queues from the RabbitMQ API: {}", queues);
+
         final Set<DistributorWorkItem> distributorWorkItems = new HashSet<>();
         
         for(final Queue targetQueue: queues.stream().filter(q -> !q.getName().contains(LOAD_BALANCED_INDICATOR))
@@ -46,6 +53,8 @@ public abstract class MessageDistributor {
                             q.getMessages() > 0 &&
                                     q.getName().startsWith(targetQueue.getName() + LOAD_BALANCED_INDICATOR))
                     .collect(Collectors.toSet());
+
+            LOGGER.debug("Filtered the list of queues from the RabbitMQ API to contain only the staging queues: {}", stagingQueues);
             
             if(stagingQueues.isEmpty()) {
                 continue;

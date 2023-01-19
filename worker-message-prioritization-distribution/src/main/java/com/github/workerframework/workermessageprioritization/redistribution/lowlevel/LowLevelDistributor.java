@@ -40,6 +40,7 @@ public class LowLevelDistributor extends MessageDistributor {
     private final ConsumptionTargetCalculator consumptionTargetCalculator;
     private final StagingTargetPairProvider stagingTargetPairProvider;
     private final ConnectionFactory connectionFactory;
+    private final String connectionDetails;
 
     public LowLevelDistributor(final RabbitManagementApi<QueuesApi> queuesApi,
                                final ConnectionFactory connectionFactory,
@@ -47,13 +48,22 @@ public class LowLevelDistributor extends MessageDistributor {
                                final StagingTargetPairProvider stagingTargetPairProvider) {
         super(queuesApi);
         this.connectionFactory = connectionFactory;
+        this.connectionDetails = String.format(
+            "Host: %s, Port: %s, Virtual Host: %s, SSL: %s",
+            connectionFactory.getHost(),
+            connectionFactory.getPort(),
+            connectionFactory.getVirtualHost(),
+            connectionFactory.isSSL());
         this.consumptionTargetCalculator = consumptionTargetCalculator;
         this.stagingTargetPairProvider = stagingTargetPairProvider;
     }
     
     public void run() throws IOException, TimeoutException, InterruptedException {
-        
+
         try(final Connection connection = connectionFactory.newConnection()) {
+
+            LOGGER.info(String.format("Successfully connected to RabbitMQ. Connection details: %s", connectionDetails));
+
             while (connection.isOpen()) {
                 runOnce(connection);
 
@@ -65,6 +75,9 @@ public class LowLevelDistributor extends MessageDistributor {
                 }
 
             }
+        } catch (final IOException ioException) {
+            LOGGER.error(String.format("Failed to connect to RabbitMQ. Connection details: %s", connectionDetails), ioException);
+            throw ioException;
         }
         
     }

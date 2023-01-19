@@ -28,4 +28,3 @@ At present there are two implementations of a MessageDistributor, one is using t
 messages from a staging queue and publish them to the worker input queue. The second implementation uses RabbitMQ 
 shovel plugin to achieve the same goal. Ultimately a much simpler approach but with the requirement of an additional 
 RabbitMq plugin. **During the POC phase some instability was observed with this plugin which should be revisted.**
-

@@ -24,65 +24,47 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>worker-message-prioritization-distribution</artifactId>
-    <packaging>jar</packaging>
+    <artifactId>worker-message-prioritization-distribution-container</artifactId>
 
-    <name>worker-message-prioritization-distribution</name>
-    <url>http://maven.apache.org</url>
+    <name>worker-message-prioritization-distribution-container</name>
+    <url>http://maven.apache.org</url> 
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.install.skip>true</maven.install.skip>
+        <skipNexusStagingDeployMojo>true</skipNexusStagingDeployMojo>
+        <dockerHubOrganization>workerframework</dockerHubOrganization>
+        <dockerWorkerFrameworkOrg>${dockerImagePrefix}${dockerHubOrganization}${dockerOrgSeperator}</dockerWorkerFrameworkOrg>
+        <dockerProjectVersion>${dockerVersionSeperator}${project.version}</dockerProjectVersion>
     </properties>
 
     <dependencies>
         <dependency>
-            <groupId>com.google.code.gson</groupId>
-            <artifactId>gson</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.github.cafapi.logging</groupId>
-            <artifactId>caf-logging-logback</artifactId>
-            <scope>runtime</scope>
+            <groupId>com.github.workerframework</groupId>
+            <artifactId>worker-message-prioritization-distribution</artifactId>
         </dependency>
         <dependency>
             <groupId>com.github.workerframework</groupId>
             <artifactId>worker-message-prioritization-rabbitmq</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.github.workerframework</groupId>
-            <artifactId>worker-message-prioritization-target-capacity-calculators</artifactId>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
         </dependency>
         <dependency>
             <groupId>com.rabbitmq</groupId>
             <artifactId>amqp-client</artifactId>
         </dependency>
         <dependency>
-          <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.github.cafdataprocessing</groupId>
-            <artifactId>worker-document-interface</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
-    
+
     <build>
         <plugins>
+
             <plugin>
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <version>2.19.1</version>
@@ -102,18 +84,19 @@
                         <rabbitmq.ctrl.port>${rabbitmq.ctrl.port}</rabbitmq.ctrl.port>
                         <rabbitmq.username>guest</rabbitmq.username>
                         <rabbitmq.password>guest</rabbitmq.password>
-                        <timeout.ms>120000</timeout.ms>
+                        <timeout.ms>120000</timeout.ms>  
                     </systemPropertyVariables>
                     <environmentVariables>
                     </environmentVariables>
                 </configuration>
             </plugin>
+
             <plugin>
                 <groupId>io.fabric8</groupId>
                 <artifactId>docker-maven-plugin</artifactId>
-                <version>0.40.2</version>
                 <executions>
-                    <!-- Build the container in compile phase. -->
+
+                    <!-- Build the containers in compile phase -->
                     <execution>
                         <id>build-docker-container</id>
                         <phase>compile</phase>
@@ -121,7 +104,8 @@
                             <goal>build</goal>
                         </goals>
                     </execution>
-                    <!-- Start the containers in pre-integration-test phase. -->
+
+                    <!-- Start the containers in pre-integration-test phase -->
                     <execution>
                         <id>start-docker-containers</id>
                         <phase>pre-integration-test</phase>
@@ -129,7 +113,8 @@
                             <goal>start</goal>
                         </goals>
                     </execution>
-                    <!-- Stop the containers in post-integration-test phase. -->
+
+                    <!-- Stop the containers in post-integration-test phase -->
                     <execution>
                         <id>stop-docker-containers</id>
                         <phase>post-integration-test</phase>
@@ -138,22 +123,28 @@
                             <goal>volume-remove</goal>
                         </goals>
                     </execution>
+
+                    <!-- Push the docker image to the registry in the deploy phase -->
+                    <execution>
+                        <id>docker-image-push</id>
+                        <phase>deploy</phase>
+                        <goals>
+                            <goal>push</goal>
+                        </goals>
+                    </execution>
+
                 </executions>
+
                 <configuration>
                     <autoPull>on</autoPull>
                     <containerNamePattern>%a-%t</containerNamePattern>
                     <verbose>true</verbose>
                     <images>
-                        <!-- Build a RabbitMQ image with the shovel plugins enabled for testing purposes -->
+
+                        <!-- Run the RabbitMQ image -->
                         <image>
                             <alias>rabbitmq</alias>
-                            <name>dev/rabbitmq-with-shovel-plugin</name>
-                            <build>
-                                <dockerFile>${project.basedir}/src/test/docker/Dockerfile</dockerFile>
-                                <args>
-                                    <RABBITMQ_IMAGE>${dockerHubPublic}/library/rabbitmq:3-management</RABBITMQ_IMAGE>
-                                </args>
-                            </build>
+                            <name>${dockerHubPublic}/library/rabbitmq:3-management</name>
                             <run>
                                 <ports>
                                     <port>${rabbitmq.ctrl.port}:15672</port>
@@ -172,21 +163,64 @@
                                 </log>
                             </run>
                         </image>
+
+                        <image>
+                            <name>${dockerWorkerFrameworkOrg}worker-message-prioritization-distribution${dockerProjectVersion}</name>
+                            <!-- Build the image for this module -->
+                            <build>
+                                <from>${dockerHubPublic}/cafapi/opensuse-jre11:3</from>
+                                <labels>
+                                    <Build.Number>${project.version}</Build.Number>
+                                    <Build.Date>${maven.build.timestamp}</Build.Date>
+                                    <Git.Repo>https://github.com/WorkerFramework/worker-message-prioritization</Git.Repo>
+                                    <Git.Branch>${git.branch}</Git.Branch>
+                                    <Git.Commit>${git.revision}</Git.Commit>
+                                </labels>
+                                <healthCheck>
+                                    <!--
+                                        Check if the Java process is running. This also indirectly verifies that the connection to
+                                        RabbitMQ is ok, since the Java process will exit if it cannot connect to RabbitMQ.
+                                    -->
+                                    <cmd>/maven/healthcheck/healthcheck.sh || exit 1</cmd>
+                                </healthCheck>
+                                <entryPoint>
+                                    <arg>/tini</arg>
+                                    <arg>--</arg>
+                                    <arg>/startup/startup.sh</arg>
+                                    <arg>java</arg>
+                                    <arg>-jar</arg>
+                                    <arg>/maven/worker-message-prioritization-distribution-${project.version}.jar</arg>
+                                </entryPoint>
+                                <assembly>
+                                    <mode>tar</mode>
+                                    <descriptor>assembly.xml</descriptor>
+                                </assembly>
+                            </build>
+                            <!-- Run the image for this module -->
+                            <run>
+                                <env>
+                                    <CAF_LOG_LEVEL>DEBUG</CAF_LOG_LEVEL>
+                                </env>
+                                <dependsOn>
+                                    <container>rabbitmq</container>
+                                </dependsOn>
+                                <links>
+                                    <link>rabbitmq</link>
+                                </links>
+                                <log>
+                                    <enabled>true</enabled>
+                                </log>
+                                <wait>
+                                    <log>Read the following list of queues from the RabbitMQ API: </log>
+                                    <time>120000</time>
+                                    <shutdown>500</shutdown>
+                                </wait>
+                            </run>
+                        </image>
                     </images>
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <configuration>
-                    <archive>
-                        <manifest>
-                            <addClasspath>true</addClasspath>
-                            <mainClass>com.github.workerframework.workermessageprioritization.redistribution.lowlevel.LowLevelApplication</mainClass>
-                        </manifest>
-                    </archive>
-                </configuration>
-            </plugin>
+
         </plugins>
     </build>
     
@@ -194,8 +228,8 @@
         <profile>
             <id>use-default-fixed-ports</id>
             <properties>
-                <rabbitmq.ctrl.port>25673</rabbitmq.ctrl.port>
-                <rabbitmq.node.port>25672</rabbitmq.node.port>
+                <rabbitmq.ctrl.port>15672</rabbitmq.ctrl.port>
+                <rabbitmq.node.port>5672</rabbitmq.node.port>
             </properties>
         </profile>
     </profiles>
