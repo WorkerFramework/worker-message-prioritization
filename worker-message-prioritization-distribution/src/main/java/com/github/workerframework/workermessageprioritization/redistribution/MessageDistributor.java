@@ -41,7 +41,7 @@ public abstract class MessageDistributor {
     protected Set<DistributorWorkItem> getDistributorWorkItems() {
         final List<Queue> queues = queuesApi.getApi().getQueues();
 
-        LOGGER.info("Read the following list of queues from the RabbitMQ API: {}", queues);
+        LOGGER.debug("Read the following list of queues from the RabbitMQ API: {}", queues);
 
         final Set<DistributorWorkItem> distributorWorkItems = new HashSet<>();
         
@@ -54,7 +54,7 @@ public abstract class MessageDistributor {
                                     q.getName().startsWith(targetQueue.getName() + LOAD_BALANCED_INDICATOR))
                     .collect(Collectors.toSet());
 
-            LOGGER.info("Filtered the list of queues from the RabbitMQ API to contain only the staging queues: {}", stagingQueues);
+            LOGGER.debug("Filtered the list of queues from the RabbitMQ API to contain only the staging queues: {}", stagingQueues);
             
             if(stagingQueues.isEmpty()) {
                 continue;
