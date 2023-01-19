@@ -21,7 +21,7 @@ import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
  * An example implementation to be used as a reference for further, real world, implementations
  */
 public class FixedTargetQueueCapacityProvider implements TargetQueueCapacityProvider {
-    private static final long MAXIMUM_CAPACITY = 1000;
+    private static final long MAXIMUM_CAPACITY = 0;
     @Override
     public long get(final Queue targetQueue) {
         return MAXIMUM_CAPACITY - targetQueue.getMessages();
