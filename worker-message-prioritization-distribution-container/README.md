@@ -7,6 +7,10 @@ This repository consists of the source to build a container that includes the
 
 ### Environment Variables
 
+* `CAF_RABBITMQ_VHOST`  
+    **Default**: `/`  
+    **Description**: The RabbitMQ virtual host.
+
 * `CAF_RABBITMQ_HOST`  
     **Default**: `rabbitmq`  
     **Description**: The RabbitMQ host.
@@ -34,3 +38,16 @@ This repository consists of the source to build a container that includes the
 * `CAF_RABBITMQ_MGMT_PASSWORD`  
     **Default**: `guest`  
     **Description**: The RabbitMQ management API password.
+
+* `CAF_WMP_DISTRIBUTOR_RUN_INTERVAL_MILLISECONDS`  
+    **Default**: `10000`  
+    **Description**: How often the distributor runs.
+
+* `CAF_WMP_NON_RUNNING_SHOVEL_TIMEOUT_MILLISECONDS`  
+    **Default**: `120000`  
+    **Description**: The timeout in milliseconds after which to delete RabbitMQ shovels that are in a bad state (i.e. not 'running').
+
+* `CAF_WMP_NON_RUNNING_SHOVEL_CHECK_INTERVAL_MILLISECONDS`  
+    **Default**: `120000`  
+    **Description**: How often to check for non-running RabbitMQ shovels.
+

@@ -80,6 +80,7 @@ public class RabbitManagementApi <T> {
 
         return new GsonBuilder()
             .setObjectToNumberStrategy(ToNumberPolicy.LONG_OR_DOUBLE)
+            .setDateFormat("yyyy-MM-dd HH:mm:ss") // Format of timestamp returned by shovel API: https://www.rabbitmq.com/shovel.html
             .create();
     }
 

@@ -141,10 +141,16 @@
                     <verbose>true</verbose>
                     <images>
 
-                        <!-- Run the RabbitMQ image -->
+                        <!-- Build a RabbitMQ image with the shovel plugins enabled for testing purposes -->
                         <image>
                             <alias>rabbitmq</alias>
-                            <name>${dockerHubPublic}/library/rabbitmq:3-management</name>
+                            <name>dev/rabbitmq-with-shovel-plugin</name>
+                            <build>
+                                <dockerFile>${project.basedir}/src/test/docker/Dockerfile</dockerFile>
+                                <args>
+                                    <RABBITMQ_IMAGE>${dockerHubPublic}/library/rabbitmq:3-management</RABBITMQ_IMAGE>
+                                </args>
+                            </build>
                             <run>
                                 <ports>
                                     <port>${rabbitmq.ctrl.port}:15672</port>

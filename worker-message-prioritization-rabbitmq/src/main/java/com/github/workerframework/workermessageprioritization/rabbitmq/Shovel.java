@@ -15,6 +15,7 @@
  */
 package com.github.workerframework.workermessageprioritization.rabbitmq;
 
+import com.google.common.base.MoreObjects;
 import com.google.gson.annotations.SerializedName;
 
 public class Shovel {
@@ -80,5 +81,16 @@ public class Shovel {
     public void setDestUri(String destUri) {
         this.destUri = destUri;
     }
-    
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("ackMode", ackMode)
+            .add("srcUri", srcUri)
+            .add("srcQueue", srcQueue)
+            .add("srcDeleteAfter", srcDeleteAfter)
+            .add("destUri", destUri)
+            .add("destQueue", destQueue)
+            .toString();
+    }
 }
