@@ -144,7 +144,7 @@
                         <!-- Build a RabbitMQ image with the shovel plugins enabled for testing purposes -->
                         <image>
                             <alias>rabbitmq</alias>
-                            <name>${project.artifactId}-test-rabbitmq-with-shovel-plugin:${project.version}</name>
+                            <name>${dockerWorkerFrameworkOrg}test-rabbitmq-with-shovel-plugin:${project.version}</name>
                             <build>
                                 <dockerFile>${project.basedir}/src/test/docker/Dockerfile</dockerFile>
                                 <args>
