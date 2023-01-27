@@ -42,11 +42,6 @@ public class MessageRouterSingleton {
         }
 
         initAttempted = true;
-
-        if(!Boolean.parseBoolean(System.getenv("CAF_WMP_ENABLED"))) {
-            LOGGER.error("Ignored WMP init request, CAF_WMP_ENABLED evaluated to false.");
-            return;
-        }
         
         try {
 
