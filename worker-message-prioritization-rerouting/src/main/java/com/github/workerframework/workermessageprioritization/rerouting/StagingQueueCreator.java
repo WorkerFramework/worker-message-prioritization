@@ -31,7 +31,7 @@ public class StagingQueueCreator {
         this.channel = channel;
     }
 
-    void createStagingQueue(final Queue targetQueue, final String stagingQueueName) throws IOException {
+    public void createStagingQueue(final Queue targetQueue, final String stagingQueueName) throws IOException {
         
         if(declaredQueues.contains(stagingQueueName)) {
             return;
