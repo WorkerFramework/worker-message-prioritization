@@ -19,26 +19,30 @@ import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitMan
 import com.github.workerframework.workermessageprioritization.rabbitmq.RetrievedShovel;
 import com.github.workerframework.workermessageprioritization.rabbitmq.ShovelState;
 import com.github.workerframework.workermessageprioritization.rabbitmq.ShovelsApi;
-import java.util.Date;
+import java.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Map;
 
 public final class ShovelStateChecker implements Runnable
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(ShovelStateChecker.class);
 
     private final RabbitManagementApi<ShovelsApi> shovelsApi;
+    private final Map<String, Instant> shovelNameToCreationTimeUTC;
     private final String rabbitMQVHost;
     private final long nonRunningShovelTimeoutMilliseconds;
 
     public ShovelStateChecker(
         final RabbitManagementApi<ShovelsApi> shovelsApi,
+        final Map<String, Instant> shovelNameToCreationTimeUTC,
         final String rabbitMQVHost,
         final long nonRunningShovelTimeoutMilliseconds)
     {
         this.shovelsApi = shovelsApi;
+        this.shovelNameToCreationTimeUTC = shovelNameToCreationTimeUTC;
         this.rabbitMQVHost = rabbitMQVHost;
         this.nonRunningShovelTimeoutMilliseconds = nonRunningShovelTimeoutMilliseconds;
     }
@@ -54,33 +58,39 @@ public final class ShovelStateChecker implements Runnable
 
             if (retrievedShovel.getState() != ShovelState.RUNNING) {
 
-                final Date shovelCreationTime = retrievedShovel.getTimestamp();
-                final long shovelCreationTimeMilliseconds = shovelCreationTime.getTime();
+                final String shovelName = retrievedShovel.getName();
 
-                final Date timeNow = new Date();
-                final long timeNowMilliseconds = timeNow.getTime();
+                // Get the shovel creation time, setting it to the current time if it is not present (which may happen if this
+                // application gets restarted after the shovel is created and before it is deleted).
+                final Instant shovelCreationTimeUTC = shovelNameToCreationTimeUTC.computeIfAbsent(shovelName, s -> Instant.now());
+                final long shovelCreationTimeUTCMilliseconds = shovelCreationTimeUTC.toEpochMilli();
 
-                if (timeNowMilliseconds - shovelCreationTimeMilliseconds >= nonRunningShovelTimeoutMilliseconds) {   
+                final Instant timeNowUTC = Instant.now();
+                final long timeNowUTCMilliseconds = timeNowUTC.toEpochMilli();
+
+                if (timeNowUTCMilliseconds - shovelCreationTimeUTCMilliseconds >= nonRunningShovelTimeoutMilliseconds) {   
                     LOGGER.error("Shovel named {} was created at {}. The time now is {}. "
                         + "The shovel is not yet in a 'running' state. It's current state is '{}'. "
                         + "As the non-running shovel timeout of {} milliseconds has been reached, the shovel is now going to be deleted. "
                         + "Please check the RabbitMQ logs for more details. "
                         + "Shovel creation will be attempted later if the shovel is still required.",
-                                 retrievedShovel.getName(),
-                                 shovelCreationTime,
-                                 timeNow,
+                                 shovelName,
+                                 shovelCreationTimeUTC,
+                                 timeNowUTC,
                                  retrievedShovel.getState().toString().toLowerCase(),
-                                 nonRunningShovelTimeoutMilliseconds);
+                                 nonRunningShovelTimeoutMilliseconds);                    
  
-                    shovelsApi.getApi().delete(rabbitMQVHost, retrievedShovel.getName());
+                    shovelsApi.getApi().delete(rabbitMQVHost, shovelName);
+
+                    shovelNameToCreationTimeUTC.remove(shovelName);
                 } else {
                     LOGGER.debug("Shovel named {} was created at {}. The time now is {}. "
                         + "The shovel is not yet in a 'running' state. It's current state is '{}'. "
                         + "However, as the non-running shovel timeout of {} milliseconds has not been reached yet, "
                         + "the shovel will not be deleted at this time.",
-                                 retrievedShovel.getName(),
-                                 shovelCreationTime,
-                                 timeNow,
+                                 shovelName,
+                                 shovelCreationTimeUTC,
+                                 timeNowUTC,
                                  retrievedShovel.getState().toString().toLowerCase(),
                                  nonRunningShovelTimeoutMilliseconds);
                 }

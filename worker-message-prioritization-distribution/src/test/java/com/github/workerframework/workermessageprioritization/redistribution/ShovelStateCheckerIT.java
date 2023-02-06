@@ -26,7 +26,10 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeoutException;
 
@@ -66,11 +69,9 @@ public class ShovelStateCheckerIT extends DistributorTestBase
         Assert.assertNotEquals("Bad shovel should not be in 'running' state", ShovelState.RUNNING, retrievedShovel.getState());
 
         // Run the ShovelStateChecker to delete the bad shovel.
-        // A timeout of -10000000 is used here to allow for differences in clocks between the RabbitMQ container and where this test is
-        // running. For example, the Shovel API might return 'Wed Jan 25 17:22:50 GMT 2023', while we might call new Date() and get 
-        // 'Wed Jan 25 17:22:49 GMT 2023', which would result in 'timeNowMilliseconds - shovelCreationTimeMilliseconds' being negative,
-        // meaning the shovel never gets deleted in this test if we passed a non-negative value here.
-        final ShovelStateChecker shovelStateChecker = new ShovelStateChecker(shovelsApi, "/", -10000000);
+        final Map<String, Instant> shovelNameToCreationTimeUTC = new HashMap<>();
+        shovelNameToCreationTimeUTC.put(stagingQueueName, Instant.now().minusSeconds(5L));
+        final ShovelStateChecker shovelStateChecker = new ShovelStateChecker(shovelsApi, shovelNameToCreationTimeUTC, "/", 1L);
         shovelStateChecker.run();
 
         // Verify the bad shovel has been deleted
