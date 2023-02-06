@@ -30,6 +30,7 @@ import org.junit.Test;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import com.github.workerframework.workermessageprioritization.rerouting.reroutedeciders.RerouteDecider;
 
 public class MessageRouterTests {
     
@@ -43,10 +44,12 @@ public class MessageRouterTests {
         when(queuesApi.getQueue(anyString(), anyString())).thenReturn(mockQueue);
         when(queuesApiWrapper.getApi()).thenReturn(queuesApi);
         
-        final TargetQueueCapacityProvider targetQueueCapacityProvider = mock(TargetQueueCapacityProvider.class) ;
+        final TargetQueueCapacityProvider targetQueueCapacityProvider = mock(TargetQueueCapacityProvider.class);
+        final RerouteDecider rerouteDecider = mock(RerouteDecider.class);
+        when(rerouteDecider.shouldReroute(mockQueue, targetQueueCapacityProvider)).thenReturn(true);
         final StagingQueueCreator stagingQueueCreator = mock(StagingQueueCreator.class);
         final MessageRouter messageRouter = new MessageRouter(queuesApiWrapper,  "/", stagingQueueCreator, 
-                targetQueueCapacityProvider);
+                rerouteDecider, targetQueueCapacityProvider);
 
         final Document document = mock(Document.class);
         when(document.getCustomData("tenantId")).thenReturn("poc-tenant");

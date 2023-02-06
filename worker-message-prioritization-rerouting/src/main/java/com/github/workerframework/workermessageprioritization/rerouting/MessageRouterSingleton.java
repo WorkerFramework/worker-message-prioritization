@@ -18,6 +18,8 @@ package com.github.workerframework.workermessageprioritization.rerouting;
 import com.hpe.caf.worker.document.model.Document;
 import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApi;
 import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitManagementApi;
+import com.github.workerframework.workermessageprioritization.rerouting.reroutedeciders.AlwaysRerouteDecider;
+import com.github.workerframework.workermessageprioritization.rerouting.reroutedeciders.TargetQueueCapacityRerouteDecider;
 import com.github.workerframework.workermessageprioritization.targetcapacitycalculators.FixedTargetQueueCapacityProvider;
 import com.github.workerframework.workermessageprioritization.targetcapacitycalculators.TargetQueueCapacityProvider;
 import com.rabbitmq.client.Connection;
@@ -26,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import com.github.workerframework.workermessageprioritization.rerouting.reroutedeciders.RerouteDecider;
 
 public class MessageRouterSingleton {
 
@@ -64,7 +67,13 @@ public class MessageRouterSingleton {
             
             final StagingQueueCreator stagingQueueCreator = new StagingQueueCreator(connection.createChannel());
 
-            messageRouter = new MessageRouter(queuesApi, "/", stagingQueueCreator, targetQueueCapacityProvider);
+            final RerouteDecider rerouteDecider = Boolean.valueOf(System.getenv("CAF_WMP_USE_TARGET_QUEUE_CAPACITY_WHEN_REROUTING"))
+                ? new TargetQueueCapacityRerouteDecider()
+                : new AlwaysRerouteDecider();
+
+            LOGGER.debug("Using {} to decide whether to reroute messages", rerouteDecider.getClass().getName());
+
+            messageRouter = new MessageRouter(queuesApi, "/", stagingQueueCreator, rerouteDecider, targetQueueCapacityProvider);
         }
         catch (final Throwable e) {
             LOGGER.error("Failed to initialise WMP - {}", e.toString());
