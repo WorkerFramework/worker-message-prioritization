@@ -67,7 +67,7 @@ public class MessageRouterSingleton {
             
             final StagingQueueCreator stagingQueueCreator = new StagingQueueCreator(connection.createChannel());
 
-            final RerouteDecider rerouteDecider = Boolean.valueOf(System.getenv("CAF_WMP_USE_TARGET_QUEUE_CAPACITY_WHEN_REROUTING"))
+            final RerouteDecider rerouteDecider = Boolean.valueOf(System.getenv("CAF_WMP_USE_TARGET_QUEUE_CAPACITY_TO_REROUTE"))
                 ? new TargetQueueCapacityRerouteDecider()
                 : new AlwaysRerouteDecider();
 
