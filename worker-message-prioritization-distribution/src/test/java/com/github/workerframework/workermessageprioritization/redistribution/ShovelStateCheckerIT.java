@@ -28,9 +28,9 @@ import org.junit.Test;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeoutException;
 
 public class ShovelStateCheckerIT extends DistributorTestBase
@@ -69,7 +69,7 @@ public class ShovelStateCheckerIT extends DistributorTestBase
         Assert.assertNotEquals("Bad shovel should not be in 'running' state", ShovelState.RUNNING, retrievedShovel.getState());
 
         // Run the ShovelStateChecker to delete the bad shovel.
-        final Map<String, Instant> shovelNameToCreationTimeUTC = new HashMap<>();
+        final Map<String, Instant> shovelNameToCreationTimeUTC = new ConcurrentHashMap<>();
         shovelNameToCreationTimeUTC.put(stagingQueueName, Instant.now().minusSeconds(5L));
         final ShovelStateChecker shovelStateChecker = new ShovelStateChecker(shovelsApi, shovelNameToCreationTimeUTC, "/", 1L);
         shovelStateChecker.run();

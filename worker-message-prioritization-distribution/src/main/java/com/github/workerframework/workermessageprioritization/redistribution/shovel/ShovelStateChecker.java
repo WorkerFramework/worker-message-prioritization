@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public final class ShovelStateChecker implements Runnable
 {
@@ -99,5 +100,13 @@ public final class ShovelStateChecker implements Runnable
                 shovelNameToCreationTimeUTC.remove(shovelName);
             }
         }
+
+        // Remove any shovels that have been deleted normally (e.g. automatically by RabbitMQ via src-delete-after) from the map
+        final List<String> retrievedShovelNames = retrievedShovels
+            .stream()
+            .map(RetrievedShovel::getName)
+            .collect(Collectors.toList());
+
+        shovelNameToCreationTimeUTC.entrySet().removeIf(entry -> !retrievedShovelNames.contains(entry.getKey()));
     }
 }
