@@ -89,6 +89,11 @@
         <artifactId>worker-message-prioritization-target-capacity-calculators</artifactId>
         <version>${project.version}</version>
       </dependency>
+      <dependency>
+          <groupId>net.jodah</groupId>
+          <artifactId>expiringmap</artifactId>
+          <version>0.5.10</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
