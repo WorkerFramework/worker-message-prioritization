@@ -56,9 +56,9 @@ public final class ShovelStateChecker implements Runnable
 
         for (final RetrievedShovel retrievedShovel : retrievedShovels) {
 
-            if (retrievedShovel.getState() != ShovelState.RUNNING) {
+            final String shovelName = retrievedShovel.getName();
 
-                final String shovelName = retrievedShovel.getName();
+            if (retrievedShovel.getState() != ShovelState.RUNNING) {
 
                 // Get the shovel creation time, setting it to the current time if it is not present (which may happen if this
                 // application gets restarted after the shovel is created and before it is deleted).
@@ -94,6 +94,9 @@ public final class ShovelStateChecker implements Runnable
                                  retrievedShovel.getState().toString().toLowerCase(),
                                  nonRunningShovelTimeoutMilliseconds);
                 }
+            } else {
+                // Else the shovel is running, in which case we can remove it from the map as we don't need to keep it's creation time
+                shovelNameToCreationTimeUTC.remove(shovelName);
             }
         }
     }
