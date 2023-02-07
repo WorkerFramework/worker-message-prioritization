@@ -28,15 +28,12 @@ import com.github.workerframework.workermessageprioritization.redistribution.Dis
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.time.Instant;
-import java.util.HashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
@@ -47,7 +44,6 @@ public class ShovelDistributor extends MessageDistributor {
     private static final String ACK_MODE = "on-confirm";
 
     private final RabbitManagementApi<ShovelsApi> shovelsApi;
-    private final Map<String, Instant> shovelNameToCreationTimeUTC;
     private final ConsumptionTargetCalculator consumptionTargetCalculator;
     private final String rabbitMQVHost;
     private final String rabbitMQUri;
@@ -65,7 +61,6 @@ public class ShovelDistributor extends MessageDistributor {
 
         super(queuesApi);
         this.shovelsApi = shovelsApi;
-        this.shovelNameToCreationTimeUTC = new ConcurrentHashMap<>();
         this.consumptionTargetCalculator = consumptionTargetCalculator;
         this.rabbitMQVHost = rabbitMQVHost;
         this.rabbitMQUri = String.format(
@@ -73,7 +68,7 @@ public class ShovelDistributor extends MessageDistributor {
         this.distributorRunIntervalMilliseconds = distributorRunIntervalMilliseconds;
 
         Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
-            new ShovelStateChecker(shovelsApi, shovelNameToCreationTimeUTC, rabbitMQVHost, nonRunningShovelTimeoutMilliseconds),
+            new ShovelStateChecker(shovelsApi, rabbitMQVHost, nonRunningShovelTimeoutMilliseconds),
             0,
             nonRunningShovelTimeoutCheckIntervalMilliseconds,
             TimeUnit.MILLISECONDS);
@@ -149,12 +144,6 @@ public class ShovelDistributor extends MessageDistributor {
                                                       new Component<>("shovel",
                                                                       stagingQueue,
                                                                       shovel));
-
-                        // Although we can get the shovel creation time from the RabbitMQ Shovel API, it is returned in
-                        // 'local calendar time' (https://www.rabbitmq.com/shovel.html), so we cannot be certain what timezone it is
-                        // using, which will make later calculations using this time possibly inaccurate.
-                        // To avoid this, we are recording the shovel creation time here in UTC.
-                        shovelNameToCreationTimeUTC.put(stagingQueue, Instant.now());
                     }
                 }
             }
