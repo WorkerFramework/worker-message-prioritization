@@ -18,6 +18,6 @@ instead of to Worker B's target queue, then you would set these environment vari
     **Default**: false  
     **Description**: Only applies when `CAF_WMP_ENABLED` is true. Determines whether a worker should use the target queue's capacity when
     making a decision on whether to reroute a message. If true, a message will only be rerouted to a staging queue if the target queue
-    does not have capacity for it. If false, a message will **always** be rerouted to a staging queue, irregardless of the tarqet queue's
+    does not have capacity for it. If false, a message will **always** be rerouted to a staging queue, irregardless of the target queue's
     capacity.
 
