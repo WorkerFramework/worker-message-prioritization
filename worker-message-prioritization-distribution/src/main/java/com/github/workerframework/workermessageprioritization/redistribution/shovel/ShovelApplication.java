@@ -33,7 +33,7 @@ public class ShovelApplication
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(ShovelApplication.class);
 
-    public static void main(String[] args) throws IOException, TimeoutException, InterruptedException
+    public static void main(String[] args) throws IOException, InterruptedException
     {
         final ConnectionFactory connectionFactory = new ConnectionFactory();
 
