@@ -41,11 +41,13 @@ public class LowLevelDistributor extends MessageDistributor {
     private final StagingTargetPairProvider stagingTargetPairProvider;
     private final ConnectionFactory connectionFactory;
     private final String connectionDetails;
+    private final long distributorRunIntervalMilliseconds;
 
     public LowLevelDistributor(final RabbitManagementApi<QueuesApi> queuesApi,
                                final ConnectionFactory connectionFactory,
                                final ConsumptionTargetCalculator consumptionTargetCalculator,
-                               final StagingTargetPairProvider stagingTargetPairProvider) {
+                               final StagingTargetPairProvider stagingTargetPairProvider,
+                               final long distributorRunIntervalMilliseconds) {
         super(queuesApi);
         this.connectionFactory = connectionFactory;
         this.connectionDetails = String.format(
@@ -56,6 +58,7 @@ public class LowLevelDistributor extends MessageDistributor {
             connectionFactory.isSSL());
         this.consumptionTargetCalculator = consumptionTargetCalculator;
         this.stagingTargetPairProvider = stagingTargetPairProvider;
+        this.distributorRunIntervalMilliseconds = distributorRunIntervalMilliseconds;
     }
     
     public void run() throws IOException, TimeoutException, InterruptedException {
@@ -68,7 +71,7 @@ public class LowLevelDistributor extends MessageDistributor {
                 runOnce(connection);
 
                 try {
-                    Thread.sleep(1000 * 10);
+                    Thread.sleep(distributorRunIntervalMilliseconds);
                 } catch (final InterruptedException e) {
                     LOGGER.warn("Interrupted {}", e.getMessage());
                     throw e;

@@ -15,8 +15,11 @@
  */
 package com.github.workerframework.workermessageprioritization.rabbitmq;
 
+import com.google.common.base.MoreObjects;
+
 public class RetrievedShovel extends Shovel {
     private String name;
+    private ShovelState state;
 
     public String getName() {
         return name;
@@ -26,4 +29,25 @@ public class RetrievedShovel extends Shovel {
         this.name = name;
     }
 
+    public ShovelState getState() {
+        return state;
+    }
+
+    public void setState(ShovelState state) {
+        this.state = state;
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("name", name)
+            .add("state", state)
+            .add("ackMode", getAckMode())
+            .add("srcUri", getSrcUri())
+            .add("srcQueue", getSrcQueue())
+            .add("srcDeleteAfter", getSrcDeleteAfter())
+            .add("destUri", getDestUri())
+            .add("destQueue", getDestQueue())
+            .toString();
+    }
 }

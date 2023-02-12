@@ -53,12 +53,12 @@ public abstract class MessageDistributor {
                             q.getMessages() > 0 &&
                                     q.getName().startsWith(targetQueue.getName() + LOAD_BALANCED_INDICATOR))
                     .collect(Collectors.toSet());
-
-            LOGGER.debug("Filtered the list of queues from the RabbitMQ API to contain only the staging queues: {}", stagingQueues);
             
             if(stagingQueues.isEmpty()) {
                 continue;
             }
+            
+            LOGGER.debug("Creating a new DistributorWorkItem for target queue: {} and staging queues: {}", targetQueue, stagingQueues);
             
             distributorWorkItems.add(new DistributorWorkItem(targetQueue, stagingQueues));
             

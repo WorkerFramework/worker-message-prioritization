@@ -27,7 +27,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.concurrent.TimeoutException;
 
-public final class LowLevelDistributorIT extends DistributorTestBase {
+// This test will used whatever distributor implementation (low level or shovel) has been set as the mainClass in the maven-jar-plugin in
+// worker-message-prioritization-distribution/pom.xml.
+public final class DistributorIT extends DistributorTestBase {
 
     @Test
     public void twoStagingQueuesTest() throws TimeoutException, IOException, InterruptedException {

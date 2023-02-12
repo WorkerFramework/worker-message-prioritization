@@ -65,7 +65,7 @@ public class LowLevelDistributorIT extends DistributorTestBase {
                 new EqualConsumptionTargetCalculator(new FixedTargetQueueCapacityProvider());
         final StagingTargetPairProvider stagingTargetPairProvider = new StagingTargetPairProvider();
         final LowLevelDistributor lowLevelDistributor = new LowLevelDistributor(queuesApi, connectionFactory, 
-                consumptionTargetCalculator, stagingTargetPairProvider);
+                consumptionTargetCalculator, stagingTargetPairProvider, 10000);
 
         Queue targetQueue = null;
         try(final Connection connection = connectionFactory.newConnection()) {
