@@ -13,12 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.workerframework.workermessageprioritization.redistribution.lowlevel;
+package com.github.workerframework.workermessageprioritization.redistribution.shovel;
 
 import com.github.workerframework.workermessageprioritization.redistribution.consumption.EqualConsumptionTargetCalculator;
 import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApi;
 import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitManagementApi;
+import com.github.workerframework.workermessageprioritization.rabbitmq.ShovelsApi;
 import com.github.workerframework.workermessageprioritization.redistribution.config.MessageDistributorConfig;
+import com.github.workerframework.workermessageprioritization.redistribution.consumption.ConsumptionTargetCalculator;
 import com.github.workerframework.workermessageprioritization.targetcapacitycalculators.FixedTargetQueueCapacityProvider;
 import com.rabbitmq.client.ConnectionFactory;
 
@@ -27,12 +29,12 @@ import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class LowLevelApplication {
-    
-    private static final Logger LOGGER = LoggerFactory.getLogger(LowLevelApplication.class);
+public class ShovelApplication
+{
+    private static final Logger LOGGER = LoggerFactory.getLogger(ShovelApplication.class);
 
-    public static void main(String[] args) throws IOException, TimeoutException, InterruptedException {
-
+    public static void main(String[] args) throws IOException, InterruptedException
+    {
         final ConnectionFactory connectionFactory = new ConnectionFactory();
 
         final MessageDistributorConfig messageDistributorConfig = new MessageDistributorConfig();
@@ -43,10 +45,7 @@ public class LowLevelApplication {
         connectionFactory.setUsername(messageDistributorConfig.getRabbitMQUsername());
         connectionFactory.setPassword(messageDistributorConfig.getRabbitMQPassword());
         connectionFactory.setPort(messageDistributorConfig.getRabbitMQPort());
-        connectionFactory.setVirtualHost("/");
-
-        //https://www.rabbitmq.com/api-guide.html#java-nio
-        //connectionFactory.useNio();
+        connectionFactory.setVirtualHost(messageDistributorConfig.getRabbitMQVHost());
 
         final RabbitManagementApi<QueuesApi> queuesApi = new RabbitManagementApi<>(
             QueuesApi.class,
@@ -54,14 +53,25 @@ public class LowLevelApplication {
             messageDistributorConfig.getRabbitMQMgmtUsername(),
             messageDistributorConfig.getRabbitMQMgmtPassword());
 
-        final LowLevelDistributor lowLevelDistributor =
-                new LowLevelDistributor(
-                        queuesApi,
-                        connectionFactory,
-                        new EqualConsumptionTargetCalculator(new FixedTargetQueueCapacityProvider()),
-                        new StagingTargetPairProvider(),
-                        messageDistributorConfig.getDistributorRunIntervalMilliseconds());
+        RabbitManagementApi<ShovelsApi> shovelsApi = new RabbitManagementApi<>(
+            ShovelsApi.class,
+            messageDistributorConfig.getRabbitMQMgmtUrl(),
+            messageDistributorConfig.getRabbitMQMgmtUsername(),
+            messageDistributorConfig.getRabbitMQMgmtPassword());
 
-        lowLevelDistributor.run();
+        final ConsumptionTargetCalculator consumptionTargetCalculator
+            = new EqualConsumptionTargetCalculator(new FixedTargetQueueCapacityProvider());
+
+        final ShovelDistributor shovelDistributor = new ShovelDistributor(
+            queuesApi,
+            shovelsApi,
+            consumptionTargetCalculator,
+            messageDistributorConfig.getRabbitMQUsername(),
+            messageDistributorConfig.getRabbitMQVHost(),
+            messageDistributorConfig.getNonRunningShovelTimeoutMilliseconds(),
+            messageDistributorConfig.getNonRunningShovelCheckIntervalMilliseconds(),
+            messageDistributorConfig.getDistributorRunIntervalMilliseconds());
+
+        shovelDistributor.run();
     }
 }

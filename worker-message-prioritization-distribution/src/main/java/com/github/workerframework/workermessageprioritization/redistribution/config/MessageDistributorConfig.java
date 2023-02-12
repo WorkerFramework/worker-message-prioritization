@@ -20,6 +20,9 @@ import com.google.common.base.Strings;
 
 public final class MessageDistributorConfig {
 
+    private static final String CAF_RABBITMQ_VHOST = "CAF_RABBITMQ_VHOST";
+    private static final String CAF_RABBITMQ_VHOST_DEFAULT = "/";
+
     private static final String CAF_RABBITMQ_HOST = "CAF_RABBITMQ_HOST";
     private static final String CAF_RABBITMQ_HOST_DEFAULT = "rabbitmq";
 
@@ -41,6 +44,20 @@ public final class MessageDistributorConfig {
     private static final String CAF_RABBITMQ_MGMT_PASSWORD = "CAF_RABBITMQ_MGMT_PASSWORD";
     private static final String CAF_RABBITMQ_MGMT_PASSWORD_DEFAULT = "guest";
 
+    private static final String CAF_WMP_DISTRIBUTOR_RUN_INTERVAL_MILLISECONDS = "CAF_WMP_DISTRIBUTOR_RUN_INTERVAL_MILLISECONDS";
+    private static final long CAF_WMP_DISTRIBUTOR_RUN_INTERVAL_MILLISECONDS_DEFAULT = 10000;
+
+    private static final String CAF_WMP_NON_RUNNING_SHOVEL_TIMEOUT_MILLISECONDS
+        = "CAF_WMP_NON_RUNNING_SHOVEL_TIMEOUT_MILLISECONDS";
+    private static final long CAF_WMP_NON_RUNNING_SHOVEL_TIMEOUT_MILLISECONDS_DEFAULT
+        = 120000;
+
+    private static final String CAF_WMP_NON_RUNNING_SHOVEL_CHECK_INTERVAL_MILLISECONDS
+        = "CAF_WMP_NON_RUNNING_SHOVEL_CHECK_INTERVAL_MILLISECONDS";
+    private static final long CAF_WMP_NON_RUNNING_SHOVEL_CHECK_INTERVAL_MILLISECONDS_DEFAULT
+        = 120000;
+
+    private final String rabbitMQVHost;
     private final String rabbitMQHost;
     private final int rabbitMQPort;
     private final String rabbitMQUsername;
@@ -48,16 +65,33 @@ public final class MessageDistributorConfig {
     private final String rabbitMQMgmtUrl;
     private final String rabbitMQMgmtUsername;
     private final String rabbitMQMgmtPassword;
+    private final long distributorRunIntervalMilliseconds;
+    private final long nonRunningShovelTimeoutMilliseconds;
+    private final long nonRunningShovelCheckIntervalMilliseconds;
 
     public MessageDistributorConfig() {
+        rabbitMQVHost = getEnvOrDefault(CAF_RABBITMQ_VHOST, CAF_RABBITMQ_VHOST_DEFAULT);
         rabbitMQHost = getEnvOrDefault(CAF_RABBITMQ_HOST, CAF_RABBITMQ_HOST_DEFAULT);
         rabbitMQPort = getEnvOrDefault(CAF_RABBITMQ_PORT, CAF_RABBITMQ_PORT_DEFAULT);
         rabbitMQUsername = getEnvOrDefault(CAF_RABBITMQ_USERNAME, CAF_RABBITMQ_USERNAME_DEFAULT);
         rabbitMQPassword = getEnvOrDefault(CAF_RABBITMQ_PASSWORD, CAF_RABBITMQ_PASSWORD_DEFAULT);
-
         rabbitMQMgmtUrl = getEnvOrDefault(CAF_RABBITMQ_MGMT_URL, CAF_RABBITMQ_MGMT_URL_DEFAULT);
         rabbitMQMgmtUsername = getEnvOrDefault(CAF_RABBITMQ_MGMT_USERNAME, CAF_RABBITMQ_MGMT_USERNAME_DEFAULT);
         rabbitMQMgmtPassword = getEnvOrDefault(CAF_RABBITMQ_MGMT_PASSWORD, CAF_RABBITMQ_MGMT_PASSWORD_DEFAULT);
+        distributorRunIntervalMilliseconds = getEnvOrDefault(
+            CAF_WMP_DISTRIBUTOR_RUN_INTERVAL_MILLISECONDS,
+            CAF_WMP_DISTRIBUTOR_RUN_INTERVAL_MILLISECONDS_DEFAULT);
+        nonRunningShovelTimeoutMilliseconds = getEnvOrDefault(
+            CAF_WMP_NON_RUNNING_SHOVEL_TIMEOUT_MILLISECONDS,
+            CAF_WMP_NON_RUNNING_SHOVEL_TIMEOUT_MILLISECONDS_DEFAULT);
+        nonRunningShovelCheckIntervalMilliseconds = getEnvOrDefault(
+            CAF_WMP_NON_RUNNING_SHOVEL_CHECK_INTERVAL_MILLISECONDS,
+            CAF_WMP_NON_RUNNING_SHOVEL_CHECK_INTERVAL_MILLISECONDS_DEFAULT
+    );
+    }
+
+    public String getRabbitMQVHost() {
+        return rabbitMQVHost;
     }
 
     public String getRabbitMQHost() {
@@ -88,9 +122,22 @@ public final class MessageDistributorConfig {
         return rabbitMQMgmtPassword;
     }
 
+    public long getNonRunningShovelTimeoutMilliseconds() {
+        return nonRunningShovelTimeoutMilliseconds;
+    }
+
+    public long getNonRunningShovelCheckIntervalMilliseconds() {
+        return nonRunningShovelCheckIntervalMilliseconds;
+    }
+
+    public long getDistributorRunIntervalMilliseconds() {
+        return distributorRunIntervalMilliseconds;
+    }
+
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
+            .add(CAF_RABBITMQ_VHOST, rabbitMQVHost)
             .add(CAF_RABBITMQ_HOST, rabbitMQHost)
             .add(CAF_RABBITMQ_PORT, rabbitMQPort)
             .add(CAF_RABBITMQ_USERNAME, rabbitMQUsername)
@@ -98,6 +145,9 @@ public final class MessageDistributorConfig {
             .add(CAF_RABBITMQ_MGMT_URL, rabbitMQMgmtUrl)
             .add(CAF_RABBITMQ_MGMT_USERNAME, rabbitMQMgmtUsername)
             .add(CAF_RABBITMQ_MGMT_PASSWORD, "<HIDDEN>")
+            .add(CAF_WMP_DISTRIBUTOR_RUN_INTERVAL_MILLISECONDS, distributorRunIntervalMilliseconds)
+            .add(CAF_WMP_NON_RUNNING_SHOVEL_TIMEOUT_MILLISECONDS, nonRunningShovelTimeoutMilliseconds)
+            .add(CAF_WMP_NON_RUNNING_SHOVEL_CHECK_INTERVAL_MILLISECONDS, nonRunningShovelCheckIntervalMilliseconds)
             .toString();
     }
 
@@ -111,5 +161,11 @@ public final class MessageDistributorConfig {
         final String value = System.getenv(name);
 
         return !Strings.isNullOrEmpty(value) ? Integer.parseInt(value) : defaultValue;
+    }
+    
+    private static long getEnvOrDefault(final String name, final long defaultValue) {
+        final String value = System.getenv(name);
+
+        return !Strings.isNullOrEmpty(value) ? Long.parseLong(value) : defaultValue;
     }
 }
