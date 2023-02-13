@@ -81,7 +81,7 @@ public class ShovelStateCheckerIT extends DistributorTestBase
                 .filter(s -> s.getName().equals(stagingQueueName))
                 .findFirst();
 
-            if (!retrievedShovelAfterDeletion.isPresent()) {
+            if (retrievedShovelAfterDeletion.isEmpty()) {
                 // Test passed
                 return; 
             } else {
