@@ -33,19 +33,19 @@ import com.github.workerframework.workermessageprioritization.rerouting.rerouted
 public class MessageRouterSingleton {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageRouterSingleton.class);
-    private static Connection connection;    
+    private static Connection connection;
     private static MessageRouter messageRouter;
     private static volatile boolean initAttempted = false;
-    
-    
+    private static volatile boolean initShouldBeReattempted = false;
+
     public static void init() {
-        
-        if(messageRouter != null || initAttempted) {
+
+        if((messageRouter != null || initAttempted) && !initShouldBeReattempted) {
             return;
         }
 
         initAttempted = true;
-        
+
         try {
 
             final ConnectionFactory connectionFactory = new ConnectionFactory();
@@ -64,7 +64,7 @@ public class MessageRouterSingleton {
 
             final RabbitManagementApi<QueuesApi> queuesApi =
                     new RabbitManagementApi<>(QueuesApi.class, mgmtEndpoint, mgmtUsername, mgmtPassword);
-            
+
             final StagingQueueCreator stagingQueueCreator = new StagingQueueCreator(connection.createChannel());
 
             final RerouteDecider rerouteDecider =
@@ -75,23 +75,45 @@ public class MessageRouterSingleton {
             LOGGER.debug("Using {} to decide whether to reroute messages", rerouteDecider.getClass().getName());
 
             messageRouter = new MessageRouter(queuesApi, "/", stagingQueueCreator, rerouteDecider, targetQueueCapacityProvider);
+
+            initShouldBeReattempted = false;
         }
         catch (final Throwable e) {
             LOGGER.error("Failed to initialise WMP - {}", e.toString());
+            closeQuietly();
         }
-        
+
     }
-    
+
     public static void route(final Document document) {
         if(messageRouter != null) {
-            messageRouter.route(document);
+            try {
+                messageRouter.route(document);
+            } catch (final Throwable throwable) {
+                LOGGER.error("Exception thrown trying to route document", throwable);
+
+                // If an error has been thrown by the messageRouter.route call, it is possible that the connection and/or channel has
+                // been closed, so we should attempt to init this class again the next time init() is called to create a new connection
+                // and new channel.
+                closeQuietly();
+                initShouldBeReattempted = true;
+
+                throw throwable;
+            }
         }
     }
-    
+
     public static void close() throws IOException {
         if(connection != null) {
             connection.close();
         }
     }
 
+    private static void closeQuietly() {
+        try {
+            close();
+        } catch (final IOException iOException) {
+            LOGGER.warn("IOException thrown trying to close connection", iOException);
+        }
+    }
 }
