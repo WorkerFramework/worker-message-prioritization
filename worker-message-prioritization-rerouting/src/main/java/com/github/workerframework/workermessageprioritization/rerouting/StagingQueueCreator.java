@@ -20,9 +20,14 @@ import com.rabbitmq.client.Channel;
 
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class StagingQueueCreator {
-    
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(StagingQueueCreator.class);
+
     private final HashSet<String> declaredQueues = new HashSet<>();
     private final Channel channel;
 
@@ -32,17 +37,28 @@ public class StagingQueueCreator {
     }
 
     void createStagingQueue(final Queue targetQueue, final String stagingQueueName) throws IOException {
-        
+
         if(declaredQueues.contains(stagingQueueName)) {
             return;
         }
 
-        channel.queueDeclare(
-            stagingQueueName,
-            targetQueue.isDurable(),
-            targetQueue.isExclusive(),
-            targetQueue.isAuto_delete(),
-            targetQueue.getArguments());
+        final boolean durable = targetQueue.isDurable();
+        final boolean exclusive = targetQueue.isExclusive();
+        final boolean autoDelete = targetQueue.isAuto_delete();
+        final Map<String, Object> arguments = targetQueue.getArguments();
+
+        LOGGER.info("Creating or checking staging queue by calling channel.queueDeclare({}, {}, {}, {}, {})",
+                stagingQueueName, durable, exclusive, autoDelete, arguments);
+
+        try {
+            channel.queueDeclare(stagingQueueName, durable, exclusive, autoDelete, arguments);
+        } catch (final IOException iOException) {
+            LOGGER.error(String.format(
+                    "IOException thrown creating or checking staging queue when calling channel.queueDeclare(%s, %s, %s, %s, %s)",
+                    stagingQueueName, durable, exclusive, autoDelete, arguments), iOException);
+
+            throw iOException;
+        }
 
         declaredQueues.add(stagingQueueName);
     }
