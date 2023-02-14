@@ -174,8 +174,8 @@
                         </image>
 
                         <image>
-                            <alias>worker-message-prioritization-distribution</alias>
-                            <name>${dockerWorkerFrameworkOrg}worker-message-prioritization-distribution${dockerProjectVersion}</name>
+                            <alias>worker-message-distribution</alias>
+                            <name>${dockerWorkerFrameworkOrg}worker-message-distribution${dockerProjectVersion}</name>
                             <!-- Build the image for this module -->
                             <build>
                                 <from>${dockerHubPublic}/cafapi/opensuse-jre11:3</from>
