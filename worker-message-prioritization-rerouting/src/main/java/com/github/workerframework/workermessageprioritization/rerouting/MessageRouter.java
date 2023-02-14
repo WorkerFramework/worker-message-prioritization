@@ -38,6 +38,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import com.github.workerframework.workermessageprioritization.rerouting.reroutedeciders.RerouteDecider;
 
 public class MessageRouter {
     
@@ -49,13 +50,18 @@ public class MessageRouter {
             new TenantQueueNameMutator(), new WorkflowQueueNameMutator()).collect(Collectors.toList());
     private final LoadingCache<String, Queue> queuesCache;
     private final StagingQueueCreator stagingQueueCreator;
+    private final RerouteDecider rerouteDecider;
     private final TargetQueueCapacityProvider targetQueueCapacityProvider;
 
-    public MessageRouter(final RabbitManagementApi<QueuesApi> queuesApi, final String vhost, 
+    public MessageRouter(final RabbitManagementApi<QueuesApi> queuesApi,
+                         final String vhost,
                          final StagingQueueCreator stagingQueueCreator,
+                         final RerouteDecider rerouteDecider,
                          final TargetQueueCapacityProvider targetQueueCapacityProvider) {
 
         this.stagingQueueCreator = stagingQueueCreator;
+
+        this.rerouteDecider = rerouteDecider;
 
         this.targetQueueCapacityProvider = targetQueueCapacityProvider;
         
@@ -123,8 +129,8 @@ public class MessageRouter {
             
             return false;
         }
-        
-        return queue.getMessages() >= targetQueueCapacityProvider.get(queue);
+
+        return rerouteDecider.shouldReroute(queue, targetQueueCapacityProvider);
     }
     
 }

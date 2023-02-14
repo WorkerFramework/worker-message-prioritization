@@ -18,6 +18,8 @@ package com.github.workerframework.workermessageprioritization.rerouting;
 import com.hpe.caf.worker.document.model.Document;
 import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApi;
 import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitManagementApi;
+import com.github.workerframework.workermessageprioritization.rerouting.reroutedeciders.AlwaysRerouteDecider;
+import com.github.workerframework.workermessageprioritization.rerouting.reroutedeciders.TargetQueueCapacityRerouteDecider;
 import com.github.workerframework.workermessageprioritization.targetcapacitycalculators.FixedTargetQueueCapacityProvider;
 import com.github.workerframework.workermessageprioritization.targetcapacitycalculators.TargetQueueCapacityProvider;
 import com.rabbitmq.client.Connection;
@@ -26,28 +28,24 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import com.github.workerframework.workermessageprioritization.rerouting.reroutedeciders.RerouteDecider;
 
 public class MessageRouterSingleton {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageRouterSingleton.class);
-    private static Connection connection;    
+    private static Connection connection;
     private static MessageRouter messageRouter;
     private static volatile boolean initAttempted = false;
-    
-    
+    private static volatile boolean initShouldBeReattempted = false;
+
     public static void init() {
-        
-        if(messageRouter != null || initAttempted) {
+
+        if((messageRouter != null || initAttempted) && !initShouldBeReattempted) {
             return;
         }
 
         initAttempted = true;
 
-        if(!Boolean.parseBoolean(System.getenv("CAF_WMP_ENABLED"))) {
-            LOGGER.error("Ignored WMP init request, CAF_WMP_ENABLED evaluated to false.");
-            return;
-        }
-        
         try {
 
             final ConnectionFactory connectionFactory = new ConnectionFactory();
@@ -66,27 +64,56 @@ public class MessageRouterSingleton {
 
             final RabbitManagementApi<QueuesApi> queuesApi =
                     new RabbitManagementApi<>(QueuesApi.class, mgmtEndpoint, mgmtUsername, mgmtPassword);
-            
+
             final StagingQueueCreator stagingQueueCreator = new StagingQueueCreator(connection.createChannel());
 
-            messageRouter = new MessageRouter(queuesApi, "/", stagingQueueCreator, targetQueueCapacityProvider);
+            final RerouteDecider rerouteDecider =
+                    Boolean.parseBoolean(System.getenv("CAF_WMP_USE_TARGET_QUEUE_CAPACITY_TO_REROUTE"))
+                            ? new TargetQueueCapacityRerouteDecider()
+                            : new AlwaysRerouteDecider();
+
+            LOGGER.debug("Using {} to decide whether to reroute messages", rerouteDecider.getClass().getName());
+
+            messageRouter = new MessageRouter(queuesApi, "/", stagingQueueCreator, rerouteDecider, targetQueueCapacityProvider);
+
+            initShouldBeReattempted = false;
         }
         catch (final Throwable e) {
             LOGGER.error("Failed to initialise WMP - {}", e.toString());
+            closeQuietly();
         }
-        
+
     }
-    
+
     public static void route(final Document document) {
         if(messageRouter != null) {
-            messageRouter.route(document);
+            try {
+                messageRouter.route(document);
+            } catch (final Throwable throwable) {
+                LOGGER.error("Exception thrown trying to route document", throwable);
+
+                // If an error has been thrown by the messageRouter.route call, it is possible that the connection and/or channel has
+                // been closed, so we should attempt to init this class again the next time init() is called to create a new connection
+                // and new channel.
+                closeQuietly();
+                initShouldBeReattempted = true;
+
+                throw throwable;
+            }
         }
     }
-    
+
     public static void close() throws IOException {
         if(connection != null) {
             connection.close();
         }
     }
 
+    private static void closeQuietly() {
+        try {
+            close();
+        } catch (final IOException iOException) {
+            LOGGER.warn("IOException thrown trying to close connection", iOException);
+        }
+    }
 }
