@@ -53,3 +53,7 @@ This repository consists of the source to build a container that includes the
     **Default**: `120000`  
     **Description**: How often to check for non-running RabbitMQ shovels.
 
+* `CAF_WMP_KUBERNETES_NAMESPACES`  
+    **Default**: None. A value must be provided for this environment variable. Must not be null and must not be empty.
+    **Description**: Used to specify the Kubernetes namespaces, comma separated, in which to search for a worker's labels. These
+    labels contain information about each worker's target queue, such as its name and maximum length.

@@ -15,6 +15,11 @@
  */
 package com.github.workerframework.workermessageprioritization.redistribution.config;
 
+import static java.util.stream.Collectors.toList;
+
+import java.util.List;
+import java.util.stream.Stream;
+
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 
@@ -57,6 +62,8 @@ public final class MessageDistributorConfig {
     private static final long CAF_WMP_NON_RUNNING_SHOVEL_CHECK_INTERVAL_MILLISECONDS_DEFAULT
         = 120000;
 
+    private static final String CAF_WMP_KUBERNETES_NAMESPACES = "CAF_WMP_KUBERNETES_NAMESPACES";
+
     private final String rabbitMQVHost;
     private final String rabbitMQHost;
     private final int rabbitMQPort;
@@ -68,6 +75,8 @@ public final class MessageDistributorConfig {
     private final long distributorRunIntervalMilliseconds;
     private final long nonRunningShovelTimeoutMilliseconds;
     private final long nonRunningShovelCheckIntervalMilliseconds;
+
+    private final List<String> kubernetesNamespaces;
 
     public MessageDistributorConfig() {
         rabbitMQVHost = getEnvOrDefault(CAF_RABBITMQ_VHOST, CAF_RABBITMQ_VHOST_DEFAULT);
@@ -86,8 +95,8 @@ public final class MessageDistributorConfig {
             CAF_WMP_NON_RUNNING_SHOVEL_TIMEOUT_MILLISECONDS_DEFAULT);
         nonRunningShovelCheckIntervalMilliseconds = getEnvOrDefault(
             CAF_WMP_NON_RUNNING_SHOVEL_CHECK_INTERVAL_MILLISECONDS,
-            CAF_WMP_NON_RUNNING_SHOVEL_CHECK_INTERVAL_MILLISECONDS_DEFAULT
-    );
+            CAF_WMP_NON_RUNNING_SHOVEL_CHECK_INTERVAL_MILLISECONDS_DEFAULT);
+        kubernetesNamespaces = getKubernetesNamespacesOrThrowException();
     }
 
     public String getRabbitMQVHost() {
@@ -134,6 +143,10 @@ public final class MessageDistributorConfig {
         return distributorRunIntervalMilliseconds;
     }
 
+    public List<String> getKubernetesNamespaces() {
+        return kubernetesNamespaces;
+    }
+
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
@@ -148,6 +161,7 @@ public final class MessageDistributorConfig {
             .add(CAF_WMP_DISTRIBUTOR_RUN_INTERVAL_MILLISECONDS, distributorRunIntervalMilliseconds)
             .add(CAF_WMP_NON_RUNNING_SHOVEL_TIMEOUT_MILLISECONDS, nonRunningShovelTimeoutMilliseconds)
             .add(CAF_WMP_NON_RUNNING_SHOVEL_CHECK_INTERVAL_MILLISECONDS, nonRunningShovelCheckIntervalMilliseconds)
+            .add(CAF_WMP_KUBERNETES_NAMESPACES, kubernetesNamespaces)
             .toString();
     }
 
@@ -167,5 +181,26 @@ public final class MessageDistributorConfig {
         final String value = System.getenv(name);
 
         return !Strings.isNullOrEmpty(value) ? Long.parseLong(value) : defaultValue;
+    }
+
+    private static List<String> getKubernetesNamespacesOrThrowException() {
+        final String kubernetesNamespacesCsvString = System.getenv(CAF_WMP_KUBERNETES_NAMESPACES);
+
+        if (Strings.isNullOrEmpty(kubernetesNamespacesCsvString)) {
+            throw new RuntimeException(String.format(
+                    "The %s environment variable should not be null or empty", CAF_WMP_KUBERNETES_NAMESPACES));
+        }
+
+        final List<String> kubernetesNamespacesCsvStringValues =
+                Stream.of(kubernetesNamespacesCsvString.split(",")).map(String::trim).collect(toList());
+
+        if (kubernetesNamespacesCsvStringValues.isEmpty()) {
+            throw new RuntimeException(String.format(
+                    "The %s environment variable should contain at last one Kubernetes namespace. " +
+                            "If multiple Kubernetes namespaces are specified they should be comma-separated.",
+                    CAF_WMP_KUBERNETES_NAMESPACES));
+        }
+
+        return kubernetesNamespacesCsvStringValues;
     }
 }

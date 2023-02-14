@@ -22,6 +22,7 @@ import com.github.workerframework.workermessageprioritization.rabbitmq.ShovelsAp
 import com.github.workerframework.workermessageprioritization.redistribution.config.MessageDistributorConfig;
 import com.github.workerframework.workermessageprioritization.redistribution.consumption.ConsumptionTargetCalculator;
 import com.github.workerframework.workermessageprioritization.targetcapacitycalculators.FixedTargetQueueCapacityProvider;
+import com.github.workerframework.workermessageprioritization.targetcapacitycalculators.K8sTargetQueueCapacityProvider;
 import com.rabbitmq.client.ConnectionFactory;
 
 import java.io.IOException;
@@ -59,8 +60,8 @@ public class ShovelApplication
             messageDistributorConfig.getRabbitMQMgmtUsername(),
             messageDistributorConfig.getRabbitMQMgmtPassword());
 
-        final ConsumptionTargetCalculator consumptionTargetCalculator
-            = new EqualConsumptionTargetCalculator(new FixedTargetQueueCapacityProvider());
+        final ConsumptionTargetCalculator consumptionTargetCalculator = new EqualConsumptionTargetCalculator(
+                new K8sTargetQueueCapacityProvider(messageDistributorConfig.getKubernetesNamespaces()));
 
         final ShovelDistributor shovelDistributor = new ShovelDistributor(
             queuesApi,

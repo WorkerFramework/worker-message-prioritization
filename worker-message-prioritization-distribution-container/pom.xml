@@ -210,6 +210,7 @@
                             <run>
                                 <env>
                                     <CAF_LOG_LEVEL>DEBUG</CAF_LOG_LEVEL>
+                                    <CAF_WMP_KUBERNETES_NAMESPACES>private</CAF_WMP_KUBERNETES_NAMESPACES>
                                 </env>
                                 <dependsOn>
                                     <container>rabbitmq</container>
