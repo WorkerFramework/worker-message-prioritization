@@ -23,8 +23,15 @@ import com.github.workerframework.workermessageprioritization.targetcapacitycalc
  */
 public class TargetQueueCapacityRerouteDecider implements RerouteDecider
 {
+    private final TargetQueueCapacityProvider targetQueueCapacityProvider;
+
+    public TargetQueueCapacityRerouteDecider(final TargetQueueCapacityProvider targetQueueCapacityProvider)
+    {
+        this.targetQueueCapacityProvider = targetQueueCapacityProvider;
+    }
+
     @Override
-    public boolean shouldReroute(final Queue targetQueue, final TargetQueueCapacityProvider targetQueueCapacityProvider)
+    public boolean shouldReroute(final Queue targetQueue)
     {
         return targetQueue.getMessages() >= targetQueueCapacityProvider.get(targetQueue);
     }

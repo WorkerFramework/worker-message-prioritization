@@ -22,6 +22,14 @@ instead of to Worker B's target queue, then you would set these environment vari
     capacity.
 
 * `CAF_WMP_KUBERNETES_NAMESPACES`  
-    **Default**: None. A value must be provided for this environment variable. Must not be null and must not be empty. 
-    **Description**: Used to specify the Kubernetes namespaces, comma separated, in which to search for a worker's labels. These 
-    labels contain information about each worker's target queue, such as its name and maximum length.
+    **Default**: None.  
+    **Description**: Used to specify the Kubernetes namespaces, comma separated, in which to search for a worker's labels. These labels
+*   contain information about each worker's target queue, such as its name and maximum length. A non-null and non-empty value must be 
+    provided for this environment variable if `CAF_WMP_USE_TARGET_QUEUE_CAPACITY_TO_REROUTE` is true. If 
+    `CAF_WMP_USE_TARGET_QUEUE_CAPACITY_TO_REROUTE` is false, this environment variable is not used.
+
+* `CAF_WMP_KUBERNETES_LABEL_CACHE_EXPIRY_MINUTES`  
+  **Default**: 60.  
+  **Description**: Used to specify the 'expire after write' minutes after which a Kubernetes label that has been added to the cache 
+  should be removed. Set this to 0 to disable caching. Only used when `CAF_WMP_USE_TARGET_QUEUE_CAPACITY_TO_REROUTE` is true. If
+  `CAF_WMP_USE_TARGET_QUEUE_CAPACITY_TO_REROUTE` is false, this environment variable is not used.

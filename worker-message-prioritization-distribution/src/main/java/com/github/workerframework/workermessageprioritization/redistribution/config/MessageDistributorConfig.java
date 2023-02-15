@@ -64,6 +64,10 @@ public final class MessageDistributorConfig {
 
     private static final String CAF_WMP_KUBERNETES_NAMESPACES = "CAF_WMP_KUBERNETES_NAMESPACES";
 
+    private static final String CAF_WMP_KUBERNETES_LABEL_CACHE_EXPIRY_MINUTES = "CAF_WMP_KUBERNETES_LABEL_CACHE_EXPIRY_MINUTES";
+
+    private static final int CAF_WMP_KUBERNETES_LABEL_CACHE_EXPIRY_MINUTES_DEFAULT = 60;
+
     private final String rabbitMQVHost;
     private final String rabbitMQHost;
     private final int rabbitMQPort;
@@ -75,8 +79,8 @@ public final class MessageDistributorConfig {
     private final long distributorRunIntervalMilliseconds;
     private final long nonRunningShovelTimeoutMilliseconds;
     private final long nonRunningShovelCheckIntervalMilliseconds;
-
     private final List<String> kubernetesNamespaces;
+    private final int kubernetesLabelCacheExpiryMinutes;
 
     public MessageDistributorConfig() {
         rabbitMQVHost = getEnvOrDefault(CAF_RABBITMQ_VHOST, CAF_RABBITMQ_VHOST_DEFAULT);
@@ -96,7 +100,10 @@ public final class MessageDistributorConfig {
         nonRunningShovelCheckIntervalMilliseconds = getEnvOrDefault(
             CAF_WMP_NON_RUNNING_SHOVEL_CHECK_INTERVAL_MILLISECONDS,
             CAF_WMP_NON_RUNNING_SHOVEL_CHECK_INTERVAL_MILLISECONDS_DEFAULT);
-        kubernetesNamespaces = getKubernetesNamespacesOrThrowException();
+        kubernetesNamespaces = getEnvOrThrow(CAF_WMP_KUBERNETES_NAMESPACES);
+        kubernetesLabelCacheExpiryMinutes = getEnvOrDefault(
+                CAF_WMP_KUBERNETES_LABEL_CACHE_EXPIRY_MINUTES,
+                CAF_WMP_KUBERNETES_LABEL_CACHE_EXPIRY_MINUTES_DEFAULT);
     }
 
     public String getRabbitMQVHost() {
@@ -147,6 +154,10 @@ public final class MessageDistributorConfig {
         return kubernetesNamespaces;
     }
 
+    public int getKubernetesLabelCacheExpiryMinutes() {
+        return kubernetesLabelCacheExpiryMinutes;
+    }
+
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
@@ -162,6 +173,7 @@ public final class MessageDistributorConfig {
             .add(CAF_WMP_NON_RUNNING_SHOVEL_TIMEOUT_MILLISECONDS, nonRunningShovelTimeoutMilliseconds)
             .add(CAF_WMP_NON_RUNNING_SHOVEL_CHECK_INTERVAL_MILLISECONDS, nonRunningShovelCheckIntervalMilliseconds)
             .add(CAF_WMP_KUBERNETES_NAMESPACES, kubernetesNamespaces)
+            .add(CAF_WMP_KUBERNETES_LABEL_CACHE_EXPIRY_MINUTES, kubernetesLabelCacheExpiryMinutes)
             .toString();
     }
 
@@ -183,24 +195,17 @@ public final class MessageDistributorConfig {
         return !Strings.isNullOrEmpty(value) ? Long.parseLong(value) : defaultValue;
     }
 
-    private static List<String> getKubernetesNamespacesOrThrowException() {
-        final String kubernetesNamespacesCsvString = System.getenv(CAF_WMP_KUBERNETES_NAMESPACES);
+    private static List<String> getEnvOrThrow(final String name) {
+        final List<String> values = Stream.of(Strings.nullToEmpty(System.getenv(name)).split(","))
+                        .map(String::trim)
+                        .filter(s -> !Strings.isNullOrEmpty(s))
+                        .collect(toList());
 
-        if (Strings.isNullOrEmpty(kubernetesNamespacesCsvString)) {
-            throw new RuntimeException(String.format(
-                    "The %s environment variable should not be null or empty", CAF_WMP_KUBERNETES_NAMESPACES));
+        if (values.isEmpty()) {
+            throw new RuntimeException(String.format("The %s environment variable should not be null or empty. " +
+                    "If multiple values are provided, they should be comma separated.", name));
         }
 
-        final List<String> kubernetesNamespacesCsvStringValues =
-                Stream.of(kubernetesNamespacesCsvString.split(",")).map(String::trim).collect(toList());
-
-        if (kubernetesNamespacesCsvStringValues.isEmpty()) {
-            throw new RuntimeException(String.format(
-                    "The %s environment variable should contain at last one Kubernetes namespace. " +
-                            "If multiple Kubernetes namespaces are specified they should be comma-separated.",
-                    CAF_WMP_KUBERNETES_NAMESPACES));
-        }
-
-        return kubernetesNamespacesCsvStringValues;
+        return values;
     }
 }

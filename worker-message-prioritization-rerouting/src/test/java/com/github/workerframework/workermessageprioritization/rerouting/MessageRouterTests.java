@@ -43,13 +43,11 @@ public class MessageRouterTests {
         final Queue mockQueue = mock(Queue.class);
         when(queuesApi.getQueue(anyString(), anyString())).thenReturn(mockQueue);
         when(queuesApiWrapper.getApi()).thenReturn(queuesApi);
-        
-        final TargetQueueCapacityProvider targetQueueCapacityProvider = mock(TargetQueueCapacityProvider.class);
+
         final RerouteDecider rerouteDecider = mock(RerouteDecider.class);
-        when(rerouteDecider.shouldReroute(mockQueue, targetQueueCapacityProvider)).thenReturn(true);
+        when(rerouteDecider.shouldReroute(mockQueue)).thenReturn(true);
         final StagingQueueCreator stagingQueueCreator = mock(StagingQueueCreator.class);
-        final MessageRouter messageRouter = new MessageRouter(queuesApiWrapper,  "/", stagingQueueCreator, 
-                rerouteDecider, targetQueueCapacityProvider);
+        final MessageRouter messageRouter = new MessageRouter(queuesApiWrapper,  "/", stagingQueueCreator, rerouteDecider);
 
         final Document document = mock(Document.class);
         when(document.getCustomData("tenantId")).thenReturn("poc-tenant");

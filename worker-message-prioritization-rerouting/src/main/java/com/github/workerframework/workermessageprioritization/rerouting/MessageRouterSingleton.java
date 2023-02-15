@@ -17,31 +17,34 @@ package com.github.workerframework.workermessageprioritization.rerouting;
 
 import static java.util.stream.Collectors.toList;
 
-import com.github.workerframework.workermessageprioritization.targetcapacitycalculators.K8sTargetQueueCapacityProvider;
-import com.google.common.base.Strings;
-import com.hpe.caf.worker.document.model.Document;
-import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApi;
-import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitManagementApi;
-import com.github.workerframework.workermessageprioritization.rerouting.reroutedeciders.AlwaysRerouteDecider;
-import com.github.workerframework.workermessageprioritization.rerouting.reroutedeciders.TargetQueueCapacityRerouteDecider;
-import com.github.workerframework.workermessageprioritization.targetcapacitycalculators.FixedTargetQueueCapacityProvider;
-import com.github.workerframework.workermessageprioritization.targetcapacitycalculators.TargetQueueCapacityProvider;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
+import java.io.IOException;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Stream;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.stream.Stream;
-
+import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApi;
+import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitManagementApi;
+import com.github.workerframework.workermessageprioritization.rerouting.reroutedeciders.AlwaysRerouteDecider;
 import com.github.workerframework.workermessageprioritization.rerouting.reroutedeciders.RerouteDecider;
+import com.github.workerframework.workermessageprioritization.rerouting.reroutedeciders.TargetQueueCapacityRerouteDecider;
+import com.github.workerframework.workermessageprioritization.targetcapacitycalculators.K8sTargetQueueCapacityProvider;
+import com.github.workerframework.workermessageprioritization.targetcapacitycalculators.TargetQueueCapacityProvider;
+import com.google.common.base.Strings;
+import com.hpe.caf.worker.document.model.Document;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
 
 public class MessageRouterSingleton {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageRouterSingleton.class);
 
+    private  static final String CAF_WMP_USE_TARGET_QUEUE_CAPACITY_TO_REROUTE = "CAF_WMP_USE_TARGET_QUEUE_CAPACITY_TO_REROUTE";
+
     private static final String CAF_WMP_KUBERNETES_NAMESPACES = "CAF_WMP_KUBERNETES_NAMESPACES";
+
     private static Connection connection;
     private static MessageRouter messageRouter;
     private static volatile boolean initAttempted = false;
@@ -75,18 +78,39 @@ public class MessageRouterSingleton {
 
             final StagingQueueCreator stagingQueueCreator = new StagingQueueCreator(connection.createChannel());
 
-            final RerouteDecider rerouteDecider =
-                    Boolean.parseBoolean(System.getenv("CAF_WMP_USE_TARGET_QUEUE_CAPACITY_TO_REROUTE"))
-                            ? new TargetQueueCapacityRerouteDecider()
-                            : new AlwaysRerouteDecider();
+            final RerouteDecider rerouteDecider;
 
-            LOGGER.debug("Using {} to decide whether to reroute messages", rerouteDecider.getClass().getName());
+            if (Boolean.parseBoolean(System.getenv(CAF_WMP_USE_TARGET_QUEUE_CAPACITY_TO_REROUTE))) {
 
-            final List<String> kubernetesNamespaces = getKubernetesNamespacesOrThrowException();
+                final List<String> kubernetesNamespaces =
+                        Stream.of(Strings.nullToEmpty(System.getenv(CAF_WMP_KUBERNETES_NAMESPACES)).split(","))
+                                .map(String::trim)
+                                .filter(s -> !Strings.isNullOrEmpty(s))
+                                .collect(toList());
 
-            final TargetQueueCapacityProvider targetQueueCapacityProvider = new K8sTargetQueueCapacityProvider(kubernetesNamespaces);
+                if (kubernetesNamespaces.isEmpty()) {
+                    throw new RuntimeException(String.format(
+                            "The %s environment variable should be provided when the %s environment variable is true. It should not be " +
+                                    "null or empty. If multiple values are provided, they should be comma separated.",
+                            CAF_WMP_KUBERNETES_NAMESPACES,
+                            CAF_WMP_USE_TARGET_QUEUE_CAPACITY_TO_REROUTE));
+                }
 
-            messageRouter = new MessageRouter(queuesApi, "/", stagingQueueCreator, rerouteDecider, targetQueueCapacityProvider);
+                final int kubernetesLabelCacheExpiryMinutes = Integer.parseInt(
+                        Optional.ofNullable(System.getenv("CAF_WMP_KUBERNETES_LABEL_CACHE_EXPIRY_MINUTES")).orElse("60"));
+
+                final TargetQueueCapacityProvider targetQueueCapacityProvider = new K8sTargetQueueCapacityProvider(
+                        kubernetesNamespaces,
+                        kubernetesLabelCacheExpiryMinutes);
+
+                rerouteDecider = new TargetQueueCapacityRerouteDecider(targetQueueCapacityProvider);
+            } else {
+                rerouteDecider = new AlwaysRerouteDecider();
+            }
+
+            LOGGER.info("Using {} to decide whether to reroute messages", rerouteDecider.getClass().getSimpleName()); // TODO debug
+
+            messageRouter = new MessageRouter(queuesApi, "/", stagingQueueCreator, rerouteDecider);
 
             initShouldBeReattempted = false;
         }
@@ -127,26 +151,5 @@ public class MessageRouterSingleton {
         } catch (final IOException iOException) {
             LOGGER.warn("IOException thrown trying to close connection", iOException);
         }
-    }
-
-    private static List<String> getKubernetesNamespacesOrThrowException() {
-        final String kubernetesNamespacesCsvString = System.getenv(CAF_WMP_KUBERNETES_NAMESPACES);
-
-        if (Strings.isNullOrEmpty(kubernetesNamespacesCsvString)) {
-            throw new RuntimeException(String.format(
-                    "The %s environment variable should not be null or empty", CAF_WMP_KUBERNETES_NAMESPACES));
-        }
-
-        final List<String> kubernetesNamespacesCsvStringValues =
-                Stream.of(kubernetesNamespacesCsvString.split(",")).map(String::trim).collect(toList());
-
-        if (kubernetesNamespacesCsvStringValues.isEmpty()) {
-            throw new RuntimeException(String.format(
-                    "The %s environment variable should contain at last one Kubernetes namespace. " +
-                            "If multiple Kubernetes namespaces are specified they should be comma-separated.",
-                    CAF_WMP_KUBERNETES_NAMESPACES));
-        }
-
-        return kubernetesNamespacesCsvStringValues;
     }
 }

@@ -54,6 +54,12 @@ This repository consists of the source to build a container that includes the
     **Description**: How often to check for non-running RabbitMQ shovels.
 
 * `CAF_WMP_KUBERNETES_NAMESPACES`  
-    **Default**: None. A value must be provided for this environment variable. Must not be null and must not be empty.
+    **Default**: None.
     **Description**: Used to specify the Kubernetes namespaces, comma separated, in which to search for a worker's labels. These
-    labels contain information about each worker's target queue, such as its name and maximum length.
+    labels contain information about each worker's target queue, such as its name and maximum length. A non-null and non-empty value must
+*   be provided for this environment variable.
+
+* `CAF_WMP_KUBERNETES_LABEL_CACHE_EXPIRY_MINUTES`  
+    **Default**: 60.  
+    **Description**: Used to specify the 'expire after write' minutes after which a Kubernetes label that has been added to the cache
+    should be removed. Set this to 0 to disable caching.

@@ -15,17 +15,6 @@
  */
 package com.github.workerframework.workermessageprioritization.targetcapacitycalculators;
 
-import io.kubernetes.client.extended.kubectl.Kubectl;
-import io.kubernetes.client.extended.kubectl.exception.KubectlException;
-import io.kubernetes.client.openapi.ApiClient;
-import io.kubernetes.client.openapi.Configuration;
-import io.kubernetes.client.openapi.models.V1Deployment;
-import io.kubernetes.client.openapi.models.V1ObjectMeta;
-import io.kubernetes.client.util.ClientBuilder;
-import io.kubernetes.client.util.KubeConfig;
-
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -40,7 +29,11 @@ import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.common.collect.Lists;
+
+import io.kubernetes.client.extended.kubectl.Kubectl;
+import io.kubernetes.client.extended.kubectl.exception.KubectlException;
+import io.kubernetes.client.openapi.models.V1Deployment;
+import io.kubernetes.client.openapi.models.V1ObjectMeta;
 
 /**
  * A {@link TargetQueueCapacityProvider} implementation that fetches the target queue capacity from a Kubernetes label.
@@ -53,64 +46,57 @@ public final class K8sTargetQueueCapacityProvider implements TargetQueueCapacity
 
     private static final String MESSAGE_PRIORITIZATION_TARGET_QUEUE_MAX_LENGTH_LABEL = "messageprioritization.targetqueuemaxlength";
 
-    private static final long FALLBACK_MAX_QUEUE_LENGTH = 1000;
+    private static final long TARGET_QUEUE_MAX_LENGTH_FALLBACK = 1000;
 
-    private final LoadingCache<Queue, Long> queueMaxLengthCache;
+    private final List<String> kubernetesNamespaces;
 
-    private final List<String> namespaces;
+    private final LoadingCache<Queue, Long> targetQueueToMaxLengthCache;
 
-    public static void main(String [] args) throws IOException
+    public K8sTargetQueueCapacityProvider(final List<String> kubernetesNamespaces, final int kubernetesLabelCacheExpiryMinutes)
     {
-        String kubeConfigPath = "C:\\Users\\RTorney\\Documents\\kube-config-larry"; // Copy from https://github.houston.softwaregrp.net/Verity/deploy/blob/master/override/kube-config-curly
-
-        // https://github.com/kubernetes-client/java/blob/master/docs/kubectl-equivalence-in-java.md
-        final ApiClient client = ClientBuilder.kubeconfig(KubeConfig.loadKubeConfig(new FileReader(kubeConfigPath))).build();
-        Configuration.setDefaultApiClient(client);
-
-        final long l = new K8sTargetQueueCapacityProvider(Lists.newArrayList("private", "public")).get(null);
-        System.out.println(l);
-    }
-
-    public K8sTargetQueueCapacityProvider(final List<String> namespaces)
-    {
-        this.queueMaxLengthCache = CacheBuilder.newBuilder()
-                .expireAfterWrite(60, TimeUnit.MINUTES)
+        this.targetQueueToMaxLengthCache = CacheBuilder.newBuilder()
+                .expireAfterWrite(kubernetesLabelCacheExpiryMinutes, TimeUnit.MINUTES)
                 .build(new CacheLoader<Queue,Long>()
                 {
                     @Override
                     public Long load(@Nonnull final Queue queue) throws Exception
                     {
-                        return getMaxQueueLengthFromKubernetes(queue);
+                        return getTargetMaxQueueLengthFromKubernetes(queue);
                     }
                 });
 
-        this.namespaces = namespaces;
+        this.kubernetesNamespaces = kubernetesNamespaces;
+
+        LOGGER.info("{} initialised with kubernetesNamespaces: {}, kubernetesLabelCacheExpiryMinutes: {}",
+                this.getClass().getSimpleName(),
+                kubernetesNamespaces,
+                kubernetesLabelCacheExpiryMinutes);
     }
 
     @Override
     public long get(final Queue targetQueue)
     {
         try {
-            return queueMaxLengthCache.get(targetQueue);
+            return targetQueueToMaxLengthCache.get(targetQueue);
         } catch (final ExecutionException executionException) {
             LOGGER.error(String.format("Cannot get max length for the %s queue as an ExecutionException was thrown. " +
-                    "Falling back to using a max queue length of %s", targetQueue, FALLBACK_MAX_QUEUE_LENGTH), executionException);
+                    "Falling back to using a max length of %s", targetQueue, TARGET_QUEUE_MAX_LENGTH_FALLBACK), executionException);
 
-            return FALLBACK_MAX_QUEUE_LENGTH;
+            return TARGET_QUEUE_MAX_LENGTH_FALLBACK;
         }
     }
 
-    private long getMaxQueueLengthFromKubernetes(final Queue targetQueue)
+    private long getTargetMaxQueueLengthFromKubernetes(final Queue targetQueue)
     {
         // Get the target queue name
-        final String targetQueueName = "dataprocessing-family-hashing-in";
+        final String targetQueueName = targetQueue.getName();
 
         // Loop through all provided namespaces
-        for (final String namespace : namespaces) {
+        for (final String kubernetesNamespace : kubernetesNamespaces) {
 
             try {
                 // Loop through all deployments (e.g. "elastic-worker", "elastic-query-worker")
-                for (final V1Deployment deployment : Kubectl.get(V1Deployment.class).namespace(namespace).execute()) {
+                for (final V1Deployment deployment : Kubectl.get(V1Deployment.class).namespace(kubernetesNamespace).execute()) {
 
                     // Get the metadata
                     final V1ObjectMeta metadata = deployment.getMetadata();
@@ -136,7 +122,7 @@ public final class K8sTargetQueueCapacityProvider implements TargetQueueCapacity
 
                     // Check if there is a target queue max length label
                     if (!labels.containsKey(MESSAGE_PRIORITIZATION_TARGET_QUEUE_MAX_LENGTH_LABEL)) {
-                        // RuntimeException as this indicates a deployment error that should never happen in production
+                        // Throw RuntimeException as this indicates a deployment error that should never happen in production
                         throw new RuntimeException(String.format(
                                 "Cannot get max length for the %s queue. The %s worker is missing the %s label",
                                 targetQueueName, metadata.getName(), MESSAGE_PRIORITIZATION_TARGET_QUEUE_MAX_LENGTH_LABEL));
@@ -145,19 +131,24 @@ public final class K8sTargetQueueCapacityProvider implements TargetQueueCapacity
                     // Return the value of the target queue max length label
                     final Long targetQueueMaxLength = Long.valueOf(labels.get(MESSAGE_PRIORITIZATION_TARGET_QUEUE_MAX_LENGTH_LABEL));
 
-                    LOGGER.debug("Setting the {} queue max length to {}", targetQueueName, targetQueueMaxLength);
+                    LOGGER.info("Read the {} worker's {} label. Setting {} queue max length to {}", // TODO debug
+                            metadata.getName(),
+                            MESSAGE_PRIORITIZATION_TARGET_QUEUE_MAX_LENGTH_LABEL,
+                            targetQueueName,
+                            targetQueueMaxLength);
 
                     return targetQueueMaxLength;
                 }
             } catch (final KubectlException kubectlException) {
                 LOGGER.error(String.format("Cannot get max length for the %s queue as the Kubernetes API threw an exception. " +
-                        "Falling back to using a max queue length of %s", targetQueue, FALLBACK_MAX_QUEUE_LENGTH), kubectlException);
+                        "Falling back to using a max queue length of %s", targetQueueName, TARGET_QUEUE_MAX_LENGTH_FALLBACK),
+                        kubectlException);
 
-                return FALLBACK_MAX_QUEUE_LENGTH;
+                return TARGET_QUEUE_MAX_LENGTH_FALLBACK;
             }
         }
 
-        // RuntimeException as this indicates a deployment error that should never happen in production
+        // Throw RuntimeException as this indicates a deployment error that should never happen in production
         throw new RuntimeException(String.format(
                 "Cannot get max length for the %s queue. Unable to find a worker with the %s label.",
                 targetQueueName, MESSAGE_PRIORITIZATION_TARGET_QUEUE_NAME_LABEL));

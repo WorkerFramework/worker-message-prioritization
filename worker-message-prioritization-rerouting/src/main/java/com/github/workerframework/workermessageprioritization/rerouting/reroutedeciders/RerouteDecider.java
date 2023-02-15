@@ -23,5 +23,5 @@ import com.github.workerframework.workermessageprioritization.targetcapacitycalc
  */
 public interface RerouteDecider
 {
-    boolean shouldReroute(final Queue targetQueue, final TargetQueueCapacityProvider targetQueueCapacityProvider);
+    boolean shouldReroute(final Queue targetQueue);
 }

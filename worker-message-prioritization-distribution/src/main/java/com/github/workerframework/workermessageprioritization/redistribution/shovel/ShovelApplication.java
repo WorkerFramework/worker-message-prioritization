@@ -60,8 +60,12 @@ public class ShovelApplication
             messageDistributorConfig.getRabbitMQMgmtUsername(),
             messageDistributorConfig.getRabbitMQMgmtPassword());
 
-        final ConsumptionTargetCalculator consumptionTargetCalculator = new EqualConsumptionTargetCalculator(
-                new K8sTargetQueueCapacityProvider(messageDistributorConfig.getKubernetesNamespaces()));
+        final K8sTargetQueueCapacityProvider k8sTargetQueueCapacityProvider = new K8sTargetQueueCapacityProvider(
+                messageDistributorConfig.getKubernetesNamespaces(),
+                messageDistributorConfig.getKubernetesLabelCacheExpiryMinutes());
+
+        final ConsumptionTargetCalculator consumptionTargetCalculator =
+                new EqualConsumptionTargetCalculator(k8sTargetQueueCapacityProvider);
 
         final ShovelDistributor shovelDistributor = new ShovelDistributor(
             queuesApi,
