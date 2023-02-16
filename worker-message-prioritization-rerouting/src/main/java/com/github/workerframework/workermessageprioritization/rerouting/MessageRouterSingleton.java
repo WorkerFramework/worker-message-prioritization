@@ -108,7 +108,7 @@ public class MessageRouterSingleton {
                 rerouteDecider = new AlwaysRerouteDecider();
             }
 
-            LOGGER.info("Using {} to decide whether to reroute messages", rerouteDecider.getClass().getSimpleName()); // TODO debug
+            LOGGER.debug("Using {} to decide whether to reroute messages", rerouteDecider.getClass().getSimpleName());
 
             messageRouter = new MessageRouter(queuesApi, "/", stagingQueueCreator, rerouteDecider);
 

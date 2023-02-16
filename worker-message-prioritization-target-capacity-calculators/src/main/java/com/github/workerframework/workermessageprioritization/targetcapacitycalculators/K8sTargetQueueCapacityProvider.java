@@ -60,7 +60,6 @@ public final class K8sTargetQueueCapacityProvider implements TargetQueueCapacity
         try {
             Configuration.setDefaultApiClient(ClientBuilder.standard().build());
         } catch (final IOException ioException) {
-            // Throw RuntimeException as we should always be able to create a Kubernetes client
             throw new RuntimeException("IOException thrown trying to create a Kubernetes client", ioException);
         }
 
@@ -77,8 +76,7 @@ public final class K8sTargetQueueCapacityProvider implements TargetQueueCapacity
 
         this.kubernetesNamespaces = kubernetesNamespaces;
 
-        LOGGER.info("{} initialised with kubernetesNamespaces: {}, kubernetesLabelCacheExpiryMinutes: {}",
-                this.getClass().getSimpleName(),
+        LOGGER.info("Initialised with kubernetesNamespaces: {}, kubernetesLabelCacheExpiryMinutes: {}",
                 kubernetesNamespaces,
                 kubernetesLabelCacheExpiryMinutes);
     }
@@ -141,9 +139,9 @@ public final class K8sTargetQueueCapacityProvider implements TargetQueueCapacity
                     // Return the value of the target queue max length label
                     final Long targetQueueMaxLength = Long.valueOf(labels.get(MESSAGE_PRIORITIZATION_TARGET_QUEUE_MAX_LENGTH_LABEL));
 
-                    LOGGER.info("Read the {} worker's {} label. Setting {} queue max length to {}", // TODO debug
-                            metadata.getName(),
+                    LOGGER.debug("Read the {} label belonging to {}. Setting the max length of the {} queue to {}",
                             MESSAGE_PRIORITIZATION_TARGET_QUEUE_MAX_LENGTH_LABEL,
+                            metadata.getName(),
                             targetQueueName,
                             targetQueueMaxLength);
 
