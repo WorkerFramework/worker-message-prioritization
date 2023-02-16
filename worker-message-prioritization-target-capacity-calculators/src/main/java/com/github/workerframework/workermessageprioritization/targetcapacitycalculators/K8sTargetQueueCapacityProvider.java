@@ -15,6 +15,7 @@
  */
 package com.github.workerframework.workermessageprioritization.targetcapacitycalculators;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -32,8 +33,10 @@ import com.google.common.cache.LoadingCache;
 
 import io.kubernetes.client.extended.kubectl.Kubectl;
 import io.kubernetes.client.extended.kubectl.exception.KubectlException;
+import io.kubernetes.client.openapi.Configuration;
 import io.kubernetes.client.openapi.models.V1Deployment;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
+import io.kubernetes.client.util.ClientBuilder;
 
 /**
  * A {@link TargetQueueCapacityProvider} implementation that fetches the target queue capacity from a Kubernetes label.
@@ -54,6 +57,13 @@ public final class K8sTargetQueueCapacityProvider implements TargetQueueCapacity
 
     public K8sTargetQueueCapacityProvider(final List<String> kubernetesNamespaces, final int kubernetesLabelCacheExpiryMinutes)
     {
+        try {
+            Configuration.setDefaultApiClient(ClientBuilder.standard().build());
+        } catch (final IOException ioException) {
+            // Throw RuntimeException as we should always be able to create a Kubernetes client
+            throw new RuntimeException("IOException thrown trying to create a Kubernetes client", ioException);
+        }
+
         this.targetQueueToMaxLengthCache = CacheBuilder.newBuilder()
                 .expireAfterWrite(kubernetesLabelCacheExpiryMinutes, TimeUnit.MINUTES)
                 .build(new CacheLoader<Queue,Long>()
