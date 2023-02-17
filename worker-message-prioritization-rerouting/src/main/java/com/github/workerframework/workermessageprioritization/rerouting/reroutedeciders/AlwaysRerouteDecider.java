@@ -24,7 +24,7 @@ import com.github.workerframework.workermessageprioritization.targetcapacitycalc
 public class AlwaysRerouteDecider implements RerouteDecider
 {
     @Override
-    public boolean shouldReroute(final Queue targetQueue, final TargetQueueCapacityProvider targetQueueCapacityProvider)
+    public boolean shouldReroute(final Queue targetQueue)
     {
         return true;
     }

@@ -15,19 +15,19 @@
  */
 package com.github.workerframework.workermessageprioritization.redistribution.shovel;
 
-import com.github.workerframework.workermessageprioritization.redistribution.consumption.EqualConsumptionTargetCalculator;
+import java.io.IOException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApi;
 import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitManagementApi;
 import com.github.workerframework.workermessageprioritization.rabbitmq.ShovelsApi;
 import com.github.workerframework.workermessageprioritization.redistribution.config.MessageDistributorConfig;
 import com.github.workerframework.workermessageprioritization.redistribution.consumption.ConsumptionTargetCalculator;
-import com.github.workerframework.workermessageprioritization.targetcapacitycalculators.FixedTargetQueueCapacityProvider;
+import com.github.workerframework.workermessageprioritization.redistribution.consumption.EqualConsumptionTargetCalculator;
+import com.github.workerframework.workermessageprioritization.targetcapacitycalculators.K8sTargetQueueCapacityProvider;
 import com.rabbitmq.client.ConnectionFactory;
-
-import java.io.IOException;
-import java.util.concurrent.TimeoutException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class ShovelApplication
 {
@@ -53,14 +53,18 @@ public class ShovelApplication
             messageDistributorConfig.getRabbitMQMgmtUsername(),
             messageDistributorConfig.getRabbitMQMgmtPassword());
 
-        RabbitManagementApi<ShovelsApi> shovelsApi = new RabbitManagementApi<>(
+        final RabbitManagementApi<ShovelsApi> shovelsApi = new RabbitManagementApi<>(
             ShovelsApi.class,
             messageDistributorConfig.getRabbitMQMgmtUrl(),
             messageDistributorConfig.getRabbitMQMgmtUsername(),
             messageDistributorConfig.getRabbitMQMgmtPassword());
 
-        final ConsumptionTargetCalculator consumptionTargetCalculator
-            = new EqualConsumptionTargetCalculator(new FixedTargetQueueCapacityProvider());
+        final K8sTargetQueueCapacityProvider k8sTargetQueueCapacityProvider = new K8sTargetQueueCapacityProvider(
+                messageDistributorConfig.getKubernetesNamespaces(),
+                messageDistributorConfig.getKubernetesLabelCacheExpiryMinutes());
+
+        final ConsumptionTargetCalculator consumptionTargetCalculator =
+                new EqualConsumptionTargetCalculator(k8sTargetQueueCapacityProvider);
 
         final ShovelDistributor shovelDistributor = new ShovelDistributor(
             queuesApi,
