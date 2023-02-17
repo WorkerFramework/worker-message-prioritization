@@ -68,7 +68,7 @@ public final class K8sTargetQueueCapacityProvider implements TargetQueueCapacity
                 .build(new CacheLoader<Queue,Long>()
                 {
                     @Override
-                    public Long load(@Nonnull final Queue queue) throws Exception
+                    public Long load(@Nonnull final Queue queue)
                     {
                         return getTargetMaxQueueLengthFromKubernetes(queue);
                     }
@@ -137,7 +137,7 @@ public final class K8sTargetQueueCapacityProvider implements TargetQueueCapacity
                     }
 
                     // Return the value of the target queue max length label
-                    final Long targetQueueMaxLength = Long.valueOf(labels.get(MESSAGE_PRIORITIZATION_TARGET_QUEUE_MAX_LENGTH_LABEL));
+                    final long targetQueueMaxLength = Long.parseLong(labels.get(MESSAGE_PRIORITIZATION_TARGET_QUEUE_MAX_LENGTH_LABEL));
 
                     LOGGER.debug("Read the {} label belonging to {}. Setting the max length of the {} queue to {}",
                             MESSAGE_PRIORITIZATION_TARGET_QUEUE_MAX_LENGTH_LABEL,
