@@ -146,7 +146,7 @@ public class MessageRouter {
             return originalQueueName;
         }
     }
-    
+
     private boolean shouldReroute(final String successQueueName) {
         final Queue queue;
         try {

@@ -127,30 +127,33 @@ public class MessageRouterSingleton {
                 messageRouter.route(document);
             } catch (final Throwable throwable) {
                 handleRouteFailure(throwable);
+                throw throwable;
             }
         }
     }
 
-    public static void route(final String originalQueueName, final String partitionId) {
+    public static String route(final String originalQueueName, final String partitionId) {
         if(messageRouter != null) {
             try {
-                messageRouter.route(originalQueueName, partitionId);
+                return messageRouter.route(originalQueueName, partitionId);
             } catch (final Throwable throwable) {
                 handleRouteFailure(throwable);
+                throw throwable;
             }
+        } else {
+            return originalQueueName;
         }
     }
 
-    public static void handleRouteFailure(final Throwable throwable) {
+    private static void handleRouteFailure(final Throwable throwable) {
         LOGGER.error("Exception thrown trying to route document", throwable);
 
         // If an error has been thrown by the messageRouter.route call, it is possible that the connection and/or channel has
         // been closed, so we should attempt to init this class again the next time init() is called to create a new connection
         // and new channel.
         closeQuietly();
-        initShouldBeReattempted = true;
 
-        throw throwable;
+        initShouldBeReattempted = true;
     }
 
     public static void close() throws IOException {
