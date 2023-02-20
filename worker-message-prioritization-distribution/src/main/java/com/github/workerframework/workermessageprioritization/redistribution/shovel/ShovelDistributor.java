@@ -125,14 +125,12 @@ public class ShovelDistributor extends MessageDistributor {
                         final long maxNumMessagesToConsumeFromStagingQueue = queueConsumptionTarget.getValue();
                         final long srcDeleteAfter = Math.min(numMessagesInStagingQueue, maxNumMessagesToConsumeFromStagingQueue);
 
-                        final String targetQueue = distributorWorkItem.getTargetQueue().getName();
-
                         final Shovel shovel = new Shovel();
                         shovel.setSrcDeleteAfter(srcDeleteAfter);
                         shovel.setAckMode(ACK_MODE);
                         shovel.setSrcQueue(shovelName);
                         shovel.setSrcUri(rabbitMQUri);
-                        shovel.setDestQueue(targetQueue);
+                        shovel.setDestQueue(distributorWorkItem.getTargetQueue().getName());
                         shovel.setDestUri(rabbitMQUri);
 
                         LOGGER.info("(Re)creating shovel named {} with properties {} to consume {} messages",
