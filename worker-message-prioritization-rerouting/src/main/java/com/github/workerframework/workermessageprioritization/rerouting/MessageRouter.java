@@ -114,7 +114,7 @@ public class MessageRouter {
 
     }
 
-    public String route(final String originalQueueName, final String partitionId) {
+    public String route(final String originalQueueName, final String tenantId) {
 
         final Queue originalQueue;
         try {
@@ -129,7 +129,7 @@ public class MessageRouter {
 
         if(shouldReroute(originalQueueName)) {
 
-            final String successQueueName = originalQueueName + LOAD_BALANCED_INDICATOR + "/" + partitionId;
+            final String successQueueName = originalQueueName + LOAD_BALANCED_INDICATOR + "/" + tenantId;
 
             try {
                 stagingQueueCreator.createStagingQueue(originalQueue, successQueueName);

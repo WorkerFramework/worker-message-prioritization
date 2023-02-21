@@ -132,10 +132,10 @@ public class MessageRouterSingleton {
         }
     }
 
-    public static String route(final String originalQueueName, final String partitionId) {
+    public static String route(final String originalQueueName, final String tenantId) {
         if(messageRouter != null) {
             try {
-                return messageRouter.route(originalQueueName, partitionId);
+                return messageRouter.route(originalQueueName, tenantId);
             } catch (final Throwable throwable) {
                 handleRouteFailure(throwable);
                 throw throwable;
