@@ -112,8 +112,7 @@ public class ShovelDistributor extends MessageDistributor {
                     final String shovelName = queueConsumptionTarget.getKey().getName();
 
                     final boolean nonTerminatedShovelExists = retrievedShovels.stream()
-                            .filter(retrievedShovel -> retrievedShovel.getState() != ShovelState.TERMINATED)
-                            .anyMatch(s -> s.getName().endsWith(shovelName));
+                            .anyMatch(s -> (s.getState() != ShovelState.TERMINATED) && (s.getName().endsWith(shovelName)));
 
                     if (nonTerminatedShovelExists) {
                         LOGGER.info("Non-terminated shovel {} already exists, ignoring.", shovelName);
