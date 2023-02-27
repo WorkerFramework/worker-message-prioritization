@@ -16,7 +16,6 @@
 package com.github.workerframework.workermessageprioritization.rerouting.reroutedeciders;
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
-import com.github.workerframework.workermessageprioritization.targetcapacitycalculators.TargetQueueCapacityProvider;
 
 /**
  * Decides whether a message should be rerouted to a staging queue or not.

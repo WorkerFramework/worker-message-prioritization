@@ -16,7 +16,6 @@
 package com.github.workerframework.workermessageprioritization.rerouting.reroutedeciders;
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
-import com.github.workerframework.workermessageprioritization.targetcapacitycalculators.TargetQueueCapacityProvider;
 
 /**
  * A {@link RerouteDecider} that always reroutes a message to a staging queue.
