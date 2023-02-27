@@ -19,6 +19,7 @@ import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.ShutdownSignalException;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -64,8 +65,8 @@ public class StagingQueueCreator {
         if (connection != null) {
             try {
                 connection.close();
-            } catch (final IOException ioException) {
-                LOGGER.warn("IOException thrown trying to close RabbitMQ connection", ioException);
+            } catch (final IOException | ShutdownSignalException exception) {
+                LOGGER.warn("IOException thrown trying to close RabbitMQ connection", exception);
             }
         }
     }
