@@ -37,11 +37,10 @@ public class MessageRouterSingleton {
     private static Connection connection;
     private static MessageRouter messageRouter;
     private static volatile boolean initAttempted = false;
-    private static volatile boolean initShouldBeReattempted = false;
 
     public static void init() {
 
-        if((messageRouter != null || initAttempted) && !initShouldBeReattempted) {
+        if(messageRouter != null || initAttempted) {
             return;
         }
 
@@ -65,15 +64,13 @@ public class MessageRouterSingleton {
             final RabbitManagementApi<QueuesApi> queuesApi =
                     new RabbitManagementApi<>(QueuesApi.class, mgmtEndpoint, mgmtUsername, mgmtPassword);
 
-            final StagingQueueCreator stagingQueueCreator = new StagingQueueCreator(connection.createChannel());
+            final StagingQueueCreator stagingQueueCreator = new StagingQueueCreator(connectionFactory);
 
             final RerouteDecider rerouteDecider = new AlwaysRerouteDecider();
 
             LOGGER.debug("Using {} to decide whether to reroute messages", rerouteDecider.getClass().getSimpleName());
 
             messageRouter = new MessageRouter(queuesApi, "/", stagingQueueCreator, rerouteDecider);
-
-            initShouldBeReattempted = false;
         }
         catch (final Throwable e) {
             LOGGER.error("Failed to initialise WMP - {}", e.toString());
@@ -84,37 +81,16 @@ public class MessageRouterSingleton {
 
     public static void route(final Document document) {
         if(messageRouter != null) {
-            try {
-                messageRouter.route(document);
-            } catch (final Throwable throwable) {
-                handleRouteFailure(throwable);
-                throw throwable;
-            }
+            messageRouter.route(document);
         }
     }
 
     public static String route(final String originalQueueName, final String tenantId) {
         if(messageRouter != null) {
-            try {
-                return messageRouter.route(originalQueueName, tenantId);
-            } catch (final Throwable throwable) {
-                handleRouteFailure(throwable);
-                throw throwable;
-            }
+            return messageRouter.route(originalQueueName, tenantId);
         } else {
             return originalQueueName;
         }
-    }
-
-    private static void handleRouteFailure(final Throwable throwable) {
-        LOGGER.error("Exception thrown trying to route document", throwable);
-
-        // If an error has been thrown by the messageRouter.route call, it is possible that the connection and/or channel has
-        // been closed, so we should attempt to init this class again the next time init() is called to create a new connection
-        // and new channel.
-        closeQuietly();
-
-        initShouldBeReattempted = true;
     }
 
     public static void close() throws IOException {
