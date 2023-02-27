@@ -86,10 +86,10 @@ public class StagingQueueCreator {
 
         try {
             channel.queueDeclare(stagingQueueName, durable, exclusive, autoDelete, arguments);
-        } catch (final IOException iOException) {
+        } catch (final IOException ioException) {
             LOGGER.error(String.format(
                     "IOException thrown creating or checking staging queue when calling channel.queueDeclare(%s, %s, %s, %s, %s)",
-                    stagingQueueName, durable, exclusive, autoDelete, arguments), iOException);
+                    stagingQueueName, durable, exclusive, autoDelete, arguments), ioException);
 
             try {
                 reconnectToRabbitMQ();
@@ -98,7 +98,7 @@ public class StagingQueueCreator {
             }
 
             // Throw original exception
-            throw iOException;
+            throw ioException;
         }
 
         declaredQueues.add(stagingQueueName);
