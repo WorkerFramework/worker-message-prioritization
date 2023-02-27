@@ -15,6 +15,7 @@
  */
 package com.github.workerframework.workermessageprioritization.redistribution.shovel;
 
+import com.github.workerframework.workermessageprioritization.rabbitmq.ShovelState;
 import com.github.workerframework.workermessageprioritization.redistribution.MessageDistributor;
 import com.github.workerframework.workermessageprioritization.redistribution.consumption.ConsumptionTargetCalculator;
 import com.github.workerframework.workermessageprioritization.rabbitmq.Component;
@@ -107,15 +108,14 @@ public class ShovelDistributor extends MessageDistributor {
             }
             else {
                 for(final Map.Entry<Queue, Long> queueConsumptionTarget: consumptionTarget.entrySet()) {
-//                    if(sourceQueue.getMessages() == 0) {
-//                        LOGGER.info("Source queue '{}' has no messages, ignoring.", 
-//                                distributorWorkItem.getTargetQueue().getName());
-//
-//                        continue;
-//                    }
-                    if(retrievedShovels.stream().anyMatch(s -> s.getName()
-                            .endsWith(queueConsumptionTarget.getKey().getName()))) {
-                        LOGGER.info("Shovel {} already exists, ignoring.", queueConsumptionTarget.getKey().getName());
+
+                    final String shovelName = queueConsumptionTarget.getKey().getName();
+
+                    final boolean nonTerminatedShovelExists = retrievedShovels.stream()
+                            .anyMatch(s -> (s.getState() != ShovelState.TERMINATED) && (s.getName().endsWith(shovelName)));
+
+                    if (nonTerminatedShovelExists) {
+                        LOGGER.info("Non-terminated shovel {} already exists, ignoring.", shovelName);
                     } else {
                         // Delete this shovel after all the messages in the staging queue have been consumed OR we have reached the
                         // maximum amount of messages we are allowed to consume from the staging queue (whichever is lower).
@@ -123,26 +123,23 @@ public class ShovelDistributor extends MessageDistributor {
                         final long numMessagesInStagingQueue = queueConsumptionTarget.getKey().getMessages();
                         final long maxNumMessagesToConsumeFromStagingQueue = queueConsumptionTarget.getValue();
                         final long srcDeleteAfter = Math.min(numMessagesInStagingQueue, maxNumMessagesToConsumeFromStagingQueue);
- 
-                        final String stagingQueue = queueConsumptionTarget.getKey().getName();
-                        final String targetQueue = distributorWorkItem.getTargetQueue().getName();
 
                         final Shovel shovel = new Shovel();
                         shovel.setSrcDeleteAfter(srcDeleteAfter);
                         shovel.setAckMode(ACK_MODE);
-                        shovel.setSrcQueue(stagingQueue);
+                        shovel.setSrcQueue(shovelName);
                         shovel.setSrcUri(rabbitMQUri);
-                        shovel.setDestQueue(targetQueue);
+                        shovel.setDestQueue(distributorWorkItem.getTargetQueue().getName());
                         shovel.setDestUri(rabbitMQUri);
 
-                        LOGGER.info("Creating shovel named {} with properties {} to consume {} messages",
-                                    stagingQueue,
-                                    shovel,
-                                    srcDeleteAfter);
+                        LOGGER.info("(Re)creating shovel named {} with properties {} to consume {} messages",
+                                shovelName,
+                                shovel,
+                                srcDeleteAfter);
 
-                        shovelsApi.getApi().putShovel(rabbitMQVHost, stagingQueue,
+                        shovelsApi.getApi().putShovel(rabbitMQVHost, shovelName,
                                                       new Component<>("shovel",
-                                                                      stagingQueue,
+                                                                      shovelName,
                                                                       shovel));
                     }
                 }
