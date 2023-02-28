@@ -66,7 +66,7 @@ public class StagingQueueCreator {
             try {
                 connection.close();
             } catch (final IOException | ShutdownSignalException exception) {
-                LOGGER.warn("IOException thrown trying to close RabbitMQ connection", exception);
+                LOGGER.warn("Exception thrown trying to close RabbitMQ connection", exception);
             }
         }
     }
