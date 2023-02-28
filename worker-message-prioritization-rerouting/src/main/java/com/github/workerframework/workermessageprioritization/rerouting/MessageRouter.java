@@ -79,15 +79,15 @@ public class MessageRouter {
              originalQueue = queuesCache.get(originalQueueName);
         } catch (final ExecutionException e) {
             LOGGER.error(
-                    "Unable to retrieve the definition of original queue '{}' exists, reverting to original queue. {}",
+                    "Unable to retrieve the definition of original queue '{}', reverting to original queue. {}",
                     response.getSuccessQueue().getName(), e);
 
             response.getSuccessQueue().set(originalQueueName);
             return;
         }
 
-        if(shouldReroute(response.getSuccessQueue())) {
-            
+        if(shouldReroute(response.getSuccessQueue().getName())) {
+
             response.getSuccessQueue().set(originalQueueName + LOAD_BALANCED_INDICATOR);
             
             for(final QueueNameMutator queueNameMutator: queueNameMutators) {
@@ -104,7 +104,7 @@ public class MessageRouter {
                 stagingQueueCreator.createStagingQueue(originalQueue, response.getSuccessQueue().getName());
             } catch (final IOException e) {
                 LOGGER.error(
-                        "Unable to create the new staging queue '{}' exists, reverting to original queue. {}",
+                        "Unable to create the new staging queue '{}', reverting to original queue. {}",
                         response.getSuccessQueue().getName(), e);
 
                 response.getSuccessQueue().set(originalQueueName);
@@ -113,14 +113,47 @@ public class MessageRouter {
         }
 
     }
-    
-    private boolean shouldReroute(final ResponseQueue successQueue) {
+
+    public String route(final String originalQueueName, final String tenantId) {
+
+        final Queue originalQueue;
+        try {
+            originalQueue = queuesCache.get(originalQueueName);
+        } catch (final ExecutionException e) {
+            LOGGER.error(
+                    "Unable to retrieve the definition of original queue '{}', reverting to original queue. {}",
+                    originalQueueName, e);
+
+            return originalQueueName;
+        }
+
+        if(shouldReroute(originalQueueName)) {
+
+            final String successQueueName = originalQueueName + LOAD_BALANCED_INDICATOR + "/" + tenantId;
+
+            try {
+                stagingQueueCreator.createStagingQueue(originalQueue, successQueueName);
+
+                return successQueueName;
+            } catch (final IOException e) {
+                LOGGER.error(
+                        "Unable to create the new staging queue '{}', reverting to original queue. {}",
+                        successQueueName, e);
+
+                return originalQueueName;
+            }
+        } else {
+            return originalQueueName;
+        }
+    }
+
+    private boolean shouldReroute(final String successQueueName) {
         final Queue queue;
         try {
-            queue = queuesCache.get(successQueue.getName());
+            queue = queuesCache.get(successQueueName);
         } catch (final ExecutionException e) {
-            LOGGER.error("Could not retrieve queue stats for {} to determine need for reroute.\n{}", 
-                    successQueue.getName(), e.getCause().toString());
+            LOGGER.error("Could not retrieve queue stats for {} to determine need for reroute.\n{}",
+                    successQueueName, e.getCause().toString());
             
             return false;
         }

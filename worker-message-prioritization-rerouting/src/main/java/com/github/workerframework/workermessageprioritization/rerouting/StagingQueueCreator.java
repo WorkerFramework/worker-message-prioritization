@@ -17,10 +17,15 @@ package com.github.workerframework.workermessageprioritization.rerouting;
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.ShutdownSignalException;
 
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.concurrent.TimeoutException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,11 +34,41 @@ public class StagingQueueCreator {
     private static final Logger LOGGER = LoggerFactory.getLogger(StagingQueueCreator.class);
 
     private final HashSet<String> declaredQueues = new HashSet<>();
-    private final Channel channel;
+    private final ConnectionFactory connectionFactory;
+    private Connection connection;
+    private Channel channel;
 
-    public StagingQueueCreator(final Channel channel) {
+    public StagingQueueCreator(final ConnectionFactory connectionFactory) throws IOException, TimeoutException {
+        this.connectionFactory = connectionFactory;
+        connectToRabbitMQ();
+    }
 
-        this.channel = channel;
+    private void connectToRabbitMQ() throws IOException, TimeoutException  {
+        try {
+            connection = connectionFactory.newConnection();
+            channel = connection.createChannel();
+        } catch (final IOException | TimeoutException e) {
+            LOGGER.error("Exception thrown trying to create connection to RabbitMQ", e);
+
+            closeConnectionToRabbitMQ();
+
+            throw e;
+        }
+    }
+
+    private void reconnectToRabbitMQ() throws IOException, TimeoutException  {
+        closeConnectionToRabbitMQ();
+        connectToRabbitMQ();
+    }
+
+    private void closeConnectionToRabbitMQ()  {
+        if (connection != null) {
+            try {
+                connection.close();
+            } catch (final IOException | ShutdownSignalException exception) {
+                LOGGER.warn("Exception thrown trying to close RabbitMQ connection", exception);
+            }
+        }
     }
 
     void createStagingQueue(final Queue targetQueue, final String stagingQueueName) throws IOException {
@@ -52,12 +87,19 @@ public class StagingQueueCreator {
 
         try {
             channel.queueDeclare(stagingQueueName, durable, exclusive, autoDelete, arguments);
-        } catch (final IOException iOException) {
+        } catch (final IOException ioException) {
             LOGGER.error(String.format(
                     "IOException thrown creating or checking staging queue when calling channel.queueDeclare(%s, %s, %s, %s, %s)",
-                    stagingQueueName, durable, exclusive, autoDelete, arguments), iOException);
+                    stagingQueueName, durable, exclusive, autoDelete, arguments), ioException);
 
-            throw iOException;
+            try {
+                reconnectToRabbitMQ();
+            } catch (final IOException | TimeoutException ignored) {
+                // An error will already be logged if we're unable to reconnect, no need to log it again
+            }
+
+            // Throw original exception
+            throw ioException;
         }
 
         declaredQueues.add(stagingQueueName);
