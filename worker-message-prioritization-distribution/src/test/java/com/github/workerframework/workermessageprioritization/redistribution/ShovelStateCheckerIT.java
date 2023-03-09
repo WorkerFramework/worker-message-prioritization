@@ -66,8 +66,7 @@ public class ShovelStateCheckerIT extends DistributorTestBase
         Assert.assertNotEquals("Bad shovel should not be in 'running' state", ShovelState.RUNNING, retrievedShovel.getState());
 
         // Run the ShovelStateChecker to delete the bad shovel.
-        final ShovelStateChecker shovelStateChecker = new ShovelStateChecker(shovelsApi, "/", 1L,
-                1L);
+        final ShovelStateChecker shovelStateChecker = new ShovelStateChecker(shovelsApi, "/", 1L, 1L);
         shovelStateChecker.run(); // First run() sets the timeObservedInNonRunningState to Instant.now()
         Thread.sleep(2000);       // Wait 2 seconds
         shovelStateChecker.run(); // Second run() should see that the timeout of 1 millisecond has been reached, and delete the shovel
