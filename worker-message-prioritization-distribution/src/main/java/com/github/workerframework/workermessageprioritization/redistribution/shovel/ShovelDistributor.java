@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class ShovelDistributor extends MessageDistributor {
@@ -49,6 +50,7 @@ public class ShovelDistributor extends MessageDistributor {
     private final String rabbitMQVHost;
     private final String rabbitMQUri;
     private final long distributorRunIntervalMilliseconds;
+    private final ScheduledExecutorService shovelStateCheckerExecutorService;
 
     public ShovelDistributor(
             final RabbitManagementApi<QueuesApi> queuesApi,
@@ -68,21 +70,33 @@ public class ShovelDistributor extends MessageDistributor {
             "amqp://%s@/%s", rabbitMQUsername, URLEncoder.encode(this.rabbitMQVHost, StandardCharsets.UTF_8.toString()));
         this.distributorRunIntervalMilliseconds = distributorRunIntervalMilliseconds;
 
-        Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
-            new ShovelStateChecker(shovelsApi, rabbitMQVHost, nonRunningShovelTimeoutMilliseconds),
-            0,
-            nonRunningShovelTimeoutCheckIntervalMilliseconds,
-            TimeUnit.MILLISECONDS);
+        this.shovelStateCheckerExecutorService = Executors.newSingleThreadScheduledExecutor();
+
+        shovelStateCheckerExecutorService.scheduleAtFixedRate(
+                new ShovelStateChecker(
+                        shovelsApi,
+                        rabbitMQVHost,
+                        nonRunningShovelTimeoutMilliseconds,
+                        nonRunningShovelTimeoutCheckIntervalMilliseconds),
+                0,
+                nonRunningShovelTimeoutCheckIntervalMilliseconds,
+                TimeUnit.MILLISECONDS);
     }
     
     public void run() throws InterruptedException {
         while(true) {
-            runOnce();
+            try {
+                runOnce();
+            } catch (final Exception e) {
+                shovelStateCheckerExecutorService.shutdownNow();
+                throw e;
+            }
 
             try {
                 Thread.sleep(distributorRunIntervalMilliseconds);
             } catch (final InterruptedException e) {
                 LOGGER.warn("Interrupted {}", e.getMessage());
+                shovelStateCheckerExecutorService.shutdownNow();
                 throw e;
             }
         }
@@ -91,8 +105,20 @@ public class ShovelDistributor extends MessageDistributor {
     public void runOnce() {
         
         final Set<DistributorWorkItem> distributorWorkItems = getDistributorWorkItems();
-        
-        final List<RetrievedShovel> retrievedShovels = shovelsApi.getApi().getShovels();
+
+        final List<RetrievedShovel> retrievedShovels;
+        try {
+            retrievedShovels = shovelsApi.getApi().getShovels();
+        } catch (final Exception e) {
+            final String errorMessage = String.format(
+                    "Failed to get a list of existing shovels, so unable to check if additional shovels need to " +
+                            " be created or recreated. Will try again during the next run in %d milliseconds",
+                    distributorRunIntervalMilliseconds);
+
+            LOGGER.error(errorMessage, e);
+
+            return;
+        }
         
         LOGGER.debug("Read the following list of shovels from the RabbitMQ API: {}", retrievedShovels);
         
@@ -132,15 +158,27 @@ public class ShovelDistributor extends MessageDistributor {
                         shovel.setDestQueue(distributorWorkItem.getTargetQueue().getName());
                         shovel.setDestUri(rabbitMQUri);
 
-                        LOGGER.info("(Re)creating shovel named {} with properties {} to consume {} messages",
+                        LOGGER.info("Creating (or recreating) shovel named {} with properties {} to consume {} messages",
                                 shovelName,
                                 shovel,
                                 srcDeleteAfter);
 
-                        shovelsApi.getApi().putShovel(rabbitMQVHost, shovelName,
-                                                      new Component<>("shovel",
-                                                                      shovelName,
-                                                                      shovel));
+                        try {
+                            shovelsApi.getApi().putShovel(rabbitMQVHost, shovelName,
+                                    new Component<>("shovel",
+                                            shovelName,
+                                            shovel));
+                        } catch (final Exception e) {
+                            final String errorMessage = String.format(
+                                    "Failed to create (or recreate) shovel named %s with properties %s to consume %s messages. " +
+                                    "Will try again during the next run in %d milliseconds (if the shovel is still required then).",
+                                    shovelName,
+                                    shovel,
+                                    srcDeleteAfter,
+                                    distributorRunIntervalMilliseconds);
+
+                            LOGGER.error(errorMessage, e);
+                        }
                     }
                 }
             }
