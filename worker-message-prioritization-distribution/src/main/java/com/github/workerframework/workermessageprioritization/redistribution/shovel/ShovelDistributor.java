@@ -84,21 +84,19 @@ public class ShovelDistributor extends MessageDistributor {
     }
     
     public void run() throws InterruptedException {
-        while(true) {
-            try {
+        try {
+            while(true) {
                 runOnce();
-            } catch (final Exception e) {
-                shovelStateCheckerExecutorService.shutdownNow();
-                throw e;
-            }
 
-            try {
-                Thread.sleep(distributorRunIntervalMilliseconds);
-            } catch (final InterruptedException e) {
-                LOGGER.warn("Interrupted {}", e.getMessage());
-                shovelStateCheckerExecutorService.shutdownNow();
-                throw e;
+                try {
+                    Thread.sleep(distributorRunIntervalMilliseconds);
+                } catch (final InterruptedException e) {
+                    LOGGER.warn("Interrupted {}", e.getMessage());
+                    throw e;
+                }
             }
+        } finally {
+            shovelStateCheckerExecutorService.shutdownNow();
         }
     }
     
