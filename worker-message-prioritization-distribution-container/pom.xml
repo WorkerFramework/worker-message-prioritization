@@ -209,6 +209,8 @@
                             <!-- Run the image for this module -->
                             <run>
                                 <env>
+                                    <CAF_RABBITMQ_PASS>guest</CAF_RABBITMQ_PASS>
+                                    <CAF_RABBITMQ_MGMT_PASS>guest</CAF_RABBITMQ_MGMT_PASS>
                                     <CAF_LOG_LEVEL>DEBUG</CAF_LOG_LEVEL>
                                     <CAF_WMP_KUBERNETES_NAMESPACES>private</CAF_WMP_KUBERNETES_NAMESPACES>
                                 </env>
