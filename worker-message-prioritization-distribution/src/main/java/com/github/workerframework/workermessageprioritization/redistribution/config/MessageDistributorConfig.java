@@ -37,7 +37,7 @@ public final class MessageDistributorConfig {
     private static final String CAF_RABBITMQ_USERNAME = "CAF_RABBITMQ_USERNAME";
     private static final String CAF_RABBITMQ_USERNAME_DEFAULT = "guest";
 
-    private static final String CAF_RABBITMQ_PASS = "CAF_RABBITMQ_PASSWORD";
+    private static final String CAF_RABBITMQ_PASS = "CAF_RABBITMQ_PASS";
 
     private static final String CAF_RABBITMQ_MGMT_URL = "CAF_RABBITMQ_MGMT_URL";
     private static final String CAF_RABBITMQ_MGMT_URL_DEFAULT = "http://rabbitmq:15672";
@@ -45,7 +45,7 @@ public final class MessageDistributorConfig {
     private static final String CAF_RABBITMQ_MGMT_USERNAME = "CAF_RABBITMQ_MGMT_USERNAME";
     private static final String CAF_RABBITMQ_MGMT_USERNAME_DEFAULT = "guest";
 
-    private static final String CAF_RABBITMQ_MGMT_PASS = "CAF_RABBITMQ_MGMT_PASSWORD";
+    private static final String CAF_RABBITMQ_MGMT_PASS = "CAF_RABBITMQ_MGMT_PASS";
 
     private static final String CAF_WMP_DISTRIBUTOR_RUN_INTERVAL_MILLISECONDS = "CAF_WMP_DISTRIBUTOR_RUN_INTERVAL_MILLISECONDS";
     private static final long CAF_WMP_DISTRIBUTOR_RUN_INTERVAL_MILLISECONDS_DEFAULT = 10000;
