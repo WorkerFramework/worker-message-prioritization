@@ -15,21 +15,25 @@
  */
 package com.github.workerframework.workermessageprioritization.rabbitmq;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+import java.util.concurrent.TimeUnit;
+
+import com.google.common.io.ByteStreams;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
 import com.google.gson.ToNumberPolicy;
 import com.squareup.okhttp.OkHttpClient;
+
 import retrofit.ErrorHandler;
 import retrofit.RestAdapter;
 import retrofit.RetrofitError;
 import retrofit.client.OkClient;
 import retrofit.client.Response;
 import retrofit.converter.GsonConverter;
-
-
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-import java.util.concurrent.TimeUnit;
 
 public class RabbitManagementApi <T> {
 
@@ -81,18 +85,32 @@ public class RabbitManagementApi <T> {
 
         return new GsonBuilder()
             .setObjectToNumberStrategy(ToNumberPolicy.LONG_OR_DOUBLE)
+            .setDateFormat("yyyy-MM-dd HH:mm:ss") // Format of timestamp returned by shovel API: https://www.rabbitmq.com/shovel.html
             .create();
     }
 
     private static class RabbitApiErrorHandler implements ErrorHandler
     {
+        private static Gson gson = new Gson();
+
         @Override
         public Throwable handleError(final RetrofitError retrofitError)
         {
             final Response response = retrofitError.getResponse();
             final String responseStatus = response != null ? String.valueOf(response.getStatus()) : null;
             final String responseReason = response != null ? response.getReason() : null;
-            final String responseBody =  response != null && response.getBody() != null ? response.getBody().toString() : null;
+            String responseBody;
+            if (response != null && response.getBody() != null) {
+                try {
+                    final InputStream inputStream = response.getBody().in();
+                    final String json = new String(ByteStreams.toByteArray(inputStream), StandardCharsets.UTF_8);
+                    responseBody = gson.fromJson(json, JsonElement.class).toString();
+                } catch (final IOException e) {
+                    responseBody = response.getBody().toString();
+                }
+            } else {
+                responseBody = null;
+            }
 
             final String errorMessage = String.format(
                     "RabbitMQ management API error: " +
@@ -113,6 +131,6 @@ public class RabbitManagementApi <T> {
 
             return new RuntimeException(errorMessage, retrofitError);
         }
-    }
 
+    }
 }

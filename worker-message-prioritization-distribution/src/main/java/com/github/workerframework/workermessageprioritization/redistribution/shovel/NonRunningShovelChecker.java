@@ -105,8 +105,6 @@ public final class NonRunningShovelChecker implements Runnable
                                 nonRunningShovelTimeoutCheckIntervalMilliseconds);
 
                         LOGGER.error(errorMessage, e);
-
-                        return;
                     }
                 } else {
                     LOGGER.debug("Shovel named {} was observed in a non-running state at {}. The time now is {}. "
