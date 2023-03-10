@@ -36,22 +36,37 @@ public final class ShovelStateChecker implements Runnable
     private final Map<String, Instant> shovelNameToTimeObservedInNonRunningState;
     private final String rabbitMQVHost;
     private final long nonRunningShovelTimeoutMilliseconds;
+    private final long nonRunningShovelTimeoutCheckIntervalMilliseconds;
 
     public ShovelStateChecker(
-        final RabbitManagementApi<ShovelsApi> shovelsApi,
-        final String rabbitMQVHost,
-        final long nonRunningShovelTimeoutMilliseconds)
+            final RabbitManagementApi<ShovelsApi> shovelsApi,
+            final String rabbitMQVHost,
+            final long nonRunningShovelTimeoutMilliseconds,
+            final long nonRunningShovelTimeoutCheckIntervalMilliseconds)
     {
         this.shovelsApi = shovelsApi;
         this.shovelNameToTimeObservedInNonRunningState = ExpiringMap.builder().expiration(12, TimeUnit.HOURS).build();
         this.rabbitMQVHost = rabbitMQVHost;
         this.nonRunningShovelTimeoutMilliseconds = nonRunningShovelTimeoutMilliseconds;
+        this.nonRunningShovelTimeoutCheckIntervalMilliseconds = nonRunningShovelTimeoutCheckIntervalMilliseconds;
     }
 
     @Override
     public void run()
-    {        
-        final List<RetrievedShovel> retrievedShovels = shovelsApi.getApi().getShovels();
+    {
+        final List<RetrievedShovel> retrievedShovels;
+        try {
+            retrievedShovels = shovelsApi.getApi().getShovels();
+        } catch (final Exception e) {
+            final String errorMessage = String.format(
+                    "Failed to get a list of existing shovels, so unable to check if any shovels are in a " +
+                            "non-running state and need to be deleted. Will try again during the next run in %d milliseconds",
+                    nonRunningShovelTimeoutCheckIntervalMilliseconds);
+
+            LOGGER.error(errorMessage, e);
+
+            return;
+        }
 
         LOGGER.debug("Read the following list of shovels from the RabbitMQ API: {}", retrievedShovels);
 
@@ -79,8 +94,20 @@ public final class ShovelStateChecker implements Runnable
                                  timeNow,
                                  retrievedShovel.getState().toString().toLowerCase(),
                                  nonRunningShovelTimeoutMilliseconds);                    
- 
-                    shovelsApi.getApi().delete(rabbitMQVHost, shovelName);
+
+                    try {
+                        shovelsApi.getApi().delete(rabbitMQVHost, shovelName);
+                    } catch (final Exception e) {
+                        final String errorMessage = String.format(
+                                "Failed to delete shovel named %s. Will try again during the next run in %d " +
+                                        "milliseconds (if the shovel is still present)",
+                                shovelName,
+                                nonRunningShovelTimeoutCheckIntervalMilliseconds);
+
+                        LOGGER.error(errorMessage, e);
+
+                        return;
+                    }
                 } else {
                     LOGGER.debug("Shovel named {} was observed in a non-running state at {}. The time now is {}. "
                         + "The shovel is not yet in a 'running' state. It's current state is '{}'. "

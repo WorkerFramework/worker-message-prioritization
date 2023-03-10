@@ -23,6 +23,7 @@ import retrofit.ErrorHandler;
 import retrofit.RestAdapter;
 import retrofit.RetrofitError;
 import retrofit.client.OkClient;
+import retrofit.client.Response;
 import retrofit.converter.GsonConverter;
 
 
@@ -88,7 +89,29 @@ public class RabbitManagementApi <T> {
         @Override
         public Throwable handleError(final RetrofitError retrofitError)
         {
-            return new RuntimeException("RabbitMQ management API error " + retrofitError.getResponse().toString(), retrofitError);
+            final Response response = retrofitError.getResponse();
+            final String responseStatus = response != null ? String.valueOf(response.getStatus()) : null;
+            final String responseReason = response != null ? response.getReason() : null;
+            final String responseBody =  response != null && response.getBody() != null ? response.getBody().toString() : null;
+
+            final String errorMessage = String.format(
+                    "RabbitMQ management API error: " +
+                            "requestUrl=%s, " +
+                            "responseStatus=%s, " +
+                            "responseReason=%s, " +
+                            "responseBody=%s, " +
+                            "kind=%s, " +
+                            "successType=%s, " +
+                            "cause=%s",
+                    retrofitError.getUrl(),
+                    responseStatus,
+                    responseReason,
+                    responseBody,
+                    retrofitError.getKind(),
+                    retrofitError.getSuccessType(),
+                    retrofitError.getCause());
+
+            return new RuntimeException(errorMessage, retrofitError);
         }
     }
 
