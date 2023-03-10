@@ -50,7 +50,7 @@ public class ShovelDistributor extends MessageDistributor {
     private final String rabbitMQVHost;
     private final String rabbitMQUri;
     private final long distributorRunIntervalMilliseconds;
-    private final ScheduledExecutorService shovelStateCheckerExecutorService;
+    private final ScheduledExecutorService nonRunningShovelCheckerExecutorService;
 
     public ShovelDistributor(
             final RabbitManagementApi<QueuesApi> queuesApi,
@@ -70,10 +70,10 @@ public class ShovelDistributor extends MessageDistributor {
             "amqp://%s@/%s", rabbitMQUsername, URLEncoder.encode(this.rabbitMQVHost, StandardCharsets.UTF_8.toString()));
         this.distributorRunIntervalMilliseconds = distributorRunIntervalMilliseconds;
 
-        this.shovelStateCheckerExecutorService = Executors.newSingleThreadScheduledExecutor();
+        this.nonRunningShovelCheckerExecutorService = Executors.newSingleThreadScheduledExecutor();
 
-        shovelStateCheckerExecutorService.scheduleAtFixedRate(
-                new ShovelStateChecker(
+        nonRunningShovelCheckerExecutorService.scheduleAtFixedRate(
+                new NonRunningShovelChecker(
                         shovelsApi,
                         rabbitMQVHost,
                         nonRunningShovelTimeoutMilliseconds,
@@ -96,7 +96,7 @@ public class ShovelDistributor extends MessageDistributor {
                 }
             }
         } finally {
-            shovelStateCheckerExecutorService.shutdownNow();
+            nonRunningShovelCheckerExecutorService.shutdownNow();
         }
     }
     

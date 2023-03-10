@@ -19,7 +19,7 @@ import com.github.workerframework.workermessageprioritization.rabbitmq.Component
 import com.github.workerframework.workermessageprioritization.rabbitmq.RetrievedShovel;
 import com.github.workerframework.workermessageprioritization.rabbitmq.Shovel;
 import com.github.workerframework.workermessageprioritization.rabbitmq.ShovelState;
-import com.github.workerframework.workermessageprioritization.redistribution.shovel.ShovelStateChecker;
+import com.github.workerframework.workermessageprioritization.redistribution.shovel.NonRunningShovelChecker;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import org.junit.Assert;
@@ -30,7 +30,7 @@ import java.util.Collections;
 import java.util.Optional;
 import java.util.concurrent.TimeoutException;
 
-public class ShovelStateCheckerIT extends DistributorTestBase
+public class NonRunningShovelCheckerIT extends DistributorTestBase
 {
     @Test
     public void nonRunningShovelShouldBeDeletedTest() throws TimeoutException, IOException, InterruptedException
@@ -66,10 +66,10 @@ public class ShovelStateCheckerIT extends DistributorTestBase
         Assert.assertNotEquals("Bad shovel should not be in 'running' state", ShovelState.RUNNING, retrievedShovel.getState());
 
         // Run the ShovelStateChecker to delete the bad shovel.
-        final ShovelStateChecker shovelStateChecker = new ShovelStateChecker(shovelsApi, "/", 1L, 1L);
-        shovelStateChecker.run(); // First run() sets the timeObservedInNonRunningState to Instant.now()
+        final NonRunningShovelChecker nonRunningShovelChecker = new NonRunningShovelChecker(shovelsApi, "/", 1L, 1L);
+        nonRunningShovelChecker.run(); // First run() sets the timeObservedInNonRunningState to Instant.now()
         Thread.sleep(2000);       // Wait 2 seconds
-        shovelStateChecker.run(); // Second run() should see that the timeout of 1 millisecond has been reached, and delete the shovel
+        nonRunningShovelChecker.run(); // Second run() should see that the timeout of 1 millisecond has been reached, and delete the shovel
 
         // Verify the bad shovel has been deleted
         Optional<RetrievedShovel> retrievedShovelAfterDeletion;

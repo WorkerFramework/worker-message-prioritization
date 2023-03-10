@@ -28,9 +28,9 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import net.jodah.expiringmap.ExpiringMap;
 
-public final class ShovelStateChecker implements Runnable
+public final class NonRunningShovelChecker implements Runnable
 {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ShovelStateChecker.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(NonRunningShovelChecker.class);
 
     private final RabbitManagementApi<ShovelsApi> shovelsApi;
     private final Map<String, Instant> shovelNameToTimeObservedInNonRunningState;
@@ -38,7 +38,7 @@ public final class ShovelStateChecker implements Runnable
     private final long nonRunningShovelTimeoutMilliseconds;
     private final long nonRunningShovelTimeoutCheckIntervalMilliseconds;
 
-    public ShovelStateChecker(
+    public NonRunningShovelChecker(
             final RabbitManagementApi<ShovelsApi> shovelsApi,
             final String rabbitMQVHost,
             final long nonRunningShovelTimeoutMilliseconds,
