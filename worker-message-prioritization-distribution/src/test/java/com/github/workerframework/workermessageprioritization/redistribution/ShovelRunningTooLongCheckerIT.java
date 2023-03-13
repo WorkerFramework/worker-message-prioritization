@@ -100,30 +100,29 @@ public class ShovelRunningTooLongCheckerIT extends DistributorTestBase
                 1L,
                 TimeUnit.MILLISECONDS);
 
-        // Wait 5 seconds
-        Thread.sleep(5000);
+        try {
+            // Verify the shovel has been deleted
+            Optional<RetrievedShovel> retrievedShovelAfterDeletion;
+            for (int attempt = 0; attempt < 10; attempt++) {
+                retrievedShovelAfterDeletion = shovelsApi
+                        .getApi()
+                        .getShovels()
+                        .stream()
+                        .filter(s -> s.getName().equals(stagingQueueName))
+                        .findFirst();
 
-        shovelRunningTooLongCheckerExecutorService.shutdown();
-
-        // Verify the shovel has been deleted
-        Optional<RetrievedShovel> retrievedShovelAfterDeletion;
-        for (int attempt = 0; attempt < 10; attempt++) {
-            retrievedShovelAfterDeletion = shovelsApi
-                .getApi()
-                .getShovels()
-                .stream()
-                .filter(s -> s.getName().equals(stagingQueueName))
-                .findFirst();
-
-            if (!retrievedShovelAfterDeletion.isPresent()) {
-                // Test passed
-                return;
-            } else {
-                // Shovel not deleted yet, wait a bit and check again
-                Thread.sleep(1000 * 10);
+                if (!retrievedShovelAfterDeletion.isPresent()) {
+                    // Test passed
+                    return;
+                } else {
+                    // Shovel not deleted yet, wait a bit and check again
+                    Thread.sleep(2000);
+                }
             }
-        }
 
-        Assert.fail("Shovel named " + stagingQueueName + " should have been deleted but wasn't");
+            Assert.fail("Shovel named " + stagingQueueName + " should have been deleted but wasn't");
+        } finally {
+            shovelRunningTooLongCheckerExecutorService.shutdownNow();
+        }
     }
 }
