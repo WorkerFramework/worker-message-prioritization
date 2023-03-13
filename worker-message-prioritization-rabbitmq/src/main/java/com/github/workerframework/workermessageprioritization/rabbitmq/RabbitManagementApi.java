@@ -18,18 +18,8 @@ package com.github.workerframework.workermessageprioritization.rabbitmq;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
 import java.util.Base64;
 import java.util.concurrent.TimeUnit;
-
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
-
-import org.jetbrains.annotations.Nullable;
 
 import com.google.common.io.ByteStreams;
 import com.google.gson.Gson;
