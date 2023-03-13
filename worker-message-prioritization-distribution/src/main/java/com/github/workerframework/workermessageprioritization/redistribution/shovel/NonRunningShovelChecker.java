@@ -114,7 +114,7 @@ public final class NonRunningShovelChecker implements Runnable
                                  retrievedShovel.getState().toString().toLowerCase(),
                                  nonRunningShovelTimeoutMilliseconds);
 
-                    if (!ShovelRepairer.repairShovel(retrievedShovel, nodeSpecificShovelsApiCache, rabbitMQVHost)) {
+                    if (!ShovelRepairer.repairShovel(retrievedShovel, shovelsApi.getApi(), nodeSpecificShovelsApiCache, rabbitMQVHost)) {
 
                         LOGGER.error("Shovel named {} was observed in a non-running state at {}. The time now is {}. " +
                                         "It's current state is '{}'. The non-running shovel timeout of {} milliseconds has been " +

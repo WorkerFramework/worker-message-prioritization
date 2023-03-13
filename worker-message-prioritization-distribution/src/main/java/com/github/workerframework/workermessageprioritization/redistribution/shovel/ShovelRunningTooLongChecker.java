@@ -108,7 +108,7 @@ public final class ShovelRunningTooLongChecker implements Runnable
 
                 if (shovelRunningTooLong) {
 
-                    LOGGER.error("Shovel named {} has been observed in a 'running' state at {}. The time now is {}. " +
+                    LOGGER.error("Shovel named {} has been observed in a 'running' state starting at {}. The time now is {}. " +
                                     "As the 'shovel running too long timeout' of {} milliseconds has been reached, " +
                                     "we are now going to try to repair the shovel by deleting, restarting, or recreating it " +
                                     "(in that order), as it is may have become stuck. Shovel creation will be attempted later if " +
@@ -118,9 +118,9 @@ public final class ShovelRunningTooLongChecker implements Runnable
                             timeNow,
                             shovelRunningTooLongTimeoutMilliseconds);
 
-                    if (!ShovelRepairer.repairShovel(retrievedShovel, nodeSpecificShovelsApiCache, rabbitMQVHost)) {
+                    if (!ShovelRepairer.repairShovel(retrievedShovel, shovelsApi.getApi(), nodeSpecificShovelsApiCache, rabbitMQVHost)) {
 
-                        LOGGER.error("Shovel named {} has been observed in a 'running' state at {}. The time now is {}. " +
+                        LOGGER.error("Shovel named {} has been observed in a 'running' state starting at {}. The time now is {}. " +
                                         "The 'shovel running too long timeout' of {} milliseconds has been reached, " +
                                         "but attempts to repair the shovel by deleting, restarting, and recreating it " +
                                         "have failed. Will try again during the next run in {} milliseconds.",

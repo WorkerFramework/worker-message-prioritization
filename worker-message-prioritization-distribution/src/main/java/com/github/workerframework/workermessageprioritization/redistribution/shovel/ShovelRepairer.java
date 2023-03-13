@@ -37,6 +37,7 @@ final class ShovelRepairer
 
     public static boolean repairShovel(
             final RetrievedShovel retrievedShovel,
+            final ShovelsApi shovelsApi,
             final LoadingCache<String,RabbitManagementApi<ShovelsApi>> nodeSpecificShovelsApiCache,
             final String rabbitMQVHost)
     {
@@ -46,18 +47,19 @@ final class ShovelRepairer
         } catch (final ExecutionException e) {
             LOGGER.error(String.format("ExecutionException thrown while trying to get a node-specific ShovelsApi for %s",
                     retrievedShovel.getNode()), e);
+
+            return false;
+        }
+
+        if (deleteShovel(retrievedShovel, shovelsApi, nodeSpecificShovelsApi, rabbitMQVHost)) {
             return true;
         }
 
-        if (deleteShovel(retrievedShovel, nodeSpecificShovelsApi, rabbitMQVHost)) {
+        if (restartShovel(retrievedShovel, shovelsApi, nodeSpecificShovelsApi, rabbitMQVHost)) {
             return true;
         }
 
-        if (restartShovel(retrievedShovel, nodeSpecificShovelsApi, rabbitMQVHost)) {
-            return true;
-        }
-
-        if (recreateShovel(retrievedShovel, nodeSpecificShovelsApi, rabbitMQVHost)) {
+        if (recreateShovel(retrievedShovel, shovelsApi, nodeSpecificShovelsApi, rabbitMQVHost)) {
             return true;
         }
 
@@ -66,26 +68,39 @@ final class ShovelRepairer
 
     private static boolean deleteShovel(
             final RetrievedShovel retrievedShovel,
+            final ShovelsApi shovelsApi,
             final ShovelsApi nodeSpecificShovelsApi,
             final String rabbitMQVHost)
     {
         try {
             nodeSpecificShovelsApi.delete(rabbitMQVHost, retrievedShovel.getName());
 
-            LOGGER.info("Successfully deleted shovel named {}.", retrievedShovel.getName());
+            LOGGER.info("Successfully deleted shovel named {}", retrievedShovel.getName());
 
             return true;
-        } catch (final Exception e) {
-            final String errorMessage = String.format("Failed to delete shovel named %s.", retrievedShovel.getName());
+        } catch (final Exception nodeSpecificShovelsApiException) {
+            LOGGER.error(String.format(
+                    "Failed to delete shovel named %s using a node-specific Shovels API, will try using the general Shovels API...",
+                    retrievedShovel.getName()), nodeSpecificShovelsApiException);
 
-            LOGGER.error(errorMessage, e);
+            try {
+                shovelsApi.delete(rabbitMQVHost, retrievedShovel.getName());
 
-            return false;
+                LOGGER.info("Successfully deleted shovel named {}", retrievedShovel.getName());
+
+                return true;
+            } catch (final Exception shovelsApiException) {
+                LOGGER.error(String.format("Failed to delete shovel named %s", retrievedShovel.getName()), shovelsApiException);
+
+                return false;
+            }
         }
     }
 
+
     private static boolean restartShovel(
             final RetrievedShovel retrievedShovel,
+            final ShovelsApi shovelsApi,
             final ShovelsApi nodeSpecificShovelsApi,
             final String rabbitMQVHost)
     {
@@ -95,17 +110,28 @@ final class ShovelRepairer
             LOGGER.info("Successfully restarted shovel named {}.", retrievedShovel.getName());
 
             return true;
-        } catch (final Exception e) {
-            final String errorMessage = String.format("Failed to restart shovel named %s.", retrievedShovel.getName());
+        } catch (final Exception nodeSpecificShovelsApiException) {
+            LOGGER.error(String.format(
+                    "Failed to restart shovel named %s using a node-specific Shovels API, will try using the general Shovels API...",
+                    retrievedShovel.getName()), nodeSpecificShovelsApiException);
 
-            LOGGER.error(errorMessage, e);
+            try {
+                shovelsApi.restartShovel(rabbitMQVHost, retrievedShovel.getName());
 
-            return false;
+                LOGGER.info("Successfully restarted shovel named {}.", retrievedShovel.getName());
+
+                return true;
+            } catch (final Exception shovelsApiException) {
+                LOGGER.error(String.format("Failed to restart shovel named %s", retrievedShovel.getName()), shovelsApiException);
+
+                return false;
+            }
         }
     }
 
     private static boolean recreateShovel(
             final RetrievedShovel retrievedShovel,
+            final ShovelsApi shovelsApi,
             final ShovelsApi nodeSpecificShovelsApi,
             final String rabbitMQVHost
     )
@@ -126,12 +152,24 @@ final class ShovelRepairer
             LOGGER.info("Successfully recreated shovel named {}.", retrievedShovel.getName());
 
             return true;
-        } catch (final Exception e) {
-            final String errorMessage = String.format("Failed to recreate shovel named %s.", retrievedShovel.getName());
+        } catch (final Exception nodeSpecificShovelsApiException) {
+            LOGGER.error(String.format(
+                    "Failed to recreate shovel named %s using a node-specific Shovels API, will try using the general Shovels API...",
+                    retrievedShovel.getName()), nodeSpecificShovelsApiException);
 
-            LOGGER.error(errorMessage, e);
+            try {
+                shovelsApi.putShovel(rabbitMQVHost, retrievedShovel.getName(), new Component<>("shovel",
+                        retrievedShovel.getName(),
+                        retrievedShovel));
 
-            return false;
+                LOGGER.info("Successfully recreated shovel named {}.", retrievedShovel.getName());
+
+                return true;
+            } catch (final Exception shovelsApiException) {
+                LOGGER.error(String.format("Failed to recreate shovel named %s", retrievedShovel.getName()), shovelsApiException);
+
+                return false;
+            }
         }
     }
 }
