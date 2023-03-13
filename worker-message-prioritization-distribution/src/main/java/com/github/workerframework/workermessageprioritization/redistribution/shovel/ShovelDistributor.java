@@ -15,9 +15,19 @@
  */
 package com.github.workerframework.workermessageprioritization.redistribution.shovel;
 
-import com.github.workerframework.workermessageprioritization.rabbitmq.ShovelState;
-import com.github.workerframework.workermessageprioritization.redistribution.MessageDistributor;
-import com.github.workerframework.workermessageprioritization.redistribution.consumption.ConsumptionTargetCalculator;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.github.workerframework.workermessageprioritization.rabbitmq.Component;
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApi;
@@ -26,23 +36,14 @@ import com.github.workerframework.workermessageprioritization.rabbitmq.Retrieved
 import com.github.workerframework.workermessageprioritization.rabbitmq.Shovel;
 import com.github.workerframework.workermessageprioritization.rabbitmq.ShovelsApi;
 import com.github.workerframework.workermessageprioritization.redistribution.DistributorWorkItem;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import com.github.workerframework.workermessageprioritization.redistribution.MessageDistributor;
+import com.github.workerframework.workermessageprioritization.redistribution.consumption.ConsumptionTargetCalculator;
+import com.google.common.cache.LoadingCache;
 
 public class ShovelDistributor extends MessageDistributor {
-    
+
     private static final Logger LOGGER = LoggerFactory.getLogger(ShovelDistributor.class);
-    
+
     private static final String ACK_MODE = "on-confirm";
 
     private final RabbitManagementApi<ShovelsApi> shovelsApi;
@@ -50,16 +51,20 @@ public class ShovelDistributor extends MessageDistributor {
     private final String rabbitMQVHost;
     private final String rabbitMQUri;
     private final long distributorRunIntervalMilliseconds;
-    private final ScheduledExecutorService shovelStateCheckerExecutorService;
+    private final ScheduledExecutorService nonRunningShovelCheckerExecutorService;
+    private final ScheduledExecutorService shovelRunningTooLongCheckerExecutorService;
 
     public ShovelDistributor(
             final RabbitManagementApi<QueuesApi> queuesApi,
             final RabbitManagementApi<ShovelsApi> shovelsApi,
+            final LoadingCache<String,RabbitManagementApi<ShovelsApi>> nodeSpecificShovelsApiCache,
             final ConsumptionTargetCalculator consumptionTargetCalculator,
             final String rabbitMQUsername,
             final String rabbitMQVHost,
             final long nonRunningShovelTimeoutMilliseconds,
             final long nonRunningShovelTimeoutCheckIntervalMilliseconds,
+            final long shovelRunningTooLongTimeoutMilliseconds,
+            final long shovelRunningTooLongCheckIntervalMilliseconds,
             final long distributorRunIntervalMilliseconds) throws UnsupportedEncodingException {
 
         super(queuesApi);
@@ -70,16 +75,30 @@ public class ShovelDistributor extends MessageDistributor {
             "amqp://%s@/%s", rabbitMQUsername, URLEncoder.encode(this.rabbitMQVHost, StandardCharsets.UTF_8.toString()));
         this.distributorRunIntervalMilliseconds = distributorRunIntervalMilliseconds;
 
-        this.shovelStateCheckerExecutorService = Executors.newSingleThreadScheduledExecutor();
+        this.nonRunningShovelCheckerExecutorService = Executors.newSingleThreadScheduledExecutor();
 
-        shovelStateCheckerExecutorService.scheduleAtFixedRate(
-                new ShovelStateChecker(
+        nonRunningShovelCheckerExecutorService.scheduleAtFixedRate(
+                new NonRunningShovelChecker(
                         shovelsApi,
+                        nodeSpecificShovelsApiCache,
                         rabbitMQVHost,
                         nonRunningShovelTimeoutMilliseconds,
                         nonRunningShovelTimeoutCheckIntervalMilliseconds),
                 0,
                 nonRunningShovelTimeoutCheckIntervalMilliseconds,
+                TimeUnit.MILLISECONDS);
+
+        this.shovelRunningTooLongCheckerExecutorService = Executors.newSingleThreadScheduledExecutor();
+
+        shovelRunningTooLongCheckerExecutorService.scheduleAtFixedRate(
+                new ShovelRunningTooLongChecker(
+                        shovelsApi,
+                        nodeSpecificShovelsApiCache,
+                        rabbitMQVHost,
+                        shovelRunningTooLongTimeoutMilliseconds,
+                        shovelRunningTooLongCheckIntervalMilliseconds),
+                0,
+                shovelRunningTooLongCheckIntervalMilliseconds,
                 TimeUnit.MILLISECONDS);
     }
     
@@ -96,7 +115,8 @@ public class ShovelDistributor extends MessageDistributor {
                 }
             }
         } finally {
-            shovelStateCheckerExecutorService.shutdownNow();
+            nonRunningShovelCheckerExecutorService.shutdownNow();
+            shovelRunningTooLongCheckerExecutorService.shutdownNow();
         }
     }
     
@@ -135,11 +155,10 @@ public class ShovelDistributor extends MessageDistributor {
 
                     final String shovelName = queueConsumptionTarget.getKey().getName();
 
-                    final boolean nonTerminatedShovelExists = retrievedShovels.stream()
-                            .anyMatch(s -> (s.getState() != ShovelState.TERMINATED) && (s.getName().endsWith(shovelName)));
+                    final boolean shovelExists = retrievedShovels.stream().anyMatch(s -> s.getName().endsWith(shovelName));
 
-                    if (nonTerminatedShovelExists) {
-                        LOGGER.info("Non-terminated shovel {} already exists, ignoring.", shovelName);
+                    if (shovelExists) {
+                        LOGGER.info("Shovel {} already exists, ignoring.", shovelName);
                     } else {
                         // Delete this shovel after all the messages in the staging queue have been consumed OR we have reached the
                         // maximum amount of messages we are allowed to consume from the staging queue (whichever is lower).
@@ -156,7 +175,7 @@ public class ShovelDistributor extends MessageDistributor {
                         shovel.setDestQueue(distributorWorkItem.getTargetQueue().getName());
                         shovel.setDestUri(rabbitMQUri);
 
-                        LOGGER.info("Creating (or recreating) shovel named {} with properties {} to consume {} messages",
+                        LOGGER.info("Creating shovel named {} with properties {} to consume {} messages",
                                 shovelName,
                                 shovel,
                                 srcDeleteAfter);
@@ -168,8 +187,8 @@ public class ShovelDistributor extends MessageDistributor {
                                             shovel));
                         } catch (final Exception e) {
                             final String errorMessage = String.format(
-                                    "Failed to create (or recreate) shovel named %s with properties %s to consume %s messages. " +
-                                    "Will try again during the next run in %d milliseconds (if the shovel is still required then).",
+                                    "Failed to create shovel named %s with properties %s to consume %s messages. " +
+                                            "Will try again during the next run in %d milliseconds (if the shovel is still required then).",
                                     shovelName,
                                     shovel,
                                     srcDeleteAfter,

@@ -16,10 +16,13 @@
 package com.github.workerframework.workermessageprioritization.rabbitmq;
 
 import com.google.common.base.MoreObjects;
+import java.util.Date;
 
 public class RetrievedShovel extends Shovel {
     private String name;
+    private Date timestamp;
     private ShovelState state;
+    private String node;
 
     public String getName() {
         return name;
@@ -27,6 +30,14 @@ public class RetrievedShovel extends Shovel {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public Date getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(Date timestamp) {
+        this.timestamp = timestamp;
     }
 
     public ShovelState getState() {
@@ -37,17 +48,27 @@ public class RetrievedShovel extends Shovel {
         this.state = state;
     }
 
+    public String getNode() {
+        return node;
+    }
+
+    public void setNode(String node) {
+        this.node = node;
+    }
+
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("name", name)
-            .add("state", state)
-            .add("ackMode", getAckMode())
-            .add("srcUri", getSrcUri())
-            .add("srcQueue", getSrcQueue())
-            .add("srcDeleteAfter", getSrcDeleteAfter())
-            .add("destUri", getDestUri())
-            .add("destQueue", getDestQueue())
-            .toString();
+                .add("name", name)
+                .add("timestamp", timestamp)
+                .add("state", state)
+                .add("node", node)
+                .add("ackMode", getAckMode())
+                .add("srcUri", getSrcUri())
+                .add("srcQueue", getSrcQueue())
+                .add("srcDeleteAfter", getSrcDeleteAfter())
+                .add("destUri", getDestUri())
+                .add("destQueue", getDestQueue())
+                .toString();
     }
 }
