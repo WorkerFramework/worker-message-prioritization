@@ -64,8 +64,18 @@ public class ShovelDistributorIT extends DistributorTestBase {
         final ConsumptionTargetCalculator consumptionTargetCalculator =
                 new EqualConsumptionTargetCalculator(new FixedTargetQueueCapacityProvider());
 
-        final ShovelDistributor shovelDistributor = new ShovelDistributor(queuesApi, shovelsApi,
-                consumptionTargetCalculator, System.getProperty("rabbitmq.username", "guest"), "/", 120000, 120000, 10000);
+        final ShovelDistributor shovelDistributor = new ShovelDistributor(
+                queuesApi,
+                shovelsApi,
+                getNodeSpecificShovelsApiCache(),
+                consumptionTargetCalculator,
+                System.getProperty("rabbitmq.username", "guest"),
+                "/",
+                120000,
+                120000,
+                1800000,
+                120000,
+                10000);
 
         Queue targetQueue = null;
         for(int attempt = 0; attempt < 10; attempt ++) {

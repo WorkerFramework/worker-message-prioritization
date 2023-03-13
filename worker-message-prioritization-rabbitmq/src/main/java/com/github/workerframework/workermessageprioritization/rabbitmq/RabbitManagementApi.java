@@ -18,8 +18,18 @@ package com.github.workerframework.workermessageprioritization.rabbitmq;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
 import java.util.Base64;
 import java.util.concurrent.TimeUnit;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+
+import org.jetbrains.annotations.Nullable;
 
 import com.google.common.io.ByteStreams;
 import com.google.gson.Gson;
@@ -99,18 +109,7 @@ public class RabbitManagementApi <T> {
             final Response response = retrofitError.getResponse();
             final String responseStatus = response != null ? String.valueOf(response.getStatus()) : null;
             final String responseReason = response != null ? response.getReason() : null;
-            String responseBody;
-            if (response != null && response.getBody() != null) {
-                try {
-                    final InputStream inputStream = response.getBody().in();
-                    final String json = new String(ByteStreams.toByteArray(inputStream), StandardCharsets.UTF_8);
-                    responseBody = gson.fromJson(json, JsonElement.class).toString();
-                } catch (final IOException e) {
-                    responseBody = response.getBody().toString();
-                }
-            } else {
-                responseBody = null;
-            }
+            final String responseBody = convertResponseBodyToJsonString(response);
 
             final String errorMessage = String.format(
                     "RabbitMQ management API error: " +
@@ -132,5 +131,22 @@ public class RabbitManagementApi <T> {
             return new RuntimeException(errorMessage, retrofitError);
         }
 
+        private static String convertResponseBodyToJsonString(final Response response)
+        {
+            String responseBody;
+            if (response != null && response.getBody() != null) {
+                try {
+                    final InputStream inputStream = response.getBody().in();
+                    final String json = new String(ByteStreams.toByteArray(inputStream), StandardCharsets.UTF_8);
+                    responseBody = gson.fromJson(json, JsonElement.class).toString();
+                } catch (final IOException e) {
+                    responseBody = response.getBody().toString();
+                }
+            } else {
+                responseBody = null;
+            }
+
+            return responseBody;
+        }
     }
 }

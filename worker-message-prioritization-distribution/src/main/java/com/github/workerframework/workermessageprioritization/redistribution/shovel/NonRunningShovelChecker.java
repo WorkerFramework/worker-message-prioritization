@@ -19,6 +19,8 @@ import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitMan
 import com.github.workerframework.workermessageprioritization.rabbitmq.RetrievedShovel;
 import com.github.workerframework.workermessageprioritization.rabbitmq.ShovelState;
 import com.github.workerframework.workermessageprioritization.rabbitmq.ShovelsApi;
+import com.google.common.cache.LoadingCache;
+
 import java.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +35,7 @@ public final class NonRunningShovelChecker implements Runnable
     private static final Logger LOGGER = LoggerFactory.getLogger(NonRunningShovelChecker.class);
 
     private final RabbitManagementApi<ShovelsApi> shovelsApi;
+    private final LoadingCache<String,RabbitManagementApi<ShovelsApi>> nodeSpecificShovelsApiCache;
     private final Map<String, Instant> shovelNameToTimeObservedInNonRunningState;
     private final String rabbitMQVHost;
     private final long nonRunningShovelTimeoutMilliseconds;
@@ -40,12 +43,26 @@ public final class NonRunningShovelChecker implements Runnable
 
     public NonRunningShovelChecker(
             final RabbitManagementApi<ShovelsApi> shovelsApi,
+            final LoadingCache<String,RabbitManagementApi<ShovelsApi>> nodeSpecificShovelsApiCache,
             final String rabbitMQVHost,
             final long nonRunningShovelTimeoutMilliseconds,
             final long nonRunningShovelTimeoutCheckIntervalMilliseconds)
     {
         this.shovelsApi = shovelsApi;
-        this.shovelNameToTimeObservedInNonRunningState = ExpiringMap.builder().expiration(12, TimeUnit.HOURS).build();
+        this.nodeSpecificShovelsApiCache = nodeSpecificShovelsApiCache;
+
+        // Expire map entries a little after the timeout + interval between checks
+        final long shovelNameToTimeObservedInNonRunningStateExpiryMilliseconds =
+                (nonRunningShovelTimeoutMilliseconds + nonRunningShovelTimeoutCheckIntervalMilliseconds) * 2;
+
+        this.shovelNameToTimeObservedInNonRunningState = ExpiringMap
+                .builder()
+                .expirationListener((String shoveName, Instant timeObservedInNonRunningState) ->
+                        LOGGER.debug("Expired entry from shovelNameToTimeObservedInNonRunningState: {} -> {}",
+                                shoveName, timeObservedInNonRunningState))
+                .expiration(shovelNameToTimeObservedInNonRunningStateExpiryMilliseconds, TimeUnit.MILLISECONDS)
+                .build();
+
         this.rabbitMQVHost = rabbitMQVHost;
         this.nonRunningShovelTimeoutMilliseconds = nonRunningShovelTimeoutMilliseconds;
         this.nonRunningShovelTimeoutCheckIntervalMilliseconds = nonRunningShovelTimeoutCheckIntervalMilliseconds;
@@ -81,30 +98,34 @@ public final class NonRunningShovelChecker implements Runnable
                 final long timeObservedInNonRunningStateMilliseconds = timeObservedInNonRunningState.toEpochMilli();
 
                 final Instant timeNow = Instant.now();
-                final long timeNowMilliseconds = timeNow.toEpochMilli();
 
-                if (timeNowMilliseconds - timeObservedInNonRunningStateMilliseconds >= nonRunningShovelTimeoutMilliseconds) {   
-                    LOGGER.error("Shovel named {} was observed in a non-running state at {}. The time now is {}. "
-                        + "It's current state is '{}'. "
-                        + "As the non-running shovel timeout of {} milliseconds has been reached, the shovel is now going to be deleted. "
-                        + "Please check the RabbitMQ logs for more details. "
-                        + "Shovel creation will be attempted later if the shovel is still required.",
+                final boolean nonRunningShovelTimeoutReached =
+                        timeNow.toEpochMilli() - timeObservedInNonRunningStateMilliseconds >= nonRunningShovelTimeoutMilliseconds;
+
+                if (nonRunningShovelTimeoutReached) {
+
+                    LOGGER.error("Shovel named {} was observed in a non-running state at {}. The time now is {}. " +
+                                    "It's current state is '{}'. As the non-running shovel timeout of {} milliseconds has been reached, " +
+                                    "we are now going to try to repair the shovel by deleting, restarting, or recreating it " +
+                                    "(in that order). Shovel creation will be attempted later if the shovel is still required.",
                                  shovelName,
                                  timeObservedInNonRunningState,
                                  timeNow,
                                  retrievedShovel.getState().toString().toLowerCase(),
-                                 nonRunningShovelTimeoutMilliseconds);                    
+                                 nonRunningShovelTimeoutMilliseconds);
 
-                    try {
-                        shovelsApi.getApi().delete(rabbitMQVHost, shovelName);
-                    } catch (final Exception e) {
-                        final String errorMessage = String.format(
-                                "Failed to delete shovel named %s. Will try again during the next run in %d " +
-                                        "milliseconds (if the shovel is still present)",
+                    if (!ShovelRepairer.repairShovel(retrievedShovel, nodeSpecificShovelsApiCache, rabbitMQVHost)) {
+
+                        LOGGER.error("Shovel named {} was observed in a non-running state at {}. The time now is {}. " +
+                                        "It's current state is '{}'. The non-running shovel timeout of {} milliseconds has been " +
+                                        "reached, but attempts to repair the shovel by deleting, restarting and recreating it have " +
+                                        "failed. Will try again during the next run in {} milliseconds.",
                                 shovelName,
+                                timeObservedInNonRunningState,
+                                timeNow,
+                                retrievedShovel.getState().toString().toLowerCase(),
+                                nonRunningShovelTimeoutMilliseconds,
                                 nonRunningShovelTimeoutCheckIntervalMilliseconds);
-
-                        LOGGER.error(errorMessage, e);
                     }
                 } else {
                     LOGGER.debug("Shovel named {} was observed in a non-running state at {}. The time now is {}. "

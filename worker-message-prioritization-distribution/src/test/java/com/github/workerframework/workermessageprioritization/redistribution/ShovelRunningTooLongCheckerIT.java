@@ -15,16 +15,6 @@
  */
 package com.github.workerframework.workermessageprioritization.redistribution;
 
-import com.github.workerframework.workermessageprioritization.rabbitmq.Component;
-import com.github.workerframework.workermessageprioritization.rabbitmq.RetrievedShovel;
-import com.github.workerframework.workermessageprioritization.rabbitmq.Shovel;
-import com.github.workerframework.workermessageprioritization.rabbitmq.ShovelState;
-import com.github.workerframework.workermessageprioritization.redistribution.shovel.NonRunningShovelChecker;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import org.junit.Assert;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Optional;
@@ -33,12 +23,24 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public class NonRunningShovelCheckerIT extends DistributorTestBase
+import org.junit.Assert;
+import org.junit.Test;
+
+import com.github.workerframework.workermessageprioritization.rabbitmq.Component;
+import com.github.workerframework.workermessageprioritization.rabbitmq.RetrievedShovel;
+import com.github.workerframework.workermessageprioritization.rabbitmq.Shovel;
+import com.github.workerframework.workermessageprioritization.rabbitmq.ShovelState;
+import com.github.workerframework.workermessageprioritization.redistribution.shovel.ShovelRunningTooLongChecker;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+
+public class ShovelRunningTooLongCheckerIT extends DistributorTestBase
 {
     @Test
-    public void nonRunningShovelShouldBeDeletedTest() throws TimeoutException, IOException, InterruptedException
+    public void shovelRunningTooLongShouldBeDeletedTest() throws TimeoutException, IOException, InterruptedException
     {
         // Create a staging queue and a target queue
+
         final String targetQueueName = getUniqueTargetQueueName(TARGET_QUEUE_NAME);
         final String stagingQueueName = getStagingQueueName(targetQueueName, T1_STAGING_QUEUE_NAME);
 
@@ -48,34 +50,52 @@ public class NonRunningShovelCheckerIT extends DistributorTestBase
             channel.queueDeclare(targetQueueName, true, false, false, Collections.emptyMap());
         }
 
-        // Create a bad shovel that never gets into a 'running' state
+        // Create a shovel that will stay in 'running' state forever (because we haven't supplied a src-delete-after value)
+
         final Shovel shovel = new Shovel();
         shovel.setAckMode("on-confirm");
         shovel.setSrcQueue(stagingQueueName);
-        shovel.setSrcUri("amqp://BADURI");
+        shovel.setSrcUri("amqp://");
         shovel.setDestQueue(targetQueueName);
-        shovel.setDestUri("amqp://BADURI");
+        shovel.setDestUri("amqp://");
 
         shovelsApi.getApi().putShovel("/", stagingQueueName, new Component<>("shovel", stagingQueueName, shovel));
 
-        // Verify the bad shovel is not in a 'running' state
-        final RetrievedShovel retrievedShovel = shovelsApi
-            .getApi()
-            .getShovels()
-            .stream()
-            .filter(s -> s.getName().equals(stagingQueueName))
-            .findFirst()
-            .get();
-        Assert.assertNotEquals("Bad shovel should not be in 'running' state", ShovelState.RUNNING, retrievedShovel.getState());
+        // Verify the shovel is in a 'running' state
 
-        // Run the ShovelStateChecker to delete the bad shovel.
+        RetrievedShovel retrievedShovel = null;
 
-        final ScheduledExecutorService nonRunningShovelCheckerExecutorService = Executors.newSingleThreadScheduledExecutor();
+        for (int attempt = 0; attempt < 10; attempt++) {
 
-        nonRunningShovelCheckerExecutorService.scheduleAtFixedRate(
-                new NonRunningShovelChecker(shovelsApi,
+            retrievedShovel = shovelsApi
+                    .getApi()
+                    .getShovels()
+                    .stream()
+                    .filter(s -> s.getName().equals(stagingQueueName))
+                    .findFirst()
+                    .get();
+
+            if (retrievedShovel.getState() != ShovelState.RUNNING) {
+                // Shovel not in a 'running' state yet, wait a bit and check again
+                Thread.sleep(1000 * 10);
+            }
+        }
+
+        Assert.assertEquals("Shovel should be in 'running' state", ShovelState.RUNNING, retrievedShovel.getState());
+
+        // Run the ShovelRunningTooLongChecker to delete the shovel that has been running too long
+
+        final long shovelRunningTooLongTimeoutMilliseconds = 1L;
+
+        final ScheduledExecutorService shovelRunningTooLongCheckerExecutorService = Executors.newSingleThreadScheduledExecutor();
+
+        shovelRunningTooLongCheckerExecutorService.scheduleAtFixedRate(
+                new ShovelRunningTooLongChecker(
+                        shovelsApi,
                         getNodeSpecificShovelsApiCache(),
-                        "/", 1L, 1L),
+                        "/",
+                        shovelRunningTooLongTimeoutMilliseconds,
+                        1L),
                 0,
                 1L,
                 TimeUnit.MILLISECONDS);
@@ -83,9 +103,9 @@ public class NonRunningShovelCheckerIT extends DistributorTestBase
         // Wait 5 seconds
         Thread.sleep(5000);
 
-        nonRunningShovelCheckerExecutorService.shutdown();
+        shovelRunningTooLongCheckerExecutorService.shutdown();
 
-        // Verify the bad shovel has been deleted
+        // Verify the shovel has been deleted
         Optional<RetrievedShovel> retrievedShovelAfterDeletion;
         for (int attempt = 0; attempt < 10; attempt++) {
             retrievedShovelAfterDeletion = shovelsApi
@@ -97,7 +117,7 @@ public class NonRunningShovelCheckerIT extends DistributorTestBase
 
             if (!retrievedShovelAfterDeletion.isPresent()) {
                 // Test passed
-                return; 
+                return;
             } else {
                 // Shovel not deleted yet, wait a bit and check again
                 Thread.sleep(1000 * 10);

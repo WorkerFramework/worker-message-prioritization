@@ -15,25 +15,18 @@
  */
 package com.github.workerframework.workermessageprioritization.redistribution.shovel;
 
-import com.squareup.okhttp.HttpUrl;
+import org.junit.Assert;
+import org.junit.Test;
 
-final class NodeSpecificRabbitMqMgmtBuilder
+public final class NodeSpecificRabbitMqMgmtUrlBuilderTest
 {
-    private NodeSpecificRabbitMqMgmtBuilder()
+    @Test
+    public void buildNodeSpecificRabbitMqMgmtUrlTest()
     {
-    }
+        final String actual = NodeSpecificRabbitMqMgmtUrlBuilder.buildNodeSpecificRabbitMqMgmtUrl(
+                "rabbit@baltra-cent02.aspensb.local",
+                "https://baltra-rabbitmq.aspensb.local:15672");
 
-    // Given node :             rabbit@baltra-cent02.aspensb.local
-    // Given rabbitMQMgmtUrl:   https://baltra-rabbitmq.aspensb.local:15672
-    // Returns:                 https://baltra-cent02.aspensb.local:15672
-    public static String getNodeSpecificRabbitMqMgmtUrl(final String node, final String rabbitMQMgmtUrl)
-    {
-        final String nodeSpecificHost = node.substring(node.indexOf('@') + 1);
-
-        return HttpUrl.parse(rabbitMQMgmtUrl)
-                .newBuilder()
-                .host(nodeSpecificHost) // TODO
-                .build()
-                .toString();
+        Assert.assertEquals("https://baltra-cent02.aspensb.local:15672/", actual);
     }
 }
