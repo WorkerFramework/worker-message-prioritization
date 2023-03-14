@@ -34,18 +34,14 @@ public final class MessageDistributorConfig {
     private static final String CAF_RABBITMQ_PORT = "CAF_RABBITMQ_PORT";
     private static final int CAF_RABBITMQ_PORT_DEFAULT = 5672;
 
-    private static final String CAF_RABBITMQ_USERNAME = "CAF_RABBITMQ_USERNAME";
-    private static final String CAF_RABBITMQ_USERNAME_DEFAULT = "guest";
-
-    private static final String CAF_RABBITMQ_PASS = "CAF_RABBITMQ_PASS";
+    private static final String CAF_RABBITMQ_USERNAME_ENVVAR = "CAF_RABBITMQ_USERNAME";
+    private static final String CAF_RABBITMQ_PASSWORD_ENVVAR = "CAF_RABBITMQ_PASSWORD";
 
     private static final String CAF_RABBITMQ_MGMT_URL = "CAF_RABBITMQ_MGMT_URL";
     private static final String CAF_RABBITMQ_MGMT_URL_DEFAULT = "http://rabbitmq:15672";
 
-    private static final String CAF_RABBITMQ_MGMT_USERNAME = "CAF_RABBITMQ_MGMT_USERNAME";
-    private static final String CAF_RABBITMQ_MGMT_USERNAME_DEFAULT = "guest";
-
-    private static final String CAF_RABBITMQ_MGMT_PASS = "CAF_RABBITMQ_MGMT_PASS";
+    private static final String CAF_RABBITMQ_MGMT_USERNAME_ENVVAR = "CAF_RABBITMQ_MGMT_USERNAME";
+    private static final String CAF_RABBITMQ_MGMT_PASSWORD_ENVVAR = "CAF_RABBITMQ_MGMT_PASSWORD";
 
     private static final String CAF_WMP_DISTRIBUTOR_RUN_INTERVAL_MILLISECONDS = "CAF_WMP_DISTRIBUTOR_RUN_INTERVAL_MILLISECONDS";
     private static final long CAF_WMP_DISTRIBUTOR_RUN_INTERVAL_MILLISECONDS_DEFAULT = 10000;
@@ -84,11 +80,11 @@ public final class MessageDistributorConfig {
         rabbitMQVHost = getEnvOrDefault(CAF_RABBITMQ_VHOST, CAF_RABBITMQ_VHOST_DEFAULT);
         rabbitMQHost = getEnvOrDefault(CAF_RABBITMQ_HOST, CAF_RABBITMQ_HOST_DEFAULT);
         rabbitMQPort = getEnvOrDefault(CAF_RABBITMQ_PORT, CAF_RABBITMQ_PORT_DEFAULT);
-        rabbitMQUsername = getEnvOrDefault(CAF_RABBITMQ_USERNAME, CAF_RABBITMQ_USERNAME_DEFAULT);
-        rabbitMQPassword = System.getenv(CAF_RABBITMQ_PASS);
+        rabbitMQUsername = getStrEnvOrThrow(CAF_RABBITMQ_USERNAME_ENVVAR);
+        rabbitMQPassword = getStrEnvOrThrow(CAF_RABBITMQ_PASSWORD_ENVVAR);
         rabbitMQMgmtUrl = getEnvOrDefault(CAF_RABBITMQ_MGMT_URL, CAF_RABBITMQ_MGMT_URL_DEFAULT);
-        rabbitMQMgmtUsername = getEnvOrDefault(CAF_RABBITMQ_MGMT_USERNAME, CAF_RABBITMQ_MGMT_USERNAME_DEFAULT);
-        rabbitMQMgmtPassword = System.getenv(CAF_RABBITMQ_MGMT_PASS);
+        rabbitMQMgmtUsername = getStrEnvOrThrow(CAF_RABBITMQ_MGMT_USERNAME_ENVVAR);
+        rabbitMQMgmtPassword = getStrEnvOrThrow(CAF_RABBITMQ_MGMT_PASSWORD_ENVVAR);
         distributorRunIntervalMilliseconds = getEnvOrDefault(
             CAF_WMP_DISTRIBUTOR_RUN_INTERVAL_MILLISECONDS,
             CAF_WMP_DISTRIBUTOR_RUN_INTERVAL_MILLISECONDS_DEFAULT);
@@ -162,11 +158,11 @@ public final class MessageDistributorConfig {
             .add(CAF_RABBITMQ_VHOST, rabbitMQVHost)
             .add(CAF_RABBITMQ_HOST, rabbitMQHost)
             .add(CAF_RABBITMQ_PORT, rabbitMQPort)
-            .add(CAF_RABBITMQ_USERNAME, rabbitMQUsername)
-            .add(CAF_RABBITMQ_PASS, "<HIDDEN>")
+            .add(CAF_RABBITMQ_USERNAME_ENVVAR, rabbitMQUsername)
+            .add(CAF_RABBITMQ_PASSWORD_ENVVAR, "<HIDDEN>")
             .add(CAF_RABBITMQ_MGMT_URL, rabbitMQMgmtUrl)
-            .add(CAF_RABBITMQ_MGMT_USERNAME, rabbitMQMgmtUsername)
-            .add(CAF_RABBITMQ_MGMT_PASS, "<HIDDEN>")
+            .add(CAF_RABBITMQ_MGMT_USERNAME_ENVVAR, rabbitMQMgmtUsername)
+            .add(CAF_RABBITMQ_MGMT_PASSWORD_ENVVAR, "<HIDDEN>")
             .add(CAF_WMP_DISTRIBUTOR_RUN_INTERVAL_MILLISECONDS, distributorRunIntervalMilliseconds)
             .add(CAF_WMP_NON_RUNNING_SHOVEL_TIMEOUT_MILLISECONDS, nonRunningShovelTimeoutMilliseconds)
             .add(CAF_WMP_NON_RUNNING_SHOVEL_CHECK_INTERVAL_MILLISECONDS, nonRunningShovelCheckIntervalMilliseconds)
@@ -205,5 +201,14 @@ public final class MessageDistributorConfig {
         }
 
         return values;
+    }
+
+    private static String getStrEnvOrThrow(final String name) {
+        final String value = System.getenv(name);
+        if (Strings.isNullOrEmpty(value)) {
+            throw new RuntimeException(String.format("The %s environment variable should not be null or empty.", name));
+        }
+
+        return value;
     }
 }
