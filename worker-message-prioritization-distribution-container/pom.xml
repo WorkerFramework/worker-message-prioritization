@@ -209,6 +209,10 @@
                             <!-- Run the image for this module -->
                             <run>
                                 <env>
+                                    <CAF_RABBITMQ_USERNAME>guest</CAF_RABBITMQ_USERNAME>
+                                    <CAF_RABBITMQ_PASSWORD>guest</CAF_RABBITMQ_PASSWORD>
+                                    <CAF_RABBITMQ_MGMT_USERNAME>guest</CAF_RABBITMQ_MGMT_USERNAME>
+                                    <CAF_RABBITMQ_MGMT_PASSWORD>guest</CAF_RABBITMQ_MGMT_PASSWORD>
                                     <CAF_LOG_LEVEL>DEBUG</CAF_LOG_LEVEL>
                                     <CAF_WMP_KUBERNETES_NAMESPACES>private</CAF_WMP_KUBERNETES_NAMESPACES>
                                 </env>
