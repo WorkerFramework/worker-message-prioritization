@@ -140,13 +140,13 @@ public class RabbitManagementApi <T> {
 
             final String responseBodyMimeType = responseBody.mimeType();
             if (responseBodyMimeType == null) {
-                LOGGER.warn("Response body MIME type is null. Unable to convert response body to JSON for output: {}", responseBody);
+                LOGGER.error("Response body MIME type is null. Unable to convert response body to JSON for output: {}", responseBody);
 
                 return responseBody.toString();
             }
 
             if (!responseBodyMimeType.equals("application/json")) {
-                LOGGER.warn("Response body MIME type is unexpected (expected application/json): {}. " +
+                LOGGER.error("Response body MIME type is unexpected (expected application/json): {}. " +
                                 "Unable to convert response body to JSON for output: {}",
                         responseBodyMimeType, responseBody);
 
