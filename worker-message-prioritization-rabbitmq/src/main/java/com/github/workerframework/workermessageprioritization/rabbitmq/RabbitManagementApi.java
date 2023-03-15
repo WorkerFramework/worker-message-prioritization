@@ -154,7 +154,7 @@ public class RabbitManagementApi <T> {
             }
 
             try {
-                final InputStream inputStream = response.getBody().in();
+                final InputStream inputStream = responseBody.in();
                 final String json = new String(ByteStreams.toByteArray(inputStream), StandardCharsets.UTF_8);
                 return gson.fromJson(json, JsonElement.class).toString();
             } catch (final IOException e) {
