@@ -34,6 +34,10 @@ import retrofit.RetrofitError;
 import retrofit.client.OkClient;
 import retrofit.client.Response;
 import retrofit.converter.GsonConverter;
+import retrofit.mime.TypedInput;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RabbitManagementApi <T> {
 
@@ -91,6 +95,8 @@ public class RabbitManagementApi <T> {
 
     private static class RabbitApiErrorHandler implements ErrorHandler
     {
+        private static final Logger LOGGER = LoggerFactory.getLogger(RabbitApiErrorHandler.class);
+
         private static Gson gson = new Gson();
 
         @Override
@@ -123,20 +129,39 @@ public class RabbitManagementApi <T> {
 
         private static String convertResponseBodyToJsonString(final Response response)
         {
-            String responseBody;
-            if (response != null && response.getBody() != null) {
-                try {
-                    final InputStream inputStream = response.getBody().in();
-                    final String json = new String(ByteStreams.toByteArray(inputStream), StandardCharsets.UTF_8);
-                    responseBody = gson.fromJson(json, JsonElement.class).toString();
-                } catch (final IOException e) {
-                    responseBody = response.getBody().toString();
-                }
-            } else {
-                responseBody = null;
+            if (response == null) {
+                return null;
             }
 
-            return responseBody;
+            final TypedInput responseBody = response.getBody();
+            if (responseBody == null) {
+                return null;
+            }
+
+            final String responseBodyMimeType = responseBody.mimeType();
+            if (responseBodyMimeType == null) {
+                LOGGER.warn("Response body MIME type is null. Unable to convert response body to JSON for output: {}", responseBody);
+
+                return responseBody.toString();
+            }
+
+            if (!responseBodyMimeType.equals("application/json")) {
+                LOGGER.warn("Response body MIME type is unexpected (expected application/json): {}. " +
+                                "Unable to convert response body to JSON for output: {}",
+                        responseBodyMimeType, responseBody);
+
+                return responseBody.toString();
+            }
+
+            try {
+                final InputStream inputStream = response.getBody().in();
+                final String json = new String(ByteStreams.toByteArray(inputStream), StandardCharsets.UTF_8);
+                return gson.fromJson(json, JsonElement.class).toString();
+            } catch (final IOException e) {
+                LOGGER.error("Exception thrown trying to convert response body to JSON for output: {}", responseBody, e);
+
+                return responseBody.toString();
+            }
         }
     }
 }
