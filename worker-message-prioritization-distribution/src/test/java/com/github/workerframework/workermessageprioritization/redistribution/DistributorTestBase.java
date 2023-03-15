@@ -15,6 +15,14 @@
  */
 package com.github.workerframework.workermessageprioritization.redistribution;
 
+import java.util.concurrent.TimeUnit;
+
+import javax.annotation.Nonnull;
+
+import com.github.workerframework.workermessageprioritization.redistribution.shovel.NodeSpecificRabbitMqMgmtUrlBuilder;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.gson.Gson;
 import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApi;
 import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitManagementApi;
@@ -32,9 +40,11 @@ public class DistributorTestBase {
     protected int managementPort;
     protected RabbitManagementApi<QueuesApi> queuesApi;
     protected RabbitManagementApi<ShovelsApi> shovelsApi;
+    private final String managementUrl;
 
     public DistributorTestBase() {
-        final ConnectionFactory connectionFactory = new ConnectionFactory();
+        connectionFactory = new ConnectionFactory();
+
         connectionFactory.setHost(System.getProperty("rabbitmq.node.address", "localhost"));
         connectionFactory.setUsername(System.getProperty("rabbitmq.username", "guest"));
         connectionFactory.setPassword(System.getProperty("rabbitmq.password", "guest"));
@@ -44,13 +54,15 @@ public class DistributorTestBase {
 
         managementPort = Integer.parseInt(System.getProperty("rabbitmq.ctrl.port", "25673"));
 
+        managementUrl = "http://" + connectionFactory.getHost() + ":" + managementPort + "/";
+
         queuesApi =
                 new RabbitManagementApi<>(QueuesApi.class,
-                        "http://" + connectionFactory.getHost() + ":" + managementPort + "/",
+                        managementUrl,
                         connectionFactory.getUsername(), connectionFactory.getPassword());
         
-        shovelsApi = new RabbitManagementApi<>(ShovelsApi.class, 
-                "http://" + connectionFactory.getHost() + ":" + managementPort + "/",
+        shovelsApi = new RabbitManagementApi<>(ShovelsApi.class,
+                managementUrl,
                 connectionFactory.getUsername(), connectionFactory.getPassword());
 
     }
@@ -62,6 +74,33 @@ public class DistributorTestBase {
     protected String getStagingQueueName(final String targetQueueName, final String stagingQueueName) {
         return targetQueueName + MessageDistributor.LOAD_BALANCED_INDICATOR + stagingQueueName;
     }
-    
-    
+
+    protected LoadingCache<String,RabbitManagementApi<ShovelsApi>> getNodeSpecificShovelsApiCache() {
+        return CacheBuilder
+                .newBuilder()
+                .expireAfterAccess(7, TimeUnit.DAYS)
+                .build(new CacheLoader<String,RabbitManagementApi<ShovelsApi>>()
+                {
+                    @Override
+                    public RabbitManagementApi<ShovelsApi> load(@Nonnull final String node)
+                    {
+                        // When running these integration tests, the 'node' value returned by the RabbitMQ Shovels API contains
+                        // an ID rather than a host, for example:
+                        //
+                        // node:            rabbit@5d73b9c7a198
+                        //
+                        // whereas the management URL contains localhost:
+                        //
+                        // managementUrl:   http://localhost:49165/
+                        //
+                        // As such, we are unable to use the node value to build a node-specific management URL, as
+                        // http://5d73b9c7a198:49165/ is not a valid host.
+                        //
+                        // So for the purposes of these tests, we will just use the standard Shovels API, rather than creating
+                        // node-specific Shovels APIs.
+
+                        return shovelsApi;
+                    }
+                });
+    }
 }

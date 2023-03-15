@@ -19,7 +19,7 @@ import com.github.workerframework.workermessageprioritization.rabbitmq.Component
 import com.github.workerframework.workermessageprioritization.rabbitmq.RetrievedShovel;
 import com.github.workerframework.workermessageprioritization.rabbitmq.Shovel;
 import com.github.workerframework.workermessageprioritization.rabbitmq.ShovelState;
-import com.github.workerframework.workermessageprioritization.redistribution.shovel.ShovelStateChecker;
+import com.github.workerframework.workermessageprioritization.redistribution.shovel.NonRunningShovelChecker;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import org.junit.Assert;
@@ -28,9 +28,12 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Optional;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public class ShovelStateCheckerIT extends DistributorTestBase
+public class NonRunningShovelCheckerIT extends DistributorTestBase
 {
     @Test
     public void nonRunningShovelShouldBeDeletedTest() throws TimeoutException, IOException, InterruptedException
@@ -66,30 +69,40 @@ public class ShovelStateCheckerIT extends DistributorTestBase
         Assert.assertNotEquals("Bad shovel should not be in 'running' state", ShovelState.RUNNING, retrievedShovel.getState());
 
         // Run the ShovelStateChecker to delete the bad shovel.
-        final ShovelStateChecker shovelStateChecker = new ShovelStateChecker(shovelsApi, "/", 1L, 1L);
-        shovelStateChecker.run(); // First run() sets the timeObservedInNonRunningState to Instant.now()
-        Thread.sleep(2000);       // Wait 2 seconds
-        shovelStateChecker.run(); // Second run() should see that the timeout of 1 millisecond has been reached, and delete the shovel
 
-        // Verify the bad shovel has been deleted
-        Optional<RetrievedShovel> retrievedShovelAfterDeletion;
-        for (int attempt = 0; attempt < 10; attempt++) {
-            retrievedShovelAfterDeletion = shovelsApi
-                .getApi()
-                .getShovels()
-                .stream()
-                .filter(s -> s.getName().equals(stagingQueueName))
-                .findFirst();
+        final ScheduledExecutorService nonRunningShovelCheckerExecutorService = Executors.newSingleThreadScheduledExecutor();
 
-            if (!retrievedShovelAfterDeletion.isPresent()) {
-                // Test passed
-                return; 
-            } else {
-                // Shovel not deleted yet, wait a bit and check again
-                Thread.sleep(1000 * 10);
+        nonRunningShovelCheckerExecutorService.scheduleAtFixedRate(
+                new NonRunningShovelChecker(shovelsApi,
+                        getNodeSpecificShovelsApiCache(),
+                        "/", 1L, 1L),
+                0,
+                1L,
+                TimeUnit.MILLISECONDS);
+
+        try {
+            // Verify the bad shovel has been deleted
+            Optional<RetrievedShovel> retrievedShovelAfterDeletion;
+            for (int attempt = 0; attempt < 10; attempt++) {
+                retrievedShovelAfterDeletion = shovelsApi
+                        .getApi()
+                        .getShovels()
+                        .stream()
+                        .filter(s -> s.getName().equals(stagingQueueName))
+                        .findFirst();
+
+                if (!retrievedShovelAfterDeletion.isPresent()) {
+                    // Test passed
+                    return;
+                } else {
+                    // Shovel not deleted yet, wait a bit and check again
+                    Thread.sleep(2000);
+                }
             }
-        }
 
-        Assert.fail("Shovel named " + stagingQueueName + " should have been deleted but wasn't");
+            Assert.fail("Shovel named " + stagingQueueName + " should have been deleted but wasn't");
+        } finally {
+            nonRunningShovelCheckerExecutorService.shutdownNow();
+        }
     }
 }
