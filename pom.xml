@@ -1,6 +1,6 @@
 <!--
 
-    Copyright 2022-2023 Micro Focus or one of its affiliates.
+    Copyright 2022-2023 Open Text.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -44,7 +44,7 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <copyrightYear>2023</copyrightYear>
-    <copyrightNotice>Copyright ${project.inceptionYear}-${copyrightYear} Micro Focus or one of its affiliates.</copyrightNotice>
+    <copyrightNotice>Copyright ${project.inceptionYear}-${copyrightYear} Open Text.</copyrightNotice>
     <enforceCorrectDependencies>true</enforceCorrectDependencies>
       <maven.compiler.source>8</maven.compiler.source>
       <maven.compiler.target>8</maven.compiler.target>
