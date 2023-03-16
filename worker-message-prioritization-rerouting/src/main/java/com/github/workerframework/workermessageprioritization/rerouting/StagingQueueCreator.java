@@ -15,16 +15,29 @@
  */
 package com.github.workerframework.workermessageprioritization.rerouting;
 
+import static com.github.workerframework.workermessageprioritization.rerouting.MessageRouter.LOAD_BALANCED_INDICATOR;
+
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
+import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApi;
+import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitManagementApi;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.ShutdownSignalException;
 
 import java.io.IOException;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
+
+import javax.annotation.Nonnull;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,13 +46,35 @@ public class StagingQueueCreator {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(StagingQueueCreator.class);
 
-    private final HashSet<String> declaredQueues = new HashSet<>();
+    // We want a single-element (list of all staging queues) LoadingCache, in order to reduce the number of network requests to
+    // the RabbitMQ API, but LoadingCache doesn't allow null keys, so we use a dummy key instead.
+    //
+    // See: https://github.com/google/guava/issues/872
+    private static final Object DUMMY_CACHE_KEY = new Object();
+
     private final ConnectionFactory connectionFactory;
+    private final LoadingCache<Object,List<String>> existingStagingQueueNamesCache;
     private Connection connection;
     private Channel channel;
 
-    public StagingQueueCreator(final ConnectionFactory connectionFactory) throws IOException, TimeoutException {
+    public StagingQueueCreator(final ConnectionFactory connectionFactory, final RabbitManagementApi<QueuesApi> queuesApi)
+            throws IOException, TimeoutException {
         this.connectionFactory = connectionFactory;
+
+        this.existingStagingQueueNamesCache =  CacheBuilder.newBuilder()
+                .expireAfterWrite(1, TimeUnit.MINUTES)
+                .build(new CacheLoader<Object,List<String>>() {
+                    @Override
+                    public List<String> load(@Nonnull final Object ignoredKey) {
+                        return queuesApi.getApi()
+                                .getQueues()
+                                .stream()
+                                .map(Queue::getName)
+                                .filter(name -> name.contains(LOAD_BALANCED_INDICATOR))
+                                .collect(Collectors.toList());
+                    }
+                });
+
         connectToRabbitMQ();
     }
 
@@ -73,8 +108,18 @@ public class StagingQueueCreator {
 
     void createStagingQueue(final Queue targetQueue, final String stagingQueueName) throws IOException {
 
-        if(declaredQueues.contains(stagingQueueName)) {
-            return;
+        try {
+            final List<String> existingStagingQueueNames = existingStagingQueueNamesCache.get(DUMMY_CACHE_KEY);
+
+            if (existingStagingQueueNames.contains(stagingQueueName)) {
+                LOGGER.debug("A staging queue named {} already exists in the existingStagingQueueNamesCache, so not creating it.",
+                        stagingQueueName);
+
+                return;
+            };
+        } catch (final ExecutionException e) {
+            LOGGER.warn(String.format("ExecutionException thrown trying to check if a staging queue named %s already exists before " +
+                    "creating it, so assuming that it does not exist.", stagingQueueName), e);
         }
 
         final boolean durable = targetQueue.isDurable();
@@ -102,6 +147,29 @@ public class StagingQueueCreator {
             throw ioException;
         }
 
-        declaredQueues.add(stagingQueueName);
+        channel.basicConsume(stagingQueueName, new HandleCancelConsumer(channel, stagingQueueName));
+
+        existingStagingQueueNamesCache.refresh(DUMMY_CACHE_KEY);
+    }
+
+    final class HandleCancelConsumer extends DefaultConsumer
+    {
+        private final String queueName;
+
+        public HandleCancelConsumer(final Channel channel, final String queueName)
+        {
+            super(channel);
+            this.queueName = queueName;
+        }
+
+        @Override
+        public void handleCancel(String consumerTag) throws IOException
+        {
+            LOGGER.warn("HandleCancelConsumer.handleCancel was called for queue named {}. " +
+                            "This means the queue may have been deleted. Will now refresh the existingStagingQueueNamesCache.",
+                    queueName);
+
+            existingStagingQueueNamesCache.refresh(DUMMY_CACHE_KEY);
+        }
     }
 }
