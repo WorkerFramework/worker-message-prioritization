@@ -66,8 +66,9 @@ public class StagingQueueCreator {
                 .build(new CacheLoader<Object,List<String>>() {
                     @Override
                     public List<String> load(@Nonnull final Object ignoredKey) {
+
                         return queuesApi.getApi()
-                                .getQueues()
+                                .getQueues("name")
                                 .stream()
                                 .map(Queue::getName)
                                 .filter(name -> name.contains(LOAD_BALANCED_INDICATOR))
@@ -127,8 +128,9 @@ public class StagingQueueCreator {
         final boolean autoDelete = targetQueue.isAuto_delete();
         final Map<String, Object> arguments = targetQueue.getArguments();
 
-        LOGGER.info("Creating or checking staging queue by calling channel.queueDeclare({}, {}, {}, {}, {})",
-                stagingQueueName, durable, exclusive, autoDelete, arguments);
+        LOGGER.info("A staging queue named {} does NOT exist in the existingStagingQueueNamesCache," +
+                        "so creating or checking staging queue by calling channel.queueDeclare({}, {}, {}, {}, {})",
+                stagingQueueName, stagingQueueName, durable, exclusive, autoDelete, arguments);
 
         try {
             channel.queueDeclare(stagingQueueName, durable, exclusive, autoDelete, arguments);
@@ -165,7 +167,7 @@ public class StagingQueueCreator {
         @Override
         public void handleCancel(String consumerTag) throws IOException
         {
-            LOGGER.warn("HandleCancelConsumer.handleCancel was called for queue named {}. " +
+            LOGGER.warn("HandleCancelConsumer.handleCancel was called for a queue named {}. " +
                             "This means the queue may have been deleted. Will now refresh the existingStagingQueueNamesCache.",
                     queueName);
 

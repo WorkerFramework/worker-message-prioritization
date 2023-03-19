@@ -17,12 +17,16 @@ package com.github.workerframework.workermessageprioritization.rabbitmq;
 
 import retrofit.http.GET;
 import retrofit.http.Path;
+import retrofit.http.Query;
 
 import java.util.List;
 
 public interface QueuesApi {
     @GET("/api/queues/")
     List<Queue> getQueues();
+
+    @GET("/api/queues/")
+    List<Queue> getQueues(@Query(value = "columns", encodeValue = true) final String columnsCsvString);
 
     @GET("/api/queues/{vhost}/{queue}")
     Queue getQueue(@Path("vhost") final String vhost, @Path("queue") final String queueName);
