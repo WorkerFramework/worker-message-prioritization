@@ -46,8 +46,8 @@ public class StagingQueueCreator {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(StagingQueueCreator.class);
 
-    // We want a single-element (list of all staging queues) LoadingCache, in order to reduce the number of network requests to
-    // the RabbitMQ API, but LoadingCache doesn't allow null keys, so we use a dummy key instead.
+    // We want a single-element (list of all staging queues) LoadingCache, rather than a cache entry per staging queue, in order to
+    // reduce the number of network requests to the RabbitMQ API, but LoadingCache doesn't allow null keys, so we use a dummy key instead.
     //
     // See: https://github.com/google/guava/issues/872
     private static final Object DUMMY_CACHE_KEY = new Object();
