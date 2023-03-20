@@ -71,7 +71,7 @@ public final class StagingQueueCreatorIT extends RerouterTestBase {
         }
     }
 
-    //@Test
+    @Test
     public void recreateStagingQueueAfterDeletionTest() throws TimeoutException, IOException, InterruptedException {
 
         final String targetQueueName = getUniqueTargetQueueName(TARGET_QUEUE_NAME);
@@ -121,6 +121,10 @@ public final class StagingQueueCreatorIT extends RerouterTestBase {
                 } catch (final Exception e) {
                     // Expected
                 }
+
+                // Wait > 1 minute until the staging queue names cache inside the StagingQueueCreator has expired, at which point the
+                // next call to createStagingQueue will query the RabbitMQ API for the current staging queue names
+                Thread.sleep(2000);
 
                 // Recreate the staging queue
                 stagingQueueCreator.createStagingQueue(targetQueue, stagingQueueName);

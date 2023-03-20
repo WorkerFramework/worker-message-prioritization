@@ -26,7 +26,6 @@ import com.google.common.cache.LoadingCache;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
-import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.ShutdownSignalException;
 
 import java.io.IOException;
@@ -149,29 +148,6 @@ public class StagingQueueCreator {
             throw ioException;
         }
 
-        //channel.basicConsume(stagingQueueName, new HandleCancelConsumer(channel, stagingQueueName));
-
         existingStagingQueueNamesCache.refresh(DUMMY_CACHE_KEY);
-    }
-
-    final class HandleCancelConsumer extends DefaultConsumer
-    {
-        private final String queueName;
-
-        public HandleCancelConsumer(final Channel channel, final String queueName)
-        {
-            super(channel);
-            this.queueName = queueName;
-        }
-
-        @Override
-        public void handleCancel(String consumerTag) throws IOException
-        {
-            LOGGER.warn("HandleCancelConsumer.handleCancel was called for a queue named {}. " +
-                            "This means the queue may have been deleted. Will now refresh the existingStagingQueueNamesCache.",
-                    queueName);
-
-            existingStagingQueueNamesCache.refresh(DUMMY_CACHE_KEY);
-        }
     }
 }
