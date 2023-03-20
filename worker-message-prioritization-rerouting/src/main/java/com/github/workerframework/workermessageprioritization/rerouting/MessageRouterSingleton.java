@@ -64,7 +64,8 @@ public class MessageRouterSingleton {
             final RabbitManagementApi<QueuesApi> queuesApi =
                     new RabbitManagementApi<>(QueuesApi.class, mgmtEndpoint, mgmtUsername, mgmtPassword);
 
-            final StagingQueueCreator stagingQueueCreator = new StagingQueueCreator(connectionFactory, queuesApi);
+            final StagingQueueCreator stagingQueueCreator = new StagingQueueCreator(
+                    connectionFactory, queuesApi, 60000);
 
             final RerouteDecider rerouteDecider = new AlwaysRerouteDecider();
 

@@ -56,12 +56,15 @@ public class StagingQueueCreator {
     private Connection connection;
     private Channel channel;
 
-    public StagingQueueCreator(final ConnectionFactory connectionFactory, final RabbitManagementApi<QueuesApi> queuesApi)
+    public StagingQueueCreator(
+            final ConnectionFactory connectionFactory,
+            final RabbitManagementApi<QueuesApi> queuesApi,
+            final long existingStagingQueueNamesCacheExpiryMilliseconds)
             throws IOException, TimeoutException {
         this.connectionFactory = connectionFactory;
 
         this.existingStagingQueueNamesCache =  CacheBuilder.newBuilder()
-                .expireAfterWrite(1, TimeUnit.MINUTES)
+                .expireAfterWrite(existingStagingQueueNamesCacheExpiryMilliseconds, TimeUnit.MILLISECONDS)
                 .build(new CacheLoader<Object,List<String>>() {
                     @Override
                     public List<String> load(@Nonnull final Object ignoredKey) {
