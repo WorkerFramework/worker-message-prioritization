@@ -149,7 +149,7 @@ public class StagingQueueCreator {
             throw ioException;
         }
 
-        channel.basicConsume(stagingQueueName, new HandleCancelConsumer(channel, stagingQueueName));
+        //channel.basicConsume(stagingQueueName, new HandleCancelConsumer(channel, stagingQueueName));
 
         existingStagingQueueNamesCache.refresh(DUMMY_CACHE_KEY);
     }
