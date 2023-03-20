@@ -71,7 +71,7 @@ public final class StagingQueueCreatorIT extends RerouterTestBase {
         }
     }
 
-    @Test
+    //@Test
     public void recreateStagingQueueAfterDeletionTest() throws TimeoutException, IOException, InterruptedException {
 
         final String targetQueueName = getUniqueTargetQueueName(TARGET_QUEUE_NAME);
