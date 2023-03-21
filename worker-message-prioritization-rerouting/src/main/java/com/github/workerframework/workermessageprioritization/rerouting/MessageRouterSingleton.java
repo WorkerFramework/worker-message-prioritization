@@ -24,6 +24,7 @@ import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApi
 import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitManagementApi;
 import com.github.workerframework.workermessageprioritization.rerouting.reroutedeciders.AlwaysRerouteDecider;
 import com.github.workerframework.workermessageprioritization.rerouting.reroutedeciders.RerouteDecider;
+import com.google.common.base.Strings;
 import com.hpe.caf.worker.document.model.Document;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
@@ -31,8 +32,6 @@ import com.rabbitmq.client.ConnectionFactory;
 public class MessageRouterSingleton {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageRouterSingleton.class);
-
-    private static final String CAF_WMP_KUBERNETES_NAMESPACES = "CAF_WMP_KUBERNETES_NAMESPACES";
 
     private static Connection connection;
     private static MessageRouter messageRouter;
@@ -64,8 +63,16 @@ public class MessageRouterSingleton {
             final RabbitManagementApi<QueuesApi> queuesApi =
                     new RabbitManagementApi<>(QueuesApi.class, mgmtEndpoint, mgmtUsername, mgmtPassword);
 
+            final String stagingQueueCacheExpiryMillisecondsString =
+                    System.getenv("CAF_WMP_STAGING_QUEUE_CACHE_EXPIRY_MILLISECONDS");
+
+            final long stagingQueueCacheExpiryMilliseconds =
+                    !Strings.isNullOrEmpty(stagingQueueCacheExpiryMillisecondsString) ?
+                            Long.parseLong(stagingQueueCacheExpiryMillisecondsString) :
+                            60000;
+
             final StagingQueueCreator stagingQueueCreator = new StagingQueueCreator(
-                    connectionFactory, queuesApi, 60000);
+                    connectionFactory, queuesApi, stagingQueueCacheExpiryMilliseconds);
 
             final RerouteDecider rerouteDecider = new AlwaysRerouteDecider();
 

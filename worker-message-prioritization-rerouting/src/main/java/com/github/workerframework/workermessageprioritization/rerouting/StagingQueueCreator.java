@@ -52,19 +52,19 @@ public class StagingQueueCreator {
     private static final Object DUMMY_CACHE_KEY = new Object();
 
     private final ConnectionFactory connectionFactory;
-    private final LoadingCache<Object,List<String>> existingStagingQueueNamesCache;
+    private final LoadingCache<Object,List<String>> stagingQueueCache;
     private Connection connection;
     private Channel channel;
 
     public StagingQueueCreator(
             final ConnectionFactory connectionFactory,
             final RabbitManagementApi<QueuesApi> queuesApi,
-            final long existingStagingQueueNamesCacheExpiryMilliseconds)
+            final long stagingQueueCacheExpiryMilliseconds)
             throws IOException, TimeoutException {
         this.connectionFactory = connectionFactory;
 
-        this.existingStagingQueueNamesCache =  CacheBuilder.newBuilder()
-                .expireAfterWrite(existingStagingQueueNamesCacheExpiryMilliseconds, TimeUnit.MILLISECONDS)
+        this.stagingQueueCache =  CacheBuilder.newBuilder()
+                .expireAfterWrite(stagingQueueCacheExpiryMilliseconds, TimeUnit.MILLISECONDS)
                 .build(new CacheLoader<Object,List<String>>() {
                     @Override
                     public List<String> load(@Nonnull final Object ignoredKey) {
@@ -79,6 +79,8 @@ public class StagingQueueCreator {
                 });
 
         connectToRabbitMQ();
+
+        LOGGER.debug("Initialised StagingQueueCreator with stagingQueueCacheExpiryMilliseconds={}", stagingQueueCacheExpiryMilliseconds);
     }
 
     private void connectToRabbitMQ() throws IOException, TimeoutException  {
@@ -112,10 +114,10 @@ public class StagingQueueCreator {
     void createStagingQueue(final Queue targetQueue, final String stagingQueueName) throws IOException {
 
         try {
-            final List<String> existingStagingQueueNames = existingStagingQueueNamesCache.get(DUMMY_CACHE_KEY);
+            final List<String> stagingQueues = stagingQueueCache.get(DUMMY_CACHE_KEY);
 
-            if (existingStagingQueueNames.contains(stagingQueueName)) {
-                LOGGER.debug("A staging queue named {} already exists in the existingStagingQueueNamesCache, so not creating it.",
+            if (stagingQueues.contains(stagingQueueName)) {
+                LOGGER.debug("A staging queue named {} already exists in the stagingQueueCache, so not creating it.",
                         stagingQueueName);
 
                 return;
@@ -130,7 +132,7 @@ public class StagingQueueCreator {
         final boolean autoDelete = targetQueue.isAuto_delete();
         final Map<String, Object> arguments = targetQueue.getArguments();
 
-        LOGGER.info("A staging queue named {} does NOT exist in the existingStagingQueueNamesCache," +
+        LOGGER.info("A staging queue named {} does NOT exist in the stagingQueueCache, " +
                         "so creating or checking staging queue by calling channel.queueDeclare({}, {}, {}, {}, {})",
                 stagingQueueName, stagingQueueName, durable, exclusive, autoDelete, arguments);
 
@@ -151,6 +153,6 @@ public class StagingQueueCreator {
             throw ioException;
         }
 
-        existingStagingQueueNamesCache.refresh(DUMMY_CACHE_KEY);
+        stagingQueueCache.refresh(DUMMY_CACHE_KEY);
     }
 }

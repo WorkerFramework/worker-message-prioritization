@@ -51,9 +51,9 @@ public final class StagingQueueCreatorIT extends RerouterTestBase {
                 Assert.assertNotNull("Target queue was not found via REST API", targetQueue);
 
                 // Create a staging queue using the target queue as a template
-                final long existingStagingQueueNamesCacheExpiryMilliseconds = 5000;
+                final long stagingQueueCacheExpiryMilliseconds = 5000;
                 final StagingQueueCreator stagingQueueCreator = new StagingQueueCreator(
-                        connectionFactory, queuesApi, existingStagingQueueNamesCacheExpiryMilliseconds);
+                        connectionFactory, queuesApi, stagingQueueCacheExpiryMilliseconds);
                 stagingQueueCreator.createStagingQueue(targetQueue, stagingQueueName);
 
                 // Verify the staging queue was created successfully
@@ -96,9 +96,9 @@ public final class StagingQueueCreatorIT extends RerouterTestBase {
                 Assert.assertNotNull("Target queue was not found via REST API", targetQueue);
 
                 // Create a staging queue using the target queue as a template
-                final long existingStagingQueueNamesCacheExpiryMilliseconds = 5000;
+                final long stagingQueueCacheExpiryMilliseconds = 5000;
                 final StagingQueueCreator stagingQueueCreator = new StagingQueueCreator(
-                        connectionFactory, queuesApi, existingStagingQueueNamesCacheExpiryMilliseconds);
+                        connectionFactory, queuesApi, stagingQueueCacheExpiryMilliseconds);
                 stagingQueueCreator.createStagingQueue(targetQueue, stagingQueueName);
 
                 // Verify the staging queue was created successfully
@@ -126,10 +126,10 @@ public final class StagingQueueCreatorIT extends RerouterTestBase {
                     // Expected
                 }
 
-                // Wait > existingStagingQueueNamesCacheExpiryMilliseconds until the staging queue names cache inside the
-                // StagingQueueCreator has expired, at which point the next call to createStagingQueue will re-query the RabbitMQ API
-                // for the current staging queue names
-                Thread.sleep(existingStagingQueueNamesCacheExpiryMilliseconds + 5000);
+                // Wait > stagingQueueCacheExpiryMilliseconds until the staging queue names cache inside the StagingQueueCreator has
+                // expired, at which point the next call to createStagingQueue will re-query the RabbitMQ API for the current staging
+                // queue names
+                Thread.sleep(stagingQueueCacheExpiryMilliseconds + 5000);
 
                 // Recreate the staging queue
                 stagingQueueCreator.createStagingQueue(targetQueue, stagingQueueName);
