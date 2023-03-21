@@ -117,7 +117,7 @@ public class StagingQueueCreator {
             final List<String> stagingQueues = stagingQueueCache.get(DUMMY_CACHE_KEY);
 
             if (stagingQueues.contains(stagingQueueName)) {
-                LOGGER.debug("A staging queue named {} already exists in the stagingQueueCache, so not creating it.",
+                LOGGER.debug("A staging queue named {} already exists in the staging queue cache, so not creating it.",
                         stagingQueueName);
 
                 return;
@@ -132,7 +132,7 @@ public class StagingQueueCreator {
         final boolean autoDelete = targetQueue.isAuto_delete();
         final Map<String, Object> arguments = targetQueue.getArguments();
 
-        LOGGER.info("A staging queue named {} does NOT exist in the stagingQueueCache, " +
+        LOGGER.info("A staging queue named {} does NOT exist in the staging queue cache, " +
                         "so creating or checking staging queue by calling channel.queueDeclare({}, {}, {}, {}, {})",
                 stagingQueueName, stagingQueueName, durable, exclusive, autoDelete, arguments);
 
