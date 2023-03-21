@@ -72,6 +72,7 @@ public class ShovelApplication
         // same node as the shovel.
         final LoadingCache<String,RabbitManagementApi<ShovelsApi>> nodeSpecificShovelsApiCache = CacheBuilder
                 .newBuilder()
+                .maximumSize(1)
                 .expireAfterAccess(7, TimeUnit.DAYS)
                 .build(new CacheLoader<String,RabbitManagementApi<ShovelsApi>>()
                 {
