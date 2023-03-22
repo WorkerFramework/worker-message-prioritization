@@ -65,6 +65,7 @@ public class StagingQueueCreator {
 
         this.stagingQueueCache =  CacheBuilder.newBuilder()
                 .expireAfterWrite(stagingQueueCacheExpiryMilliseconds, TimeUnit.MILLISECONDS)
+                .maximumSize(1)
                 .build(new CacheLoader<Object,List<String>>() {
                     @Override
                     public List<String> load(@Nonnull final Object ignoredKey) {
