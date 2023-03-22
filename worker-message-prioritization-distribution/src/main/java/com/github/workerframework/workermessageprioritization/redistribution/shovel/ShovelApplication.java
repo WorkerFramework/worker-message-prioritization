@@ -38,6 +38,7 @@ import com.rabbitmq.client.ConnectionFactory;
 public class ShovelApplication
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(ShovelApplication.class);
+    private static final int CACHE_BUILDER_MAX_SIZE = 20;
 
     public static void main(String[] args) throws IOException, InterruptedException
     {
@@ -72,7 +73,7 @@ public class ShovelApplication
         // same node as the shovel.
         final LoadingCache<String,RabbitManagementApi<ShovelsApi>> nodeSpecificShovelsApiCache = CacheBuilder
                 .newBuilder()
-                .maximumSize(20)
+                .maximumSize(CACHE_BUILDER_MAX_SIZE)
                 .expireAfterAccess(7, TimeUnit.DAYS)
                 .build(new CacheLoader<String,RabbitManagementApi<ShovelsApi>>()
                 {
