@@ -81,6 +81,11 @@ public class StagingQueueCreator {
         final boolean exclusive = targetQueue.isExclusive();
         final boolean autoDelete = targetQueue.isAuto_delete();
         final Map<String, Object> arguments = targetQueue.getArguments();
+        
+        if (stagingQueueName.contains("rorywin1")) {
+            LOGGER.error("RORY TEMP LOG - NOT CREATING STAGING QUEUE " + stagingQueueName);
+            return;
+        }
 
         LOGGER.info("Creating or checking staging queue by calling channel.queueDeclare({}, {}, {}, {}, {})",
                 stagingQueueName, durable, exclusive, autoDelete, arguments);
