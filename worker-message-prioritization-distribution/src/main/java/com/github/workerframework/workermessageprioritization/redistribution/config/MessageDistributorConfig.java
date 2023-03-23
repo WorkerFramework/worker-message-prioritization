@@ -155,9 +155,11 @@ public final class MessageDistributorConfig {
     public String getRabbitMQMgmtPassword() {
         return rabbitMQMgmtPassword;
     }
+    
     public int getRabbitMQMaxNodeCount() {
         return rabbitMQMaxNodeCount;
     }
+
     public long getNonRunningShovelTimeoutMilliseconds() {
         return nonRunningShovelTimeoutMilliseconds;
     }
