@@ -43,6 +43,9 @@ public final class MessageDistributorConfig {
     private static final String CAF_RABBITMQ_MGMT_USERNAME_ENVVAR = "CAF_RABBITMQ_MGMT_USERNAME";
     private static final String CAF_RABBITMQ_MGMT_PASSWORD_ENVVAR = "CAF_RABBITMQ_MGMT_PASSWORD";
 
+    private static final String CAF_RABBITMQ_MAX_NODE_COUNT = "CAF_RABBITMQ_MAX_NODE_COUNT";
+    private static final int CAF_RABBITMQ_MAX_NODE_COUNT_DEFAULT = 20;
+
     private static final String CAF_WMP_DISTRIBUTOR_RUN_INTERVAL_MILLISECONDS = "CAF_WMP_DISTRIBUTOR_RUN_INTERVAL_MILLISECONDS";
     private static final long CAF_WMP_DISTRIBUTOR_RUN_INTERVAL_MILLISECONDS_DEFAULT = 10000;
 
@@ -80,6 +83,7 @@ public final class MessageDistributorConfig {
     private final String rabbitMQMgmtUrl;
     private final String rabbitMQMgmtUsername;
     private final String rabbitMQMgmtPassword;
+    private final int rabbitMQMaxNodeCount;
     private final long distributorRunIntervalMilliseconds;
     private final long nonRunningShovelTimeoutMilliseconds;
     private final long nonRunningShovelCheckIntervalMilliseconds;
@@ -98,6 +102,7 @@ public final class MessageDistributorConfig {
         rabbitMQMgmtUrl = getEnvOrDefault(CAF_RABBITMQ_MGMT_URL, CAF_RABBITMQ_MGMT_URL_DEFAULT);
         rabbitMQMgmtUsername = getStrEnvOrThrow(CAF_RABBITMQ_MGMT_USERNAME_ENVVAR);
         rabbitMQMgmtPassword = getStrEnvOrThrow(CAF_RABBITMQ_MGMT_PASSWORD_ENVVAR);
+        rabbitMQMaxNodeCount = getEnvOrDefault(CAF_RABBITMQ_MAX_NODE_COUNT, CAF_RABBITMQ_MAX_NODE_COUNT_DEFAULT);
         distributorRunIntervalMilliseconds = getEnvOrDefault(
             CAF_WMP_DISTRIBUTOR_RUN_INTERVAL_MILLISECONDS,
             CAF_WMP_DISTRIBUTOR_RUN_INTERVAL_MILLISECONDS_DEFAULT);
@@ -150,6 +155,10 @@ public final class MessageDistributorConfig {
     public String getRabbitMQMgmtPassword() {
         return rabbitMQMgmtPassword;
     }
+    
+    public int getRabbitMQMaxNodeCount() {
+        return rabbitMQMaxNodeCount;
+    }
 
     public long getNonRunningShovelTimeoutMilliseconds() {
         return nonRunningShovelTimeoutMilliseconds;
@@ -190,6 +199,7 @@ public final class MessageDistributorConfig {
             .add(CAF_RABBITMQ_MGMT_URL, rabbitMQMgmtUrl)
             .add(CAF_RABBITMQ_MGMT_USERNAME_ENVVAR, rabbitMQMgmtUsername)
             .add(CAF_RABBITMQ_MGMT_PASSWORD_ENVVAR, "<HIDDEN>")
+            .add(CAF_RABBITMQ_MAX_NODE_COUNT, rabbitMQMaxNodeCount)
             .add(CAF_WMP_DISTRIBUTOR_RUN_INTERVAL_MILLISECONDS, distributorRunIntervalMilliseconds)
             .add(CAF_WMP_NON_RUNNING_SHOVEL_TIMEOUT_MILLISECONDS, nonRunningShovelTimeoutMilliseconds)
             .add(CAF_WMP_NON_RUNNING_SHOVEL_CHECK_INTERVAL_MILLISECONDS, nonRunningShovelCheckIntervalMilliseconds)
