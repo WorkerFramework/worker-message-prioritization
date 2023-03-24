@@ -26,6 +26,7 @@ public class RerouterTestBase {
 
     protected ConnectionFactory connectionFactory;
     protected RabbitManagementApi<QueuesApi> queuesApi;
+    protected RabbitManagementApi<QueuesApi> cachingQueuesApi;
 
     public RerouterTestBase() {
 
@@ -39,9 +40,14 @@ public class RerouterTestBase {
         final int managementPort = Integer.parseInt(System.getProperty("rabbitmq.ctrl.port", "25673"));
 
         queuesApi
-            = new RabbitManagementApi<>(QueuesApi.class,
-                                        "http://" + connectionFactory.getHost() + ":" + managementPort + "/",
-                                        connectionFactory.getUsername(), connectionFactory.getPassword());
+                = new RabbitManagementApi<>(QueuesApi.class,
+                "http://" + connectionFactory.getHost() + ":" + managementPort + "/",
+                connectionFactory.getUsername(), connectionFactory.getPassword());
+
+        cachingQueuesApi
+                = new RabbitManagementApi<>(QueuesApi.class,
+                "http://" + connectionFactory.getHost() + ":" + managementPort + "/",
+                connectionFactory.getUsername(), connectionFactory.getPassword(), 10000);
     }
 
     protected String getUniqueTargetQueueName(final String targetQueueName) {

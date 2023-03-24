@@ -51,9 +51,7 @@ public final class StagingQueueCreatorIT extends RerouterTestBase {
                 Assert.assertNotNull("Target queue was not found via REST API", targetQueue);
 
                 // Create a staging queue using the target queue as a template
-                final long stagingQueueCacheExpiryMilliseconds = 5000;
-                final StagingQueueCreator stagingQueueCreator = new StagingQueueCreator(
-                        connectionFactory, queuesApi, stagingQueueCacheExpiryMilliseconds);
+                final StagingQueueCreator stagingQueueCreator = new StagingQueueCreator(connectionFactory, cachingQueuesApi);
                 stagingQueueCreator.createStagingQueue(targetQueue, stagingQueueName);
 
                 // Verify the staging queue was created successfully
@@ -74,7 +72,8 @@ public final class StagingQueueCreatorIT extends RerouterTestBase {
     }
 
     @Test
-    public void recreateStagingQueueAfterDeletionTest() throws TimeoutException, IOException, InterruptedException {
+    public void stagingQueueShouldNotBeCreatedIfPresentInHttpCacheTest() throws TimeoutException, IOException,
+            InterruptedException {
 
         final String targetQueueName = getUniqueTargetQueueName(TARGET_QUEUE_NAME);
         final String stagingQueueName = getStagingQueueName(targetQueueName, T1_STAGING_QUEUE_NAME);
@@ -95,25 +94,17 @@ public final class StagingQueueCreatorIT extends RerouterTestBase {
                 final Queue targetQueue = queuesApi.getApi().getQueue("/", targetQueueName);
                 Assert.assertNotNull("Target queue was not found via REST API", targetQueue);
 
-                // Create a staging queue using the target queue as a template
-                final long stagingQueueCacheExpiryMilliseconds = 5000;
-                final StagingQueueCreator stagingQueueCreator = new StagingQueueCreator(
-                        connectionFactory, queuesApi, stagingQueueCacheExpiryMilliseconds);
-                stagingQueueCreator.createStagingQueue(targetQueue, stagingQueueName);
+                // Create a staging queue
+                channel.queueDeclare(
+                        stagingQueueName, targetQueueDurable, targetQueueExclusive, targetQueueAutoDelete, targetQueueArguments);
 
                 // Verify the staging queue was created successfully
-                final Queue stagingQueue = queuesApi.getApi().getQueue("/", stagingQueueName);
-                Assert.assertNotNull("Staging queue was not found via REST API", stagingQueue);
-                Assert.assertEquals("Staging queue should have been created with the supplied name",
-                        stagingQueueName, stagingQueue.getName());
-                Assert.assertEquals("Staging queue should have been created with the same durable setting as the target queue",
-                        targetQueueDurable, stagingQueue.isDurable());
-                Assert.assertEquals("Staging queue should have been created with the same exclusive setting as the target queue",
-                        targetQueueExclusive, stagingQueue.isExclusive());
-                Assert.assertEquals("Staging queue should have been created with the same auto_delete setting as the target queue",
-                        targetQueueAutoDelete, stagingQueue.isAuto_delete());
-                Assert.assertEquals("Staging queue should have been created with the same arguments as the target queue",
-                        targetQueueArguments, stagingQueue.getArguments());
+                Assert.assertNotNull("Staging queue was not found via REST API", queuesApi.getApi().getQueue("/", stagingQueueName));
+
+                // Call createStagingQueue to populate the StagingQueueCreator's HTTP cache. As the staging queue has already been
+                // created, this won't do anything else.
+                final StagingQueueCreator stagingQueueCreator = new StagingQueueCreator(connectionFactory, cachingQueuesApi);
+                stagingQueueCreator.createStagingQueue(targetQueue, stagingQueueName);
 
                 // Delete the staging queue
                 channel.queueDelete(stagingQueueName);
@@ -126,27 +117,26 @@ public final class StagingQueueCreatorIT extends RerouterTestBase {
                     // Expected
                 }
 
-                // Wait > stagingQueueCacheExpiryMilliseconds until the staging queue names cache inside the StagingQueueCreator has
-                // expired, at which point the next call to createStagingQueue will re-query the RabbitMQ API for the current staging
-                // queue names
-                Thread.sleep(stagingQueueCacheExpiryMilliseconds + 5000);
-
-                // Recreate the staging queue
+                // Call createStagingQueue again. Although the staging queue has been deleted, the StagingQueueCreator does not know
+                // this because the staging queue is present inside the StageQueueCreator's HTTP cache. As such, the staging queue
+                // should not be created.
                 stagingQueueCreator.createStagingQueue(targetQueue, stagingQueueName);
 
-                // Verify the staging queue was recreated successfully
-                final Queue recreatedStagingQueue = queuesApi.getApi().getQueue("/", stagingQueueName);
-                Assert.assertNotNull("Staging queue was not found via REST API", recreatedStagingQueue);
-                Assert.assertEquals("Staging queue should have been created with the supplied name",
-                        stagingQueueName, recreatedStagingQueue.getName());
-                Assert.assertEquals("Staging queue should have been created with the same durable setting as the target queue",
-                        targetQueueDurable, recreatedStagingQueue.isDurable());
-                Assert.assertEquals("Staging queue should have been created with the same exclusive setting as the target queue",
-                        targetQueueExclusive, recreatedStagingQueue.isExclusive());
-                Assert.assertEquals("Staging queue should have been created with the same auto_delete setting as the target queue",
-                        targetQueueAutoDelete, recreatedStagingQueue.isAuto_delete());
-                Assert.assertEquals("Staging queue should have been created with the same arguments as the target queue",
-                        targetQueueArguments, recreatedStagingQueue.getArguments());
+                // Verify the staging queue was not created
+                try {
+                    queuesApi.getApi().getQueue("/", stagingQueueName);
+                    Assert.fail("Expected a 404 when trying to get a queue that has been deleted");
+                } catch (final Exception e) {
+                    // Expected
+                }
+
+                // Wait a bit longer then the HTTP cache max age, then call createStagingQueue again. This time, the staging queue
+                // should be created because the StagingQueueCreator's HTTP cache should have expired.
+                Thread.sleep(20000);
+
+                // Verify the staging queue was created
+                stagingQueueCreator.createStagingQueue(targetQueue, stagingQueueName);
+                Assert.assertNotNull("Staging queue was not found via REST API", queuesApi.getApi().getQueue("/", stagingQueueName));
             }
         }
     }

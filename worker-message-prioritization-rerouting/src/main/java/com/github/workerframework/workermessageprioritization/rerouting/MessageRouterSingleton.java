@@ -60,19 +60,28 @@ public class MessageRouterSingleton {
 
             connection = connectionFactory.newConnection();
 
-            final RabbitManagementApi<QueuesApi> queuesApi =
-                    new RabbitManagementApi<>(QueuesApi.class, mgmtEndpoint, mgmtUsername, mgmtPassword);
+            final String stagingQueueHttpCacheMaxAgeMillisecondsString =
+                    System.getenv("CAF_WMP_STAGING_QUEUE_HTTP_CACHE_MAX_AGE_MILLISECONDS");
 
-            final String stagingQueueCacheExpiryMillisecondsString =
-                    System.getenv("CAF_WMP_STAGING_QUEUE_CACHE_EXPIRY_MILLISECONDS");
-
-            final long stagingQueueCacheExpiryMilliseconds =
-                    !Strings.isNullOrEmpty(stagingQueueCacheExpiryMillisecondsString) ?
-                            Long.parseLong(stagingQueueCacheExpiryMillisecondsString) :
+            final int stagingQueueHttpCacheMaxAgeMilliseconds =
+                    !Strings.isNullOrEmpty(stagingQueueHttpCacheMaxAgeMillisecondsString) ?
+                            Integer.parseInt(stagingQueueHttpCacheMaxAgeMillisecondsString) :
                             60000;
 
-            final StagingQueueCreator stagingQueueCreator = new StagingQueueCreator(
-                    connectionFactory, queuesApi, stagingQueueCacheExpiryMilliseconds);
+            final RabbitManagementApi<QueuesApi> queuesApi = new RabbitManagementApi<>(
+                    QueuesApi.class,
+                    mgmtEndpoint,
+                    mgmtUsername,
+                    mgmtPassword);
+
+            final RabbitManagementApi<QueuesApi> cachingQueuesApi = new RabbitManagementApi<>(
+                    QueuesApi.class,
+                    mgmtEndpoint,
+                    mgmtUsername,
+                    mgmtPassword,
+                    stagingQueueHttpCacheMaxAgeMilliseconds);
+
+            final StagingQueueCreator stagingQueueCreator = new StagingQueueCreator(connectionFactory, cachingQueuesApi);
 
             final RerouteDecider rerouteDecider = new AlwaysRerouteDecider();
 
