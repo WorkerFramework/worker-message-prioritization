@@ -34,12 +34,13 @@ public class MessageRouterSingleton {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageRouterSingleton.class);
 
-    private static final String CAF_WMP_KUBERNETES_NAMESPACES = "CAF_WMP_KUBERNETES_NAMESPACES";
+    private static final boolean CAF_WMP_ENABLED = Boolean.parseBoolean(System.getenv("CAF_WMP_ENABLED"));
 
     private static Connection connection;
     private static RabbitManagementApi<HealthCheckApi> healthCheckApi;
     private static MessageRouter messageRouter;
     private static volatile boolean initAttempted = false;
+    private static volatile String initError;
 
     public static void init() {
 
@@ -78,10 +79,10 @@ public class MessageRouterSingleton {
             messageRouter = new MessageRouter(queuesApi, "/", stagingQueueCreator, rerouteDecider);
         }
         catch (final Throwable e) {
-            LOGGER.error("Failed to initialise WMP - {}", e.toString());
+            initError = String.format("Failed to initialise WMP - %s", e.toString());
+            LOGGER.error(initError);
             closeQuietly();
         }
-
     }
 
     public static void route(final Document document) {
@@ -99,14 +100,22 @@ public class MessageRouterSingleton {
     }
 
     public static void checkHealth(final HealthMonitor healthMonitor) {
-        if(messageRouter != null) {
-            try {
-                healthCheckApi.getApi().checkHealth();
-            } catch (final Throwable t) {
-                final String errorMessage = String.format(
-                        "RabbitMQ Management API health check failed. Exception message: %s", t.getMessage());
-                healthMonitor.reportUnhealthy(errorMessage);
-                LOGGER.error(errorMessage, t);
+
+        if (CAF_WMP_ENABLED) {
+
+            MessageRouterSingleton.init();
+
+            if (initError == null) {
+                try {
+                    healthCheckApi.getApi().checkHealth();
+                } catch (final Throwable t) {
+                    final String errorMessage = String.format(
+                            "RabbitMQ Management API health check failed. Exception message: %s", t.getMessage());
+                    healthMonitor.reportUnhealthy(errorMessage);
+                    LOGGER.error(errorMessage, t);
+                }
+            } else {
+                healthMonitor.reportUnhealthy(initError);
             }
         }
     }
