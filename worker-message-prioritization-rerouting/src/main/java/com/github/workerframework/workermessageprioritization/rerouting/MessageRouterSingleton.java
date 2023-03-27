@@ -20,11 +20,13 @@ import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.workerframework.workermessageprioritization.rabbitmq.HealthCheckApi;
 import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApi;
 import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitManagementApi;
 import com.github.workerframework.workermessageprioritization.rerouting.reroutedeciders.AlwaysRerouteDecider;
 import com.github.workerframework.workermessageprioritization.rerouting.reroutedeciders.RerouteDecider;
 import com.hpe.caf.worker.document.model.Document;
+import com.hpe.caf.worker.document.model.HealthMonitor;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 
@@ -35,6 +37,7 @@ public class MessageRouterSingleton {
     private static final String CAF_WMP_KUBERNETES_NAMESPACES = "CAF_WMP_KUBERNETES_NAMESPACES";
 
     private static Connection connection;
+    private static RabbitManagementApi<HealthCheckApi> healthCheckApi;
     private static MessageRouter messageRouter;
     private static volatile boolean initAttempted = false;
 
@@ -64,6 +67,8 @@ public class MessageRouterSingleton {
             final RabbitManagementApi<QueuesApi> queuesApi =
                     new RabbitManagementApi<>(QueuesApi.class, mgmtEndpoint, mgmtUsername, mgmtPassword);
 
+            healthCheckApi = new RabbitManagementApi<>(HealthCheckApi.class, mgmtEndpoint, mgmtUsername, mgmtPassword);
+
             final StagingQueueCreator stagingQueueCreator = new StagingQueueCreator(connectionFactory);
 
             final RerouteDecider rerouteDecider = new AlwaysRerouteDecider();
@@ -90,6 +95,19 @@ public class MessageRouterSingleton {
             return messageRouter.route(originalQueueName, tenantId);
         } else {
             return originalQueueName;
+        }
+    }
+
+    public static void checkHealth(final HealthMonitor healthMonitor) {
+        if(messageRouter != null) {
+            try {
+                healthCheckApi.getApi().checkHealth();
+            } catch (final Throwable t) {
+                final String errorMessage = String.format(
+                        "RabbitMQ Management API health check failed. Exception message: %s", t.getMessage());
+                healthMonitor.reportUnhealthy(errorMessage);
+                LOGGER.error(errorMessage, t);
+            }
         }
     }
 
