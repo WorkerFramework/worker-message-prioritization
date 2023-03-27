@@ -105,7 +105,9 @@ public class MessageRouterSingleton {
 
             MessageRouterSingleton.init();
 
-            if (initError == null) {
+            if (initError != null) {
+                healthMonitor.reportUnhealthy(initError);
+            } else {
                 try {
                     healthCheckApi.getApi().checkHealth();
                 } catch (final Throwable t) {
@@ -114,8 +116,6 @@ public class MessageRouterSingleton {
                     healthMonitor.reportUnhealthy(errorMessage);
                     LOGGER.error(errorMessage, t);
                 }
-            } else {
-                healthMonitor.reportUnhealthy(initError);
             }
         }
     }
