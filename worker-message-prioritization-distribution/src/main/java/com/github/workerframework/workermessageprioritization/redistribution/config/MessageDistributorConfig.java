@@ -43,6 +43,9 @@ public final class MessageDistributorConfig {
     private static final String CAF_RABBITMQ_MGMT_USERNAME_ENVVAR = "CAF_RABBITMQ_MGMT_USERNAME";
     private static final String CAF_RABBITMQ_MGMT_PASSWORD_ENVVAR = "CAF_RABBITMQ_MGMT_PASSWORD";
 
+    private static final String CAF_RABBITMQ_MAX_NODE_COUNT = "CAF_RABBITMQ_MAX_NODE_COUNT";
+    private static final int CAF_RABBITMQ_MAX_NODE_COUNT_DEFAULT = 20;
+
     private static final String CAF_WMP_DISTRIBUTOR_RUN_INTERVAL_MILLISECONDS = "CAF_WMP_DISTRIBUTOR_RUN_INTERVAL_MILLISECONDS";
     private static final long CAF_WMP_DISTRIBUTOR_RUN_INTERVAL_MILLISECONDS_DEFAULT = 10000;
 
@@ -55,6 +58,16 @@ public final class MessageDistributorConfig {
         = "CAF_WMP_NON_RUNNING_SHOVEL_CHECK_INTERVAL_MILLISECONDS";
     private static final long CAF_WMP_NON_RUNNING_SHOVEL_CHECK_INTERVAL_MILLISECONDS_DEFAULT
         = 120000;
+
+    private static final String CAF_WMP_SHOVEL_RUNNING_TOO_LONG_TIMEOUT_MILLISECONDS
+            = "CAF_WMP_SHOVEL_RUNNING_TOO_LONG_TIMEOUT_MILLISECONDS";
+    private static final long CAF_WMP_SHOVEL_RUNNING_TOO_LONG_TIMEOUT_MILLISECONDS_DEFAULT
+            = 1800000;
+
+    private static final String CAF_WMP_SHOVEL_RUNNING_TOO_LONG_CHECK_INTERVAL_MILLISECONDS
+            = "CAF_WMP_SHOVEL_RUNNING_TOO_LONG_CHECK_INTERVAL_MILLISECONDS";
+    private static final long CAF_WMP_SHOVEL_RUNNING_TOO_LONG_CHECK_INTERVAL_MILLISECONDS_DEFAULT
+            = 120000;
 
     private static final String CAF_WMP_KUBERNETES_NAMESPACES = "CAF_WMP_KUBERNETES_NAMESPACES";
 
@@ -70,9 +83,13 @@ public final class MessageDistributorConfig {
     private final String rabbitMQMgmtUrl;
     private final String rabbitMQMgmtUsername;
     private final String rabbitMQMgmtPassword;
+    private final int rabbitMQMaxNodeCount;
     private final long distributorRunIntervalMilliseconds;
     private final long nonRunningShovelTimeoutMilliseconds;
     private final long nonRunningShovelCheckIntervalMilliseconds;
+    private final long shovelRunningTooLongTimeoutMilliseconds;
+    private final long shovelRunningTooLongCheckIntervalMilliseconds;
+
     private final List<String> kubernetesNamespaces;
     private final int kubernetesLabelCacheExpiryMinutes;
 
@@ -85,6 +102,7 @@ public final class MessageDistributorConfig {
         rabbitMQMgmtUrl = getEnvOrDefault(CAF_RABBITMQ_MGMT_URL, CAF_RABBITMQ_MGMT_URL_DEFAULT);
         rabbitMQMgmtUsername = getStrEnvOrThrow(CAF_RABBITMQ_MGMT_USERNAME_ENVVAR);
         rabbitMQMgmtPassword = getStrEnvOrThrow(CAF_RABBITMQ_MGMT_PASSWORD_ENVVAR);
+        rabbitMQMaxNodeCount = getEnvOrDefault(CAF_RABBITMQ_MAX_NODE_COUNT, CAF_RABBITMQ_MAX_NODE_COUNT_DEFAULT);
         distributorRunIntervalMilliseconds = getEnvOrDefault(
             CAF_WMP_DISTRIBUTOR_RUN_INTERVAL_MILLISECONDS,
             CAF_WMP_DISTRIBUTOR_RUN_INTERVAL_MILLISECONDS_DEFAULT);
@@ -94,6 +112,12 @@ public final class MessageDistributorConfig {
         nonRunningShovelCheckIntervalMilliseconds = getEnvOrDefault(
             CAF_WMP_NON_RUNNING_SHOVEL_CHECK_INTERVAL_MILLISECONDS,
             CAF_WMP_NON_RUNNING_SHOVEL_CHECK_INTERVAL_MILLISECONDS_DEFAULT);
+        shovelRunningTooLongTimeoutMilliseconds = getEnvOrDefault(
+                CAF_WMP_SHOVEL_RUNNING_TOO_LONG_TIMEOUT_MILLISECONDS,
+                CAF_WMP_SHOVEL_RUNNING_TOO_LONG_TIMEOUT_MILLISECONDS_DEFAULT);
+        shovelRunningTooLongCheckIntervalMilliseconds = getEnvOrDefault(
+                CAF_WMP_SHOVEL_RUNNING_TOO_LONG_CHECK_INTERVAL_MILLISECONDS,
+                CAF_WMP_SHOVEL_RUNNING_TOO_LONG_CHECK_INTERVAL_MILLISECONDS_DEFAULT);
         kubernetesNamespaces = getEnvOrThrow(CAF_WMP_KUBERNETES_NAMESPACES);
         kubernetesLabelCacheExpiryMinutes = getEnvOrDefault(
                 CAF_WMP_KUBERNETES_LABEL_CACHE_EXPIRY_MINUTES,
@@ -131,6 +155,10 @@ public final class MessageDistributorConfig {
     public String getRabbitMQMgmtPassword() {
         return rabbitMQMgmtPassword;
     }
+    
+    public int getRabbitMQMaxNodeCount() {
+        return rabbitMQMaxNodeCount;
+    }
 
     public long getNonRunningShovelTimeoutMilliseconds() {
         return nonRunningShovelTimeoutMilliseconds;
@@ -138,6 +166,14 @@ public final class MessageDistributorConfig {
 
     public long getNonRunningShovelCheckIntervalMilliseconds() {
         return nonRunningShovelCheckIntervalMilliseconds;
+    }
+
+    public long getShovelRunningTooLongTimeoutMilliseconds() {
+        return shovelRunningTooLongTimeoutMilliseconds;
+    }
+
+    public long getShovelRunningTooLongCheckIntervalMilliseconds() {
+        return shovelRunningTooLongCheckIntervalMilliseconds;
     }
 
     public long getDistributorRunIntervalMilliseconds() {
@@ -163,9 +199,12 @@ public final class MessageDistributorConfig {
             .add(CAF_RABBITMQ_MGMT_URL, rabbitMQMgmtUrl)
             .add(CAF_RABBITMQ_MGMT_USERNAME_ENVVAR, rabbitMQMgmtUsername)
             .add(CAF_RABBITMQ_MGMT_PASSWORD_ENVVAR, "<HIDDEN>")
+            .add(CAF_RABBITMQ_MAX_NODE_COUNT, rabbitMQMaxNodeCount)
             .add(CAF_WMP_DISTRIBUTOR_RUN_INTERVAL_MILLISECONDS, distributorRunIntervalMilliseconds)
             .add(CAF_WMP_NON_RUNNING_SHOVEL_TIMEOUT_MILLISECONDS, nonRunningShovelTimeoutMilliseconds)
             .add(CAF_WMP_NON_RUNNING_SHOVEL_CHECK_INTERVAL_MILLISECONDS, nonRunningShovelCheckIntervalMilliseconds)
+            .add(CAF_WMP_SHOVEL_RUNNING_TOO_LONG_TIMEOUT_MILLISECONDS, shovelRunningTooLongTimeoutMilliseconds)
+            .add(CAF_WMP_SHOVEL_RUNNING_TOO_LONG_CHECK_INTERVAL_MILLISECONDS, shovelRunningTooLongCheckIntervalMilliseconds)
             .add(CAF_WMP_KUBERNETES_NAMESPACES, kubernetesNamespaces)
             .add(CAF_WMP_KUBERNETES_LABEL_CACHE_EXPIRY_MINUTES, kubernetesLabelCacheExpiryMinutes)
             .toString();

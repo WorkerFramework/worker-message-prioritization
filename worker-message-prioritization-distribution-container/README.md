@@ -53,6 +53,16 @@ This repository consists of the source to build a container that includes the
     **Default**: `120000`  
     **Description**: How often to check for non-running RabbitMQ shovels.
 
+* `CAF_WMP_SHOVEL_RUNNING_TOO_LONG_TIMEOUT_MILLISECONDS`  
+    **Default**: `1800000`  
+    **Description**: The timeout in milliseconds after which to delete RabbitMQ shovels that have been running too long. The
+    timeout begins from the time this application first observed the shovel in a running state, which will depend on how often the 
+    check runs (the `CAF_WMP_SHOVEL_RUNNING_TOO_LONG_CHECK_INTERVAL_MILLISECONDS` environment variable).
+
+* `CAF_WMP_SHOVEL_RUNNING_TOO_LONG_CHECK_INTERVAL_MILLISECONDS`  
+    **Default**: `120000`  
+    **Description**: How often to check for RabbitMQ shovels that have been running too long.
+
 * `CAF_WMP_KUBERNETES_NAMESPACES`  
     **Default**: None.  
     **Description**: Used to specify the Kubernetes namespaces, comma separated, in which to search for a worker's labels. These
