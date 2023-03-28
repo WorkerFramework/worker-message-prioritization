@@ -112,7 +112,7 @@ public class MessageRouterSingleton {
                     healthCheckApi.getApi().checkHealth();
                 } catch (final Throwable t) {
                     final String errorMessage = String.format(
-                            "RabbitMQ Management API health check failed. Exception message: %s", t.getMessage());
+                            "RabbitMQ Management API healthcheck failed. Exception message: %s", t.getMessage());
                     healthMonitor.reportUnhealthy(errorMessage);
                     LOGGER.error(errorMessage, t);
                 }
