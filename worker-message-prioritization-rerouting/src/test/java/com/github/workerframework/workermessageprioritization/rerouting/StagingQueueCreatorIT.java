@@ -53,7 +53,7 @@ public final class StagingQueueCreatorIT extends RerouterTestBase {
                 Assert.assertNotNull("Target queue was not found via REST API", targetQueue);
 
                 // Create a staging queue using the target queue as a template
-                final StagingQueueCreator stagingQueueCreator = new StagingQueueCreator(connectionFactory, cachingQueuesApi, 5000);
+                final StagingQueueCreator stagingQueueCreator = new StagingQueueCreator(connectionFactory, queuesApi, 5000);
                 stagingQueueCreator.createStagingQueue(targetQueue, stagingQueueName);
 
                 // Verify the staging queue was created successfully
@@ -104,7 +104,7 @@ public final class StagingQueueCreatorIT extends RerouterTestBase {
 
                 // Call createStagingQueue to populate the StagingQueueCreator's cache. As the staging queue has already been
                 // created, this won't do anything else apart from populating the cache.
-                final StagingQueueCreator stagingQueueCreator = new StagingQueueCreator(connectionFactory, cachingQueuesApi, 10000);
+                final StagingQueueCreator stagingQueueCreator = new StagingQueueCreator(connectionFactory, queuesApi, 10000);
                 stagingQueueCreator.createStagingQueue(targetQueue, stagingQueueName);
 
                 // Delete the staging queue
