@@ -15,11 +15,9 @@
  */
 package com.github.workerframework.workermessageprioritization.rabbitmq;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.Base64;
 import java.util.concurrent.TimeUnit;
 
@@ -28,11 +26,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.ToNumberPolicy;
-import com.squareup.okhttp.Cache;
-import com.squareup.okhttp.CacheControl;
-import com.squareup.okhttp.Interceptor;
 import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
 
 import retrofit.ErrorHandler;
 import retrofit.RestAdapter;
@@ -52,61 +46,12 @@ public class RabbitManagementApi <T> {
     
     private T api;
 
-    public RabbitManagementApi(
-            final Class<T> apiType,
-            final String endpoint,
-            final String user,
-            final String password) {
+    public RabbitManagementApi(final Class<T> apiType, final String endpoint, final String user, 
+                               final String password) {
 
-        final OkHttpClient okHttpClient = createOkHttpClient();
-
-        createApi(apiType, endpoint, user, password, okHttpClient);
-    }
-
-    public RabbitManagementApi(
-            final Class<T> apiType,
-            final String endpoint,
-            final String user,
-            final String password,
-            final int cacheMaxAgeMilliseconds) {
-
-        final OkHttpClient okHttpClient = createOkHttpClient();
-
-        final Cache cache = createCache();
-        okHttpClient.setCache(cache);
-        okHttpClient.networkInterceptors().add(new ResponseCachingInterceptor(cacheMaxAgeMilliseconds));
-
-        createApi(apiType, endpoint, user, password, okHttpClient);
-    }
-
-    private static OkHttpClient createOkHttpClient()
-    {
         final OkHttpClient okHttpClient = new OkHttpClient();
-
         okHttpClient.setReadTimeout(READ_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         okHttpClient.setConnectTimeout(CONNECT_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-
-        return okHttpClient;
-    }
-
-    private static Cache createCache()
-    {
-        final File cacheDirectory;
-        try {
-            cacheDirectory = Files.createTempDirectory("http-cache").toFile();
-        } catch (final IOException ex) {
-            throw new RuntimeException("Unable to create a temporary directory for the HTTP cache", ex);
-        }
-
-        return new Cache(cacheDirectory, 10 * 1024 * 1024); // 10 MiB
-    }
-
-    private void createApi(final Class<T> apiType,
-                           final String endpoint,
-                           final String user,
-                           final String password,
-                           final OkHttpClient okHttpClient)
-    {
         final RestAdapter.Builder restAdapterBuilder
                 = new RestAdapter.Builder().setEndpoint(endpoint).setClient(new OkClient(okHttpClient))
                 .setConverter(new GsonConverter(createGson()));
@@ -117,11 +62,11 @@ public class RabbitManagementApi <T> {
             requestFacade.addHeader("Accept", "application/json");
             requestFacade.addHeader("Authorization", authorizationHeaderValue);
         });
-        restAdapterBuilder.setErrorHandler(new RabbitApiErrorHandler());
+        restAdapterBuilder.setErrorHandler(new RabbitManagementApi.RabbitApiErrorHandler());
         final RestAdapter restAdapter = restAdapterBuilder.build();
         api = restAdapter.create(apiType);
     }
-
+    
     public T getApi() {
         return api;
     }
@@ -216,34 +161,6 @@ public class RabbitManagementApi <T> {
                 LOGGER.error("Exception thrown trying to convert response body to JSON for output: {}", responseBody, e);
 
                 return responseBody.toString();
-            }
-        }
-    }
-
-    private static final class ResponseCachingInterceptor implements Interceptor
-    {
-        private final int cacheMaxAgeMilliseconds;
-
-        public ResponseCachingInterceptor(final int cacheMaxAgeMilliseconds)
-        {
-            this.cacheMaxAgeMilliseconds = cacheMaxAgeMilliseconds;
-        }
-
-        @Override
-        public com.squareup.okhttp.Response intercept(final Interceptor.Chain chain) throws IOException
-        {
-            final Request request = chain.request();
-            final com.squareup.okhttp.Response response = chain.proceed(request);
-            if (response.isSuccessful()) {
-                final CacheControl cacheControl = new CacheControl.Builder()
-                        .maxAge(cacheMaxAgeMilliseconds, TimeUnit.MILLISECONDS)
-                        .build();
-
-                return response.newBuilder()
-                        .header("Cache-Control", cacheControl.toString())
-                        .build();
-            } else {
-                return response;
             }
         }
     }
