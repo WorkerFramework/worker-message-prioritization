@@ -100,7 +100,7 @@ public class StagingQueueCreator {
                     stagingQueueName);
 
             return;
-        };
+        }
 
         final boolean durable = targetQueue.isDurable();
         final boolean exclusive = targetQueue.isExclusive();
