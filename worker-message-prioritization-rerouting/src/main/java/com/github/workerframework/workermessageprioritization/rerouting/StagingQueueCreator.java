@@ -20,6 +20,7 @@ import static com.github.workerframework.workermessageprioritization.rerouting.M
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
@@ -29,6 +30,8 @@ import org.slf4j.LoggerFactory;
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApi;
 import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitManagementApi;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
@@ -39,17 +42,25 @@ public class StagingQueueCreator {
     private static final Logger LOGGER = LoggerFactory.getLogger(StagingQueueCreator.class);
 
     private final ConnectionFactory connectionFactory;
+    private final RabbitManagementApi<QueuesApi> queuesApi;
+    private final Supplier<List<String>> memoizedStagingQueueNamesSupplier;
     private Connection connection;
     private Channel channel;
-    private final RabbitManagementApi<QueuesApi> cachingQueuesApi;
 
     public StagingQueueCreator(
             final ConnectionFactory connectionFactory,
-            final RabbitManagementApi<QueuesApi> cachingQueuesApi)
+            final RabbitManagementApi<QueuesApi> queuesApi,
+            final long stagingQueueCacheExpiryMilliseconds)
             throws IOException, TimeoutException {
         this.connectionFactory = connectionFactory;
-        this.cachingQueuesApi = cachingQueuesApi;
+        this.queuesApi = queuesApi;
+
+        this.memoizedStagingQueueNamesSupplier = Suppliers.memoizeWithExpiration(
+                this::getStagingQueueNames, stagingQueueCacheExpiryMilliseconds, TimeUnit.MILLISECONDS);
+
         connectToRabbitMQ();
+
+        LOGGER.debug("Initialised StagingQueueCreator with stagingQueueCacheExpiryMilliseconds={}", stagingQueueCacheExpiryMilliseconds);
     }
 
     private void connectToRabbitMQ() throws IOException, TimeoutException  {
@@ -82,17 +93,22 @@ public class StagingQueueCreator {
 
     void createStagingQueue(final Queue targetQueue, final String stagingQueueName) throws IOException {
 
-        if (getPossiblyCachedStagingQueueNames().contains(stagingQueueName)) {
-            LOGGER.debug("A staging queue named {} already exists, so not calling channel.queueDeclare.", stagingQueueName);
+        final List<String> stagingQueues = memoizedStagingQueueNamesSupplier.get();
+
+        if (stagingQueues.contains(stagingQueueName)) {
+            LOGGER.debug("A staging queue named {} already exists in the staging queue cache, so not creating it.",
+                    stagingQueueName);
+
             return;
-        }
+        };
 
         final boolean durable = targetQueue.isDurable();
         final boolean exclusive = targetQueue.isExclusive();
         final boolean autoDelete = targetQueue.isAuto_delete();
         final Map<String, Object> arguments = targetQueue.getArguments();
 
-        LOGGER.info("A staging queue named {} does NOT exist, so calling channel.queueDeclare({}, {}, {}, {}, {})",
+        LOGGER.info("A staging queue named {} does NOT exist in the staging queue cache, " +
+                        "so creating or checking staging queue by calling channel.queueDeclare({}, {}, {}, {}, {})",
                 stagingQueueName, stagingQueueName, durable, exclusive, autoDelete, arguments);
 
         try {
@@ -113,9 +129,8 @@ public class StagingQueueCreator {
         }
     }
 
-    private List<String> getPossiblyCachedStagingQueueNames()
-    {
-        return cachingQueuesApi.getApi()
+    private List<String> getStagingQueueNames() {
+        return queuesApi.getApi()
                 .getQueues("name")
                 .stream()
                 .map(Queue::getName)
