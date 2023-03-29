@@ -26,6 +26,8 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
+import retrofit.RetrofitError;
+
 public final class StagingQueueCreatorIT extends RerouterTestBase {
 
     @Test
@@ -51,7 +53,7 @@ public final class StagingQueueCreatorIT extends RerouterTestBase {
                 Assert.assertNotNull("Target queue was not found via REST API", targetQueue);
 
                 // Create a staging queue using the target queue as a template
-                final StagingQueueCreator stagingQueueCreator = new StagingQueueCreator(connectionFactory);
+                final StagingQueueCreator stagingQueueCreator = new StagingQueueCreator(connectionFactory, queuesApi, 5000);
                 stagingQueueCreator.createStagingQueue(targetQueue, stagingQueueName);
 
                 // Verify the staging queue was created successfully
@@ -67,6 +69,81 @@ public final class StagingQueueCreatorIT extends RerouterTestBase {
                                     targetQueueAutoDelete, stagingQueue.isAuto_delete());
                 Assert.assertEquals("Staging queue should have been created with the same arguments as the target queue",
                                     targetQueueArguments, stagingQueue.getArguments());
+            }
+        }
+    }
+
+    @Test
+    public void stagingQueueShouldNotBeCreatedIfPresentInCacheTest() throws TimeoutException, IOException, InterruptedException {
+
+        final String targetQueueName = getUniqueTargetQueueName(TARGET_QUEUE_NAME);
+        final String stagingQueueName = getStagingQueueName(targetQueueName, T1_STAGING_QUEUE_NAME);
+
+        try (final Connection connection = connectionFactory.newConnection()) {
+
+            try (final Channel channel = connection.createChannel()) {
+
+                // Create a target queue
+                final boolean targetQueueDurable = true;
+                final boolean targetQueueExclusive = false;
+                final boolean targetQueueAutoDelete = false;
+                final Map<String, Object> targetQueueArguments = Collections.singletonMap("x-max-priority", 5L);
+                channel.queueDeclare(
+                        targetQueueName, targetQueueDurable, targetQueueExclusive, targetQueueAutoDelete, targetQueueArguments);
+
+                // Verify the target queue was created successfully
+                final Queue targetQueue = queuesApi.getApi().getQueue("/", targetQueueName);
+                Assert.assertNotNull("Target queue was not found via REST API", targetQueue);
+
+                // Create a staging queue
+                channel.queueDeclare(
+                        stagingQueueName, targetQueueDurable, targetQueueExclusive, targetQueueAutoDelete, targetQueueArguments);
+
+                // Verify the staging queue was created successfully
+                Assert.assertNotNull("Staging queue was not found via REST API", queuesApi.getApi().getQueue("/", stagingQueueName));
+
+                // Call createStagingQueue to populate the StagingQueueCreator's cache. As the staging queue has already been
+                // created, this won't do anything else apart from populating the cache.
+                final StagingQueueCreator stagingQueueCreator = new StagingQueueCreator(connectionFactory, queuesApi, 10000);
+                stagingQueueCreator.createStagingQueue(targetQueue, stagingQueueName);
+
+                // Delete the staging queue
+                channel.queueDelete(stagingQueueName);
+
+                // Verify the staging queue was deleted successfully
+                try {
+                    queuesApi.getApi().getQueue("/", stagingQueueName);
+                    Assert.fail("Expected a 404 when trying to get a queue that has been deleted");
+                } catch (final Exception e) {
+                    Assert.assertTrue("Expected exception to be an instance of RetrofitError", e.getCause() instanceof RetrofitError);
+                    Assert.assertEquals("Staging queue should have been deleted but wasn't",
+                            404, ((RetrofitError)e.getCause()).getResponse().getStatus());
+                }
+
+                // Call createStagingQueue again. Although the staging queue has been deleted, the StagingQueueCreator does not know
+                // this because the staging queue is still present inside the StageQueueCreator's cache. As such, the staging queue
+                // should not be created.
+                stagingQueueCreator.createStagingQueue(targetQueue, stagingQueueName);
+
+                // Verify the staging queue was not created
+                try {
+                    queuesApi.getApi().getQueue("/", stagingQueueName);
+                    Assert.fail("Expected a 404 when trying to get a queue that has been deleted");
+                } catch (final Exception e) {
+                    Assert.assertTrue("Expected exception to be an instance of RetrofitError", e.getCause() instanceof RetrofitError);
+                    Assert.assertEquals("Staging queue should not have been created because it should still be present inside the " +
+                                    "StagingQueueCreator's cache",
+                            404, ((RetrofitError)e.getCause()).getResponse().getStatus());
+                }
+
+                // Wait a bit longer then the cache expiry, then call createStagingQueue again. This time, the staging queue
+                // should be created because the StagingQueueCreator's cache should have expired.
+                Thread.sleep(20000);
+
+                // Verify the staging queue was created
+                stagingQueueCreator.createStagingQueue(targetQueue, stagingQueueName);
+                Assert.assertNotNull("Staging queue should have been created because it should no longer be present inside the " +
+                        "StagingQueueCreator's cache", queuesApi.getApi().getQueue("/", stagingQueueName));
             }
         }
     }
