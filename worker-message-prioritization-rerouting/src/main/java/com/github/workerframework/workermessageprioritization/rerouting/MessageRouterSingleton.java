@@ -25,6 +25,7 @@ import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApi
 import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitManagementApi;
 import com.github.workerframework.workermessageprioritization.rerouting.reroutedeciders.AlwaysRerouteDecider;
 import com.github.workerframework.workermessageprioritization.rerouting.reroutedeciders.RerouteDecider;
+import com.google.common.base.Strings;
 import com.hpe.caf.worker.document.model.Document;
 import com.hpe.caf.worker.document.model.HealthMonitor;
 import com.rabbitmq.client.Connection;
@@ -70,7 +71,16 @@ public class MessageRouterSingleton {
 
             healthCheckApi = new RabbitManagementApi<>(HealthCheckApi.class, mgmtEndpoint, mgmtUsername, mgmtPassword);
 
-            final StagingQueueCreator stagingQueueCreator = new StagingQueueCreator(connectionFactory);
+            final String stagingQueueCacheExpiryMillisecondsString =
+                    System.getenv("CAF_WMP_STAGING_QUEUE_CACHE_EXPIRY_MILLISECONDS");
+
+            final long stagingQueueCacheExpiryMilliseconds =
+                    !Strings.isNullOrEmpty(stagingQueueCacheExpiryMillisecondsString) ?
+                            Long.parseLong(stagingQueueCacheExpiryMillisecondsString) :
+                            60000;
+
+            final StagingQueueCreator stagingQueueCreator = new StagingQueueCreator(
+                    connectionFactory, queuesApi, stagingQueueCacheExpiryMilliseconds);
 
             final RerouteDecider rerouteDecider = new AlwaysRerouteDecider();
 
@@ -79,7 +89,7 @@ public class MessageRouterSingleton {
             messageRouter = new MessageRouter(queuesApi, "/", stagingQueueCreator, rerouteDecider);
         }
         catch (final Throwable e) {
-            initError = String.format("Failed to initialise WMP - %s", e.toString());
+            initError = String.format("Failed to initialise WMP - %s", e);
             LOGGER.error(initError);
             closeQuietly();
         }
