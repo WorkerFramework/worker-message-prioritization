@@ -36,12 +36,13 @@ public class MessageRouterSingleton {
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageRouterSingleton.class);
 
     private static final boolean CAF_WMP_ENABLED = Boolean.parseBoolean(System.getenv("CAF_WMP_ENABLED"));
+    private static final String CAF_RABBITMQ_MGMT_URL = System.getenv("CAF_RABBITMQ_MGMT_URL");
+    private static final String CAF_RABBITMQ_MGMT_USERNAME = System.getenv("CAF_RABBITMQ_MGMT_USERNAME");
+    private static final String CAF_RABBITMQ_MGMT_PASSWORD = System.getenv("CAF_RABBITMQ_MGMT_PASSWORD");
 
     private static Connection connection;
-    private static RabbitManagementApi<HealthCheckApi> healthCheckApi;
     private static MessageRouter messageRouter;
     private static volatile boolean initAttempted = false;
-    private static volatile String initError;
 
     public static void init() {
 
@@ -60,16 +61,10 @@ public class MessageRouterSingleton {
             connectionFactory.setPort(Integer.parseInt(System.getenv("CAF_RABBITMQ_PORT")));
             connectionFactory.setVirtualHost("/");
 
-            final String mgmtEndpoint = System.getenv("CAF_RABBITMQ_MGMT_URL");
-            final String mgmtUsername = System.getenv("CAF_RABBITMQ_MGMT_USERNAME");
-            final String mgmtPassword = System.getenv("CAF_RABBITMQ_MGMT_PASSWORD");
-
             connection = connectionFactory.newConnection();
 
-            final RabbitManagementApi<QueuesApi> queuesApi =
-                    new RabbitManagementApi<>(QueuesApi.class, mgmtEndpoint, mgmtUsername, mgmtPassword);
-
-            healthCheckApi = new RabbitManagementApi<>(HealthCheckApi.class, mgmtEndpoint, mgmtUsername, mgmtPassword);
+            final RabbitManagementApi<QueuesApi> queuesApi = new RabbitManagementApi<>(
+                    QueuesApi.class, CAF_RABBITMQ_MGMT_URL, CAF_RABBITMQ_MGMT_USERNAME, CAF_RABBITMQ_MGMT_PASSWORD);
 
             final String stagingQueueCacheExpiryMillisecondsString =
                     System.getenv("CAF_WMP_STAGING_QUEUE_CACHE_EXPIRY_MILLISECONDS");
@@ -89,8 +84,7 @@ public class MessageRouterSingleton {
             messageRouter = new MessageRouter(queuesApi, "/", stagingQueueCreator, rerouteDecider);
         }
         catch (final Throwable e) {
-            initError = String.format("Failed to initialise WMP - %s", e);
-            LOGGER.error(initError);
+            LOGGER.error("Failed to initialise WMP - {}", e);
             closeQuietly();
         }
     }
@@ -113,19 +107,16 @@ public class MessageRouterSingleton {
 
         if (CAF_WMP_ENABLED) {
 
-            MessageRouterSingleton.init();
+            try {
+                final RabbitManagementApi<HealthCheckApi> healthCheckApi = new RabbitManagementApi<>(
+                        HealthCheckApi.class, CAF_RABBITMQ_MGMT_URL, CAF_RABBITMQ_MGMT_USERNAME, CAF_RABBITMQ_MGMT_PASSWORD);
 
-            if (initError != null) {
-                healthMonitor.reportUnhealthy(initError);
-            } else {
-                try {
-                    healthCheckApi.getApi().checkHealth();
-                } catch (final Throwable t) {
-                    final String errorMessage = String.format(
-                            "RabbitMQ Management API healthcheck failed. Exception message: %s", t.getMessage());
-                    healthMonitor.reportUnhealthy(errorMessage);
-                    LOGGER.error(errorMessage, t);
-                }
+                healthCheckApi.getApi().checkHealth();
+            } catch (final Throwable t) {
+                final String errorMessage = String.format(
+                        "RabbitMQ Management API healthcheck failed. Exception message: %s", t.getMessage());
+                healthMonitor.reportUnhealthy(errorMessage);
+                LOGGER.error(errorMessage, t);
             }
         }
     }
