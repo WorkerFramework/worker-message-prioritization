@@ -84,7 +84,7 @@ public class MessageRouterSingleton {
             messageRouter = new MessageRouter(queuesApi, "/", stagingQueueCreator, rerouteDecider);
         }
         catch (final Throwable e) {
-            LOGGER.error("Failed to initialise WMP - {}", e);
+            LOGGER.error("Failed to initialise WMP - {}", e.toString());
             closeQuietly();
         }
     }
@@ -104,9 +104,7 @@ public class MessageRouterSingleton {
     }
 
     public static void checkHealth(final HealthMonitor healthMonitor) {
-
         if (CAF_WMP_ENABLED) {
-
             try {
                 final RabbitManagementApi<HealthCheckApi> healthCheckApi = new RabbitManagementApi<>(
                         HealthCheckApi.class, CAF_RABBITMQ_MGMT_URL, CAF_RABBITMQ_MGMT_USERNAME, CAF_RABBITMQ_MGMT_PASSWORD);
