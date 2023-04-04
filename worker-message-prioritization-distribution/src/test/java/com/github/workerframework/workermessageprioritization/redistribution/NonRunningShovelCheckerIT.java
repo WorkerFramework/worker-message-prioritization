@@ -15,6 +15,9 @@
  */
 package com.github.workerframework.workermessageprioritization.redistribution;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.awaitility.Awaitility.await;
+
 import com.github.workerframework.workermessageprioritization.rabbitmq.Component;
 import com.github.workerframework.workermessageprioritization.rabbitmq.RetrievedShovel;
 import com.github.workerframework.workermessageprioritization.rabbitmq.Shovel;
@@ -26,8 +29,8 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.Collections;
-import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -81,26 +84,10 @@ public class NonRunningShovelCheckerIT extends DistributorTestBase
                 TimeUnit.MILLISECONDS);
 
         try {
-            // Verify the bad shovel has been deleted
-            Optional<RetrievedShovel> retrievedShovelAfterDeletion;
-            for (int attempt = 0; attempt < 10; attempt++) {
-                retrievedShovelAfterDeletion = shovelsApi
-                        .getApi()
-                        .getShovels()
-                        .stream()
-                        .filter(s -> s.getName().equals(stagingQueueName))
-                        .findFirst();
-
-                if (!retrievedShovelAfterDeletion.isPresent()) {
-                    // Test passed
-                    return;
-                } else {
-                    // Shovel not deleted yet, wait a bit and check again
-                    Thread.sleep(2000);
-                }
-            }
-
-            Assert.fail("Shovel named " + stagingQueueName + " should have been deleted but wasn't");
+            await().alias(String.format("Waiting for shovel named %s to be deleted", stagingQueueName))
+                    .atMost(100, SECONDS)
+                    .pollInterval(Duration.ofSeconds(1))
+                    .until(shovelIsDeleted(stagingQueueName));
         } finally {
             nonRunningShovelCheckerExecutorService.shutdownNow();
         }

@@ -15,10 +15,12 @@
  */
 package com.github.workerframework.workermessageprioritization.redistribution;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.awaitility.Awaitility.await;
+
 import com.github.workerframework.workermessageprioritization.redistribution.consumption.ConsumptionTargetCalculator;
 import com.github.workerframework.workermessageprioritization.redistribution.consumption.EqualConsumptionTargetCalculator;
 import com.github.workerframework.workermessageprioritization.redistribution.shovel.ShovelDistributor;
-import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 import com.github.workerframework.workermessageprioritization.targetcapacitycalculators.FixedTargetQueueCapacityProvider;
 import com.rabbitmq.client.AMQP;
 
@@ -29,6 +31,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.concurrent.TimeoutException;
 
@@ -58,7 +61,15 @@ public class ShovelDistributorIT extends DistributorTestBase {
             channel.basicPublish("", stagingQueue1Name, properties, body.getBytes(StandardCharsets.UTF_8));
             channel.basicPublish("", stagingQueue2Name, properties, body.getBytes(StandardCharsets.UTF_8));
 
-            //TODO Await publish confirms to ensure messages are published before running the test.
+            await().alias(String.format("Waiting for 1st staging queue named %s to contain 1 message", stagingQueue1Name))
+                    .atMost(100, SECONDS)
+                    .pollInterval(Duration.ofSeconds(1))
+                    .until(queueContainsNumMessages(stagingQueue1Name, 1));
+
+            await().alias(String.format("Waiting for 2nd staging queue named %s to contain 1 message", stagingQueue2Name))
+                    .atMost(100, SECONDS)
+                    .pollInterval(Duration.ofSeconds(1))
+                    .until(queueContainsNumMessages(stagingQueue2Name, 1));
         }
 
         final ConsumptionTargetCalculator consumptionTargetCalculator =
@@ -77,24 +88,14 @@ public class ShovelDistributorIT extends DistributorTestBase {
                 120000,
                 10000);
 
-        Queue targetQueue = null;
-        for(int attempt = 0; attempt < 10; attempt ++) {
-            shovelDistributor.runOnce();
+        shovelDistributor.runOnce();
 
-            targetQueue = queuesApi.getApi().getQueue("/", targetQueueName);
-            if(targetQueue.getMessages() > 0) {
-                break;
-            }
-            
-            Thread.sleep(1000 * 10);
-        }
+        await().alias(String.format("Waiting for target queue named %s to contain 2 messages", targetQueueName))
+                .atMost(100, SECONDS)
+                .pollInterval(Duration.ofSeconds(1))
+                .until(queueContainsNumMessages(targetQueueName, 2));
 
-        Assert.assertNotNull("Target queue was not found via REST API", targetQueue);
-        final Queue stagingQueue1 = queuesApi.getApi().getQueue("/", stagingQueue1Name);
-        final Queue stagingQueue2 = queuesApi.getApi().getQueue("/", stagingQueue2Name);
-        Assert.assertEquals("Two staged messages should be on target queue", 2L, targetQueue.getMessages());
-        Assert.assertEquals("1st Staging queue should be empty", 0L, stagingQueue1.getMessages());
-        Assert.assertEquals("2n Staging queue should be empty", 0L, stagingQueue2.getMessages());
-        
+        Assert.assertEquals("1st Staging queue should be empty", 0L, queuesApi.getApi().getQueue("/", stagingQueue1Name).getMessages());
+        Assert.assertEquals("2nd Staging queue should be empty", 0L, queuesApi.getApi().getQueue("/", stagingQueue2Name).getMessages());
     }
 }

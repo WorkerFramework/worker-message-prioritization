@@ -15,11 +15,11 @@
  */
 package com.github.workerframework.workermessageprioritization.redistribution;
 
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nonnull;
 
-import com.github.workerframework.workermessageprioritization.redistribution.shovel.NodeSpecificRabbitMqMgmtUrlBuilder;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -102,5 +102,21 @@ public class DistributorTestBase {
                         return shovelsApi;
                     }
                 });
+    }
+
+    protected Callable<Boolean> queueContainsNumMessages(final String queueName, final int numMessages)
+    {
+        return () -> queuesApi.getApi().getQueue("/", queueName).getMessages() == numMessages;
+    }
+
+    protected Callable<Boolean> shovelIsDeleted(final String shovelName)
+    {
+        return () -> !shovelsApi
+                .getApi()
+                .getShovels()
+                .stream()
+                .filter(s -> s.getName().equals(shovelName))
+                .findFirst()
+                .isPresent();
     }
 }
