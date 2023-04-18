@@ -130,8 +130,23 @@ public class ShovelDistributor extends MessageDistributor {
                 }
             }
         } finally {
-            nonRunningShovelCheckerExecutorService.shutdownNow();
-            shovelRunningTooLongCheckerExecutorService.shutdownNow();
+            try {
+                nonRunningShovelCheckerExecutorService.shutdownNow();
+            } catch (final Exception ignored) {
+                // ignored
+            }
+
+            try {
+                nonRunningShovelCheckerExecutorService.shutdownNow();
+            } catch (final Exception ignored) {
+                // ignored
+            }
+
+            try {
+                corruptedShovelCheckerExecutorService.shutdownNow();
+            } catch (final Exception ignored) {
+                // ignored
+            }
         }
     }
     
