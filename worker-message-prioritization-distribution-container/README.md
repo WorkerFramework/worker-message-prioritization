@@ -67,8 +67,8 @@ This repository consists of the source to build a container that includes the
     **Default**: `600000`  
     **Description**: The timeout in milliseconds after which to delete corrupted RabbitMQ shovels. A corrupted shovel is defined as a 
     shovel that is returned by /api/parameters/shovel but is NOT returned by /api/shovels/. The timeout begins from the time this
-    application first observed the corrupted shovel, which will depend on how often the check runs (the 
-   `CAF_WMP_CORRUPTED_SHOVEL_CHECK_INTERVAL_MILLISECONDS` environment variable).
+    application first observed the corrupted shovel, which will depend on how often the check runs, which is configured by the 
+   `CAF_WMP_CORRUPTED_SHOVEL_CHECK_INTERVAL_MILLISECONDS` environment variable.
 
 * `CAF_WMP_CORRUPTED_SHOVEL_CHECK_INTERVAL_MILLISECONDS`  
     **Default**: `120000`  
