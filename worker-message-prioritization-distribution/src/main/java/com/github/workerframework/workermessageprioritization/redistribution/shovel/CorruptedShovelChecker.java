@@ -48,7 +48,7 @@ import net.jodah.expiringmap.ExpiringMap;
  * NOT returned by /api/shovels/.
  *
  * Note, because shovels returned by /api/parameters/shovel do not include 'state' or 'node' fields (those fields are only returned by
- * /api/shovels/), we cannot use the existing {@link NonRunningShovelChecker} or {@link NonRunningShovelChecker} to check for corrupt
+ * /api/shovels/), we cannot use the existing {@link NonRunningShovelChecker} or {@link ShovelRunningTooLongChecker} to check for corrupt
  * shovels, as these classes rely on the 'state' and 'node' fields, and corrupted shovels do not have a 'state' or a 'node'.
  */
 public final class CorruptedShovelChecker implements Runnable
