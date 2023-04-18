@@ -87,6 +87,7 @@ public class ShovelDistributorIT extends DistributorTestBase {
                 1800000,
                 120000,
                 120000,
+                120000,
                 10000);
 
         shovelDistributor.runOnce();

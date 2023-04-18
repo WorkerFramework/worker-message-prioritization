@@ -17,8 +17,11 @@ package com.github.workerframework.workermessageprioritization.redistribution.sh
 
 import static java.util.stream.Collectors.toSet;
 
+import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +31,8 @@ import com.github.workerframework.workermessageprioritization.rabbitmq.Retrieved
 import com.github.workerframework.workermessageprioritization.rabbitmq.ShovelFromParametersApi;
 import com.github.workerframework.workermessageprioritization.rabbitmq.ShovelsApi;
 import com.google.common.collect.Sets;
+
+import net.jodah.expiringmap.ExpiringMap;
 
 /**
  * Checks for shovels that are corrupted and deletes them.
@@ -52,16 +57,32 @@ public final class CorruptedShovelChecker implements Runnable
 
     private final RabbitManagementApi<ShovelsApi> shovelsApi;
     private final String rabbitMQVHost;
+    private final Map<String,Instant> shovelNameToTimeObservedCorrupted;
+    private final long corruptedShovelTimeoutMilliseconds;
     private final long corruptedShovelTimeoutCheckIntervalMilliseconds;
 
     public CorruptedShovelChecker(
             final RabbitManagementApi<ShovelsApi> shovelsApi,
             final String rabbitMQVHost,
+            final long corruptedShovelTimeoutMilliseconds,
             final long corruptedShovelTimeoutCheckIntervalMilliseconds)
     {
         this.shovelsApi = shovelsApi;
         this.rabbitMQVHost = rabbitMQVHost;
+        this.corruptedShovelTimeoutMilliseconds = corruptedShovelTimeoutMilliseconds;
         this.corruptedShovelTimeoutCheckIntervalMilliseconds = corruptedShovelTimeoutCheckIntervalMilliseconds;
+
+        // Expire map entries a little after the timeout + interval between checks
+        final long shovelNameToTimeObservedCorruptedExpiryMilliseconds =
+                (corruptedShovelTimeoutMilliseconds + corruptedShovelTimeoutCheckIntervalMilliseconds) * 2;
+
+        this.shovelNameToTimeObservedCorrupted = ExpiringMap
+                .builder()
+                .expirationListener((String shoveName, Instant timeObservedCorrupted) ->
+                        LOGGER.debug("Expired entry from shovelNameToTimeObservedCorrupted: {} -> {}",
+                                shoveName, timeObservedCorrupted))
+                .expiration(shovelNameToTimeObservedCorruptedExpiryMilliseconds, TimeUnit.MILLISECONDS)
+                .build();
     }
 
     @Override
@@ -75,7 +96,7 @@ public final class CorruptedShovelChecker implements Runnable
         } catch (final Exception e) {
             final String errorMessage = String.format(
                     "Failed to get a list of existing shovels from /api/parameters/shovel, so unable to check if any shovels are " +
-                            "corrupted and need to be restarted/recreated/deleted. Will try again during the next run in %d milliseconds",
+                            "corrupted and need to be deleted. Will try again during the next run in %d milliseconds",
                     corruptedShovelTimeoutCheckIntervalMilliseconds);
 
             LOGGER.error(errorMessage, e);
@@ -91,7 +112,7 @@ public final class CorruptedShovelChecker implements Runnable
         } catch (final Exception e) {
             final String errorMessage = String.format(
                     "Failed to get a list of existing shovels from /api/shovels/, so unable to check if any shovels are corrupted and " +
-                            "need to be restarted/recreated/deleted. Will try again during the next run in %d milliseconds",
+                            "need to be deleted. Will try again during the next run in %d milliseconds",
                     corruptedShovelTimeoutCheckIntervalMilliseconds);
 
             LOGGER.error(errorMessage, e);
@@ -111,21 +132,51 @@ public final class CorruptedShovelChecker implements Runnable
                 .map(RetrievedShovel::getName)
                 .collect(toSet());
 
-        final Set<String> corruptedShovels = Sets.difference(shovelsFromParametersApiNames, shovelsFromNonParametersApiNames);
+        final Set<String> corruptedShovelNames = Sets.difference(shovelsFromParametersApiNames, shovelsFromNonParametersApiNames);
 
-        // Delete each corrupted shovel
-        for (final String corruptedShovel : corruptedShovels) {
-            LOGGER.error("Found a shovel named {} that was returned by /api/parameters/shovel but not by /api/shovels/. " +
-                    "This is an indication that the shovel may have become corrupted, so we are now going to try to delete the shovel. " +
-                    "Shovel creation will be attempted later if deleting the shovel was successful and the shovel is still required.",
-                    corruptedShovel);
+        // For each corrupted shovel, check if the corrupted shovel timeout has been reached, if so, delete the shovel
+        for (final String corruptedShovelName : corruptedShovelNames) {
 
-            try {
-                shovelsApi.getApi().delete(rabbitMQVHost, corruptedShovel);
-                LOGGER.info("Successfully deleted corrupted shovel named {}", corruptedShovel);
-            } catch (final Exception shovelsApiException) {
-                LOGGER.warn(String.format("Exception thrown during deletion of corrupted shovel named %s", corruptedShovel),
-                        shovelsApiException);
+            final Instant timeObservedCorrupted = shovelNameToTimeObservedCorrupted
+                    .computeIfAbsent(corruptedShovelName, s -> Instant.now());
+            final long timeObservedCorruptedMilliseconds = timeObservedCorrupted.toEpochMilli();
+
+            final Instant timeNow = Instant.now();
+
+            final boolean corruptedShovelTimeoutReached =
+                    timeNow.toEpochMilli() - timeObservedCorruptedMilliseconds >= corruptedShovelTimeoutMilliseconds;
+
+            if (corruptedShovelTimeoutReached) {
+                LOGGER.error("Found a shovel named {} that was returned by /api/parameters/shovel but not by /api/shovels/. " +
+                             "This is an indication that the shovel may have become corrupted. " +
+                                "The time when we first observed this corrupted shovel was {}. " +
+                                "The time now is {}. " +
+                                "As the corrupted shovel timeout of {} milliseconds has been reached, " +
+                                "we are now going to try to delete the corrupted shovel. " +
+                                "Shovel creation will be attempted later if the shovel is still required.",
+                        corruptedShovelName,
+                        timeObservedCorrupted,
+                        timeNow,
+                        corruptedShovelTimeoutMilliseconds);
+
+                try {
+                    shovelsApi.getApi().delete(rabbitMQVHost, corruptedShovelName);
+                    LOGGER.info("Successfully deleted corrupted shovel named {}", corruptedShovelName);
+                } catch (final Exception shovelsApiException) {
+                    LOGGER.warn(String.format("Exception thrown during deletion of corrupted shovel named %s", corruptedShovelName),
+                            shovelsApiException);
+                }
+            } else {
+                LOGGER.debug("Found a shovel named {} that was returned by /api/parameters/shovel but not by /api/shovels/. " +
+                             "This is an indication that the shovel may have become corrupted. " +
+                                "The time when we first observed this corrupted shovel was {}. " +
+                                "The time now is {}. " +
+                                "As the corrupted shovel timeout of {} milliseconds has not yet been reached, " +
+                                "the shovel will not be deleted at this time. ",
+                        corruptedShovelName,
+                        timeObservedCorrupted,
+                        timeNow,
+                        corruptedShovelTimeoutMilliseconds);
             }
         }
     }

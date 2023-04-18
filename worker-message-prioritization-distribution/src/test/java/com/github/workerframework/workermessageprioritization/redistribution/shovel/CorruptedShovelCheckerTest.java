@@ -41,14 +41,13 @@ public class CorruptedShovelCheckerTest
     private CorruptedShovelChecker corruptedShovelChecker;
 
     private static final String VHOST = "/";
-    private static final long TIMEOUT = 1000L;
 
     @Before
     public void setUp()
     {
         MockitoAnnotations.initMocks(this);
         when(mockRabbitManagementApi.getApi()).thenReturn(mockShovelsApi);
-        corruptedShovelChecker = new CorruptedShovelChecker(mockRabbitManagementApi, VHOST, TIMEOUT);
+        corruptedShovelChecker = new CorruptedShovelChecker(mockRabbitManagementApi, VHOST, 0, 0);
     }
 
     @Test
