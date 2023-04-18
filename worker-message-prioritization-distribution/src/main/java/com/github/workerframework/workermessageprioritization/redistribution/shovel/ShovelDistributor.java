@@ -132,20 +132,20 @@ public class ShovelDistributor extends MessageDistributor {
         } finally {
             try {
                 nonRunningShovelCheckerExecutorService.shutdownNow();
-            } catch (final Exception ignored) {
-                // ignored
+            } catch (final Exception exception) {
+                LOGGER.warn("Failed to shutdown nonRunningShovelCheckerExecutorService", exception);
             }
 
             try {
                 nonRunningShovelCheckerExecutorService.shutdownNow();
-            } catch (final Exception ignored) {
-                // ignored
+            } catch (final Exception exception) {
+                LOGGER.warn("Failed to shutdown shovelRunningTooLongCheckerExecutorService", exception);
             }
 
             try {
                 corruptedShovelCheckerExecutorService.shutdownNow();
-            } catch (final Exception ignored) {
-                // ignored
+            } catch (final Exception exception) {
+                LOGGER.warn("Failed to shutdown corruptedShovelCheckerExecutorService", exception);
             }
         }
     }

@@ -72,7 +72,7 @@ public final class MessageDistributorConfig {
     private static final String CAF_WMP_CORRUPTED_SHOVEL_TIMEOUT_MILLISECONDS
             = "CAF_WMP_CORRUPTED_SHOVEL_TIMEOUT_MILLISECONDS";
     private static final long CAF_WMP_CORRUPTED_SHOVEL_TIMEOUT_MILLISECONDS_DEFAULT
-            = 120000;
+            = 600000;
 
     private static final String CAF_WMP_CORRUPTED_SHOVEL_CHECK_INTERVAL_MILLISECONDS
             = "CAF_WMP_CORRUPTED_SHOVEL_CHECK_INTERVAL_MILLISECONDS";

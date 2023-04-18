@@ -92,7 +92,7 @@ public final class CorruptedShovelChecker implements Runnable
         final List<ShovelFromParametersApi> shovelsFromParametersApi;
         try {
             shovelsFromParametersApi = shovelsApi.getApi().getShovelsFromParametersApi(rabbitMQVHost);
-            LOGGER.debug("Read the following list of shovels from /api/parameters/shovel: {}", shovelsFromParametersApi);
+            LOGGER.debug("Read {} shovels from /api/parameters/shovel: {}", shovelsFromParametersApi.size(), shovelsFromParametersApi);
         } catch (final Exception e) {
             final String errorMessage = String.format(
                     "Failed to get a list of existing shovels from /api/parameters/shovel, so unable to check if any shovels are " +
@@ -108,7 +108,7 @@ public final class CorruptedShovelChecker implements Runnable
         final List<RetrievedShovel> shovelsFromNonParametersApi;
         try {
             shovelsFromNonParametersApi = shovelsApi.getApi().getShovels();
-            LOGGER.debug("Read the following list of shovels from /api/shovels/: {}", shovelsFromNonParametersApi);
+            LOGGER.debug("Read {} shovels from /api/shovels/: {}", shovelsFromNonParametersApi.size(), shovelsFromNonParametersApi);
         } catch (final Exception e) {
             final String errorMessage = String.format(
                     "Failed to get a list of existing shovels from /api/shovels/, so unable to check if any shovels are corrupted and " +

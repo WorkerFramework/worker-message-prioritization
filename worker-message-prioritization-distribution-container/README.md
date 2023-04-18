@@ -63,6 +63,17 @@ This repository consists of the source to build a container that includes the
     **Default**: `120000`  
     **Description**: How often to check for RabbitMQ shovels that have been running too long.
 
+* `CAF_WMP_CORRUPTED_SHOVEL_TIMEOUT_MILLISECONDS`  
+    **Default**: `600000`  
+    **Description**: The timeout in milliseconds after which to delete corrupted RabbitMQ shovels. A corrupted shovel is defined as a 
+    shovel that is returned by /api/parameters/shovel but is NOT returned by /api/shovels/. The timeout begins from the time this
+    application first observed the corrupted shovel, which will depend on how often the check runs (the 
+   `CAF_WMP_CORRUPTED_SHOVEL_CHECK_INTERVAL_MILLISECONDS` environment variable).
+
+* `CAF_WMP_CORRUPTED_SHOVEL_CHECK_INTERVAL_MILLISECONDS`  
+    **Default**: `120000`  
+    **Description**: How often to check for corrupted RabbitMQ shovels.
+
 * `CAF_WMP_KUBERNETES_NAMESPACES`  
     **Default**: None.  
     **Description**: Used to specify the Kubernetes namespaces, comma separated, in which to search for a worker's labels. These
