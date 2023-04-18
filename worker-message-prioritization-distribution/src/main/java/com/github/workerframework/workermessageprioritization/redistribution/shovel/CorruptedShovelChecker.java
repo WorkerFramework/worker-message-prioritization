@@ -37,19 +37,19 @@ import net.jodah.expiringmap.ExpiringMap;
 /**
  * Checks for shovels that are corrupted and deletes them.
  *
- * If an error occurs whilst creating a shovel, it is possible that the shovel has been created, but in a corrupt state where it is
- * not working correctly.
+ * <p>If an error occurs whilst creating a shovel, it is possible that the shovel has been created, but in a corrupt state where it is
+ * not working correctly.</p>
  *
- * For example, we have seen a shovel that appears on the RabbitMQ 'Shovel Management' UI (/api/parameters/shovel), but the shovel does
+ * <p>For example, we have seen a shovel that appears on the RabbitMQ 'Shovel Management' UI (/api/parameters/shovel), but the shovel does
  * not appear on the RabbitMQ 'Shovel Status' UI (/api/shovels/). The shovel was not shovelling messages as it should have been, and
- * trying to recreate the shovel had no effect.
+ * trying to recreate the shovel had no effect.</p>
  *
- * So, for the purposes of this class, we are defining a 'corrupted' shovel as a shovel that is returned by /api/parameters/shovel but is
- * NOT returned by /api/shovels/.
+ * <p>So, for the purposes of this class, we are defining a 'corrupted' shovel as a shovel that is returned by /api/parameters/shovel
+ * but is NOT returned by /api/shovels/.</p>
  *
- * Note, because shovels returned by /api/parameters/shovel do not include 'state' or 'node' fields (those fields are only returned by
+ * <p>Note, because shovels returned by /api/parameters/shovel do not include 'state' or 'node' fields (those fields are only returned by
  * /api/shovels/), we cannot use the existing {@link NonRunningShovelChecker} or {@link ShovelRunningTooLongChecker} to check for corrupt
- * shovels, as these classes rely on the 'state' and 'node' fields, and corrupted shovels do not have a 'state' or a 'node'.
+ * shovels, as these classes rely on the 'state' and 'node' fields, and corrupted shovels do not have a 'state' or a 'node'.</p>
  */
 public final class CorruptedShovelChecker implements Runnable
 {
