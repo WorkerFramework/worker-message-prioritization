@@ -30,14 +30,21 @@ import com.github.workerframework.workermessageprioritization.rabbitmq.ShovelsAp
 import com.google.common.collect.Sets;
 
 /**
- * Checks for shovels that are in a corrupt state, and deletes them.
+ * Checks for shovels that are corrupted and deletes them.
  *
- * If an exception occurs whilst creating a shovel, it is possible that the shovel has been created, but in a corrupt state where it is
- * not working correctly. For example, we have seen a shovel that appears on the RabbitMQ 'Shovel Management' UI
- * (/api/parameters/shovel), but the shovel does not appear on the RabbitMQ 'Shovel Status' UI (/api/shovels/). The shovel was not
- * shovelling messages as it should have been, and trying to recreate the shovel had no effect.
+ * If an error occurs whilst creating a shovel, it is possible that the shovel has been created, but in a corrupt state where it is
+ * not working correctly.
  *
- * So, we are defining a 'corrupt' shovel as a shovel that is returned by /api/parameters/shovel but is not returned by /api/shovels/.
+ * For example, we have seen a shovel that appears on the RabbitMQ 'Shovel Management' UI (/api/parameters/shovel), but the shovel does
+ * not appear on the RabbitMQ 'Shovel Status' UI (/api/shovels/). The shovel was not shovelling messages as it should have been, and
+ * trying to recreate the shovel had no effect.
+ *
+ * So, for the purposes of this class, we are defining a 'corrupted' shovel as a shovel that is returned by /api/parameters/shovel but is
+ * NOT returned by /api/shovels/.
+ *
+ * Note, because shovels returned by /api/parameters/shovel do not include 'state' or 'node' fields (those fields are only returned by
+ * /api/shovels/), we cannot use the existing {@link NonRunningShovelChecker} or {@link NonRunningShovelChecker} to check for corrupt
+ * shovels, as these classes rely on the 'state' and 'node' fields, and corrupted shovels do not have a 'state' or a 'node'.
  */
 public final class CorruptedShovelChecker implements Runnable
 {
@@ -63,7 +70,7 @@ public final class CorruptedShovelChecker implements Runnable
         // Get a list of shovels from /api/parameters/shovel
         final List<ShovelFromParametersApi> shovelsFromParametersApi;
         try {
-            shovelsFromParametersApi = shovelsApi.getApi().getShovelsFromParametersApi();
+            shovelsFromParametersApi = shovelsApi.getApi().getShovelsFromParametersApi(rabbitMQVHost);
             LOGGER.debug("Read the following list of shovels from /api/parameters/shovel: {}", shovelsFromParametersApi);
         } catch (final Exception e) {
             final String errorMessage = String.format(
@@ -92,7 +99,7 @@ public final class CorruptedShovelChecker implements Runnable
             return;
         }
 
-        // Find shovels that exist in /api/parameters/shovel but not in /api/shovels/, these are our corrupt shovels
+        // Find shovels that exist in /api/parameters/shovel but not in /api/shovels/, these are our corrupted shovels
         final Set<String> shovelsFromParametersApiNames = shovelsFromParametersApi
                 .stream()
                 .map(ShovelFromParametersApi::getName)
@@ -100,22 +107,25 @@ public final class CorruptedShovelChecker implements Runnable
 
         final Set<String> shovelsFromNonParametersApiNames = shovelsFromNonParametersApi
                 .stream()
+                .filter(shovel -> shovel.getVhost().equals(rabbitMQVHost))
                 .map(RetrievedShovel::getName)
                 .collect(toSet());
 
         final Set<String> corruptedShovels = Sets.difference(shovelsFromParametersApiNames, shovelsFromNonParametersApiNames);
 
+        // Delete each corrupted shovel
         for (final String corruptedShovel : corruptedShovels) {
             LOGGER.error("Found a shovel named {} that was returned by /api/parameters/shovel but not by /api/shovels/. " +
                     "This is an indication that the shovel may have become corrupted, so we are now going to try to delete the shovel. " +
-                    "Shovel creation will be attempted later if deleting the shovel was successful and the shovel is still required",
+                    "Shovel creation will be attempted later if deleting the shovel was successful and the shovel is still required.",
                     corruptedShovel);
 
             try {
                 shovelsApi.getApi().delete(rabbitMQVHost, corruptedShovel);
                 LOGGER.info("Successfully deleted corrupted shovel named {}", corruptedShovel);
             } catch (final Exception shovelsApiException) {
-                LOGGER.error(String.format("Failed to delete corrupted shovel named %s", corruptedShovel), shovelsApiException);
+                LOGGER.warn(String.format("Exception thrown during deletion of corrupted shovel named %s", corruptedShovel),
+                        shovelsApiException);
             }
         }
     }

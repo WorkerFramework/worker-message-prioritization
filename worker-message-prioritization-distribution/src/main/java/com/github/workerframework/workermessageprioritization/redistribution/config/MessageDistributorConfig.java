@@ -69,6 +69,11 @@ public final class MessageDistributorConfig {
     private static final long CAF_WMP_SHOVEL_RUNNING_TOO_LONG_CHECK_INTERVAL_MILLISECONDS_DEFAULT
             = 120000;
 
+    private static final String CAF_WMP_CORRUPTED_SHOVEL_CHECK_INTERVAL_MILLISECONDS
+            = "CAF_WMP_CORRUPTED_SHOVEL_CHECK_INTERVAL_MILLISECONDS";
+    private static final long CAF_WMP_CORRUPTED_SHOVEL_CHECK_INTERVAL_MILLISECONDS_DEFAULT
+            = 120000;
+
     private static final String CAF_WMP_KUBERNETES_NAMESPACES = "CAF_WMP_KUBERNETES_NAMESPACES";
 
     private static final String CAF_WMP_KUBERNETES_LABEL_CACHE_EXPIRY_MINUTES = "CAF_WMP_KUBERNETES_LABEL_CACHE_EXPIRY_MINUTES";
@@ -89,6 +94,7 @@ public final class MessageDistributorConfig {
     private final long nonRunningShovelCheckIntervalMilliseconds;
     private final long shovelRunningTooLongTimeoutMilliseconds;
     private final long shovelRunningTooLongCheckIntervalMilliseconds;
+    private final long corruptedShovelCheckIntervalMilliseconds;
 
     private final List<String> kubernetesNamespaces;
     private final int kubernetesLabelCacheExpiryMinutes;
@@ -118,6 +124,9 @@ public final class MessageDistributorConfig {
         shovelRunningTooLongCheckIntervalMilliseconds = getEnvOrDefault(
                 CAF_WMP_SHOVEL_RUNNING_TOO_LONG_CHECK_INTERVAL_MILLISECONDS,
                 CAF_WMP_SHOVEL_RUNNING_TOO_LONG_CHECK_INTERVAL_MILLISECONDS_DEFAULT);
+        corruptedShovelCheckIntervalMilliseconds = getEnvOrDefault(
+                CAF_WMP_CORRUPTED_SHOVEL_CHECK_INTERVAL_MILLISECONDS,
+                CAF_WMP_CORRUPTED_SHOVEL_CHECK_INTERVAL_MILLISECONDS_DEFAULT);
         kubernetesNamespaces = getEnvOrThrow(CAF_WMP_KUBERNETES_NAMESPACES);
         kubernetesLabelCacheExpiryMinutes = getEnvOrDefault(
                 CAF_WMP_KUBERNETES_LABEL_CACHE_EXPIRY_MINUTES,
@@ -176,6 +185,10 @@ public final class MessageDistributorConfig {
         return shovelRunningTooLongCheckIntervalMilliseconds;
     }
 
+    public long getCorruptedShovelCheckIntervalMilliseconds() {
+        return corruptedShovelCheckIntervalMilliseconds;
+    }
+
     public long getDistributorRunIntervalMilliseconds() {
         return distributorRunIntervalMilliseconds;
     }
@@ -205,6 +218,7 @@ public final class MessageDistributorConfig {
             .add(CAF_WMP_NON_RUNNING_SHOVEL_CHECK_INTERVAL_MILLISECONDS, nonRunningShovelCheckIntervalMilliseconds)
             .add(CAF_WMP_SHOVEL_RUNNING_TOO_LONG_TIMEOUT_MILLISECONDS, shovelRunningTooLongTimeoutMilliseconds)
             .add(CAF_WMP_SHOVEL_RUNNING_TOO_LONG_CHECK_INTERVAL_MILLISECONDS, shovelRunningTooLongCheckIntervalMilliseconds)
+            .add(CAF_WMP_CORRUPTED_SHOVEL_CHECK_INTERVAL_MILLISECONDS, corruptedShovelCheckIntervalMilliseconds)
             .add(CAF_WMP_KUBERNETES_NAMESPACES, kubernetesNamespaces)
             .add(CAF_WMP_KUBERNETES_LABEL_CACHE_EXPIRY_MINUTES, kubernetesLabelCacheExpiryMinutes)
             .toString();

@@ -53,6 +53,7 @@ public class ShovelDistributor extends MessageDistributor {
     private final long distributorRunIntervalMilliseconds;
     private final ScheduledExecutorService nonRunningShovelCheckerExecutorService;
     private final ScheduledExecutorService shovelRunningTooLongCheckerExecutorService;
+    private final ScheduledExecutorService corruptedShovelCheckerExecutorService;
 
     public ShovelDistributor(
             final RabbitManagementApi<QueuesApi> queuesApi,
@@ -65,6 +66,7 @@ public class ShovelDistributor extends MessageDistributor {
             final long nonRunningShovelTimeoutCheckIntervalMilliseconds,
             final long shovelRunningTooLongTimeoutMilliseconds,
             final long shovelRunningTooLongCheckIntervalMilliseconds,
+            final long corruptedShovelCheckerIntervalMilliseconds,
             final long distributorRunIntervalMilliseconds) throws UnsupportedEncodingException {
 
         super(queuesApi);
@@ -99,6 +101,17 @@ public class ShovelDistributor extends MessageDistributor {
                         shovelRunningTooLongCheckIntervalMilliseconds),
                 0,
                 shovelRunningTooLongCheckIntervalMilliseconds,
+                TimeUnit.MILLISECONDS);
+
+        this.corruptedShovelCheckerExecutorService = Executors.newSingleThreadScheduledExecutor();
+
+        corruptedShovelCheckerExecutorService.scheduleAtFixedRate(
+                new CorruptedShovelChecker(
+                        shovelsApi,
+                        rabbitMQVHost,
+                        corruptedShovelCheckerIntervalMilliseconds),
+                0,
+                corruptedShovelCheckerIntervalMilliseconds,
                 TimeUnit.MILLISECONDS);
     }
     

@@ -110,6 +110,7 @@ public class ShovelApplication
             messageDistributorConfig.getNonRunningShovelCheckIntervalMilliseconds(),
             messageDistributorConfig.getShovelRunningTooLongTimeoutMilliseconds(),
             messageDistributorConfig.getShovelRunningTooLongCheckIntervalMilliseconds(),
+            messageDistributorConfig.getCorruptedShovelCheckIntervalMilliseconds(),
             messageDistributorConfig.getDistributorRunIntervalMilliseconds());
 
         shovelDistributor.run();
