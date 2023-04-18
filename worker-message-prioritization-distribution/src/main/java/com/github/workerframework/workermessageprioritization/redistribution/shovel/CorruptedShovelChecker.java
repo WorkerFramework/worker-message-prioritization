@@ -59,22 +59,22 @@ public final class CorruptedShovelChecker implements Runnable
     private final String rabbitMQVHost;
     private final Map<String,Instant> shovelNameToTimeObservedCorrupted;
     private final long corruptedShovelTimeoutMilliseconds;
-    private final long corruptedShovelTimeoutCheckIntervalMilliseconds;
+    private final long corruptedShovelCheckIntervalMilliseconds;
 
     public CorruptedShovelChecker(
             final RabbitManagementApi<ShovelsApi> shovelsApi,
             final String rabbitMQVHost,
             final long corruptedShovelTimeoutMilliseconds,
-            final long corruptedShovelTimeoutCheckIntervalMilliseconds)
+            final long corruptedShovelCheckIntervalMilliseconds)
     {
         this.shovelsApi = shovelsApi;
         this.rabbitMQVHost = rabbitMQVHost;
         this.corruptedShovelTimeoutMilliseconds = corruptedShovelTimeoutMilliseconds;
-        this.corruptedShovelTimeoutCheckIntervalMilliseconds = corruptedShovelTimeoutCheckIntervalMilliseconds;
+        this.corruptedShovelCheckIntervalMilliseconds = corruptedShovelCheckIntervalMilliseconds;
 
         // Expire map entries a little after the timeout + interval between checks
         final long shovelNameToTimeObservedCorruptedExpiryMilliseconds =
-                (corruptedShovelTimeoutMilliseconds + corruptedShovelTimeoutCheckIntervalMilliseconds) * 2;
+                (corruptedShovelTimeoutMilliseconds + corruptedShovelCheckIntervalMilliseconds) * 2;
 
         this.shovelNameToTimeObservedCorrupted = ExpiringMap
                 .builder()
@@ -97,7 +97,7 @@ public final class CorruptedShovelChecker implements Runnable
             final String errorMessage = String.format(
                     "Failed to get a list of existing shovels from /api/parameters/shovel, so unable to check if any shovels are " +
                             "corrupted and need to be deleted. Will try again during the next run in %d milliseconds",
-                    corruptedShovelTimeoutCheckIntervalMilliseconds);
+                    corruptedShovelCheckIntervalMilliseconds);
 
             LOGGER.error(errorMessage, e);
 
@@ -113,7 +113,7 @@ public final class CorruptedShovelChecker implements Runnable
             final String errorMessage = String.format(
                     "Failed to get a list of existing shovels from /api/shovels/, so unable to check if any shovels are corrupted and " +
                             "need to be deleted. Will try again during the next run in %d milliseconds",
-                    corruptedShovelTimeoutCheckIntervalMilliseconds);
+                    corruptedShovelCheckIntervalMilliseconds);
 
             LOGGER.error(errorMessage, e);
 

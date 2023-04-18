@@ -66,8 +66,8 @@ public class ShovelDistributor extends MessageDistributor {
             final long nonRunningShovelTimeoutCheckIntervalMilliseconds,
             final long shovelRunningTooLongTimeoutMilliseconds,
             final long shovelRunningTooLongCheckIntervalMilliseconds,
-            final long corruptedShovelCheckerTimeoutMilliseconds,
-            final long corruptedShovelCheckerIntervalMilliseconds,
+            final long corruptedShovelTimeoutMilliseconds,
+            final long corruptedShovelCheckIntervalMilliseconds,
             final long distributorRunIntervalMilliseconds) throws UnsupportedEncodingException {
 
         super(queuesApi);
@@ -110,10 +110,10 @@ public class ShovelDistributor extends MessageDistributor {
                 new CorruptedShovelChecker(
                         shovelsApi,
                         rabbitMQVHost,
-                        corruptedShovelCheckerTimeoutMilliseconds,
-                        corruptedShovelCheckerIntervalMilliseconds),
+                        corruptedShovelTimeoutMilliseconds,
+                        corruptedShovelCheckIntervalMilliseconds),
                 0,
-                corruptedShovelCheckerIntervalMilliseconds,
+                corruptedShovelCheckIntervalMilliseconds,
                 TimeUnit.MILLISECONDS);
     }
     
