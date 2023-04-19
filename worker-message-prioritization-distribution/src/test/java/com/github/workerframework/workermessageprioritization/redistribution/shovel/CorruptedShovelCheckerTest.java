@@ -47,7 +47,7 @@ public class CorruptedShovelCheckerTest
     {
         MockitoAnnotations.initMocks(this);
         when(mockRabbitManagementApi.getApi()).thenReturn(mockShovelsApi);
-        corruptedShovelChecker = new CorruptedShovelChecker(mockRabbitManagementApi, VHOST, 0, 0);
+        corruptedShovelChecker = new CorruptedShovelChecker(mockRabbitManagementApi, nodeSpecificShovelsApiCache, VHOST, 0, 0);
     }
 
     @Test

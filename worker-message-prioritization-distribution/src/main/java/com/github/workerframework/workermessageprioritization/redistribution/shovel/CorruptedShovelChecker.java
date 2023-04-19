@@ -15,21 +15,26 @@
  */
 package com.github.workerframework.workermessageprioritization.redistribution.shovel;
 
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
 import java.time.Instant;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.workerframework.workermessageprioritization.rabbitmq.NodesApi;
 import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitManagementApi;
 import com.github.workerframework.workermessageprioritization.rabbitmq.RetrievedShovel;
 import com.github.workerframework.workermessageprioritization.rabbitmq.ShovelFromParametersApi;
 import com.github.workerframework.workermessageprioritization.rabbitmq.ShovelsApi;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Sets;
 
 import net.jodah.expiringmap.ExpiringMap;
@@ -56,6 +61,8 @@ public final class CorruptedShovelChecker implements Runnable
     private static final Logger LOGGER = LoggerFactory.getLogger(CorruptedShovelChecker.class);
 
     private final RabbitManagementApi<ShovelsApi> shovelsApi;
+    private final RabbitManagementApi<NodesApi> nodesApi;
+    private final LoadingCache<String,RabbitManagementApi<ShovelsApi>> nodeSpecificShovelsApiCache;
     private final String rabbitMQVHost;
     private final Map<String,Instant> shovelNameToTimeObservedCorrupted;
     private final long corruptedShovelTimeoutMilliseconds;
@@ -63,11 +70,15 @@ public final class CorruptedShovelChecker implements Runnable
 
     public CorruptedShovelChecker(
             final RabbitManagementApi<ShovelsApi> shovelsApi,
+            final RabbitManagementApi<NodesApi> nodesApi,
+            final LoadingCache<String,RabbitManagementApi<ShovelsApi>> nodeSpecificShovelsApiCache,
             final String rabbitMQVHost,
             final long corruptedShovelTimeoutMilliseconds,
             final long corruptedShovelCheckIntervalMilliseconds)
     {
         this.shovelsApi = shovelsApi;
+        this.nodesApi = nodesApi;
+        this.nodeSpecificShovelsApiCache = nodeSpecificShovelsApiCache;
         this.rabbitMQVHost = rabbitMQVHost;
         this.corruptedShovelTimeoutMilliseconds = corruptedShovelTimeoutMilliseconds;
         this.corruptedShovelCheckIntervalMilliseconds = corruptedShovelCheckIntervalMilliseconds;
@@ -131,13 +142,15 @@ public final class CorruptedShovelChecker implements Runnable
                 .map(RetrievedShovel::getName)
                 .collect(toSet());
 
-        final Set<String> corruptedShovelNames = Sets.difference(shovelsFromParametersApiNames, shovelsFromNonParametersApiNames);
+        final Set<String> corruptedShovels = Sets.difference(shovelsFromParametersApiNames, shovelsFromNonParametersApiNames);
 
-        // For each corrupted shovel, check if the corrupted shovel timeout has been reached, if so, delete the shovel
-        for (final String corruptedShovelName : corruptedShovelNames) {
+        // Filter the corrupted shovels to include only those whose timeout has been reached
+        final Set<String> corruptedShovelsWithTimeoutReached = new HashSet<>();
 
-            final Instant timeObservedCorrupted = shovelNameToTimeObservedCorrupted
-                    .computeIfAbsent(corruptedShovelName, s -> Instant.now());
+        for (final String corruptedShovel : corruptedShovels) {
+
+            final Instant timeObservedCorrupted = shovelNameToTimeObservedCorrupted.computeIfAbsent(corruptedShovel, s -> Instant.now());
+
             final long timeObservedCorruptedMilliseconds = timeObservedCorrupted.toEpochMilli();
 
             final Instant timeNow = Instant.now();
@@ -146,36 +159,126 @@ public final class CorruptedShovelChecker implements Runnable
                     timeNow.toEpochMilli() - timeObservedCorruptedMilliseconds >= corruptedShovelTimeoutMilliseconds;
 
             if (corruptedShovelTimeoutReached) {
+
                 LOGGER.error("Found a shovel named {} that was returned by /api/parameters/shovel but not by /api/shovels/. " +
-                             "This is an indication that the shovel may have become corrupted. " +
+                                "This is an indication that the shovel may have become corrupted. " +
                                 "The time when we first observed this corrupted shovel was {}. " +
                                 "The time now is {}. " +
                                 "As the corrupted shovel timeout of {} milliseconds has been reached, " +
-                                "we are now going to try to delete the corrupted shovel. " +
+                                "we are now going to try to delete the corrupted shovel on each node. " +
                                 "Shovel creation will be attempted later if the shovel is still required.",
-                        corruptedShovelName,
+                        corruptedShovel,
                         timeObservedCorrupted,
                         timeNow,
                         corruptedShovelTimeoutMilliseconds);
 
-                try {
-                    shovelsApi.getApi().delete(rabbitMQVHost, corruptedShovelName);
-                    LOGGER.info("Successfully deleted corrupted shovel named {}", corruptedShovelName);
-                } catch (final Exception shovelsApiException) {
-                    LOGGER.warn(String.format("Exception thrown during deletion of corrupted shovel named %s", corruptedShovelName),
-                            shovelsApiException);
-                }
+                corruptedShovelsWithTimeoutReached.add(corruptedShovel);
             } else {
                 LOGGER.debug("Found a shovel named {} that was returned by /api/parameters/shovel but not by /api/shovels/. " +
-                             "This is an indication that the shovel may have become corrupted. " +
+                                "This is an indication that the shovel may have become corrupted. " +
                                 "The time when we first observed this corrupted shovel was {}. " +
                                 "The time now is {}. " +
                                 "As the corrupted shovel timeout of {} milliseconds has not yet been reached, " +
                                 "the shovel will not be deleted at this time. ",
-                        corruptedShovelName,
+                        corruptedShovel,
                         timeObservedCorrupted,
                         timeNow,
                         corruptedShovelTimeoutMilliseconds);
+            }
+        }
+
+        // If there are any corrupted shovels that have reached their timeout, then try to delete them.
+        //
+        // It is possible that deleting a corrupted shovel may only work if the request is sent to the same node that the corrupted
+        // shovel is running on.
+        //
+        // However, we don't know which node the corrupted shovel is running on, so we try to delete the corrupted shovel on all
+        // nodes.
+        if (!corruptedShovelsWithTimeoutReached.isEmpty()) {
+
+            // Get a list of node names
+            final List<String> nodeNames;
+            try {
+                nodeNames = nodesApi.getApi()
+                        .getNodes("name")
+                        .stream()
+                        .map(node -> node.getName())
+                        .collect(toList());
+            } catch (final Exception e) {
+                final String errorMessage = String.format(
+                        "Exception thrown trying to get a list of nodes, so unable to delete corrupted " +
+                                "shovel(s) %s. Will try again during the next run in %s milliseconds.",
+                        corruptedShovelsWithTimeoutReached,
+                        corruptedShovelCheckIntervalMilliseconds);
+
+                LOGGER.error(errorMessage, e);
+
+                return;
+            }
+
+            // Make sure we have at least one node name
+            if (nodeNames.isEmpty()) {
+                final String errorMessage = String.format(
+                        "No node names were returned by the RabbitMQ nodes API, so unable to delete corrupted " +
+                                "shovel(s) %s. Will try again during the next run in %s milliseconds.",
+                        corruptedShovelsWithTimeoutReached,
+                        corruptedShovelCheckIntervalMilliseconds);
+
+                LOGGER.error(errorMessage);
+
+                return;
+            }
+
+            // Loop through each corrupted shovel and perform the delete request on each node
+            for (final String corruptedShovelWithTimeoutReached : corruptedShovelsWithTimeoutReached) {
+
+                for (final String nodeName : nodeNames) {
+
+                    final ShovelsApi nodeSpecificShovelsApi;
+                    try {
+                        nodeSpecificShovelsApi = nodeSpecificShovelsApiCache.get(nodeName).getApi();
+                    } catch (final ExecutionException exception) {
+                        LOGGER.error(String.format(
+                                "ExecutionException thrown while trying to get a node-specific ShovelsApi for %s, so unable to delete " +
+                                        "corrupted shovel %s on this node.",
+                                nodeName, corruptedShovelWithTimeoutReached), exception);
+
+                        continue;
+                    }
+
+                    // The delete shovel request may return a 500 Internal Server Error, even when it has deleted the corrupted
+                    // shovel, so we cannot rely on the HTTP status of the delete request to determine if the corrupted shovel was
+                    // successfully deleted, we'll check that below by doing a GET request on the shovel.
+                    try {
+                        nodeSpecificShovelsApi.delete(rabbitMQVHost, corruptedShovelWithTimeoutReached);
+                    } catch (final Exception exception) {
+                        final String errorMessage = String.format(
+                                "Exception thrown while trying to delete corrupted shovel %s on node %s. " +
+                                        "This may be ok if the shovel has been deleted.",
+                                corruptedShovelWithTimeoutReached, nodeName);
+
+                        LOGGER.warn(errorMessage, exception);
+                    }
+                }
+
+                // Check if the corrupted shovel has been deleted
+                try {
+                    shovelsApi.getApi().getShovelFromParametersApi(rabbitMQVHost, corruptedShovelWithTimeoutReached);
+
+                    // Didn't get a 404 as expected, so the corrupted shovel still exists
+                    final String errorMessage = String.format(
+                            "Corrupted shovel deletion does not appear to have worked. Corrupted shovel %s still exists",
+                            corruptedShovelWithTimeoutReached);
+
+                    LOGGER.error(errorMessage);
+                } catch (final Exception e) {
+                    final String errorMessage = String.format(
+                            "Exception thrown while trying to get the deleted corrupted shovel %s, so we assume that it was successfully " +
+                                    "deleted. Will not attempt to delete this shovel again.",
+                            corruptedShovelWithTimeoutReached);
+
+                    LOGGER.info(errorMessage, e);
+                }
             }
         }
     }
