@@ -34,6 +34,7 @@ public class DistributorTestBase {
     protected static final String T1_STAGING_QUEUE_NAME = "tenant1";
     protected static final String T2_STAGING_QUEUE_NAME = "tenant2";
     protected static final String TARGET_QUEUE_NAME = "target";
+    protected static final String VHOST = "/";
     
     protected final Gson gson = new Gson();
     protected ConnectionFactory connectionFactory;
@@ -113,7 +114,7 @@ public class DistributorTestBase {
     {
         return () -> !shovelsApi
                 .getApi()
-                .getShovels()
+                .getShovels(VHOST)
                 .stream()
                 .filter(s -> s.getName().equals(shovelName))
                 .findFirst()

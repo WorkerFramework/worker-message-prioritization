@@ -53,6 +53,7 @@ public class ShovelDistributor extends MessageDistributor {
     private final long distributorRunIntervalMilliseconds;
     private final ScheduledExecutorService nonRunningShovelCheckerExecutorService;
     private final ScheduledExecutorService shovelRunningTooLongCheckerExecutorService;
+    private final ScheduledExecutorService corruptedShovelCheckerExecutorService;
 
     public ShovelDistributor(
             final RabbitManagementApi<QueuesApi> queuesApi,
@@ -65,6 +66,8 @@ public class ShovelDistributor extends MessageDistributor {
             final long nonRunningShovelTimeoutCheckIntervalMilliseconds,
             final long shovelRunningTooLongTimeoutMilliseconds,
             final long shovelRunningTooLongCheckIntervalMilliseconds,
+            final long corruptedShovelTimeoutMilliseconds,
+            final long corruptedShovelCheckIntervalMilliseconds,
             final long distributorRunIntervalMilliseconds) throws UnsupportedEncodingException {
 
         super(queuesApi);
@@ -100,6 +103,18 @@ public class ShovelDistributor extends MessageDistributor {
                 0,
                 shovelRunningTooLongCheckIntervalMilliseconds,
                 TimeUnit.MILLISECONDS);
+
+        this.corruptedShovelCheckerExecutorService = Executors.newSingleThreadScheduledExecutor();
+
+        corruptedShovelCheckerExecutorService.scheduleAtFixedRate(
+                new CorruptedShovelChecker(
+                        shovelsApi,
+                        rabbitMQVHost,
+                        corruptedShovelTimeoutMilliseconds,
+                        corruptedShovelCheckIntervalMilliseconds),
+                0,
+                corruptedShovelCheckIntervalMilliseconds,
+                TimeUnit.MILLISECONDS);
     }
     
     public void run() throws InterruptedException {
@@ -115,8 +130,23 @@ public class ShovelDistributor extends MessageDistributor {
                 }
             }
         } finally {
-            nonRunningShovelCheckerExecutorService.shutdownNow();
-            shovelRunningTooLongCheckerExecutorService.shutdownNow();
+            try {
+                nonRunningShovelCheckerExecutorService.shutdownNow();
+            } catch (final Exception exception) {
+                LOGGER.warn("Failed to shutdown nonRunningShovelCheckerExecutorService", exception);
+            }
+
+            try {
+                nonRunningShovelCheckerExecutorService.shutdownNow();
+            } catch (final Exception exception) {
+                LOGGER.warn("Failed to shutdown shovelRunningTooLongCheckerExecutorService", exception);
+            }
+
+            try {
+                corruptedShovelCheckerExecutorService.shutdownNow();
+            } catch (final Exception exception) {
+                LOGGER.warn("Failed to shutdown corruptedShovelCheckerExecutorService", exception);
+            }
         }
     }
     
@@ -126,7 +156,7 @@ public class ShovelDistributor extends MessageDistributor {
 
         final List<RetrievedShovel> retrievedShovels;
         try {
-            retrievedShovels = shovelsApi.getApi().getShovels();
+            retrievedShovels = shovelsApi.getApi().getShovels(rabbitMQVHost);
         } catch (final Exception e) {
             final String errorMessage = String.format(
                     "Failed to get a list of existing shovels, so unable to check if additional shovels need to " +

@@ -76,7 +76,7 @@ public final class ShovelRunningTooLongChecker implements Runnable
     {
         final List<RetrievedShovel> retrievedShovels;
         try {
-            retrievedShovels = shovelsApi.getApi().getShovels();
+            retrievedShovels = shovelsApi.getApi().getShovels(rabbitMQVHost);
         } catch (final Exception e) {
             final String errorMessage = String.format(
                     "Failed to get a list of existing shovels, so unable to check if any shovels are running too " +
