@@ -72,7 +72,7 @@ public class ShovelRunningTooLongCheckerIT extends DistributorTestBase
 
             retrievedShovel = shovelsApi
                     .getApi()
-                    .getShovels()
+                    .getShovels(VHOST)
                     .stream()
                     .filter(s -> s.getName().equals(stagingQueueName))
                     .findFirst()

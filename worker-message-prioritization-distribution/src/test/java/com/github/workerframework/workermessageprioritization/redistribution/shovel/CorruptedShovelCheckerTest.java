@@ -55,7 +55,7 @@ public class CorruptedShovelCheckerTest
     {
         when(mockShovelsApi.getShovelsFromParametersApi(VHOST)).thenReturn(makeShovelsFromParametersApi(
                 "shovel1", "shovel2"));
-        when(mockShovelsApi.getShovels()).thenReturn(makeShovelsFromNonParametersApi(
+        when(mockShovelsApi.getShovels(VHOST)).thenReturn(makeShovelsFromNonParametersApi(
                 "shovel1", "shovel2"));
 
         corruptedShovelChecker.run();
@@ -68,7 +68,7 @@ public class CorruptedShovelCheckerTest
     {
         when(mockShovelsApi.getShovelsFromParametersApi(VHOST)).thenReturn(makeShovelsFromParametersApi(
                 "shovel1", "shovel2"));
-        when(mockShovelsApi.getShovels()).thenReturn(makeShovelsFromNonParametersApi(
+        when(mockShovelsApi.getShovels(VHOST)).thenReturn(makeShovelsFromNonParametersApi(
                 "shovel1"));
 
         corruptedShovelChecker.run();
@@ -96,7 +96,6 @@ public class CorruptedShovelCheckerTest
         for (final String name : names) {
             final RetrievedShovel shovelFromNonParametersApi = new RetrievedShovel();
             shovelFromNonParametersApi.setName(name);
-            shovelFromNonParametersApi.setVhost(VHOST);
             shovelsFromNonParametersApi.add(shovelFromNonParametersApi);
         }
 

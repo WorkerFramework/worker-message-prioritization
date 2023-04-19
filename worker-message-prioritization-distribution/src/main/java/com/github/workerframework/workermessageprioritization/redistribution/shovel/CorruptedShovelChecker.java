@@ -107,7 +107,7 @@ public final class CorruptedShovelChecker implements Runnable
         // Get a list of shovels from /api/shovels/
         final List<RetrievedShovel> shovelsFromNonParametersApi;
         try {
-            shovelsFromNonParametersApi = shovelsApi.getApi().getShovels();
+            shovelsFromNonParametersApi = shovelsApi.getApi().getShovels(rabbitMQVHost);
             LOGGER.debug("Read {} shovels from /api/shovels/: {}", shovelsFromNonParametersApi.size(), shovelsFromNonParametersApi);
         } catch (final Exception e) {
             final String errorMessage = String.format(
@@ -128,7 +128,6 @@ public final class CorruptedShovelChecker implements Runnable
 
         final Set<String> shovelsFromNonParametersApiNames = shovelsFromNonParametersApi
                 .stream()
-                .filter(shovel -> shovel.getVhost().equals(rabbitMQVHost))
                 .map(RetrievedShovel::getName)
                 .collect(toSet());
 

@@ -27,8 +27,8 @@ public interface ShovelsApi {
     @PUT("/api/parameters/shovel/{vhost}/{name}")
     RetrievedShovel putShovel(@Path("vhost") final String vhost, @Path("name") final String name, @Body final Component<Shovel> shovel);
     
-    @GET("/api/shovels/") // Used by the 'Shovel Status' UI: https://host/#/shovels
-    List<RetrievedShovel> getShovels();
+    @GET("/api/shovels/{vhost}") // Used by the 'Shovel Status' UI: https://host/#/shovels
+    List<RetrievedShovel> getShovels(@Path("vhost") final String vhost);
 
     @GET("/api/parameters/shovel/{vhost}") // Used by the 'Shovel Management' UI: https://host/#/dynamic-shovels
     List<ShovelFromParametersApi> getShovelsFromParametersApi(@Path("vhost") final String vhost);

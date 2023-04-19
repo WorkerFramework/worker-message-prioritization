@@ -23,7 +23,6 @@ public class RetrievedShovel extends Shovel {
     private Date timestamp;
     private ShovelState state;
     private String node;
-    private String vhost;
 
     public String getName() {
         return name;
@@ -57,14 +56,6 @@ public class RetrievedShovel extends Shovel {
         this.node = node;
     }
 
-    public String getVhost() {
-        return vhost;
-    }
-
-    public void setVhost(String vhost) {
-        this.vhost = vhost;
-    }
-
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
@@ -72,7 +63,6 @@ public class RetrievedShovel extends Shovel {
                 .add("timestamp", timestamp)
                 .add("state", state)
                 .add("node", node)
-                .add("vhost", vhost)
                 .add("ackMode", getAckMode())
                 .add("srcUri", getSrcUri())
                 .add("srcQueue", getSrcQueue())

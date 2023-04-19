@@ -156,7 +156,7 @@ public class ShovelDistributor extends MessageDistributor {
 
         final List<RetrievedShovel> retrievedShovels;
         try {
-            retrievedShovels = shovelsApi.getApi().getShovels();
+            retrievedShovels = shovelsApi.getApi().getShovels(rabbitMQVHost);
         } catch (final Exception e) {
             final String errorMessage = String.format(
                     "Failed to get a list of existing shovels, so unable to check if additional shovels need to " +

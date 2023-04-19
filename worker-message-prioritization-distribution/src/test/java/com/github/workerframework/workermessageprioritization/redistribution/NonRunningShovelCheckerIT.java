@@ -64,7 +64,7 @@ public class NonRunningShovelCheckerIT extends DistributorTestBase
         // Verify the bad shovel is not in a 'running' state
         final RetrievedShovel retrievedShovel = shovelsApi
             .getApi()
-            .getShovels()
+            .getShovels(VHOST)
             .stream()
             .filter(s -> s.getName().equals(stagingQueueName))
             .findFirst()
