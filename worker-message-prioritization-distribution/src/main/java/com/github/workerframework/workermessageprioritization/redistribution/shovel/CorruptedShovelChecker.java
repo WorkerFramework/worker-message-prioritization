@@ -137,7 +137,7 @@ public final class CorruptedShovelChecker implements Runnable
         // Find shovels that exist in /api/parameters/shovel but not in /api/shovels/, these are our corrupted shovels
         final Set<String> corruptedShovels = findCorruptedShovels(shovelsFromParametersApi, shovelsFromNonParametersApi);
 
-        // Filter the corrupted shovels to include only those whose timeout has been reached
+        // From the corrupted shovels, find those whose timeout has been reached, these are the shovels we will be deleting
         final Set<String> corruptedShovelsWithTimeoutReached = findCorruptedShovelsWithTimeoutReached(corruptedShovels);
 
         // If there are any corrupted shovels that have reached their timeout, then try to delete them.
@@ -286,7 +286,7 @@ public final class CorruptedShovelChecker implements Runnable
             LOGGER.error(message);
         } catch (final Exception e) {
             // If a 404 is returned, it will be inside a RetrofitError which is itself inside an Exception
-            if (e.getCause() instanceof RetrofitError) {
+            if (e.getCause() != null && e.getCause() instanceof RetrofitError) {
                 final Response response = ((RetrofitError)e.getCause()).getResponse();
                 if (response != null) {
                     final int status = response.getStatus();
