@@ -135,36 +135,10 @@ public final class CorruptedShovelChecker implements Runnable
         }
 
         // Find shovels that exist in /api/parameters/shovel but not in /api/shovels/, these are our corrupted shovels
-        final Set<String> shovelsFromParametersApiNames = shovelsFromParametersApi
-                .stream()
-                .map(ShovelFromParametersApi::getName)
-                .collect(toSet());
-
-        final Set<String> shovelsFromNonParametersApiNames = shovelsFromNonParametersApi
-                .stream()
-                .map(RetrievedShovel::getName)
-                .collect(toSet());
-
-        final Set<String> corruptedShovels = Sets.difference(shovelsFromParametersApiNames, shovelsFromNonParametersApiNames);
+        final Set<String> corruptedShovels = findCorruptedShovels(shovelsFromParametersApi, shovelsFromNonParametersApi);
 
         // Filter the corrupted shovels to include only those whose timeout has been reached
-        final Set<String> corruptedShovelsWithTimeoutReached = new HashSet<>();
-
-        for (final String corruptedShovel : corruptedShovels) {
-
-            final Instant timeObservedCorrupted = shovelNameToTimeObservedCorrupted.computeIfAbsent(corruptedShovel, s -> Instant.now());
-
-            final long timeObservedCorruptedMilliseconds = timeObservedCorrupted.toEpochMilli();
-
-            final Instant timeNow = Instant.now();
-
-            final boolean corruptedShovelTimeoutReached =
-                    timeNow.toEpochMilli() - timeObservedCorruptedMilliseconds >= corruptedShovelTimeoutMilliseconds;
-
-            if (corruptedShovelTimeoutReached) {
-                corruptedShovelsWithTimeoutReached.add(corruptedShovel);
-            }
-        }
+        final Set<String> corruptedShovelsWithTimeoutReached = findCorruptedShovelsWithTimeoutReached(corruptedShovels);
 
         // If there are any corrupted shovels that have reached their timeout, then try to delete them.
         //
@@ -222,6 +196,46 @@ public final class CorruptedShovelChecker implements Runnable
                 checkIfShovelHasBeenDeleted(corruptedShovelWithTimeoutReached);
             }
         }
+    }
+
+    private static Set<String> findCorruptedShovels(
+            final List<ShovelFromParametersApi> shovelsFromParametersApi,
+            final List<RetrievedShovel> shovelsFromNonParametersApi)
+    {
+        final Set<String> shovelsFromParametersApiNames = shovelsFromParametersApi
+                .stream()
+                .map(ShovelFromParametersApi::getName)
+                .collect(toSet());
+
+        final Set<String> shovelsFromNonParametersApiNames = shovelsFromNonParametersApi
+                .stream()
+                .map(RetrievedShovel::getName)
+                .collect(toSet());
+
+        return Sets.difference(shovelsFromParametersApiNames, shovelsFromNonParametersApiNames);
+    }
+
+    private Set<String> findCorruptedShovelsWithTimeoutReached(final Set<String> corruptedShovels)
+    {
+        final Set<String> corruptedShovelsWithTimeoutReached = new HashSet<>();
+
+        for (final String corruptedShovel : corruptedShovels) {
+
+            final Instant timeObservedCorrupted = shovelNameToTimeObservedCorrupted.computeIfAbsent(corruptedShovel, s -> Instant.now());
+
+            final long timeObservedCorruptedMilliseconds = timeObservedCorrupted.toEpochMilli();
+
+            final Instant timeNow = Instant.now();
+
+            final boolean corruptedShovelTimeoutReached =
+                    timeNow.toEpochMilli() - timeObservedCorruptedMilliseconds >= corruptedShovelTimeoutMilliseconds;
+
+            if (corruptedShovelTimeoutReached) {
+                corruptedShovelsWithTimeoutReached.add(corruptedShovel);
+            }
+        }
+
+        return corruptedShovelsWithTimeoutReached;
     }
 
     private void sendDeleteShovelRequestToNode(final String corruptedShovelWithTimeoutReached, final String nodeName)
