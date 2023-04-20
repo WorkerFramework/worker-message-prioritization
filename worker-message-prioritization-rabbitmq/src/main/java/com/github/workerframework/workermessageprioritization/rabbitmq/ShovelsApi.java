@@ -34,7 +34,7 @@ public interface ShovelsApi {
     List<ShovelFromParametersApi> getShovelsFromParametersApi(@Path("vhost") final String vhost);
 
     @GET("/api/parameters/shovel/{vhost}/{name}")
-    ShovelFromParametersApi getShovelFromParametersApi(@Path("vhost") final String vhost, final String name);
+    ShovelFromParametersApi getShovelFromParametersApi(@Path("vhost") final String vhost, @Path("name") final String name);
 
     @GET("/api/shovels/vhost/{vhost}/{name}")
     RetrievedShovel getShovel(@Path("vhost") final String vhost, @Path("name") final String name);

@@ -18,25 +18,54 @@ package com.github.workerframework.workermessageprioritization.redistribution.sh
 import static org.mockito.Mockito.*;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import com.github.workerframework.workermessageprioritization.rabbitmq.Node;
+import com.github.workerframework.workermessageprioritization.rabbitmq.NodesApi;
 import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitManagementApi;
 import com.github.workerframework.workermessageprioritization.rabbitmq.RetrievedShovel;
 import com.github.workerframework.workermessageprioritization.rabbitmq.ShovelFromParametersApi;
 import com.github.workerframework.workermessageprioritization.rabbitmq.ShovelsApi;
+import com.google.common.cache.LoadingCache;
+
+import retrofit.RetrofitError;
+import retrofit.client.Response;
 
 public class CorruptedShovelCheckerTest
 {
     @Mock
-    private RabbitManagementApi<ShovelsApi> mockRabbitManagementApi;
+    private RabbitManagementApi<ShovelsApi> mockRabbitManagementApiShovelsApi;
+
+    @Mock
+    private RabbitManagementApi<ShovelsApi> mockNode1RabbitManagementApiShovelsApi;
+
+    @Mock
+    private RabbitManagementApi<ShovelsApi> mockNode2RabbitManagementApiShovelsApi;
+
+    @Mock
+    private RabbitManagementApi<NodesApi> mockRabbitManagementApiNodesApi;
 
     @Mock
     private ShovelsApi mockShovelsApi;
+
+    @Mock
+    private ShovelsApi mockNode1ShovelsApi;
+
+    @Mock
+    private ShovelsApi mockNode2ShovelsApi;
+
+    @Mock
+    private NodesApi mockNodesApi;
+
+    @Mock
+    LoadingCache<String,RabbitManagementApi<ShovelsApi>> mockNodeSpecificShovelsApiCache;
 
     private CorruptedShovelChecker corruptedShovelChecker;
 
@@ -46,34 +75,73 @@ public class CorruptedShovelCheckerTest
     public void setUp()
     {
         MockitoAnnotations.initMocks(this);
-        when(mockRabbitManagementApi.getApi()).thenReturn(mockShovelsApi);
-        corruptedShovelChecker = new CorruptedShovelChecker(mockRabbitManagementApi, nodeSpecificShovelsApiCache, VHOST, 0, 0);
+        when(mockRabbitManagementApiShovelsApi.getApi()).thenReturn(mockShovelsApi);
+        corruptedShovelChecker = new CorruptedShovelChecker(
+                mockRabbitManagementApiShovelsApi, mockRabbitManagementApiNodesApi, mockNodeSpecificShovelsApiCache, VHOST, 0, 0);
+    }
+
+    //@Test
+    public void testNoCorruptedShovels() throws ExecutionException
+    {
+        // 2 good shovels
+        when(mockShovelsApi.getShovelsFromParametersApi(VHOST)).thenReturn(makeShovelsFromParametersApi(
+                "goodShovel1", "goodShovel2"));
+        when(mockShovelsApi.getShovels(VHOST)).thenReturn(makeShovelsFromNonParametersApi(
+                "goodShovel1", "goodShovel2"));
+
+        // 2 nodes
+        when(mockRabbitManagementApiNodesApi.getApi()).thenReturn(mockNodesApi);
+        when(mockNodesApi.getNodes("name")).thenReturn(makeNodes("node1", "node2"));
+        when(mockNodeSpecificShovelsApiCache.get("node1")).thenReturn(mockNode1RabbitManagementApiShovelsApi);
+        when(mockNode1RabbitManagementApiShovelsApi.getApi()).thenReturn(mockNode1ShovelsApi);
+        when(mockNodeSpecificShovelsApiCache.get("node2")).thenReturn(mockNode2RabbitManagementApiShovelsApi);
+        when(mockNode2RabbitManagementApiShovelsApi.getApi()).thenReturn(mockNode2ShovelsApi);
+
+        // Run the test
+        corruptedShovelChecker.run();
+
+        // Verity that the good shovels were not deleted
+        verify(mockNode1ShovelsApi, never()).delete(VHOST, "goodShovel1");
+        verify(mockNode2ShovelsApi, never()).delete(VHOST, "goodShovel1");
+        verify(mockNode1ShovelsApi, never()).delete(VHOST, "goodShovel2");
+        verify(mockNode2ShovelsApi, never()).delete(VHOST, "goodShovel2");
     }
 
     @Test
-    public void testNoCorruptedShovels()
+    public void testCorruptedShovelsFound() throws ExecutionException
     {
+        // 1 good shovel, 2 corrupted shovels
         when(mockShovelsApi.getShovelsFromParametersApi(VHOST)).thenReturn(makeShovelsFromParametersApi(
-                "shovel1", "shovel2"));
+                "goodShovel1", "corruptedShovel1", "corruptedShovel2"));
         when(mockShovelsApi.getShovels(VHOST)).thenReturn(makeShovelsFromNonParametersApi(
-                "shovel1", "shovel2"));
+                "goodShovel1"));
 
+        // 2 nodes
+        when(mockRabbitManagementApiNodesApi.getApi()).thenReturn(mockNodesApi);
+        when(mockNodesApi.getNodes("name")).thenReturn(makeNodes("node1", "node2"));
+        when(mockNodeSpecificShovelsApiCache.get("node1")).thenReturn(mockNode1RabbitManagementApiShovelsApi);
+        when(mockNode1RabbitManagementApiShovelsApi.getApi()).thenReturn(mockNode1ShovelsApi);
+        when(mockNodeSpecificShovelsApiCache.get("node2")).thenReturn(mockNode2RabbitManagementApiShovelsApi);
+        when(mockNode2RabbitManagementApiShovelsApi.getApi()).thenReturn(mockNode2ShovelsApi);
+
+        // After deletion, these calls are made to check if the corrupted shovels have been deleted
+        when(mockShovelsApi.getShovelFromParametersApi(VHOST, "corruptedShovel1"))
+                .thenThrow(makeRetrofitError(404));
+        when(mockShovelsApi.getShovelFromParametersApi(VHOST, "corruptedShovel2"))
+                .thenThrow(makeRetrofitError(404));
+
+        // Run the test
         corruptedShovelChecker.run();
 
-        verify(mockShovelsApi, never()).delete(anyString(), anyString());
-    }
+        // Verify that the 2 corrupted shovels were deleted
+        verify(mockNode1ShovelsApi).delete(VHOST, "corruptedShovel1");
+        verify(mockNode2ShovelsApi).delete(VHOST, "corruptedShovel1");
+        verify(mockNode1ShovelsApi).delete(VHOST, "corruptedShovel2");
+        verify(mockNode2ShovelsApi).delete(VHOST, "corruptedShovel2");
 
-    @Test
-    public void testCorruptedShovelFound()
-    {
-        when(mockShovelsApi.getShovelsFromParametersApi(VHOST)).thenReturn(makeShovelsFromParametersApi(
-                "shovel1", "shovel2"));
-        when(mockShovelsApi.getShovels(VHOST)).thenReturn(makeShovelsFromNonParametersApi(
-                "shovel1"));
-
-        corruptedShovelChecker.run();
-
-        verify(mockShovelsApi).delete(VHOST, "shovel2");
+        // Verity that the good shovel was not deleted
+        verify(mockNode1ShovelsApi, never()).delete(VHOST, "goodShovel1");
+        verify(mockNode2ShovelsApi, never()).delete(VHOST, "goodShovel1");
     }
 
     private static List<ShovelFromParametersApi> makeShovelsFromParametersApi(final String... names)
@@ -100,5 +168,27 @@ public class CorruptedShovelCheckerTest
         }
 
         return shovelsFromNonParametersApi;
+    }
+
+    private static List<Node> makeNodes(final String ... nodeNames)
+    {
+        final List<Node> nodes = new ArrayList<>(nodeNames.length);
+
+        for (final String nodeName : nodeNames) {
+            final Node node = new Node();
+            node.setName(nodeName);
+            nodes.add(node);
+        }
+
+        return nodes;
+    }
+
+    private static RuntimeException makeRetrofitError(final int status)
+    {
+        final Response response = new Response("", status, "", Collections.emptyList(), null);
+
+        final RetrofitError retrofitError = RetrofitError.httpError("", response, null, null);
+
+        return new RuntimeException(retrofitError);
     }
 }

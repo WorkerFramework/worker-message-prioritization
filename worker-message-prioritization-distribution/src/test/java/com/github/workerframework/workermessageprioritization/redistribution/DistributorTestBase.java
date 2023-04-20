@@ -20,6 +20,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nonnull;
 
+import com.github.workerframework.workermessageprioritization.rabbitmq.NodesApi;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -41,6 +42,7 @@ public class DistributorTestBase {
     protected int managementPort;
     protected RabbitManagementApi<QueuesApi> queuesApi;
     protected RabbitManagementApi<ShovelsApi> shovelsApi;
+    protected RabbitManagementApi<NodesApi> nodesApi;
     private final String managementUrl;
 
     public DistributorTestBase() {
@@ -66,6 +68,9 @@ public class DistributorTestBase {
                 managementUrl,
                 connectionFactory.getUsername(), connectionFactory.getPassword());
 
+        nodesApi = new RabbitManagementApi<>(NodesApi.class,
+                managementUrl,
+                connectionFactory.getUsername(), connectionFactory.getPassword());
     }
     
     protected String getUniqueTargetQueueName(final String targetQueueName) {
