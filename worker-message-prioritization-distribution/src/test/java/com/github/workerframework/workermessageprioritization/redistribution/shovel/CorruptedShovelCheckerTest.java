@@ -80,7 +80,7 @@ public class CorruptedShovelCheckerTest
                 mockRabbitManagementApiShovelsApi, mockRabbitManagementApiNodesApi, mockNodeSpecificShovelsApiCache, VHOST, 0, 0);
     }
 
-    //@Test
+    @Test
     public void testNoCorruptedShovels() throws ExecutionException
     {
         // 2 good shovels
