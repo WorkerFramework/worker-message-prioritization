@@ -33,6 +33,9 @@ public interface ShovelsApi {
     @GET("/api/parameters/shovel/{vhost}") // Used by the 'Shovel Management' UI: https://host/#/dynamic-shovels
     List<ShovelFromParametersApi> getShovelsFromParametersApi(@Path("vhost") final String vhost);
 
+    @GET("/api/parameters/shovel/{vhost}/{name}")
+    ShovelFromParametersApi getShovelFromParametersApi(@Path("vhost") final String vhost, @Path("name") final String name);
+
     @GET("/api/shovels/vhost/{vhost}/{name}")
     RetrievedShovel getShovel(@Path("vhost") final String vhost, @Path("name") final String name);
 

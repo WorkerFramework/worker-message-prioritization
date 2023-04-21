@@ -23,6 +23,7 @@ import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.workerframework.workermessageprioritization.rabbitmq.NodesApi;
 import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApi;
 import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitManagementApi;
 import com.github.workerframework.workermessageprioritization.rabbitmq.ShovelsApi;
@@ -65,6 +66,12 @@ public class ShovelApplication
             messageDistributorConfig.getRabbitMQMgmtUsername(),
             messageDistributorConfig.getRabbitMQMgmtPassword());
 
+        final RabbitManagementApi<NodesApi> nodesApi = new RabbitManagementApi<>(
+                NodesApi.class,
+                messageDistributorConfig.getRabbitMQMgmtUrl(),
+                messageDistributorConfig.getRabbitMQMgmtUsername(),
+                messageDistributorConfig.getRabbitMQMgmtPassword());
+
         // It is possible that when a shovel gets into a bad state (such as running too long, stuck in a 'starting' state etc.), some
         // operations on it may only work if the request is sent to the same node as the shovel.
         //
@@ -102,6 +109,7 @@ public class ShovelApplication
         final ShovelDistributor shovelDistributor = new ShovelDistributor(
             queuesApi,
             shovelsApi,
+            nodesApi,
             nodeSpecificShovelsApiCache,
             consumptionTargetCalculator,
             messageDistributorConfig.getRabbitMQUsername(),

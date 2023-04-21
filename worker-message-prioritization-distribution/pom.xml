@@ -69,6 +69,10 @@
             <artifactId>okhttp</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.squareup.retrofit</groupId>
+            <artifactId>retrofit</artifactId>
+        </dependency>
+        <dependency>
             <groupId>net.jodah</groupId>
             <artifactId>expiringmap</artifactId>
         </dependency>

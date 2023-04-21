@@ -78,6 +78,7 @@ public class ShovelDistributorIT extends DistributorTestBase {
         final ShovelDistributor shovelDistributor = new ShovelDistributor(
                 queuesApi,
                 shovelsApi,
+                nodesApi,
                 getNodeSpecificShovelsApiCache(),
                 consumptionTargetCalculator,
                 System.getProperty("rabbitmq.username", "guest"),

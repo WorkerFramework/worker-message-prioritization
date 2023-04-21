@@ -29,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.Component;
+import com.github.workerframework.workermessageprioritization.rabbitmq.NodesApi;
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApi;
 import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitManagementApi;
@@ -58,6 +59,7 @@ public class ShovelDistributor extends MessageDistributor {
     public ShovelDistributor(
             final RabbitManagementApi<QueuesApi> queuesApi,
             final RabbitManagementApi<ShovelsApi> shovelsApi,
+            final RabbitManagementApi<NodesApi> nodesApi,
             final LoadingCache<String,RabbitManagementApi<ShovelsApi>> nodeSpecificShovelsApiCache,
             final ConsumptionTargetCalculator consumptionTargetCalculator,
             final String rabbitMQUsername,
@@ -109,6 +111,8 @@ public class ShovelDistributor extends MessageDistributor {
         corruptedShovelCheckerExecutorService.scheduleAtFixedRate(
                 new CorruptedShovelChecker(
                         shovelsApi,
+                        nodesApi,
+                        nodeSpecificShovelsApiCache,
                         rabbitMQVHost,
                         corruptedShovelTimeoutMilliseconds,
                         corruptedShovelCheckIntervalMilliseconds),
