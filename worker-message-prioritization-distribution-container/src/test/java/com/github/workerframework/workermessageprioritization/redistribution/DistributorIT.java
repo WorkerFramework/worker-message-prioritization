@@ -15,7 +15,9 @@
  */
 package com.github.workerframework.workermessageprioritization.redistribution;
 
-import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.awaitility.Awaitility.await;
+
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
@@ -24,6 +26,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.concurrent.TimeoutException;
 
@@ -55,25 +58,24 @@ public final class DistributorIT extends DistributorTestBase {
 
             channel.basicPublish("", stagingQueue1Name, properties, body.getBytes(StandardCharsets.UTF_8));
             channel.basicPublish("", stagingQueue2Name, properties, body.getBytes(StandardCharsets.UTF_8));
+
+            await().alias(String.format("Waiting for 1st staging queue named %s to contain 1 message", stagingQueue1Name))
+                    .atMost(100, SECONDS)
+                    .pollInterval(Duration.ofSeconds(1))
+                    .until(queueContainsNumMessages(stagingQueue1Name, 1));
+
+            await().alias(String.format("Waiting for 2nd staging queue named %s to contain 1 message", stagingQueue2Name))
+                    .atMost(100, SECONDS)
+                    .pollInterval(Duration.ofSeconds(1))
+                    .until(queueContainsNumMessages(stagingQueue2Name, 1));
         }
 
-        Queue targetQueue = null;
-        try(final Connection connection = connectionFactory.newConnection()) {
-            for(int attempt = 0; attempt < 10; attempt ++) {
-                targetQueue = queuesApi.getApi().getQueue("/", targetQueueName);
-                if(targetQueue.getMessages() > 0) {
-                    break;
-                }
+        await().alias(String.format("Waiting for target queue named %s to contain 2 messages", targetQueueName))
+                .atMost(100, SECONDS)
+                .pollInterval(Duration.ofSeconds(1))
+                .until(queueContainsNumMessages(targetQueueName, 2));
 
-                Thread.sleep(1000 * 10);
-            }
-        }
-
-        Assert.assertNotNull("Target queue was not found via REST API", targetQueue);
-        final Queue stagingQueue1 = queuesApi.getApi().getQueue("/", stagingQueue1Name);
-        final Queue stagingQueue2 = queuesApi.getApi().getQueue("/", stagingQueue2Name);
-        Assert.assertEquals("Two staged messages should be on target queue", 2L, targetQueue.getMessages());
-        Assert.assertEquals("1st Staging queue should be empty", 0L, stagingQueue1.getMessages());
-        Assert.assertEquals("2n Staging queue should be empty", 0L, stagingQueue2.getMessages());
+        Assert.assertEquals("1st Staging queue should be empty", 0L, queuesApi.getApi().getQueue("/", stagingQueue1Name).getMessages());
+        Assert.assertEquals("2nd Staging queue should be empty", 0L, queuesApi.getApi().getQueue("/", stagingQueue2Name).getMessages());
     }
 }
