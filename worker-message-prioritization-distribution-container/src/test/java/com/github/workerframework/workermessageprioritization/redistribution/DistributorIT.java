@@ -59,17 +59,17 @@ public final class DistributorIT extends DistributorTestBase {
             channel.basicPublish("", stagingQueue2Name, properties, body.getBytes(StandardCharsets.UTF_8));
         }
 
-        await().alias(String.format("Target queue named %s should contain 2 message", targetQueueName))
+        await().alias(String.format("Waiting for target queue named %s to contain 2 message", targetQueueName))
                 .atMost(100, SECONDS)
                 .pollInterval(Duration.ofSeconds(1))
                 .until(queueContainsNumMessages(targetQueueName, 2));
 
-        await().alias(String.format("1st staging queue named %s should be empty", stagingQueue1Name))
+        await().alias(String.format("Waiting for 1st staging queue named %s to contain 0 messages", stagingQueue1Name))
                 .atMost(100, SECONDS)
                 .pollInterval(Duration.ofSeconds(1))
                 .until(queueContainsNumMessages(stagingQueue1Name, 0));
 
-        await().alias(String.format("2nd staging queue named %s should be empty", stagingQueue2Name))
+        await().alias(String.format("Waiting for 2nd staging queue named %s to contain 0 messages", stagingQueue2Name))
                 .atMost(100, SECONDS)
                 .pollInterval(Duration.ofSeconds(1))
                 .until(queueContainsNumMessages(stagingQueue2Name, 0));

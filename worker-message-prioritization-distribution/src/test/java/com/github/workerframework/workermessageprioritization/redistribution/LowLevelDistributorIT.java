@@ -26,7 +26,6 @@ import com.github.workerframework.workermessageprioritization.targetcapacitycalc
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
-import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -88,7 +87,14 @@ public class LowLevelDistributorIT extends DistributorTestBase {
                     .until(queueContainsNumMessages(targetQueueName, 2));
         }
 
-        Assert.assertEquals("1st Staging queue should be empty", 0L, queuesApi.getApi().getQueue("/", stagingQueue1Name).getMessages());
-        Assert.assertEquals("2nd Staging queue should be empty", 0L, queuesApi.getApi().getQueue("/", stagingQueue2Name).getMessages());
+        await().alias(String.format("Waiting for 1st staging queue named %s to contain 0 messages", stagingQueue1Name))
+                .atMost(100, SECONDS)
+                .pollInterval(Duration.ofSeconds(1))
+                .until(queueContainsNumMessages(stagingQueue1Name, 0));
+
+        await().alias(String.format("Waiting for 2nd staging queue named %s to contain 0 messages", stagingQueue2Name))
+                .atMost(100, SECONDS)
+                .pollInterval(Duration.ofSeconds(1))
+                .until(queueContainsNumMessages(stagingQueue2Name, 0));
     }
 }
