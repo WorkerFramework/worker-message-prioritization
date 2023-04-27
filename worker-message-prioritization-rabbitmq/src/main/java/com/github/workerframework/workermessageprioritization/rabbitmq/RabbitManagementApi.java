@@ -41,8 +41,8 @@ import org.slf4j.LoggerFactory;
 
 public class RabbitManagementApi <T> {
 
-    private static final int READ_TIMEOUT_SECONDS = 10;
-    private static final int CONNECT_TIMEOUT_SECONDS = 10;
+    private static final int READ_TIMEOUT_SECONDS = 20;
+    private static final int CONNECT_TIMEOUT_SECONDS = 20;
     
     private T api;
 

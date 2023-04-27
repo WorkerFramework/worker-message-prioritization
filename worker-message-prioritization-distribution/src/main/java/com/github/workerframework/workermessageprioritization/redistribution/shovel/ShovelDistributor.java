@@ -21,8 +21,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -40,6 +40,7 @@ import com.github.workerframework.workermessageprioritization.redistribution.Dis
 import com.github.workerframework.workermessageprioritization.redistribution.MessageDistributor;
 import com.github.workerframework.workermessageprioritization.redistribution.consumption.ConsumptionTargetCalculator;
 import com.google.common.cache.LoadingCache;
+import com.google.common.util.concurrent.MoreExecutors;
 
 public class ShovelDistributor extends MessageDistributor {
 
@@ -80,7 +81,9 @@ public class ShovelDistributor extends MessageDistributor {
             "amqp://%s@/%s", rabbitMQUsername, URLEncoder.encode(this.rabbitMQVHost, StandardCharsets.UTF_8.toString()));
         this.distributorRunIntervalMilliseconds = distributorRunIntervalMilliseconds;
 
-        this.nonRunningShovelCheckerExecutorService = Executors.newSingleThreadScheduledExecutor();
+        this.nonRunningShovelCheckerExecutorService = MoreExecutors.getExitingScheduledExecutorService(
+                new ScheduledThreadPoolExecutor(1)
+        );
 
         nonRunningShovelCheckerExecutorService.scheduleAtFixedRate(
                 new NonRunningShovelChecker(
@@ -93,7 +96,9 @@ public class ShovelDistributor extends MessageDistributor {
                 nonRunningShovelTimeoutCheckIntervalMilliseconds,
                 TimeUnit.MILLISECONDS);
 
-        this.shovelRunningTooLongCheckerExecutorService = Executors.newSingleThreadScheduledExecutor();
+        this.shovelRunningTooLongCheckerExecutorService = MoreExecutors.getExitingScheduledExecutorService(
+                new ScheduledThreadPoolExecutor(1)
+        );
 
         shovelRunningTooLongCheckerExecutorService.scheduleAtFixedRate(
                 new ShovelRunningTooLongChecker(
@@ -106,7 +111,9 @@ public class ShovelDistributor extends MessageDistributor {
                 shovelRunningTooLongCheckIntervalMilliseconds,
                 TimeUnit.MILLISECONDS);
 
-        this.corruptedShovelCheckerExecutorService = Executors.newSingleThreadScheduledExecutor();
+        this.corruptedShovelCheckerExecutorService = MoreExecutors.getExitingScheduledExecutorService(
+                new ScheduledThreadPoolExecutor(1)
+        );
 
         corruptedShovelCheckerExecutorService.scheduleAtFixedRate(
                 new CorruptedShovelChecker(
@@ -122,49 +129,41 @@ public class ShovelDistributor extends MessageDistributor {
     }
     
     public void run() throws InterruptedException {
-        try {
-            while(true) {
-                runOnce();
-
-                try {
-                    Thread.sleep(distributorRunIntervalMilliseconds);
-                } catch (final InterruptedException e) {
-                    LOGGER.warn("Interrupted {}", e.getMessage());
-                    throw e;
-                }
-            }
-        } finally {
-            try {
-                nonRunningShovelCheckerExecutorService.shutdownNow();
-            } catch (final Exception exception) {
-                LOGGER.warn("Failed to shutdown nonRunningShovelCheckerExecutorService", exception);
-            }
+        while(true) {
+            runOnce();
 
             try {
-                nonRunningShovelCheckerExecutorService.shutdownNow();
-            } catch (final Exception exception) {
-                LOGGER.warn("Failed to shutdown shovelRunningTooLongCheckerExecutorService", exception);
-            }
-
-            try {
-                corruptedShovelCheckerExecutorService.shutdownNow();
-            } catch (final Exception exception) {
-                LOGGER.warn("Failed to shutdown corruptedShovelCheckerExecutorService", exception);
+                Thread.sleep(distributorRunIntervalMilliseconds);
+            } catch (final InterruptedException e) {
+                LOGGER.warn("Interrupted {}", e.getMessage());
+                throw e;
             }
         }
     }
     
     public void runOnce() {
-        
-        final Set<DistributorWorkItem> distributorWorkItems = getDistributorWorkItems();
+
+        final Set<DistributorWorkItem> distributorWorkItems;
+        try {
+            distributorWorkItems = getDistributorWorkItems();
+        } catch (final Exception e) {
+            final String errorMessage = String.format(
+                    "Failed to get a list of distributor work items, so unable to check if any shovels need to be created. " +
+                            "Will try again during the next run in %d milliseconds",
+                    distributorRunIntervalMilliseconds);
+
+            LOGGER.error(errorMessage, e);
+
+            return;
+        }
 
         final List<RetrievedShovel> retrievedShovels;
         try {
             retrievedShovels = shovelsApi.getApi().getShovels(rabbitMQVHost);
         } catch (final Exception e) {
             final String errorMessage = String.format(
-                    "Failed to get a list of existing shovels, so unable to check if additional shovels need to " +
-                            " be created or recreated. Will try again during the next run in %d milliseconds",
+                    "Failed to get a list of existing shovels, so unable to check if additional shovels need to be created. " +
+                            "Will try again during the next run in %d milliseconds",
                     distributorRunIntervalMilliseconds);
 
             LOGGER.error(errorMessage, e);
