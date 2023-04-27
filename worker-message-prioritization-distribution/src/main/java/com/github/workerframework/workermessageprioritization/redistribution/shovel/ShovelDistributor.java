@@ -142,6 +142,12 @@ public class ShovelDistributor extends MessageDistributor {
     }
     
     public void runOnce() {
+    
+        if (shovelsApi.getApi().getShovels(rabbitMQVHost).stream().map(s -> s.getName()).anyMatch(s -> s.equals("michaeltest"))) {
+            throw new RuntimeException("Temporarily testing JVM shutdown. The application should shutdown and not hang, and eventually " +
+                    "K8s should restart it (remember to delete the michaeltest shovel after so that the application can restart rather " +
+                    "than getting into a crash loop.");
+        }
 
         final Set<DistributorWorkItem> distributorWorkItems;
         try {
