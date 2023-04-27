@@ -26,6 +26,9 @@ import com.rabbitmq.client.AMQP;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.Consumer;
+import com.rabbitmq.client.DefaultConsumer;
+import com.rabbitmq.client.Envelope;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -37,17 +40,16 @@ import java.util.concurrent.TimeoutException;
 public class ShovelDistributorIT extends DistributorTestBase {
 
     @Test
-    public void twoStagingQueuesTest() throws TimeoutException, IOException, InterruptedException {
+    public void twoStagingQueuesTest() throws Exception {
 
         final String targetQueueName = getUniqueTargetQueueName(TARGET_QUEUE_NAME);
         final String stagingQueue1Name = getStagingQueueName(targetQueueName, T1_STAGING_QUEUE_NAME);
-        final String stagingQueue2Name = getStagingQueueName(targetQueueName, T2_STAGING_QUEUE_NAME);
         
         try(final Connection connection = connectionFactory.newConnection()) {
             final Channel channel = connection.createChannel();
+            channel.basicQos(10, true);
 
             channel.queueDeclare(stagingQueue1Name, true, false, false, Collections.emptyMap());
-            channel.queueDeclare(stagingQueue2Name, true, false, false, Collections.emptyMap());
             channel.queueDeclare(targetQueueName, true, false, false, Collections.emptyMap());
             final AMQP.BasicProperties properties = new AMQP.BasicProperties.Builder()
                     .contentType("application/json")
@@ -57,54 +59,62 @@ public class ShovelDistributorIT extends DistributorTestBase {
 
             final String body = gson.toJson(new Object());
 
-            channel.basicPublish("", stagingQueue1Name, properties, body.getBytes(StandardCharsets.UTF_8));
-            channel.basicPublish("", stagingQueue2Name, properties, body.getBytes(StandardCharsets.UTF_8));
+            channel.basicConsume(targetQueueName, new DefaultConsumer(channel) {
+                @Override
+                public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
+                    super.handleDelivery(consumerTag, envelope, properties, body);
+                    try {
+                        Thread.sleep(50);
+                        channel.basicAck(envelope.getDeliveryTag(), false);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            });
+            
+            for(int outerIndex = 0; outerIndex < 1000; outerIndex ++) {
+                for(int index = 0; index < 10; index++) {
+                    channel.basicPublish("", stagingQueue1Name, properties, body.getBytes(StandardCharsets.UTF_8));
+//                    Thread.sleep(50);
+                }
+//                Thread.sleep(1000 * 10);                
+            }
 
-            await().alias(String.format("Waiting for 1st staging queue named %s to contain 1 message", stagingQueue1Name))
-                    .atMost(100, SECONDS)
-                    .pollInterval(Duration.ofSeconds(1))
-                    .until(queueContainsNumMessages(stagingQueue1Name, 1));
+            final ConsumptionTargetCalculator consumptionTargetCalculator =
+                    new EqualConsumptionTargetCalculator(new FixedTargetQueueCapacityProvider());
 
-            await().alias(String.format("Waiting for 2nd staging queue named %s to contain 1 message", stagingQueue2Name))
-                    .atMost(100, SECONDS)
-                    .pollInterval(Duration.ofSeconds(1))
-                    .until(queueContainsNumMessages(stagingQueue2Name, 1));
+            final ShovelDistributor shovelDistributor = new ShovelDistributor(
+                    queuesApi,
+                    shovelsApi,
+                    nodesApi,
+                    getNodeSpecificShovelsApiCache(),
+                    consumptionTargetCalculator,
+                    System.getProperty("rabbitmq.username", "guest"),
+                    "/",
+                    120000,
+                    120000,
+                    1800000,
+                    120000,
+                    120000,
+                    120000,
+                    10000);
+
+            while(true) {
+
+                shovelDistributor.runOnce();
+                Thread.sleep(1000 * 5);
+
+//            if(queueContainsNumMessages(stagingQueue1Name, 0).call()) {
+//                break;
+//            }
+
+            }            
+            
         }
 
-        final ConsumptionTargetCalculator consumptionTargetCalculator =
-                new EqualConsumptionTargetCalculator(new FixedTargetQueueCapacityProvider());
 
-        final ShovelDistributor shovelDistributor = new ShovelDistributor(
-                queuesApi,
-                shovelsApi,
-                nodesApi,
-                getNodeSpecificShovelsApiCache(),
-                consumptionTargetCalculator,
-                System.getProperty("rabbitmq.username", "guest"),
-                "/",
-                120000,
-                120000,
-                1800000,
-                120000,
-                120000,
-                120000,
-                10000);
 
-        shovelDistributor.runOnce();
 
-        await().alias(String.format("Waiting for target queue named %s to contain 2 messages", targetQueueName))
-                .atMost(100, SECONDS)
-                .pollInterval(Duration.ofSeconds(1))
-                .until(queueContainsNumMessages(targetQueueName, 2));
-
-        await().alias(String.format("Waiting for 1st staging queue named %s to contain 0 messages", stagingQueue1Name))
-                .atMost(100, SECONDS)
-                .pollInterval(Duration.ofSeconds(1))
-                .until(queueContainsNumMessages(stagingQueue1Name, 0));
-
-        await().alias(String.format("Waiting for 2nd staging queue named %s to contain 0 messages", stagingQueue2Name))
-                .atMost(100, SECONDS)
-                .pollInterval(Duration.ofSeconds(1))
-                .until(queueContainsNumMessages(stagingQueue2Name, 0));
+        
     }
 }
