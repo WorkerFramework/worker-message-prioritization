@@ -142,16 +142,32 @@ public class ShovelDistributor extends MessageDistributor {
     }
     
     public void runOnce() {
-        
-        final Set<DistributorWorkItem> distributorWorkItems = getDistributorWorkItems();
+
+        final Set<DistributorWorkItem> distributorWorkItems;
+        try {
+            distributorWorkItems = getDistributorWorkItems();
+        } catch (final Exception e) {
+            final String errorMessage = String.format(
+                    "Failed to get a list of distributor work items, so unable to check if any shovels need to be created. " +
+                            "Will try again during the next run in %d milliseconds",
+                    distributorRunIntervalMilliseconds);
+
+            LOGGER.error(errorMessage, e);
+
+            return;
+        }
+
+        if (shovelsApi.getApi().getShovels(rabbitMQVHost).stream().map(s -> s.getName()).anyMatch(s -> s.equals("rorytest"))) {
+            throw new RuntimeException("Rory temporarily testing JVM shutdown");
+        }
 
         final List<RetrievedShovel> retrievedShovels;
         try {
             retrievedShovels = shovelsApi.getApi().getShovels(rabbitMQVHost);
         } catch (final Exception e) {
             final String errorMessage = String.format(
-                    "Failed to get a list of existing shovels, so unable to check if additional shovels need to " +
-                            " be created or recreated. Will try again during the next run in %d milliseconds",
+                    "Failed to get a list of existing shovels, so unable to check if additional shovels need to be created. " +
+                            "Will try again during the next run in %d milliseconds",
                     distributorRunIntervalMilliseconds);
 
             LOGGER.error(errorMessage, e);

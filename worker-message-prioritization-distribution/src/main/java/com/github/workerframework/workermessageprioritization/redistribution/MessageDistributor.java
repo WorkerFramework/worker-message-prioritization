@@ -41,10 +41,6 @@ public abstract class MessageDistributor {
     protected Set<DistributorWorkItem> getDistributorWorkItems() {
         final List<Queue> queues = queuesApi.getApi().getQueues();
 
-        if (queues.stream().map(Queue::getName).anyMatch(n -> n.equals("rorytest"))) {
-            throw new RuntimeException("Testing JVM shutdown");
-        }
-
         LOGGER.debug("Read the following list of queues from the RabbitMQ API: {}", queues);
 
         final Set<DistributorWorkItem> distributorWorkItems = new HashSet<>();
