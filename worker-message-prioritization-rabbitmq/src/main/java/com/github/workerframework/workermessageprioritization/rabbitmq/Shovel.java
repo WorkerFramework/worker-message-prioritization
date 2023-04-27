@@ -34,6 +34,9 @@ public class Shovel {
     @SerializedName(value = "dest-queue", alternate = "dest_queue")
     private String destQueue;
 
+    @SerializedName(value = "src-prefetch-count")
+    private Object srcPrefetchCount;
+    
     public String getAckMode() {
         return ackMode;
     }
@@ -92,5 +95,13 @@ public class Shovel {
             .add("destUri", destUri)
             .add("destQueue", destQueue)
             .toString();
+    }
+
+    public Object getSrcPrefetchCount() {
+        return srcPrefetchCount;
+    }
+
+    public void setSrcPrefetchCount(Object srcPrefetchCount) {
+        this.srcPrefetchCount = srcPrefetchCount;
     }
 }
