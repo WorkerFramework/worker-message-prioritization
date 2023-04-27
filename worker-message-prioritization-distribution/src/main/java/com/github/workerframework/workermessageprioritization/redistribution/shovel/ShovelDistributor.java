@@ -157,10 +157,6 @@ public class ShovelDistributor extends MessageDistributor {
             return;
         }
 
-        if (shovelsApi.getApi().getShovels(rabbitMQVHost).stream().map(s -> s.getName()).anyMatch(s -> s.equals("rorytest"))) {
-            throw new RuntimeException("Rory temporarily testing JVM shutdown");
-        }
-
         final List<RetrievedShovel> retrievedShovels;
         try {
             retrievedShovels = shovelsApi.getApi().getShovels(rabbitMQVHost);
