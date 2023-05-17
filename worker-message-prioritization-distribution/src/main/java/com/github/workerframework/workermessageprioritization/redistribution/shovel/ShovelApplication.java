@@ -31,6 +31,7 @@ import com.github.workerframework.workermessageprioritization.redistribution.con
 import com.github.workerframework.workermessageprioritization.redistribution.consumption.ConsumptionTargetCalculator;
 import com.github.workerframework.workermessageprioritization.redistribution.consumption.EqualConsumptionTargetCalculator;
 import com.github.workerframework.workermessageprioritization.targetcapacitycalculators.K8sTargetQueueCapacityProvider;
+import com.github.workerframework.workermessageprioritization.targetrefill.K8sTargetQueueRefillProvider;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -103,8 +104,12 @@ public class ShovelApplication
                 messageDistributorConfig.getKubernetesNamespaces(),
                 messageDistributorConfig.getKubernetesLabelCacheExpiryMinutes());
 
-        final ConsumptionTargetCalculator consumptionTargetCalculator =
-                new EqualConsumptionTargetCalculator(k8sTargetQueueCapacityProvider);
+        final K8sTargetQueueRefillProvider k8sTargetQueueRefillProvider = new K8sTargetQueueRefillProvider(
+            messageDistributorConfig.getKubernetesNamespaces(),
+            messageDistributorConfig.getKubernetesLabelCacheExpiryMinutes());
+
+        final ConsumptionTargetCalculator consumptionTargetCalculator
+            = new EqualConsumptionTargetCalculator(k8sTargetQueueCapacityProvider, k8sTargetQueueRefillProvider);
 
         final ShovelDistributor shovelDistributor = new ShovelDistributor(
             queuesApi,

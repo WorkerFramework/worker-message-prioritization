@@ -18,6 +18,7 @@ package com.github.workerframework.workermessageprioritization.redistribution.co
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 import com.github.workerframework.workermessageprioritization.redistribution.DistributorWorkItem;
 import com.github.workerframework.workermessageprioritization.targetcapacitycalculators.TargetQueueCapacityProvider;
+import com.github.workerframework.workermessageprioritization.targetrefill.TargetQueueRefillProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,14 +28,19 @@ import java.util.stream.Collectors;
 /**
  * Attempts to send an equal number of message from each staging queue to the target queue
  */
-public class EqualConsumptionTargetCalculator implements ConsumptionTargetCalculator {
+public class EqualConsumptionTargetCalculator implements ConsumptionTargetCalculator
+{
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EqualConsumptionTargetCalculator.class);
     private final TargetQueueCapacityProvider targetQueueCapacityProvider;
+    private final TargetQueueRefillProvider targetQueueRefillProvider;
 
-    public EqualConsumptionTargetCalculator(final TargetQueueCapacityProvider targetQueueCapacityProvider) {
+    public EqualConsumptionTargetCalculator(final TargetQueueCapacityProvider targetQueueCapacityProvider,
+                                            final TargetQueueRefillProvider targetQueueRefillProvider)
+    {
 
         this.targetQueueCapacityProvider = targetQueueCapacityProvider;
+        this.targetQueueRefillProvider = targetQueueRefillProvider;
     }
     
     @Override

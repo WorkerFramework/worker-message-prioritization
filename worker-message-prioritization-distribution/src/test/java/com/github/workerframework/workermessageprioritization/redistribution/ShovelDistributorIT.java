@@ -22,6 +22,7 @@ import com.github.workerframework.workermessageprioritization.redistribution.con
 import com.github.workerframework.workermessageprioritization.redistribution.consumption.EqualConsumptionTargetCalculator;
 import com.github.workerframework.workermessageprioritization.redistribution.shovel.ShovelDistributor;
 import com.github.workerframework.workermessageprioritization.targetcapacitycalculators.FixedTargetQueueCapacityProvider;
+import com.github.workerframework.workermessageprioritization.targetrefill.FixedTargetQueueRefillProvider;
 import com.rabbitmq.client.AMQP;
 
 import com.rabbitmq.client.Channel;
@@ -71,8 +72,8 @@ public class ShovelDistributorIT extends DistributorTestBase {
                     .until(queueContainsNumMessages(stagingQueue2Name, 1));
         }
 
-        final ConsumptionTargetCalculator consumptionTargetCalculator =
-                new EqualConsumptionTargetCalculator(new FixedTargetQueueCapacityProvider());
+        final ConsumptionTargetCalculator consumptionTargetCalculator
+            = new EqualConsumptionTargetCalculator(new FixedTargetQueueCapacityProvider(), new FixedTargetQueueRefillProvider());
 
         final ShovelDistributor shovelDistributor = new ShovelDistributor(
                 queuesApi,

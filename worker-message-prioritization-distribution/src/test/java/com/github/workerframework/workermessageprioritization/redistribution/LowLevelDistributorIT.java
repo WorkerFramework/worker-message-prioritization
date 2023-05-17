@@ -23,6 +23,7 @@ import com.github.workerframework.workermessageprioritization.redistribution.con
 import com.github.workerframework.workermessageprioritization.redistribution.lowlevel.LowLevelDistributor;
 import com.github.workerframework.workermessageprioritization.redistribution.lowlevel.StagingTargetPairProvider;
 import com.github.workerframework.workermessageprioritization.targetcapacitycalculators.FixedTargetQueueCapacityProvider;
+import com.github.workerframework.workermessageprioritization.targetrefill.FixedTargetQueueRefillProvider;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
@@ -71,9 +72,9 @@ public class LowLevelDistributorIT extends DistributorTestBase {
                     .pollInterval(Duration.ofSeconds(1))
                     .until(queueContainsNumMessages(stagingQueue2Name, 1));
         }
-        
-        final ConsumptionTargetCalculator consumptionTargetCalculator = 
-                new EqualConsumptionTargetCalculator(new FixedTargetQueueCapacityProvider());
+
+        final ConsumptionTargetCalculator consumptionTargetCalculator
+            = new EqualConsumptionTargetCalculator(new FixedTargetQueueCapacityProvider(), new FixedTargetQueueRefillProvider());
         final StagingTargetPairProvider stagingTargetPairProvider = new StagingTargetPairProvider();
         final LowLevelDistributor lowLevelDistributor = new LowLevelDistributor(queuesApi, connectionFactory, 
                 consumptionTargetCalculator, stagingTargetPairProvider, 10000);
