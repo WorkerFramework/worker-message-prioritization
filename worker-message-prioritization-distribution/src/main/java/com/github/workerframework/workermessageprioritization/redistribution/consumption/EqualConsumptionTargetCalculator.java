@@ -47,6 +47,8 @@ public class EqualConsumptionTargetCalculator implements ConsumptionTargetCalcul
     public Map<Queue, Long> calculateConsumptionTargets(final DistributorWorkItem distributorWorkItem) {
         
         final long targetQueueCapacity = targetQueueCapacityProvider.get(distributorWorkItem.getTargetQueue());
+
+        final long targetQueueEligibleForRefill = targetQueueRefillProvider.get(distributorWorkItem.getTargetQueue());
         
         final long lastKnownTargetQueueLength = distributorWorkItem.getTargetQueue().getMessages();
 
@@ -56,7 +58,7 @@ public class EqualConsumptionTargetCalculator implements ConsumptionTargetCalcul
 
         final long consumptionTarget = targetQueueCapacity - lastKnownTargetQueueLength;
         final long sourceQueueConsumptionTarget;
-        if(distributorWorkItem.getStagingQueues().isEmpty()) {
+        if(distributorWorkItem.getStagingQueues().isEmpty() || totalKnownPendingMessages < targetQueueEligibleForRefill) {
             sourceQueueConsumptionTarget = 0;
         }
         else {
