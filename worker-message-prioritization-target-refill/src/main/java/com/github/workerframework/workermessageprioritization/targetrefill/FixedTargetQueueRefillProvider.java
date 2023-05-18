@@ -19,7 +19,7 @@ import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 
 public final class FixedTargetQueueRefillProvider implements TargetQueueRefillProvider
 {
-    private static final long ELIGIBLE_FOR_REFILL = 50;
+    private static final long ELIGIBLE_FOR_REFILL = 1;
 
     @Override
     public long get(final Queue targetQueue)
