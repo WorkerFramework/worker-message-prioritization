@@ -44,7 +44,7 @@ public final class K8sTargetQueueRefillProvider implements TargetQueueRefillProv
     private static final Logger LOGGER = LoggerFactory.getLogger(K8sTargetQueueRefillProvider.class);
     private static final String MESSAGE_PRIORITIZATION_TARGET_QUEUE_NAME_LABEL = "messageprioritization.targetqueuename";
     private static final String MESSAGE_PRIORITIZATION_TARGET_QUEUE_ELIGIBLE_FOR_REFILL_LABEL = "messageprioritization.targetqueueeligibleforrefill";
-    private static final long TARGET_QUEUE_ELIGIBLE_FOR_REFILL_FALLBACK = 50;
+    private static final long TARGET_QUEUE_ELIGIBLE_FOR_REFILL_FALLBACK = 1;
     private final List<String> kubernetesNamespaces;
     private final LoadingCache<Queue, Long> targetQueueEligibleForRefillCache;
 
