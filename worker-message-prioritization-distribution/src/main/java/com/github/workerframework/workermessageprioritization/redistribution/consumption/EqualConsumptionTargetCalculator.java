@@ -17,8 +17,8 @@ package com.github.workerframework.workermessageprioritization.redistribution.co
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 import com.github.workerframework.workermessageprioritization.redistribution.DistributorWorkItem;
-import com.github.workerframework.workermessageprioritization.targetcapacitycalculators.TargetQueueCapacityProvider;
-import com.github.workerframework.workermessageprioritization.targetrefill.TargetQueueRefillProvider;
+import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueSettingsProvider;
+import com.github.workerframework.workermessageprioritization.targetqueue.targetqueuesettings.TargetQueueSettings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,33 +32,27 @@ public class EqualConsumptionTargetCalculator implements ConsumptionTargetCalcul
 {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EqualConsumptionTargetCalculator.class);
-    private final TargetQueueCapacityProvider targetQueueCapacityProvider;
-    private final TargetQueueRefillProvider targetQueueRefillProvider;
+    private final TargetQueueSettingsProvider targetQueueSettingsProvider;
 
-    public EqualConsumptionTargetCalculator(final TargetQueueCapacityProvider targetQueueCapacityProvider,
-                                            final TargetQueueRefillProvider targetQueueRefillProvider)
+    public EqualConsumptionTargetCalculator(final TargetQueueSettingsProvider targetQueueSettingsProvider)
     {
-
-        this.targetQueueCapacityProvider = targetQueueCapacityProvider;
-        this.targetQueueRefillProvider = targetQueueRefillProvider;
+        this.targetQueueSettingsProvider = targetQueueSettingsProvider;
     }
     
     @Override
     public Map<Queue, Long> calculateConsumptionTargets(final DistributorWorkItem distributorWorkItem) {
         
-        final long targetQueueCapacity = targetQueueCapacityProvider.get(distributorWorkItem.getTargetQueue());
+        final TargetQueueSettings targetQueueSettings = targetQueueSettingsProvider.get(distributorWorkItem.getTargetQueue());
 
-        final long targetQueueEligibleForRefill = targetQueueRefillProvider.get(distributorWorkItem.getTargetQueue());
-        
         final long lastKnownTargetQueueLength = distributorWorkItem.getTargetQueue().getMessages();
 
         final long totalKnownPendingMessages =
                 distributorWorkItem.getStagingQueues().stream()
                         .map(Queue::getMessages).mapToLong(Long::longValue).sum();
 
-        final long consumptionTarget = targetQueueCapacity - lastKnownTargetQueueLength;
+        final long consumptionTarget = targetQueueSettings.getMaxLength() - lastKnownTargetQueueLength;
         final long sourceQueueConsumptionTarget;
-        if(distributorWorkItem.getStagingQueues().isEmpty() || totalKnownPendingMessages < targetQueueEligibleForRefill) {
+        if(distributorWorkItem.getStagingQueues().isEmpty() || totalKnownPendingMessages < targetQueueSettings.getEligibleForRefill()) {
             sourceQueueConsumptionTarget = 0;
         }
         else {

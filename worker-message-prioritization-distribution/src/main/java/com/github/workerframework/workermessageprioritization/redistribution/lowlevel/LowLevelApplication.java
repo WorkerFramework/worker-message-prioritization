@@ -19,8 +19,7 @@ import com.github.workerframework.workermessageprioritization.redistribution.con
 import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApi;
 import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitManagementApi;
 import com.github.workerframework.workermessageprioritization.redistribution.config.MessageDistributorConfig;
-import com.github.workerframework.workermessageprioritization.targetcapacitycalculators.FixedTargetQueueCapacityProvider;
-import com.github.workerframework.workermessageprioritization.targetrefill.FixedTargetQueueRefillProvider;
+import com.github.workerframework.workermessageprioritization.targetqueue.FixedTargetQueueSettingsProvider;
 import com.rabbitmq.client.ConnectionFactory;
 
 import java.io.IOException;
@@ -59,8 +58,7 @@ public class LowLevelApplication {
             = new LowLevelDistributor(
                 queuesApi,
                 connectionFactory,
-                new EqualConsumptionTargetCalculator(new FixedTargetQueueCapacityProvider(),
-                                                     new FixedTargetQueueRefillProvider()),
+                new EqualConsumptionTargetCalculator(new FixedTargetQueueSettingsProvider()),
                 new StagingTargetPairProvider(),
                 messageDistributorConfig.getDistributorRunIntervalMilliseconds());
 

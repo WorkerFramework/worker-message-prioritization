@@ -23,8 +23,6 @@
       <module>worker-message-prioritization-distribution-container</module>
       <module>worker-message-prioritization-rerouting</module>
       <module>worker-message-prioritization-rabbitmq</module>
-      <module>worker-message-prioritization-target-capacity-calculators</module>
-      <module>worker-message-prioritization-target-refill</module>
         <module>worker-message-prioritization-target-queue</module>
     </modules>
 
@@ -93,7 +91,7 @@
       </dependency>
       <dependency>
         <groupId>com.github.workerframework</groupId>
-        <artifactId>worker-message-prioritization-target-refill</artifactId>
+        <artifactId>worker-message-prioritization-target-queue</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>

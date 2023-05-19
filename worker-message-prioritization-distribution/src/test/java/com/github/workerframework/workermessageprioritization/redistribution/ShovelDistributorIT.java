@@ -21,8 +21,7 @@ import static org.awaitility.Awaitility.await;
 import com.github.workerframework.workermessageprioritization.redistribution.consumption.ConsumptionTargetCalculator;
 import com.github.workerframework.workermessageprioritization.redistribution.consumption.EqualConsumptionTargetCalculator;
 import com.github.workerframework.workermessageprioritization.redistribution.shovel.ShovelDistributor;
-import com.github.workerframework.workermessageprioritization.targetcapacitycalculators.FixedTargetQueueCapacityProvider;
-import com.github.workerframework.workermessageprioritization.targetrefill.FixedTargetQueueRefillProvider;
+import com.github.workerframework.workermessageprioritization.targetqueue.FixedTargetQueueSettingsProvider;
 import com.rabbitmq.client.AMQP;
 
 import com.rabbitmq.client.Channel;
@@ -73,7 +72,7 @@ public class ShovelDistributorIT extends DistributorTestBase {
         }
 
         final ConsumptionTargetCalculator consumptionTargetCalculator
-            = new EqualConsumptionTargetCalculator(new FixedTargetQueueCapacityProvider(), new FixedTargetQueueRefillProvider());
+            = new EqualConsumptionTargetCalculator(new FixedTargetQueueSettingsProvider());
 
         final ShovelDistributor shovelDistributor = new ShovelDistributor(
                 queuesApi,
