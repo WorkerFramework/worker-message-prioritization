@@ -25,6 +25,7 @@
       <module>worker-message-prioritization-rabbitmq</module>
       <module>worker-message-prioritization-target-capacity-calculators</module>
       <module>worker-message-prioritization-target-refill</module>
+        <module>worker-message-prioritization-target-queue</module>
     </modules>
 
   <parent>
