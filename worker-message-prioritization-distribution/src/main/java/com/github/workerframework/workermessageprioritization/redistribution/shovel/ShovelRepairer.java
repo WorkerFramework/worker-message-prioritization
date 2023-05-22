@@ -139,9 +139,9 @@ final class ShovelRepairer
             final String rabbitMQUri
     )
     {
-        // - Shovels fetched from the /api/shovels/{vhost} endpoint do not include the src-delete-after or ack-mode properties, which
-        //   we need to recreate the shovel
-        // - Shovels fetched from the /api/parameters/shovel/{vhost} endpoint do include the src-delete-after or ack-mode properties,
+        // - Shovels fetched from the /api/shovels/{vhost} endpoint (the RetrievedShovel parameter) do NOT include the
+        //   src-delete-after or ack-mode properties, which we need to recreate the shovel
+        // - Shovels fetched from the /api/parameters/shovel/{vhost} endpoint DO include the src-delete-after or ack-mode properties,
         //   however, if a shovel gets stuck in a running state, the shovel may not be returned from the /api/parameters/shovel/{vhost}
         //   endpoint, so if we can't get the shovel from /api/parameters/shovel/{vhost}, we do not know what the src-delete-after or
         //   ack-mode properties should be
