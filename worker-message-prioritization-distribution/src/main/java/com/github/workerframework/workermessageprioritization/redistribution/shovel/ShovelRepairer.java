@@ -152,9 +152,9 @@ final class ShovelRepairer
         shovel.setSrcDeleteAfter(0);
         shovel.setAckMode(ACK_MODE);
         shovel.setSrcQueue(retrievedShovel.getSrcQueue());
-        shovel.setSrcUri(rabbitMQUri);
+        shovel.setSrcUri(rabbitMQUri); // Don't use retrievedShovel.getSrcUri() here, as it won't include the RabbitMQ username
         shovel.setDestQueue(retrievedShovel.getDestQueue());
-        shovel.setDestUri(rabbitMQUri);
+        shovel.setDestUri(rabbitMQUri); // Don't use retrievedShovel.getDestUri() here, as it won't include the RabbitMQ username
 
         final String shovelName = retrievedShovel.getName();
 
