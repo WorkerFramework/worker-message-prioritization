@@ -41,6 +41,7 @@ public final class ShovelRunningTooLongChecker implements Runnable
     private final LoadingCache<String, RabbitManagementApi<ShovelsApi>> nodeSpecificShovelsApiCache;
     private final Map<RunningShovelKey,Instant> shovelToTimeObservedInRunningStateMap;
     private final String rabbitMQVHost;
+    private final String rabbitMQUri;
     private final long shovelRunningTooLongTimeoutMilliseconds;
     private final long shovelRunningTooLongTimeoutCheckIntervalMilliseconds;
 
@@ -48,6 +49,7 @@ public final class ShovelRunningTooLongChecker implements Runnable
             final RabbitManagementApi<ShovelsApi> shovelsApi,
             final LoadingCache<String, RabbitManagementApi<ShovelsApi>> nodeSpecificShovelsApiCache,
             final String rabbitMQVHost,
+            final String rabbitMQUri,
             final long shovelRunningTooLongTimeoutMilliseconds,
             final long shovelRunningTooLongTimeoutCheckIntervalMilliseconds)
     {
@@ -65,8 +67,8 @@ public final class ShovelRunningTooLongChecker implements Runnable
                         LOGGER.debug("Expired entry from shovelToTimeObservedInRunningStateMap: {} -> {}",
                                 runningShovelKey.getName(), timeObservedInRunningState))
                 .build();
-
         this.rabbitMQVHost = rabbitMQVHost;
+        this.rabbitMQUri = rabbitMQUri;
         this.shovelRunningTooLongTimeoutMilliseconds = shovelRunningTooLongTimeoutMilliseconds;
         this.shovelRunningTooLongTimeoutCheckIntervalMilliseconds = shovelRunningTooLongTimeoutCheckIntervalMilliseconds;
     }
@@ -118,8 +120,10 @@ public final class ShovelRunningTooLongChecker implements Runnable
                             timeNow,
                             shovelRunningTooLongTimeoutMilliseconds);
 
-                    if (!ShovelRepairer.repairShovel(retrievedShovel, shovelsApi.getApi(), nodeSpecificShovelsApiCache, rabbitMQVHost)) {
-
+                    if (ShovelRepairer.repairShovel(
+                            retrievedShovel, shovelsApi.getApi(), nodeSpecificShovelsApiCache, rabbitMQVHost, rabbitMQUri)) {
+                        shovelToTimeObservedInRunningStateMap.remove(runningShovelKey);
+                    } else {
                         LOGGER.error("Shovel named {} has been observed in a 'running' state starting at {}. The time now is {}. " +
                                         "The 'shovel running too long timeout' of {} milliseconds has been reached, " +
                                         "but attempts to repair the shovel by deleting, restarting, and recreating it " +

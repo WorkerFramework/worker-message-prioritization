@@ -46,7 +46,7 @@ public class ShovelDistributor extends MessageDistributor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ShovelDistributor.class);
 
-    private static final String ACK_MODE = "on-confirm";
+    static final String ACK_MODE = "on-confirm";
 
     private final RabbitManagementApi<ShovelsApi> shovelsApi;
     private final ConsumptionTargetCalculator consumptionTargetCalculator;
@@ -90,6 +90,7 @@ public class ShovelDistributor extends MessageDistributor {
                         shovelsApi,
                         nodeSpecificShovelsApiCache,
                         rabbitMQVHost,
+                        rabbitMQUri,
                         nonRunningShovelTimeoutMilliseconds,
                         nonRunningShovelTimeoutCheckIntervalMilliseconds),
                 0,
@@ -105,6 +106,7 @@ public class ShovelDistributor extends MessageDistributor {
                         shovelsApi,
                         nodeSpecificShovelsApiCache,
                         rabbitMQVHost,
+                        rabbitMQUri,
                         shovelRunningTooLongTimeoutMilliseconds,
                         shovelRunningTooLongCheckIntervalMilliseconds),
                 0,

@@ -97,6 +97,7 @@ public class ShovelRunningTooLongCheckerIT extends DistributorTestBase
                         shovelsApi,
                         getNodeSpecificShovelsApiCache(),
                         "/",
+                        "amqp://guest@/%2F",
                         shovelRunningTooLongTimeoutMilliseconds,
                         1L),
                 0,

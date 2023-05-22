@@ -78,7 +78,7 @@ public class NonRunningShovelCheckerIT extends DistributorTestBase
         nonRunningShovelCheckerExecutorService.scheduleAtFixedRate(
                 new NonRunningShovelChecker(shovelsApi,
                         getNodeSpecificShovelsApiCache(),
-                        "/", 1L, 1L),
+                        "/", "amqp://guest@/%2F", 1L, 1L),
                 0,
                 1L,
                 TimeUnit.MILLISECONDS);

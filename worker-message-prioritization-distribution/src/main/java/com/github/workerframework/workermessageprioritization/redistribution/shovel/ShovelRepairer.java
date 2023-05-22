@@ -15,6 +15,7 @@
  */
 package com.github.workerframework.workermessageprioritization.redistribution.shovel;
 
+import static com.github.workerframework.workermessageprioritization.redistribution.shovel.ShovelDistributor.ACK_MODE;
 import java.util.concurrent.ExecutionException;
 
 import org.slf4j.Logger;
@@ -39,7 +40,8 @@ final class ShovelRepairer
             final RetrievedShovel retrievedShovel,
             final ShovelsApi shovelsApi,
             final LoadingCache<String,RabbitManagementApi<ShovelsApi>> nodeSpecificShovelsApiCache,
-            final String rabbitMQVHost)
+            final String rabbitMQVHost,
+            final String rabbitMQUri)
     {
         final ShovelsApi nodeSpecificShovelsApi;
         try {
@@ -59,7 +61,7 @@ final class ShovelRepairer
             return true;
         }
 
-        if (recreateShovel(retrievedShovel, shovelsApi, nodeSpecificShovelsApi, rabbitMQVHost)) {
+        if (recreateShovel(retrievedShovel, shovelsApi, nodeSpecificShovelsApi, rabbitMQVHost, rabbitMQUri)) {
             return true;
         }
 
@@ -133,40 +135,50 @@ final class ShovelRepairer
             final RetrievedShovel retrievedShovel,
             final ShovelsApi shovelsApi,
             final ShovelsApi nodeSpecificShovelsApi,
-            final String rabbitMQVHost
+            final String rabbitMQVHost,
+            final String rabbitMQUri
     )
     {
+        // - Shovels fetched from the /api/shovels/{vhost} endpoint do not include the src-delete-after or ack-mode properties, which
+        //   we need to recreate the shovel
+        // - Shovels fetched from the /api/parameters/shovel/{vhost} endpoint do include the src-delete-after or ack-mode properties,
+        //   however, if a shovel gets stuck in a running state, the shovel may not be returned from the /api/parameters/shovel/{vhost}
+        //   endpoint, so if we can't get the shovel from /api/parameters/shovel/{vhost}, we do not know what the src-delete-after or
+        //   ack-mode properties should be
+        // - Therefore, we are recreating the shovel with a src-delete-after of 0, so that the shovel gets recreated then immediately
+        //   deleted. This allows the shovel to be created as normal (if still required) during the next loop of the application.
+
         final Shovel shovel = new Shovel();
-        shovel.setSrcDeleteAfter(retrievedShovel.getSrcDeleteAfter());
-        shovel.setAckMode(retrievedShovel.getAckMode());
+        shovel.setSrcDeleteAfter(0);
+        shovel.setAckMode(ACK_MODE);
         shovel.setSrcQueue(retrievedShovel.getSrcQueue());
-        shovel.setSrcUri(retrievedShovel.getSrcUri());
+        shovel.setSrcUri(rabbitMQUri);
         shovel.setDestQueue(retrievedShovel.getDestQueue());
-        shovel.setDestUri(retrievedShovel.getDestUri());
+        shovel.setDestUri(rabbitMQUri);
+
+        final String shovelName = retrievedShovel.getName();
 
         try {
-            nodeSpecificShovelsApi.putShovel(rabbitMQVHost, retrievedShovel.getName(), new Component<>("shovel",
-                    retrievedShovel.getName(),
-                    retrievedShovel));
+            nodeSpecificShovelsApi.putShovel(rabbitMQVHost, shovelName, new Component<>("shovel", shovelName, shovel));
 
-            LOGGER.info("Successfully recreated shovel named {}.", retrievedShovel.getName());
+            LOGGER.info("Successfully recreated shovel named {} with properties {}", shovelName, shovel);
 
             return true;
         } catch (final Exception nodeSpecificShovelsApiException) {
             LOGGER.error(String.format(
-                    "Failed to recreate shovel named %s using a node-specific Shovels API, will try using the general Shovels API...",
-                    retrievedShovel.getName()), nodeSpecificShovelsApiException);
+                    "Failed to recreate shovel named %s with properties %s using a node-specific Shovels API, will try using the " +
+                            "general Shovels API...",
+                    shovelName, shovel), nodeSpecificShovelsApiException);
 
             try {
-                shovelsApi.putShovel(rabbitMQVHost, retrievedShovel.getName(), new Component<>("shovel",
-                        retrievedShovel.getName(),
-                        retrievedShovel));
+                shovelsApi.putShovel(rabbitMQVHost, shovelName, new Component<>("shovel", shovelName, shovel));
 
-                LOGGER.info("Successfully recreated shovel named {}.", retrievedShovel.getName());
+                LOGGER.info("Successfully recreated shovel named {} with properties {}", shovelName, shovel);
 
                 return true;
             } catch (final Exception shovelsApiException) {
-                LOGGER.error(String.format("Failed to recreate shovel named %s", retrievedShovel.getName()), shovelsApiException);
+                LOGGER.error(String.format("Failed to recreate shovel named %s with properties %s", shovelName, shovel),
+                        shovelsApiException);
 
                 return false;
             }
