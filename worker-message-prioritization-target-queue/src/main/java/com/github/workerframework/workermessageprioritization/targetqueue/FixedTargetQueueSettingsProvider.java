@@ -24,7 +24,7 @@ import com.github.workerframework.workermessageprioritization.targetqueue.target
 public final class FixedTargetQueueSettingsProvider implements TargetQueueSettingsProvider
 {
     private static final long QUEUE_MAX_LENGTH = 1000;
-    private static final long QUEUE_ELIGIBLE_FOR_REFILL = 1;
+    private static final long QUEUE_ELIGIBLE_FOR_REFILL = 20;
 
     @Override
     public TargetQueueSettings get(final Queue targetQueue)

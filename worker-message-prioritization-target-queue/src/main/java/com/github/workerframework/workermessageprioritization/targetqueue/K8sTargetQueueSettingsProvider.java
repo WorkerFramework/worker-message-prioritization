@@ -43,7 +43,7 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
     private static final String MESSAGE_PRIORITIZATION_TARGET_QUEUE_MAX_LENGTH_LABEL = "messageprioritization.targetqueuemaxlength";
     private static final String MESSAGE_PRIORITIZATION_TARGET_QUEUE_ELIGIBLE_FOR_REFILL_LABEL = "messageprioritization.targetqueueeligibleforrefill";
     private static final long TARGET_QUEUE_MAX_LENGTH_FALLBACK = 1000;
-    private static final long TARGET_QUEUE_ELIGIBLE_FOR_REFILL_FALLBACK = 1;
+    private static final long TARGET_QUEUE_ELIGIBLE_FOR_REFILL_FALLBACK = 20;
     private final List<String> kubernetesNamespaces;
     private final LoadingCache<Queue, TargetQueueSettings> targetQueueToSettingsCache;
 
