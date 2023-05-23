@@ -26,6 +26,7 @@ public class Queue {
     private boolean exclusive;
     private boolean auto_delete;
     private Map<String, Object> arguments;
+    private Map<String, Object> message_stats;
 
     public String getName() {
         return name;
@@ -82,7 +83,15 @@ public class Queue {
     public void setArguments(final Map<String, Object> arguments) {
         this.arguments = arguments;
     }
-    
+
+    public Map<String, Object> getMessage_stats() {
+        return message_stats;
+    }
+
+    public void setMessage_stats(final Map<String, Object> message_stats) {
+        this.message_stats = message_stats;
+    }
+
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)

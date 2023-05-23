@@ -24,11 +24,12 @@ public class Shovel {
     private String srcUri;
     @SerializedName(value = "dest-uri", alternate = "dest_uri")
     private String destUri;
-
     @SerializedName(value = "ack-mode", alternate = "ack_mode")
     private String ackMode;
     @SerializedName(value = "src-delete-after", alternate = "src_delete_after")
     private Object srcDeleteAfter;
+    @SerializedName(value = "src-prefetch-count", alternate = "src_prefetch_count")
+    private Object srcPrefetchCount;
     @SerializedName(value = "src-queue", alternate = "src_queue")
     private String srcQueue;
     @SerializedName(value = "dest-queue", alternate = "dest_queue")
@@ -48,6 +49,14 @@ public class Shovel {
 
     public void setSrcDeleteAfter(Object srcDeleteAfter) {
         this.srcDeleteAfter = srcDeleteAfter;
+    }
+
+    public Object getSrcPrefetchCount() {
+        return srcPrefetchCount;
+    }
+
+    public void setSrcPrefetchCount(Object srcPrefetchCount) {
+        this.srcPrefetchCount = srcPrefetchCount;
     }
 
     public String getSrcQueue() {
@@ -89,6 +98,7 @@ public class Shovel {
             .add("srcUri", srcUri)
             .add("srcQueue", srcQueue)
             .add("srcDeleteAfter", srcDeleteAfter)
+            .add("srcPrefetchCount", srcPrefetchCount)
             .add("destUri", destUri)
             .add("destQueue", destQueue)
             .toString();

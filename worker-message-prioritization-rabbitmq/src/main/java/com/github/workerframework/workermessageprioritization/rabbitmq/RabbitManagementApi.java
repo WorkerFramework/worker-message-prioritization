@@ -39,6 +39,14 @@ import retrofit.mime.TypedInput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+
 public class RabbitManagementApi <T> {
 
     private static final int READ_TIMEOUT_SECONDS = 20;
@@ -50,6 +58,43 @@ public class RabbitManagementApi <T> {
                                final String password) {
 
         final OkHttpClient okHttpClient = new OkHttpClient();
+
+        final TrustManager[] trustAllCerts = new TrustManager[] {new X509TrustManager() {
+            @Override
+            public void checkClientTrusted(
+                    java.security.cert.X509Certificate[] chain,
+                    String authType) throws CertificateException
+            {
+            }
+
+            @Override
+            public void checkServerTrusted(
+                    java.security.cert.X509Certificate[] chain,
+                    String authType) throws CertificateException {
+            }
+
+            @Override
+            public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                return null;
+            }
+        } };
+
+
+        final SSLContext sslContext;
+        try {
+            sslContext = SSLContext.getInstance("SSL");
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+        try {
+            sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+        } catch (KeyManagementException e) {
+            throw new RuntimeException(e);
+        }
+        // Create an ssl socket factory with our all-trusting manager
+        final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
+
+        okHttpClient.setSslSocketFactory(sslSocketFactory);
         okHttpClient.setReadTimeout(READ_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         okHttpClient.setConnectTimeout(CONNECT_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         final RestAdapter.Builder restAdapterBuilder

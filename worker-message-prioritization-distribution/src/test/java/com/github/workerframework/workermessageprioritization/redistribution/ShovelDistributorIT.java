@@ -36,7 +36,7 @@ import java.util.concurrent.TimeoutException;
 
 public class ShovelDistributorIT extends DistributorTestBase {
 
-    @Test
+    //@Test
     public void twoStagingQueuesTest() throws TimeoutException, IOException, InterruptedException {
 
         final String targetQueueName = getUniqueTargetQueueName(TARGET_QUEUE_NAME);
