@@ -105,8 +105,7 @@ public class ShovelApplication
                 messageDistributorConfig.getKubernetesLabelCacheExpiryMinutes());
 
         final ConsumptionTargetCalculator consumptionTargetCalculator
-            = new MinimumConsumptionTargetCalculator(k8sTargetQueueSettingsProvider,
-                                                     new EqualConsumptionTargetCalculator(k8sTargetQueueSettingsProvider));
+            = new EqualConsumptionTargetCalculator(k8sTargetQueueSettingsProvider);
 
         final ShovelDistributor shovelDistributor = new ShovelDistributor(
             queuesApi,

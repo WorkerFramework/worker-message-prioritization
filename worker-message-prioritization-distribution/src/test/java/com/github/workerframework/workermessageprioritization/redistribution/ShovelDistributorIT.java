@@ -71,9 +71,8 @@ public class ShovelDistributorIT extends DistributorTestBase {
                     .pollInterval(Duration.ofSeconds(1))
                     .until(queueContainsNumMessages(stagingQueue2Name, 1));
         }
-        final FixedTargetQueueSettingsProvider provider = new FixedTargetQueueSettingsProvider();
         final ConsumptionTargetCalculator consumptionTargetCalculator
-            = new MinimumConsumptionTargetCalculator(provider, new EqualConsumptionTargetCalculator(provider));
+            = new EqualConsumptionTargetCalculator(new FixedTargetQueueSettingsProvider());
 
         final ShovelDistributor shovelDistributor = new ShovelDistributor(
                 queuesApi,

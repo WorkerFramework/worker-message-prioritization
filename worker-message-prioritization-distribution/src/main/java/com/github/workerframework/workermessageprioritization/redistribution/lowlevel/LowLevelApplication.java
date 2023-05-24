@@ -19,7 +19,6 @@ import com.github.workerframework.workermessageprioritization.redistribution.con
 import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApi;
 import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitManagementApi;
 import com.github.workerframework.workermessageprioritization.redistribution.config.MessageDistributorConfig;
-import com.github.workerframework.workermessageprioritization.redistribution.consumption.MinimumConsumptionTargetCalculator;
 import com.github.workerframework.workermessageprioritization.targetqueue.FixedTargetQueueSettingsProvider;
 import com.rabbitmq.client.ConnectionFactory;
 
@@ -55,15 +54,12 @@ public class LowLevelApplication {
             messageDistributorConfig.getRabbitMQMgmtUsername(),
             messageDistributorConfig.getRabbitMQMgmtPassword());
 
-        final FixedTargetQueueSettingsProvider provider = new FixedTargetQueueSettingsProvider();
-
         final LowLevelDistributor lowLevelDistributor
             = new LowLevelDistributor(
                 queuesApi,
                 connectionFactory,
-                new MinimumConsumptionTargetCalculator(
-                    provider,
-                    new EqualConsumptionTargetCalculator(provider)),
+                new EqualConsumptionTargetCalculator(
+                    new FixedTargetQueueSettingsProvider()),
                 new StagingTargetPairProvider(),
                 messageDistributorConfig.getDistributorRunIntervalMilliseconds());
 

@@ -20,7 +20,6 @@ import static org.awaitility.Awaitility.await;
 
 import com.github.workerframework.workermessageprioritization.redistribution.consumption.ConsumptionTargetCalculator;
 import com.github.workerframework.workermessageprioritization.redistribution.consumption.EqualConsumptionTargetCalculator;
-import com.github.workerframework.workermessageprioritization.redistribution.consumption.MinimumConsumptionTargetCalculator;
 import com.github.workerframework.workermessageprioritization.redistribution.lowlevel.LowLevelDistributor;
 import com.github.workerframework.workermessageprioritization.redistribution.lowlevel.StagingTargetPairProvider;
 import com.github.workerframework.workermessageprioritization.targetqueue.FixedTargetQueueSettingsProvider;
@@ -72,9 +71,8 @@ public class LowLevelDistributorIT extends DistributorTestBase {
                     .pollInterval(Duration.ofSeconds(1))
                     .until(queueContainsNumMessages(stagingQueue2Name, 1));
         }
-        final FixedTargetQueueSettingsProvider provider = new FixedTargetQueueSettingsProvider();
         final ConsumptionTargetCalculator consumptionTargetCalculator
-            = new MinimumConsumptionTargetCalculator(provider, new EqualConsumptionTargetCalculator(provider));
+            = new EqualConsumptionTargetCalculator(new FixedTargetQueueSettingsProvider());
         final StagingTargetPairProvider stagingTargetPairProvider = new StagingTargetPairProvider();
         final LowLevelDistributor lowLevelDistributor = new LowLevelDistributor(queuesApi, connectionFactory,
                                                                                 consumptionTargetCalculator, stagingTargetPairProvider, 10000);
