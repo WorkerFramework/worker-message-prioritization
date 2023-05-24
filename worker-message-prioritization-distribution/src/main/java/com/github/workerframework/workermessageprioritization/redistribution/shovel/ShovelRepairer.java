@@ -41,7 +41,7 @@ public final class ShovelRepairer
             final ShovelsApi shovelsApi,
             final LoadingCache<String,RabbitManagementApi<ShovelsApi>> nodeSpecificShovelsApiCache,
             final String rabbitMQVHost,
-            final String rabbitAmpqUri)
+            final String rabbitAmqpUri)
     {
         final ShovelsApi nodeSpecificShovelsApi;
         try {
@@ -61,7 +61,7 @@ public final class ShovelRepairer
             return true;
         }
 
-        if (recreateShovel(retrievedShovel, shovelsApi, nodeSpecificShovelsApi, rabbitMQVHost, rabbitAmpqUri)) {
+        if (recreateShovel(retrievedShovel, shovelsApi, nodeSpecificShovelsApi, rabbitMQVHost, rabbitAmqpUri)) {
             return true;
         }
 
@@ -136,7 +136,7 @@ public final class ShovelRepairer
             final ShovelsApi shovelsApi,
             final ShovelsApi nodeSpecificShovelsApi,
             final String rabbitMQVHost,
-            final String rabbitAmpqUri
+            final String rabbitAmqpUri
     )
     {
         // - Shovels fetched from the /api/shovels/{vhost} endpoint (the RetrievedShovel parameter) do NOT include the
@@ -152,9 +152,9 @@ public final class ShovelRepairer
         shovelToCreate.setSrcDeleteAfter(0);
         shovelToCreate.setAckMode(ACK_MODE);
         shovelToCreate.setSrcQueue(retrievedShovel.getSrcQueue());
-        shovelToCreate.setSrcUri(rabbitAmpqUri);
+        shovelToCreate.setSrcUri(rabbitAmqpUri);
         shovelToCreate.setDestQueue(retrievedShovel.getDestQueue());
-        shovelToCreate.setDestUri(rabbitAmpqUri);
+        shovelToCreate.setDestUri(rabbitAmqpUri);
 
         final String shovelName = retrievedShovel.getName();
 

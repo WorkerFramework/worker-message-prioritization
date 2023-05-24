@@ -51,7 +51,7 @@ public class ShovelDistributor extends MessageDistributor {
     private final RabbitManagementApi<ShovelsApi> shovelsApi;
     private final ConsumptionTargetCalculator consumptionTargetCalculator;
     private final String rabbitMQVHost;
-    private final String rabbitAmpqUri;
+    private final String rabbitAmqpUri;
     private final long distributorRunIntervalMilliseconds;
     private final ScheduledExecutorService nonRunningShovelCheckerExecutorService;
     private final ScheduledExecutorService shovelRunningTooLongCheckerExecutorService;
@@ -77,7 +77,7 @@ public class ShovelDistributor extends MessageDistributor {
         this.shovelsApi = shovelsApi;
         this.consumptionTargetCalculator = consumptionTargetCalculator;
         this.rabbitMQVHost = rabbitMQVHost;
-        this.rabbitAmpqUri = String.format(
+        this.rabbitAmqpUri = String.format(
             "amqp://%s@/%s", rabbitMQUsername, URLEncoder.encode(this.rabbitMQVHost, StandardCharsets.UTF_8.toString()));
         this.distributorRunIntervalMilliseconds = distributorRunIntervalMilliseconds;
 
@@ -90,7 +90,7 @@ public class ShovelDistributor extends MessageDistributor {
                         shovelsApi,
                         nodeSpecificShovelsApiCache,
                         rabbitMQVHost,
-                        rabbitAmpqUri,
+                        rabbitAmqpUri,
                         nonRunningShovelTimeoutMilliseconds,
                         nonRunningShovelTimeoutCheckIntervalMilliseconds),
                 0,
@@ -106,7 +106,7 @@ public class ShovelDistributor extends MessageDistributor {
                         shovelsApi,
                         nodeSpecificShovelsApiCache,
                         rabbitMQVHost,
-                        rabbitAmpqUri,
+                        rabbitAmqpUri,
                         shovelRunningTooLongTimeoutMilliseconds,
                         shovelRunningTooLongCheckIntervalMilliseconds),
                 0,
@@ -206,9 +206,9 @@ public class ShovelDistributor extends MessageDistributor {
                         shovelToCreate.setSrcDeleteAfter(srcDeleteAfter);
                         shovelToCreate.setAckMode(ACK_MODE);
                         shovelToCreate.setSrcQueue(shovelName);
-                        shovelToCreate.setSrcUri(rabbitAmpqUri);
+                        shovelToCreate.setSrcUri(rabbitAmqpUri);
                         shovelToCreate.setDestQueue(distributorWorkItem.getTargetQueue().getName());
-                        shovelToCreate.setDestUri(rabbitAmpqUri);
+                        shovelToCreate.setDestUri(rabbitAmqpUri);
 
                         LOGGER.info("Creating shovel named {} with properties {} to consume {} messages",
                                 shovelName,
