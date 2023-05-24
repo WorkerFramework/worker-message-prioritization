@@ -16,39 +16,26 @@
 package com.github.workerframework.workermessageprioritization.redistribution.consumption;
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
-import com.github.workerframework.workermessageprioritization.redistribution.DistributorWorkItem;
 import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueSettingsProvider;
 import com.github.workerframework.workermessageprioritization.targetqueue.targetqueuesettings.TargetQueueSettings;
 
-import java.util.Collections;
-import java.util.Map;
-
-public final class MinimumConsumptionTargetCalculator implements ConsumptionTargetCalculator
+public abstract class MinimumConsumptionTargetCalculator extends ConsumptionTargetCalculatorBase
 {
-
-    private final TargetQueueSettingsProvider targetQueueSettingsProvider;
-    final ConsumptionTargetCalculator consumptionTargetCalculator;
-
-    public MinimumConsumptionTargetCalculator(final TargetQueueSettingsProvider targetQueueSettingsProvider,
-                                              final ConsumptionTargetCalculator consumptionTargetCalculator)
+    public MinimumConsumptionTargetCalculator(final TargetQueueSettingsProvider targetQueueSettingsProvider)
     {
-        this.targetQueueSettingsProvider = targetQueueSettingsProvider;
-        this.consumptionTargetCalculator = consumptionTargetCalculator;
+        super(targetQueueSettingsProvider);
     }
 
     @Override
-    public Map<Queue, Long> calculateConsumptionTargets(final DistributorWorkItem distributorWorkItem)
+    protected long getTargetQueueCapacity(final Queue targetQueue)
     {
-        final TargetQueueSettings targetQueueSettings = targetQueueSettingsProvider.get(distributorWorkItem.getTargetQueue());
+        final TargetQueueSettings targetQueueSettings = getTargetQueueSettings(targetQueue);
+        final long targetQueueCapacity = getTargetQueueCapacity(targetQueue);
 
-        final Map<Queue, Long> stagingQueues = consumptionTargetCalculator.calculateConsumptionTargets(distributorWorkItem);
-
-        final long lastKnownTargetQueueLength = distributorWorkItem.getTargetQueue().getMessages();
-        final long consumptionTarget = targetQueueSettings.getMaxLength() - lastKnownTargetQueueLength;
-
-        if (consumptionTarget < targetQueueSettings.getEligibleForRefill()) {
-            return Collections.emptyMap();
+        if (targetQueueCapacity < targetQueueSettings.getEligibleForRefill()) {
+            return 0;
+        } else {
+            return targetQueueCapacity;
         }
-        return stagingQueues;
     }
 }
