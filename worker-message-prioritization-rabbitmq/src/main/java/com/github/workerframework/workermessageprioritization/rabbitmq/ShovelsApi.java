@@ -15,6 +15,7 @@
  */
 package com.github.workerframework.workermessageprioritization.rabbitmq;
 
+import retrofit.client.Response;
 import retrofit.http.Body;
 import retrofit.http.DELETE;
 import retrofit.http.GET;
@@ -25,7 +26,7 @@ import java.util.List;
 
 public interface ShovelsApi {
     @PUT("/api/parameters/shovel/{vhost}/{name}")
-    RetrievedShovel putShovel(@Path("vhost") final String vhost, @Path("name") final String name, @Body final Component<Shovel> shovel);
+    Response putShovel(@Path("vhost") final String vhost, @Path("name") final String name, @Body final Component<ShovelToCreate> shovel);
     
     @GET("/api/shovels/{vhost}") // Used by the 'Shovel Status' UI: https://host/#/shovels
     List<RetrievedShovel> getShovels(@Path("vhost") final String vhost);
@@ -40,8 +41,8 @@ public interface ShovelsApi {
     RetrievedShovel getShovel(@Path("vhost") final String vhost, @Path("name") final String name);
 
     @DELETE("/api/shovels/vhost/{vhost}/{name}/restart")
-    RetrievedShovel restartShovel(@Path("vhost") final String vhost, @Path("name") final String name);
+    Response restartShovel(@Path("vhost") final String vhost, @Path("name") final String name);
 
     @DELETE("/api/parameters/shovel/{vhost}/{name}")
-    RetrievedShovel delete(@Path("vhost") final String vhost, @Path("name") final String name);
+    Response delete(@Path("vhost") final String vhost, @Path("name") final String name);
 }

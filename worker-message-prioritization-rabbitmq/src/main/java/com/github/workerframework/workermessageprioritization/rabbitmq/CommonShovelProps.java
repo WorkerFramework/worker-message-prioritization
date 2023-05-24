@@ -18,37 +18,12 @@ package com.github.workerframework.workermessageprioritization.rabbitmq;
 import com.google.common.base.MoreObjects;
 import com.google.gson.annotations.SerializedName;
 
-public class Shovel {
-    
-    @SerializedName(value = "src-uri", alternate = "src_uri")
-    private String srcUri;
-    @SerializedName(value = "dest-uri", alternate = "dest_uri")
-    private String destUri;
-
-    @SerializedName(value = "ack-mode", alternate = "ack_mode")
-    private String ackMode;
-    @SerializedName(value = "src-delete-after", alternate = "src_delete_after")
-    private Object srcDeleteAfter;
+public abstract class CommonShovelProps
+{
     @SerializedName(value = "src-queue", alternate = "src_queue")
     private String srcQueue;
     @SerializedName(value = "dest-queue", alternate = "dest_queue")
     private String destQueue;
-
-    public String getAckMode() {
-        return ackMode;
-    }
-
-    public void setAckMode(String ackMode) {
-        this.ackMode = ackMode;
-    }
-
-    public Object getSrcDeleteAfter() {
-        return srcDeleteAfter;
-    }
-
-    public void setSrcDeleteAfter(Object srcDeleteAfter) {
-        this.srcDeleteAfter = srcDeleteAfter;
-    }
 
     public String getSrcQueue() {
         return srcQueue;
@@ -66,30 +41,10 @@ public class Shovel {
         this.destQueue = destQueue;
     }
 
-    public String getSrcUri() {
-        return srcUri;
-    }
-
-    public void setSrcUri(String srcUri) {
-        this.srcUri = srcUri;
-    }
-
-    public String getDestUri() {
-        return destUri;
-    }
-
-    public void setDestUri(String destUri) {
-        this.destUri = destUri;
-    }
-
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("ackMode", ackMode)
-            .add("srcUri", srcUri)
             .add("srcQueue", srcQueue)
-            .add("srcDeleteAfter", srcDeleteAfter)
-            .add("destUri", destUri)
             .add("destQueue", destQueue)
             .toString();
     }

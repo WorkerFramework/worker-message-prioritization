@@ -18,7 +18,7 @@ package com.github.workerframework.workermessageprioritization.rabbitmq;
 import com.google.common.base.MoreObjects;
 import java.util.Date;
 
-public class RetrievedShovel extends Shovel {
+public class RetrievedShovel extends CommonShovelProps {
     private String name;
     private Date timestamp;
     private ShovelState state;
@@ -63,11 +63,7 @@ public class RetrievedShovel extends Shovel {
                 .add("timestamp", timestamp)
                 .add("state", state)
                 .add("node", node)
-                .add("ackMode", getAckMode())
-                .add("srcUri", getSrcUri())
                 .add("srcQueue", getSrcQueue())
-                .add("srcDeleteAfter", getSrcDeleteAfter())
-                .add("destUri", getDestUri())
                 .add("destQueue", getDestQueue())
                 .toString();
     }

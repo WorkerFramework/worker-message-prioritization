@@ -29,12 +29,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.Component;
+import com.github.workerframework.workermessageprioritization.rabbitmq.RetrievedShovel;
 import com.github.workerframework.workermessageprioritization.rabbitmq.NodesApi;
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApi;
 import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitManagementApi;
-import com.github.workerframework.workermessageprioritization.rabbitmq.RetrievedShovel;
-import com.github.workerframework.workermessageprioritization.rabbitmq.Shovel;
+import com.github.workerframework.workermessageprioritization.rabbitmq.ShovelToCreate;
 import com.github.workerframework.workermessageprioritization.rabbitmq.ShovelsApi;
 import com.github.workerframework.workermessageprioritization.redistribution.DistributorWorkItem;
 import com.github.workerframework.workermessageprioritization.redistribution.MessageDistributor;
@@ -46,12 +46,12 @@ public class ShovelDistributor extends MessageDistributor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ShovelDistributor.class);
 
-    private static final String ACK_MODE = "on-confirm";
+    static final String ACK_MODE = "on-confirm";
 
     private final RabbitManagementApi<ShovelsApi> shovelsApi;
     private final ConsumptionTargetCalculator consumptionTargetCalculator;
     private final String rabbitMQVHost;
-    private final String rabbitMQUri;
+    private final String rabbitAmqpUri;
     private final long distributorRunIntervalMilliseconds;
     private final ScheduledExecutorService nonRunningShovelCheckerExecutorService;
     private final ScheduledExecutorService shovelRunningTooLongCheckerExecutorService;
@@ -77,7 +77,7 @@ public class ShovelDistributor extends MessageDistributor {
         this.shovelsApi = shovelsApi;
         this.consumptionTargetCalculator = consumptionTargetCalculator;
         this.rabbitMQVHost = rabbitMQVHost;
-        this.rabbitMQUri = String.format(
+        this.rabbitAmqpUri = String.format(
             "amqp://%s@/%s", rabbitMQUsername, URLEncoder.encode(this.rabbitMQVHost, StandardCharsets.UTF_8.toString()));
         this.distributorRunIntervalMilliseconds = distributorRunIntervalMilliseconds;
 
@@ -90,6 +90,7 @@ public class ShovelDistributor extends MessageDistributor {
                         shovelsApi,
                         nodeSpecificShovelsApiCache,
                         rabbitMQVHost,
+                        rabbitAmqpUri,
                         nonRunningShovelTimeoutMilliseconds,
                         nonRunningShovelTimeoutCheckIntervalMilliseconds),
                 0,
@@ -105,6 +106,7 @@ public class ShovelDistributor extends MessageDistributor {
                         shovelsApi,
                         nodeSpecificShovelsApiCache,
                         rabbitMQVHost,
+                        rabbitAmqpUri,
                         shovelRunningTooLongTimeoutMilliseconds,
                         shovelRunningTooLongCheckIntervalMilliseconds),
                 0,
@@ -200,30 +202,30 @@ public class ShovelDistributor extends MessageDistributor {
                         final long maxNumMessagesToConsumeFromStagingQueue = queueConsumptionTarget.getValue();
                         final long srcDeleteAfter = Math.min(numMessagesInStagingQueue, maxNumMessagesToConsumeFromStagingQueue);
 
-                        final Shovel shovel = new Shovel();
-                        shovel.setSrcDeleteAfter(srcDeleteAfter);
-                        shovel.setAckMode(ACK_MODE);
-                        shovel.setSrcQueue(shovelName);
-                        shovel.setSrcUri(rabbitMQUri);
-                        shovel.setDestQueue(distributorWorkItem.getTargetQueue().getName());
-                        shovel.setDestUri(rabbitMQUri);
+                        final ShovelToCreate shovelToCreate = new ShovelToCreate();
+                        shovelToCreate.setSrcDeleteAfter(srcDeleteAfter);
+                        shovelToCreate.setAckMode(ACK_MODE);
+                        shovelToCreate.setSrcQueue(shovelName);
+                        shovelToCreate.setSrcUri(rabbitAmqpUri);
+                        shovelToCreate.setDestQueue(distributorWorkItem.getTargetQueue().getName());
+                        shovelToCreate.setDestUri(rabbitAmqpUri);
 
                         LOGGER.info("Creating shovel named {} with properties {} to consume {} messages",
                                 shovelName,
-                                shovel,
+                                shovelToCreate,
                                 srcDeleteAfter);
 
                         try {
                             shovelsApi.getApi().putShovel(rabbitMQVHost, shovelName,
                                     new Component<>("shovel",
                                             shovelName,
-                                            shovel));
+                                            shovelToCreate));
                         } catch (final Exception e) {
                             final String errorMessage = String.format(
                                     "Failed to create shovel named %s with properties %s to consume %s messages. " +
                                             "Will try again during the next run in %d milliseconds (if the shovel is still required then).",
                                     shovelName,
-                                    shovel,
+                                    shovelToCreate,
                                     srcDeleteAfter,
                                     distributorRunIntervalMilliseconds);
 
