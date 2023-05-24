@@ -20,6 +20,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nonnull;
 
+import com.github.workerframework.workermessageprioritization.redistribution.consumption.EqualConsumptionTargetCalculator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,7 +30,7 @@ import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitMan
 import com.github.workerframework.workermessageprioritization.rabbitmq.ShovelsApi;
 import com.github.workerframework.workermessageprioritization.redistribution.config.MessageDistributorConfig;
 import com.github.workerframework.workermessageprioritization.redistribution.consumption.ConsumptionTargetCalculator;
-import com.github.workerframework.workermessageprioritization.redistribution.consumption.EqualConsumptionTargetCalculator;
+import com.github.workerframework.workermessageprioritization.redistribution.consumption.MinimumConsumptionTargetCalculator;
 import com.github.workerframework.workermessageprioritization.targetqueue.K8sTargetQueueSettingsProvider;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -104,7 +105,8 @@ public class ShovelApplication
                 messageDistributorConfig.getKubernetesLabelCacheExpiryMinutes());
 
         final ConsumptionTargetCalculator consumptionTargetCalculator
-            = new EqualConsumptionTargetCalculator(k8sTargetQueueSettingsProvider);
+            = new MinimumConsumptionTargetCalculator(k8sTargetQueueSettingsProvider,
+                                                     new EqualConsumptionTargetCalculator(k8sTargetQueueSettingsProvider));
 
         final ShovelDistributor shovelDistributor = new ShovelDistributor(
             queuesApi,

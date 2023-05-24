@@ -20,18 +20,20 @@ import com.github.workerframework.workermessageprioritization.redistribution.Dis
 import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueSettingsProvider;
 import com.github.workerframework.workermessageprioritization.targetqueue.targetqueuesettings.TargetQueueSettings;
 
+import java.util.Collections;
 import java.util.Map;
 
 public final class MinimumConsumptionTargetCalculator implements ConsumptionTargetCalculator
 {
 
     private final TargetQueueSettingsProvider targetQueueSettingsProvider;
-    private final ConsumptionTargetCalculator consumptionTargetCalculator;
+    final ConsumptionTargetCalculator consumptionTargetCalculator;
 
-    public MinimumConsumptionTargetCalculator(final TargetQueueSettingsProvider targetQueueSettingsProvider)
+    public MinimumConsumptionTargetCalculator(final TargetQueueSettingsProvider targetQueueSettingsProvider,
+                                              final ConsumptionTargetCalculator consumptionTargetCalculator)
     {
         this.targetQueueSettingsProvider = targetQueueSettingsProvider;
-        this.consumptionTargetCalculator = new EqualConsumptionTargetCalculator(targetQueueSettingsProvider);
+        this.consumptionTargetCalculator = consumptionTargetCalculator;
     }
 
     @Override
@@ -42,14 +44,10 @@ public final class MinimumConsumptionTargetCalculator implements ConsumptionTarg
         final Map<Queue, Long> stagingQueues = consumptionTargetCalculator.calculateConsumptionTargets(distributorWorkItem);
 
         final long lastKnownTargetQueueLength = distributorWorkItem.getTargetQueue().getMessages();
-
         final long consumptionTarget = targetQueueSettings.getMaxLength() - lastKnownTargetQueueLength;
 
-        final long sourceQueueConsumptionTarget;
-
         if (consumptionTarget < targetQueueSettings.getEligibleForRefill()) {
-            sourceQueueConsumptionTarget = 0;
-            stagingQueues.replaceAll((k, v) -> v = sourceQueueConsumptionTarget);
+            return Collections.emptyMap();
         }
         return stagingQueues;
     }
