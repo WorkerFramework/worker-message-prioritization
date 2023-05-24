@@ -22,13 +22,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.Component;
-import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitManagementApi;
 import com.github.workerframework.workermessageprioritization.rabbitmq.RetrievedShovel;
-import com.github.workerframework.workermessageprioritization.rabbitmq.Shovel;
+import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitManagementApi;
+import com.github.workerframework.workermessageprioritization.rabbitmq.ShovelToCreate;
 import com.github.workerframework.workermessageprioritization.rabbitmq.ShovelsApi;
 import com.google.common.cache.LoadingCache;
 
-final class ShovelRepairer
+public final class ShovelRepairer
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(ShovelRepairer.class);
 
@@ -41,7 +41,7 @@ final class ShovelRepairer
             final ShovelsApi shovelsApi,
             final LoadingCache<String,RabbitManagementApi<ShovelsApi>> nodeSpecificShovelsApiCache,
             final String rabbitMQVHost,
-            final String rabbitMQUri)
+            final String rabbitAmpqUri)
     {
         final ShovelsApi nodeSpecificShovelsApi;
         try {
@@ -61,14 +61,14 @@ final class ShovelRepairer
             return true;
         }
 
-        if (recreateShovel(retrievedShovel, shovelsApi, nodeSpecificShovelsApi, rabbitMQVHost, rabbitMQUri)) {
+        if (recreateShovel(retrievedShovel, shovelsApi, nodeSpecificShovelsApi, rabbitMQVHost, rabbitAmpqUri)) {
             return true;
         }
 
         return false;
     }
 
-    private static boolean deleteShovel(
+    public static boolean deleteShovel(
             final RetrievedShovel retrievedShovel,
             final ShovelsApi shovelsApi,
             final ShovelsApi nodeSpecificShovelsApi,
@@ -100,7 +100,7 @@ final class ShovelRepairer
     }
 
 
-    private static boolean restartShovel(
+    public static boolean restartShovel(
             final RetrievedShovel retrievedShovel,
             final ShovelsApi shovelsApi,
             final ShovelsApi nodeSpecificShovelsApi,
@@ -131,12 +131,12 @@ final class ShovelRepairer
         }
     }
 
-    private static boolean recreateShovel(
+    public static boolean recreateShovel(
             final RetrievedShovel retrievedShovel,
             final ShovelsApi shovelsApi,
             final ShovelsApi nodeSpecificShovelsApi,
             final String rabbitMQVHost,
-            final String rabbitMQUri
+            final String rabbitAmpqUri
     )
     {
         // - Shovels fetched from the /api/shovels/{vhost} endpoint (the RetrievedShovel parameter) do NOT include the
@@ -148,36 +148,36 @@ final class ShovelRepairer
         // - Therefore, we are recreating the shovel with a src-delete-after of 0, so that the shovel gets recreated then immediately
         //   deleted. This allows the shovel to be created as normal (if still required) during the next loop of the application.
 
-        final Shovel shovel = new Shovel();
-        shovel.setSrcDeleteAfter(0);
-        shovel.setAckMode(ACK_MODE);
-        shovel.setSrcQueue(retrievedShovel.getSrcQueue());
-        shovel.setSrcUri(rabbitMQUri); // Don't use retrievedShovel.getSrcUri() here, as it won't include the RabbitMQ username
-        shovel.setDestQueue(retrievedShovel.getDestQueue());
-        shovel.setDestUri(rabbitMQUri); // Don't use retrievedShovel.getDestUri() here, as it won't include the RabbitMQ username
+        final ShovelToCreate shovelToCreate = new ShovelToCreate();
+        shovelToCreate.setSrcDeleteAfter(0);
+        shovelToCreate.setAckMode(ACK_MODE);
+        shovelToCreate.setSrcQueue(retrievedShovel.getSrcQueue());
+        shovelToCreate.setSrcUri(rabbitAmpqUri);
+        shovelToCreate.setDestQueue(retrievedShovel.getDestQueue());
+        shovelToCreate.setDestUri(rabbitAmpqUri);
 
         final String shovelName = retrievedShovel.getName();
 
         try {
-            nodeSpecificShovelsApi.putShovel(rabbitMQVHost, shovelName, new Component<>("shovel", shovelName, shovel));
+            nodeSpecificShovelsApi.putShovel(rabbitMQVHost, shovelName, new Component<>("shovel", shovelName, shovelToCreate));
 
-            LOGGER.info("Successfully recreated shovel named {} with properties {}", shovelName, shovel);
+            LOGGER.info("Successfully recreated shovel named {} with properties {}", shovelName, shovelToCreate);
 
             return true;
         } catch (final Exception nodeSpecificShovelsApiException) {
             LOGGER.error(String.format(
                     "Failed to recreate shovel named %s with properties %s using a node-specific Shovels API, will try using the " +
                             "general Shovels API...",
-                    shovelName, shovel), nodeSpecificShovelsApiException);
+                    shovelName, shovelToCreate), nodeSpecificShovelsApiException);
 
             try {
-                shovelsApi.putShovel(rabbitMQVHost, shovelName, new Component<>("shovel", shovelName, shovel));
+                shovelsApi.putShovel(rabbitMQVHost, shovelName, new Component<>("shovel", shovelName, shovelToCreate));
 
-                LOGGER.info("Successfully recreated shovel named {} with properties {}", shovelName, shovel);
+                LOGGER.info("Successfully recreated shovel named {} with properties {}", shovelName, shovelToCreate);
 
                 return true;
             } catch (final Exception shovelsApiException) {
-                LOGGER.error(String.format("Failed to recreate shovel named %s with properties %s", shovelName, shovel),
+                LOGGER.error(String.format("Failed to recreate shovel named %s with properties %s", shovelName, shovelToCreate),
                         shovelsApiException);
 
                 return false;

@@ -38,7 +38,7 @@ public final class NonRunningShovelChecker implements Runnable
     private final LoadingCache<String,RabbitManagementApi<ShovelsApi>> nodeSpecificShovelsApiCache;
     private final Map<String, Instant> shovelNameToTimeObservedInNonRunningState;
     private final String rabbitMQVHost;
-    private final String rabbitMQUri;
+    private final String rabbitAmpqUri;
     private final long nonRunningShovelTimeoutMilliseconds;
     private final long nonRunningShovelTimeoutCheckIntervalMilliseconds;
 
@@ -46,7 +46,7 @@ public final class NonRunningShovelChecker implements Runnable
             final RabbitManagementApi<ShovelsApi> shovelsApi,
             final LoadingCache<String,RabbitManagementApi<ShovelsApi>> nodeSpecificShovelsApiCache,
             final String rabbitMQVHost,
-            final String rabbitMQUri,
+            final String rabbitAmpqUri,
             final long nonRunningShovelTimeoutMilliseconds,
             final long nonRunningShovelTimeoutCheckIntervalMilliseconds)
     {
@@ -66,7 +66,7 @@ public final class NonRunningShovelChecker implements Runnable
                 .build();
 
         this.rabbitMQVHost = rabbitMQVHost;
-        this.rabbitMQUri = rabbitMQUri;
+        this.rabbitAmpqUri = rabbitAmpqUri;
         this.nonRunningShovelTimeoutMilliseconds = nonRunningShovelTimeoutMilliseconds;
         this.nonRunningShovelTimeoutCheckIntervalMilliseconds = nonRunningShovelTimeoutCheckIntervalMilliseconds;
     }
@@ -118,7 +118,7 @@ public final class NonRunningShovelChecker implements Runnable
                                  nonRunningShovelTimeoutMilliseconds);
 
                     if (ShovelRepairer.repairShovel(
-                            retrievedShovel, shovelsApi.getApi(), nodeSpecificShovelsApiCache, rabbitMQVHost, rabbitMQUri)) {
+                            retrievedShovel, shovelsApi.getApi(), nodeSpecificShovelsApiCache, rabbitMQVHost, rabbitAmpqUri)) {
                         shovelNameToTimeObservedInNonRunningState.remove(shovelName);
                     } else {
                         LOGGER.error("Shovel named {} was observed in a non-running state at {}. The time now is {}. " +

@@ -21,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.Nonnull;
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.NodesApi;
+import com.github.workerframework.workermessageprioritization.rabbitmq.ShovelState;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -124,5 +125,29 @@ public class DistributorTestBase {
                 .filter(s -> s.getName().equals(shovelName))
                 .findFirst()
                 .isPresent();
+    }
+
+    protected Callable<Boolean> shovelIsCreated(final String shovelName)
+    {
+        return () -> shovelsApi
+                .getApi()
+                .getShovels(VHOST)
+                .stream()
+                .filter(s -> s.getName().equals(shovelName))
+                .findFirst()
+                .isPresent();
+    }
+
+    protected Callable<Boolean> shovelIsInState(final String shovelName, final ShovelState shovelState)
+    {
+        return () -> shovelsApi
+                .getApi()
+                .getShovels(VHOST)
+                .stream()
+                .filter(s -> s.getName().equals(shovelName))
+                .findFirst()
+                .get()
+                .getState() == shovelState;
+
     }
 }
