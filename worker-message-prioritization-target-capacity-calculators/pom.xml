@@ -27,7 +27,7 @@
     </parent>
 
     <artifactId>worker-message-prioritization-target-capacity-calculators</artifactId>
-
+    
     <dependencies>
         <dependency>
             <groupId>com.github.workerframework</groupId>
