@@ -58,7 +58,7 @@
         </dependency>
         <dependency>
             <groupId>com.github.workerframework</groupId>
-            <artifactId>worker-message-prioritization-target-queue</artifactId>
+            <artifactId>worker-message-prioritization-target-capacity-calculators</artifactId>
         </dependency>
         <dependency>
             <groupId>com.rabbitmq</groupId>
