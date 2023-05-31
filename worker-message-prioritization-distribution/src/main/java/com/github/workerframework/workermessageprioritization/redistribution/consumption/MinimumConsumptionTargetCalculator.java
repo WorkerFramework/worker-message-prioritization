@@ -31,8 +31,9 @@ public abstract class MinimumConsumptionTargetCalculator extends ConsumptionTarg
     {
         final TargetQueueSettings targetQueueSettings = getTargetQueueSettings(targetQueue);
         final long targetQueueCapacity = super.getTargetQueueCapacity(targetQueue);
+        final long targetQueueCapacityPercentage = targetQueueCapacity * 100 / targetQueueSettings.getMaxLength();
 
-        if (targetQueueCapacity < targetQueueSettings.getEligibleForRefill()) {
+        if (targetQueueCapacityPercentage < targetQueueSettings.getEligibleForRefillPercentage()) {
             return 0;
         } else {
             return targetQueueCapacity;

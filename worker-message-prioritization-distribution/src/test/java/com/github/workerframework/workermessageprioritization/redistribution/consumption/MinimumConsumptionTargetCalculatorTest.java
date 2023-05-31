@@ -29,14 +29,21 @@ import static org.mockito.Mockito.when;
 public final class MinimumConsumptionTargetCalculatorTest
 {
 
+    /**
+     * Target Queue Max Length: 1000
+     * Target Queue Available Capacity: 750 (25%)
+     * Target Queue Eligible For Refill Percentage: 20%
+     *
+     * Therefore, messages should be moved - expect 250 to be returned
+     */
     @Test
-    public void getTargetQueueCapacityTestReturnTargetQueueCapacity()
+    public void getTargetQueueCapacityPercentageTestReturnTargetQueueCapacity()
     {
         final TargetQueueSettingsProvider provider = mock(TargetQueueSettingsProvider.class);
         final Queue targetQueue = new Queue();
         targetQueue.setMessages(750);
 
-        final TargetQueueSettings settings = new TargetQueueSettings(1000, 200);
+        final TargetQueueSettings settings = new TargetQueueSettings(1000, 20);
         when(provider.get(targetQueue)).thenReturn(settings);
 
         MinimumConsumptionTargetCalculator minimumConsumptionTargetCalculator = mock(
@@ -46,14 +53,21 @@ public final class MinimumConsumptionTargetCalculatorTest
         assertEquals(250, minimumConsumptionTargetCalculator.getTargetQueueCapacity(targetQueue));
     }
 
+    /**
+     * Target Queue Max Length: 1000
+     * Target Queue Available Capacity: 750 (25%)
+     * Target Queue Eligible For Refill Percentage: 30%
+     *
+     * Therefore, no messages should be moved - expect 0 to be returned
+     */
     @Test
     public void getTargetQueueCapacityTestReturn0()
     {
         final TargetQueueSettingsProvider provider = mock(TargetQueueSettingsProvider.class);
         final Queue targetQueue = new Queue();
-        targetQueue.setMessages(900);
+        targetQueue.setMessages(750);
 
-        final TargetQueueSettings settings = new TargetQueueSettings(1000, 200);
+        final TargetQueueSettings settings = new TargetQueueSettings(1000, 30);
         when(provider.get(targetQueue)).thenReturn(settings);
 
         MinimumConsumptionTargetCalculator minimumConsumptionTargetCalculator = mock(

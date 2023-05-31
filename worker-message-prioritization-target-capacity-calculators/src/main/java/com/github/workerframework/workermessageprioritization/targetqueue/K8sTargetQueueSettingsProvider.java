@@ -41,9 +41,10 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
     private static final Logger LOGGER = LoggerFactory.getLogger(K8sTargetQueueSettingsProvider.class);
     private static final String MESSAGE_PRIORITIZATION_TARGET_QUEUE_NAME_LABEL = "messageprioritization.targetqueuename";
     private static final String MESSAGE_PRIORITIZATION_TARGET_QUEUE_MAX_LENGTH_LABEL = "messageprioritization.targetqueuemaxlength";
-    private static final String MESSAGE_PRIORITIZATION_TARGET_QUEUE_ELIGIBLE_FOR_REFILL_LABEL = "messageprioritization.targetqueueeligibleforrefill";
+    private static final String MESSAGE_PRIORITIZATION_TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_LABEL
+        = "messageprioritization.targetqueueeligibleforrefillpercentage";
     private static final long TARGET_QUEUE_MAX_LENGTH_FALLBACK = 1000;
-    private static final long TARGET_QUEUE_ELIGIBLE_FOR_REFILL_FALLBACK = 20;
+    private static final long TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK = 10;
     private final List<String> kubernetesNamespaces;
     private final LoadingCache<Queue, TargetQueueSettings> targetQueueToSettingsCache;
 
@@ -76,10 +77,13 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
             return targetQueueToSettingsCache.get(targetQueue);
         } catch (final ExecutionException executionException) {
             LOGGER.error(String.format("Cannot get settings for the %s queue as an ExecutionException was thrown. "
-                + "Falling back to using max length of %s and eligible for refill threshold of %s",
-                                       targetQueue, TARGET_QUEUE_MAX_LENGTH_FALLBACK, TARGET_QUEUE_ELIGIBLE_FOR_REFILL_FALLBACK), executionException);
+                + "Falling back to using max length of %s and eligible for refill percentage of %s",
+                                       targetQueue,
+                                       TARGET_QUEUE_MAX_LENGTH_FALLBACK,
+                                       TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK),
+                         executionException);
 
-            return new TargetQueueSettings(TARGET_QUEUE_MAX_LENGTH_FALLBACK, TARGET_QUEUE_ELIGIBLE_FOR_REFILL_FALLBACK);
+            return new TargetQueueSettings(TARGET_QUEUE_MAX_LENGTH_FALLBACK, TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK);
         }
     }
 
@@ -125,37 +129,41 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
                             targetQueueName, metadata.getName(), MESSAGE_PRIORITIZATION_TARGET_QUEUE_MAX_LENGTH_LABEL));
                     }
 
-                    // Check if there is a target queue eligible for refill label
-                    if (!labels.containsKey(MESSAGE_PRIORITIZATION_TARGET_QUEUE_ELIGIBLE_FOR_REFILL_LABEL)) {
+                    // Check if there is a target queue eligible for refill percentage label
+                    if (!labels.containsKey(MESSAGE_PRIORITIZATION_TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_LABEL)) {
                         // Throw RuntimeException as this indicates a deployment error that should never happen in production
                         throw new RuntimeException(String.format(
-                            "Cannot get eligible for refill for the %s queue. The %s worker is missing the %s label",
-                            targetQueueName, metadata.getName(), MESSAGE_PRIORITIZATION_TARGET_QUEUE_ELIGIBLE_FOR_REFILL_LABEL));
+                            "Cannot get eligible for refill percentage for the %s queue. The %s worker is missing the %s label",
+                            targetQueueName, metadata.getName(),
+                            MESSAGE_PRIORITIZATION_TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_LABEL));
                     }
 
-                    // Set the max length and eligible for refill settings
+                    // Set the max length and eligible for refill percentage settings
                     final long targetQueueMaxLength = Long.parseLong(labels.get(MESSAGE_PRIORITIZATION_TARGET_QUEUE_MAX_LENGTH_LABEL));
 
-                    final long targetQueueEligibleForRefill = Long.parseLong(labels.get(
-                        MESSAGE_PRIORITIZATION_TARGET_QUEUE_ELIGIBLE_FOR_REFILL_LABEL));
+                    final long targetQueueEligibleForRefillPercentage = Long.parseLong(labels.get(
+                        MESSAGE_PRIORITIZATION_TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_LABEL));
 
                     LOGGER.debug("Read the {} and {} labels belonging to {}. "
-                        + "Setting max length to {} and eligible for refill to {} for the {} queue",
+                        + "Setting max length to {} and eligible for refill percentage to {} for the {} queue",
                                  MESSAGE_PRIORITIZATION_TARGET_QUEUE_MAX_LENGTH_LABEL,
-                                 MESSAGE_PRIORITIZATION_TARGET_QUEUE_ELIGIBLE_FOR_REFILL_LABEL,
+                                 MESSAGE_PRIORITIZATION_TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_LABEL,
                                  metadata.getName(),
                                  targetQueueMaxLength,
-                                 targetQueueEligibleForRefill,
+                                 targetQueueEligibleForRefillPercentage,
                                  targetQueueName);
 
-                    return new TargetQueueSettings(targetQueueMaxLength, targetQueueEligibleForRefill);
+                    return new TargetQueueSettings(targetQueueMaxLength, targetQueueEligibleForRefillPercentage);
                 }
             } catch (final KubectlException kubectlException) {
                 LOGGER.error(String.format("Cannot get settings for the %s queue as the Kubernetes API threw an exception. "
-                    + "Falling back to using a max length of %s and eligible for refill threshold of %s",
-                                           targetQueueName, TARGET_QUEUE_MAX_LENGTH_FALLBACK, TARGET_QUEUE_ELIGIBLE_FOR_REFILL_FALLBACK));
+                    + "Falling back to using a max length of %s and eligible for refill percentage of %s",
+                                           targetQueueName,
+                                           TARGET_QUEUE_MAX_LENGTH_FALLBACK,
+                                           TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK));
 
-                return new TargetQueueSettings(TARGET_QUEUE_MAX_LENGTH_FALLBACK, TARGET_QUEUE_ELIGIBLE_FOR_REFILL_FALLBACK);
+                return new TargetQueueSettings(TARGET_QUEUE_MAX_LENGTH_FALLBACK,
+                                               TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK);
             }
         }
 

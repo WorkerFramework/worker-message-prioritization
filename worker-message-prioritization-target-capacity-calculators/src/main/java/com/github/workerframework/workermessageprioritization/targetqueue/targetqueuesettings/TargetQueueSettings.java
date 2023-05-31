@@ -17,13 +17,13 @@ package com.github.workerframework.workermessageprioritization.targetqueue.targe
 
 public final class TargetQueueSettings
 {
-    private long maxLength;
-    private long eligibleForRefill;
+    private final long maxLength;
+    private final long eligibleForRefillPercentage;
 
-    public TargetQueueSettings(final long maxLength, final long eligibleForRefill)
+    public TargetQueueSettings(final long maxLength, final long eligibleForRefillPercentage)
     {
         this.maxLength = maxLength;
-        this.eligibleForRefill = eligibleForRefill;
+        this.eligibleForRefillPercentage = eligibleForRefillPercentage;
     }
 
     public long getMaxLength()
@@ -31,8 +31,8 @@ public final class TargetQueueSettings
         return this.maxLength;
     }
 
-    public long getEligibleForRefill()
+    public long getEligibleForRefillPercentage()
     {
-        return eligibleForRefill;
+        return eligibleForRefillPercentage;
     }
 }
