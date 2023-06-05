@@ -31,8 +31,8 @@ import org.junit.Test;
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.Component;
 import com.github.workerframework.workermessageprioritization.rabbitmq.RetrievedShovel;
-import com.github.workerframework.workermessageprioritization.rabbitmq.Shovel;
 import com.github.workerframework.workermessageprioritization.rabbitmq.ShovelState;
+import com.github.workerframework.workermessageprioritization.rabbitmq.ShovelToCreate;
 import com.github.workerframework.workermessageprioritization.redistribution.shovel.ShovelRunningTooLongChecker;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
@@ -55,14 +55,14 @@ public class ShovelRunningTooLongCheckerIT extends DistributorTestBase
 
         // Create a shovel that will stay in 'running' state forever (because we haven't supplied a src-delete-after value)
 
-        final Shovel shovel = new Shovel();
-        shovel.setAckMode("on-confirm");
-        shovel.setSrcQueue(stagingQueueName);
-        shovel.setSrcUri("amqp://");
-        shovel.setDestQueue(targetQueueName);
-        shovel.setDestUri("amqp://");
+        final ShovelToCreate shovelToCreate = new ShovelToCreate();
+        shovelToCreate.setAckMode("on-confirm");
+        shovelToCreate.setSrcQueue(stagingQueueName);
+        shovelToCreate.setSrcUri("amqp://");
+        shovelToCreate.setDestQueue(targetQueueName);
+        shovelToCreate.setDestUri("amqp://");
 
-        shovelsApi.getApi().putShovel("/", stagingQueueName, new Component<>("shovel", stagingQueueName, shovel));
+        shovelsApi.getApi().putShovel("/", stagingQueueName, new Component<>("shovel", stagingQueueName, shovelToCreate));
 
         // Verify the shovel is in a 'running' state
 
@@ -97,6 +97,7 @@ public class ShovelRunningTooLongCheckerIT extends DistributorTestBase
                         shovelsApi,
                         getNodeSpecificShovelsApiCache(),
                         "/",
+                        "amqp://guest@/%2F",
                         shovelRunningTooLongTimeoutMilliseconds,
                         1L),
                 0,

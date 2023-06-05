@@ -20,8 +20,8 @@ import static org.awaitility.Awaitility.await;
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.Component;
 import com.github.workerframework.workermessageprioritization.rabbitmq.RetrievedShovel;
-import com.github.workerframework.workermessageprioritization.rabbitmq.Shovel;
 import com.github.workerframework.workermessageprioritization.rabbitmq.ShovelState;
+import com.github.workerframework.workermessageprioritization.rabbitmq.ShovelToCreate;
 import com.github.workerframework.workermessageprioritization.redistribution.shovel.NonRunningShovelChecker;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
@@ -52,14 +52,14 @@ public class NonRunningShovelCheckerIT extends DistributorTestBase
         }
 
         // Create a bad shovel that never gets into a 'running' state
-        final Shovel shovel = new Shovel();
-        shovel.setAckMode("on-confirm");
-        shovel.setSrcQueue(stagingQueueName);
-        shovel.setSrcUri("amqp://BADURI");
-        shovel.setDestQueue(targetQueueName);
-        shovel.setDestUri("amqp://BADURI");
+        final ShovelToCreate shovelToCreate = new ShovelToCreate();
+        shovelToCreate.setAckMode("on-confirm");
+        shovelToCreate.setSrcQueue(stagingQueueName);
+        shovelToCreate.setSrcUri("amqp://BADURI");
+        shovelToCreate.setDestQueue(targetQueueName);
+        shovelToCreate.setDestUri("amqp://BADURI");
 
-        shovelsApi.getApi().putShovel("/", stagingQueueName, new Component<>("shovel", stagingQueueName, shovel));
+        shovelsApi.getApi().putShovel("/", stagingQueueName, new Component<>("shovel", stagingQueueName, shovelToCreate));
 
         // Verify the bad shovel is not in a 'running' state
         final RetrievedShovel retrievedShovel = shovelsApi
@@ -78,7 +78,7 @@ public class NonRunningShovelCheckerIT extends DistributorTestBase
         nonRunningShovelCheckerExecutorService.scheduleAtFixedRate(
                 new NonRunningShovelChecker(shovelsApi,
                         getNodeSpecificShovelsApiCache(),
-                        "/", 1L, 1L),
+                        "/", "amqp://guest@/%2F", 1L, 1L),
                 0,
                 1L,
                 TimeUnit.MILLISECONDS);
