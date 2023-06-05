@@ -44,7 +44,7 @@ public final class MinimumConsumptionTargetCalculatorTest
         final TargetQueueSettings settings = new TargetQueueSettings(1000, 20);
         when(provider.get(targetQueue)).thenReturn(settings);
 
-        MinimumConsumptionTargetCalculator minimumConsumptionTargetCalculator = mock(
+        final MinimumConsumptionTargetCalculator minimumConsumptionTargetCalculator = mock(
             MinimumConsumptionTargetCalculator.class,
             withSettings().useConstructor(provider).defaultAnswer(CALLS_REAL_METHODS));
 
@@ -66,7 +66,7 @@ public final class MinimumConsumptionTargetCalculatorTest
         final TargetQueueSettings settings = new TargetQueueSettings(1000, 30);
         when(provider.get(targetQueue)).thenReturn(settings);
 
-        MinimumConsumptionTargetCalculator minimumConsumptionTargetCalculator = mock(
+        final MinimumConsumptionTargetCalculator minimumConsumptionTargetCalculator = mock(
             MinimumConsumptionTargetCalculator.class,
             withSettings().useConstructor(provider).defaultAnswer(CALLS_REAL_METHODS));
 

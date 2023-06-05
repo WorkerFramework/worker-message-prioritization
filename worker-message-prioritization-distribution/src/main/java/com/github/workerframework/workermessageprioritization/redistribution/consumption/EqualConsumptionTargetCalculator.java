@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 /**
  * Attempts to send an equal number of message from each staging queue to the target queue
  */
-public class EqualConsumptionTargetCalculator extends MinimumConsumptionTargetCalculator
+public final class EqualConsumptionTargetCalculator extends MinimumConsumptionTargetCalculator
 {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EqualConsumptionTargetCalculator.class);

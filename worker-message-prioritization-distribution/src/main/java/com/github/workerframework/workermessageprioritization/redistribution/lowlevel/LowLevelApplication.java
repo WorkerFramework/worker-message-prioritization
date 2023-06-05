@@ -54,14 +54,13 @@ public class LowLevelApplication {
             messageDistributorConfig.getRabbitMQMgmtUsername(),
             messageDistributorConfig.getRabbitMQMgmtPassword());
 
-        final LowLevelDistributor lowLevelDistributor
-            = new LowLevelDistributor(
-                queuesApi,
-                connectionFactory,
-                new EqualConsumptionTargetCalculator(
-                    new FixedTargetQueueSettingsProvider()),
-                new StagingTargetPairProvider(),
-                messageDistributorConfig.getDistributorRunIntervalMilliseconds());
+        final LowLevelDistributor lowLevelDistributor =
+                new LowLevelDistributor(
+                        queuesApi,
+                        connectionFactory,
+                        new EqualConsumptionTargetCalculator(new FixedTargetQueueSettingsProvider()),
+                        new StagingTargetPairProvider(),
+                        messageDistributorConfig.getDistributorRunIntervalMilliseconds());
 
         lowLevelDistributor.run();
     }

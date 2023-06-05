@@ -71,11 +71,12 @@ public class LowLevelDistributorIT extends DistributorTestBase {
                     .pollInterval(Duration.ofSeconds(1))
                     .until(queueContainsNumMessages(stagingQueue2Name, 1));
         }
-        final ConsumptionTargetCalculator consumptionTargetCalculator
-            = new EqualConsumptionTargetCalculator(new FixedTargetQueueSettingsProvider());
+
+        final ConsumptionTargetCalculator consumptionTargetCalculator =
+                new EqualConsumptionTargetCalculator(new FixedTargetQueueSettingsProvider());
         final StagingTargetPairProvider stagingTargetPairProvider = new StagingTargetPairProvider();
         final LowLevelDistributor lowLevelDistributor = new LowLevelDistributor(queuesApi, connectionFactory,
-                                                                                consumptionTargetCalculator, stagingTargetPairProvider, 10000);
+                consumptionTargetCalculator, stagingTargetPairProvider, 10000);
 
         try (final Connection connection = connectionFactory.newConnection()) {
             lowLevelDistributor.runOnce(connection);
@@ -87,13 +88,13 @@ public class LowLevelDistributorIT extends DistributorTestBase {
         }
 
         await().alias(String.format("Waiting for 1st staging queue named %s to contain 0 messages", stagingQueue1Name))
-            .atMost(100, SECONDS)
-            .pollInterval(Duration.ofSeconds(1))
-            .until(queueContainsNumMessages(stagingQueue1Name, 0));
+                .atMost(100, SECONDS)
+                .pollInterval(Duration.ofSeconds(1))
+                .until(queueContainsNumMessages(stagingQueue1Name, 0));
 
         await().alias(String.format("Waiting for 2nd staging queue named %s to contain 0 messages", stagingQueue2Name))
-            .atMost(100, SECONDS)
-            .pollInterval(Duration.ofSeconds(1))
-            .until(queueContainsNumMessages(stagingQueue2Name, 0));
+                .atMost(100, SECONDS)
+                .pollInterval(Duration.ofSeconds(1))
+                .until(queueContainsNumMessages(stagingQueue2Name, 0));
     }
 }
