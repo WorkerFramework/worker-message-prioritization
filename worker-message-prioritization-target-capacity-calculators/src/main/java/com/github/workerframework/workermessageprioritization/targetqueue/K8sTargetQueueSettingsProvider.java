@@ -129,8 +129,12 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
                             targetQueueName, metadata.getName(), MESSAGE_PRIORITIZATION_TARGET_QUEUE_MAX_LENGTH_LABEL));
                     }
 
-                    // Check if there is a target queue eligible for refill percentage label
-                    if (!labels.containsKey(MESSAGE_PRIORITIZATION_TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_LABEL)) {
+                    final long targetQueueEligibleForRefillPercentage;
+                    try {
+                        // Check if there is a target queue eligible for refill percentage label
+                        targetQueueEligibleForRefillPercentage = Long.parseLong(labels.get(
+                            MESSAGE_PRIORITIZATION_TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_LABEL));
+                    } catch (final NullPointerException ex) {
                         // Throw RuntimeException as this indicates a deployment error that should never happen in production
                         throw new RuntimeException(String.format(
                             "Cannot get eligible for refill percentage for the %s queue. The %s worker is missing the %s label",
@@ -138,11 +142,17 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
                             MESSAGE_PRIORITIZATION_TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_LABEL));
                     }
 
+                    if (targetQueueEligibleForRefillPercentage < 0 || targetQueueEligibleForRefillPercentage > 100) {
+                        // Throw RuntimeException as this indicates a deployment error that should never happen in production
+                        throw new RuntimeException(String.format(
+                            "Cannot get eligible for refill percentage for the %s queue. "
+                            + "An invalid %s label was provided for the %s worker.",
+                            targetQueueName, metadata.getName(),
+                            MESSAGE_PRIORITIZATION_TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_LABEL));
+                    }
+
                     // Set the max length and eligible for refill percentage settings
                     final long targetQueueMaxLength = Long.parseLong(labels.get(MESSAGE_PRIORITIZATION_TARGET_QUEUE_MAX_LENGTH_LABEL));
-
-                    final long targetQueueEligibleForRefillPercentage = Long.parseLong(labels.get(
-                        MESSAGE_PRIORITIZATION_TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_LABEL));
 
                     LOGGER.debug("Read the {} and {} labels belonging to {}. "
                         + "Setting max length to {} and eligible for refill percentage to {} for the {} queue",
