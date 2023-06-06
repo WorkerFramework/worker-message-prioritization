@@ -27,42 +27,40 @@ import java.util.stream.Collectors;
 /**
  * Attempts to send an equal number of message from each staging queue to the target queue
  */
-public final class EqualConsumptionTargetCalculator extends MinimumConsumptionTargetCalculator
-{
+public class EqualConsumptionTargetCalculator extends MinimumConsumptionTargetCalculator {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EqualConsumptionTargetCalculator.class);
 
-    public EqualConsumptionTargetCalculator(final TargetQueueSettingsProvider targetQueueSettingsProvider)
-    {
+    public EqualConsumptionTargetCalculator(final TargetQueueSettingsProvider targetQueueSettingsProvider) {
         super(targetQueueSettingsProvider);
     }
 
     @Override
-    public Map<Queue, Long> calculateConsumptionTargets(final DistributorWorkItem distributorWorkItem)
-    {
+    public Map<Queue, Long> calculateConsumptionTargets(final DistributorWorkItem distributorWorkItem) {
 
         final long consumptionTarget = getTargetQueueCapacity(distributorWorkItem.getTargetQueue());
 
-        final long totalKnownPendingMessages
-            = distributorWorkItem.getStagingQueues().stream()
-                .map(Queue::getMessages).mapToLong(Long::longValue).sum();
+        final long totalKnownPendingMessages =
+                distributorWorkItem.getStagingQueues().stream()
+                        .map(Queue::getMessages).mapToLong(Long::longValue).sum();
 
         final long sourceQueueConsumptionTarget;
-        if (distributorWorkItem.getStagingQueues().isEmpty()) {
+        if(distributorWorkItem.getStagingQueues().isEmpty()) {
             sourceQueueConsumptionTarget = 0;
-        } else {
-            sourceQueueConsumptionTarget = (long) Math.ceil((double) consumptionTarget
-                / distributorWorkItem.getStagingQueues().size());
+        }
+        else {
+            sourceQueueConsumptionTarget = (long) Math.ceil((double)consumptionTarget /
+                    distributorWorkItem.getStagingQueues().size());
         }
 
-        LOGGER.info("TargetQueue {}, {} messages, SourceQueues {}, {} messages, "
-            + "Overall consumption target: {}, Individual Source Queue consumption target: {}",
-                    distributorWorkItem.getTargetQueue().getName(), consumptionTarget,
-                    (long) distributorWorkItem.getStagingQueues().size(), totalKnownPendingMessages,
-                    consumptionTarget, sourceQueueConsumptionTarget);
+        LOGGER.info("TargetQueue {}, {} messages, SourceQueues {}, {} messages, " +
+                        "Overall consumption target: {}, Individual Source Queue consumption target: {}",
+                distributorWorkItem.getTargetQueue().getName(), consumptionTarget,
+                (long) distributorWorkItem.getStagingQueues().size(), totalKnownPendingMessages,
+                consumptionTarget, sourceQueueConsumptionTarget);
 
         return distributorWorkItem.getStagingQueues().stream()
-            .collect(Collectors.toMap(q -> q, q -> sourceQueueConsumptionTarget));
+                .collect(Collectors.toMap(q -> q, q-> sourceQueueConsumptionTarget));
 
     }
 }
