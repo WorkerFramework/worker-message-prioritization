@@ -243,14 +243,4 @@
 
         </plugins>
     </build>
-    
-    <profiles>
-        <profile>
-            <id>use-default-fixed-ports</id>
-            <properties>
-                <rabbitmq.ctrl.port>15672</rabbitmq.ctrl.port>
-                <rabbitmq.node.port>5672</rabbitmq.node.port>
-            </properties>
-        </profile>
-    </profiles>
 </project>
