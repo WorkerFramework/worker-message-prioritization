@@ -16,7 +16,6 @@
 package com.github.workerframework.workermessageprioritization.targetqueue;
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
-import com.github.workerframework.workermessageprioritization.targetqueue.targetqueuesettings.TargetQueueSettings;
 
 /**
  * An example implementation to be used as a reference for further, real world, implementations

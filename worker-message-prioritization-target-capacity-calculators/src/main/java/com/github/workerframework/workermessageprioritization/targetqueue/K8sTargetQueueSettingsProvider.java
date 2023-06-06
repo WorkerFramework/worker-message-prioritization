@@ -16,7 +16,6 @@
 package com.github.workerframework.workermessageprioritization.targetqueue;
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
-import com.github.workerframework.workermessageprioritization.targetqueue.targetqueuesettings.TargetQueueSettings;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;

@@ -18,7 +18,7 @@ package com.github.workerframework.workermessageprioritization.redistribution.co
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 import com.github.workerframework.workermessageprioritization.redistribution.DistributorWorkItem;
 import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueSettingsProvider;
-import com.github.workerframework.workermessageprioritization.targetqueue.targetqueuesettings.TargetQueueSettings;
+import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueSettings;
 import org.junit.Test;
 
 import java.util.Arrays;
