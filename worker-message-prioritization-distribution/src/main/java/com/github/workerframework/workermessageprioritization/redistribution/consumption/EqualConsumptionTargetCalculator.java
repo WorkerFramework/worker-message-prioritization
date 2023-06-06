@@ -34,10 +34,10 @@ public class EqualConsumptionTargetCalculator extends MinimumConsumptionTargetCa
     public EqualConsumptionTargetCalculator(final TargetQueueSettingsProvider targetQueueSettingsProvider) {
         super(targetQueueSettingsProvider);
     }
-
+    
     @Override
     public Map<Queue, Long> calculateConsumptionTargets(final DistributorWorkItem distributorWorkItem) {
-
+        
         final long consumptionTarget = getTargetQueueCapacity(distributorWorkItem.getTargetQueue());
 
         final long totalKnownPendingMessages =
@@ -58,9 +58,9 @@ public class EqualConsumptionTargetCalculator extends MinimumConsumptionTargetCa
                 distributorWorkItem.getTargetQueue().getName(), consumptionTarget,
                 (long) distributorWorkItem.getStagingQueues().size(), totalKnownPendingMessages,
                 consumptionTarget, sourceQueueConsumptionTarget);
-
+        
         return distributorWorkItem.getStagingQueues().stream()
                 .collect(Collectors.toMap(q -> q, q-> sourceQueueConsumptionTarget));
-
+        
     }
 }
