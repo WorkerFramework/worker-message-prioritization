@@ -40,10 +40,10 @@ public class DistributorTestBase {
         connectionFactory.setHost(System.getProperty("rabbitmq.node.address", "localhost"));
         connectionFactory.setUsername(System.getProperty("rabbitmq.username", "guest"));
         connectionFactory.setPassword(System.getProperty("rabbitmq.password", "guest"));
-        connectionFactory.setPort(Integer.parseInt(System.getProperty("rabbitmq.node.port", "25672")));
+        connectionFactory.setPort(Integer.parseInt(System.getProperty("rabbitmq.node.port", "5672")));
         connectionFactory.setVirtualHost("/");
 
-        managementPort = Integer.parseInt(System.getProperty("rabbitmq.ctrl.port", "25673"));
+        managementPort = Integer.parseInt(System.getProperty("rabbitmq.ctrl.port", "15672"));
 
         queuesApi =
                 new RabbitManagementApi<>(QueuesApi.class,
