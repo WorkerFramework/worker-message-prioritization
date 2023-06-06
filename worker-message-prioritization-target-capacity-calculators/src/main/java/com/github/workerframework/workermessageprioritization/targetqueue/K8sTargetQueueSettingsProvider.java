@@ -154,7 +154,7 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
                     final long targetQueueMaxLength = Long.parseLong(labels.get(MESSAGE_PRIORITIZATION_TARGET_QUEUE_MAX_LENGTH_LABEL));
 
                     LOGGER.debug("Read the {} and {} labels belonging to {}. "
-                        + "Setting max length to {} and eligible for refill percentage to {} for the {} queue",
+                        + "Setting max length to {} and eligible for refill percentage to {}% for the {} queue",
                                  MESSAGE_PRIORITIZATION_TARGET_QUEUE_MAX_LENGTH_LABEL,
                                  MESSAGE_PRIORITIZATION_TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_LABEL,
                                  metadata.getName(),

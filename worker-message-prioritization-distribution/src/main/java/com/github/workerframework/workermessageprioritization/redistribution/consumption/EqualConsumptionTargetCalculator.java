@@ -53,11 +53,12 @@ public class EqualConsumptionTargetCalculator extends MinimumConsumptionTargetCa
                     distributorWorkItem.getStagingQueues().size());
         }
 
+        final Queue targetQueue = distributorWorkItem.getTargetQueue();
+
         LOGGER.info("TargetQueue {}, {} messages, SourceQueues {}, {} messages, " +
                         "Overall consumption target: {}, Individual Source Queue consumption target: {}",
-                distributorWorkItem.getTargetQueue().getName(), consumptionTarget,
-                (long) distributorWorkItem.getStagingQueues().size(), totalKnownPendingMessages,
-                consumptionTarget, sourceQueueConsumptionTarget);
+                targetQueue.getName(), targetQueue.getMessages(), (long) distributorWorkItem.getStagingQueues().size(),
+                totalKnownPendingMessages, consumptionTarget, sourceQueueConsumptionTarget);
         
         return distributorWorkItem.getStagingQueues().stream()
                 .collect(Collectors.toMap(q -> q, q-> sourceQueueConsumptionTarget));
