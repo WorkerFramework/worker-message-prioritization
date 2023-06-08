@@ -120,25 +120,24 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
                         continue;
                     }
 
-                    // Check if there is a target queue max length label
-                    if (!labels.containsKey(MESSAGE_PRIORITIZATION_TARGET_QUEUE_MAX_LENGTH_LABEL)) {
-                        // Throw RuntimeException as this indicates a deployment error that should never happen in production
-                        throw new RuntimeException(String.format(
-                            "Cannot get max length for the %s queue. The %s worker is missing the %s label",
-                            targetQueueName, metadata.getName(), MESSAGE_PRIORITIZATION_TARGET_QUEUE_MAX_LENGTH_LABEL));
+                    long targetQueueMaxLength;
+                    try {
+                        // Check if there is a target queue max length label
+                        targetQueueMaxLength = Long.parseLong(labels.get(
+                                MESSAGE_PRIORITIZATION_TARGET_QUEUE_MAX_LENGTH_LABEL));
+                    } catch (final NullPointerException ex) {
+                        // No max length label provided for worker, set to fall back value
+                        targetQueueMaxLength = TARGET_QUEUE_MAX_LENGTH_FALLBACK;
                     }
 
-                    final long targetQueueEligibleForRefillPercentage;
+                    long targetQueueEligibleForRefillPercentage;
                     try {
                         // Check if there is a target queue eligible for refill percentage label
                         targetQueueEligibleForRefillPercentage = Long.parseLong(labels.get(
                             MESSAGE_PRIORITIZATION_TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_LABEL));
                     } catch (final NullPointerException ex) {
-                        // Throw RuntimeException as this indicates a deployment error that should never happen in production
-                        throw new RuntimeException(String.format(
-                            "Cannot get eligible for refill percentage for the %s queue. The %s worker is missing the %s label",
-                            targetQueueName, metadata.getName(),
-                            MESSAGE_PRIORITIZATION_TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_LABEL));
+                        // No eligible for refill percentage label provided for worker, set to fall back value
+                        targetQueueEligibleForRefillPercentage = TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK;
                     }
 
                     if (targetQueueEligibleForRefillPercentage < 0 || targetQueueEligibleForRefillPercentage > 100) {
@@ -149,9 +148,6 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
                             targetQueueName, metadata.getName(),
                             MESSAGE_PRIORITIZATION_TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_LABEL));
                     }
-
-                    // Set the max length and eligible for refill percentage settings
-                    final long targetQueueMaxLength = Long.parseLong(labels.get(MESSAGE_PRIORITIZATION_TARGET_QUEUE_MAX_LENGTH_LABEL));
 
                     LOGGER.debug("Read the {} and {} labels belonging to {}. "
                         + "Setting max length to {} and eligible for refill percentage to {}% for the {} queue",
