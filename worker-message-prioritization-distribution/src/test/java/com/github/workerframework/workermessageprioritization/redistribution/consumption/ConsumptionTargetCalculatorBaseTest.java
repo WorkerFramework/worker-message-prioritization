@@ -45,4 +45,21 @@ public final class ConsumptionTargetCalculatorBaseTest
 
         assertEquals(250, calculator.getTargetQueueCapacity(targetQueue));
     }
+
+    @Test
+    public void getTargetQueueCapacityTestMessageCountAboveLimit()
+    {
+        final TargetQueueSettingsProvider provider = mock(TargetQueueSettingsProvider.class);
+        final Queue targetQueue = new Queue();
+        targetQueue.setMessages(1200);
+
+        final TargetQueueSettings settings = new TargetQueueSettings(1000, 20);
+        when(provider.get(targetQueue)).thenReturn(settings);
+
+        final ConsumptionTargetCalculatorBase calculator = mock(
+            ConsumptionTargetCalculatorBase.class,
+            withSettings().useConstructor(provider).defaultAnswer(CALLS_REAL_METHODS));
+
+        assertEquals(-200, calculator.getTargetQueueCapacity(targetQueue));
+    }
 }
