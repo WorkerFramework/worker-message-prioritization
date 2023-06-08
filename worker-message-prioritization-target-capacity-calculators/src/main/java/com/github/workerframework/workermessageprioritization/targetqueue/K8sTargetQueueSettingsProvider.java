@@ -124,9 +124,13 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
                     try {
                         // Check if there is a target queue max length label
                         targetQueueMaxLength = Long.parseLong(labels.get(
-                                MESSAGE_PRIORITIZATION_TARGET_QUEUE_MAX_LENGTH_LABEL));
+                            MESSAGE_PRIORITIZATION_TARGET_QUEUE_MAX_LENGTH_LABEL));
                     } catch (final NullPointerException ex) {
                         // No max length label provided for worker, set to fall back value
+                        LOGGER.error(String.format("Cannot get max length for the %s queue. The %s worker is missing the %s label. "
+                            + "Falling back to using max length of %s",
+                                                   targetQueueName, metadata.getName(), MESSAGE_PRIORITIZATION_TARGET_QUEUE_MAX_LENGTH_LABEL,
+                                                   TARGET_QUEUE_MAX_LENGTH_FALLBACK));
                         targetQueueMaxLength = TARGET_QUEUE_MAX_LENGTH_FALLBACK;
                     }
 
@@ -137,16 +141,23 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
                             MESSAGE_PRIORITIZATION_TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_LABEL));
                     } catch (final NullPointerException ex) {
                         // No eligible for refill percentage label provided for worker, set to fall back value
+                        LOGGER.error(String.format("Cannot get eligible for refill percentage for the %s queue. "
+                            + "The %s worker is missing the %s label. "
+                            + "Falling back to using eligible for refill percentage of %s",
+                                                   targetQueueName, metadata.getName(),
+                                                   MESSAGE_PRIORITIZATION_TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_LABEL,
+                                                   TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK));
                         targetQueueEligibleForRefillPercentage = TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK;
                     }
 
                     if (targetQueueEligibleForRefillPercentage < 0 || targetQueueEligibleForRefillPercentage > 100) {
-                        // Throw RuntimeException as this indicates a deployment error that should never happen in production
-                        throw new RuntimeException(String.format(
-                            "Cannot get eligible for refill percentage for the %s queue. "
-                            + "An invalid %s label was provided for the %s worker.",
-                            targetQueueName, metadata.getName(),
-                            MESSAGE_PRIORITIZATION_TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_LABEL));
+                        // Invalid eligible for refill percentage provided, set to fall back value
+                        LOGGER.error(String.format("Cannot get eligible for refill percentage for the %s queue. "
+                            + "An invalid %s label was provided for the %s worker. "
+                            + "Falling back to using eligible for refill percentage of %s",
+                                                   targetQueueName, MESSAGE_PRIORITIZATION_TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_LABEL,
+                                                   metadata.getName(), TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK));
+                        targetQueueEligibleForRefillPercentage = TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK;
                     }
 
                     LOGGER.debug("Read the {} and {} labels belonging to {}. "
