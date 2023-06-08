@@ -30,7 +30,7 @@ public final class ConsumptionTargetCalculatorBaseTest
 {
 
     @Test
-    public void getTargetQueueCapacityTest()
+    public void getTargetQueueCapacityTestValid()
     {
         final TargetQueueSettingsProvider provider = mock(TargetQueueSettingsProvider.class);
         final Queue targetQueue = new Queue();
@@ -47,7 +47,7 @@ public final class ConsumptionTargetCalculatorBaseTest
     }
 
     @Test
-    public void getTargetQueueCapacityTestMessageCountAboveLimit()
+    public void getTargetQueueCapacityTestMessageCountAboveLimitReturn0()
     {
         final TargetQueueSettingsProvider provider = mock(TargetQueueSettingsProvider.class);
         final Queue targetQueue = new Queue();
