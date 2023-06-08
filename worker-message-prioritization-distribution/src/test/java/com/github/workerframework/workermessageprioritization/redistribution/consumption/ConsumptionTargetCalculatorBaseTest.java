@@ -60,6 +60,6 @@ public final class ConsumptionTargetCalculatorBaseTest
             ConsumptionTargetCalculatorBase.class,
             withSettings().useConstructor(provider).defaultAnswer(CALLS_REAL_METHODS));
 
-        assertEquals(-200, calculator.getTargetQueueCapacity(targetQueue));
+        assertEquals(0, calculator.getTargetQueueCapacity(targetQueue));
     }
 }
