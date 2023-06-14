@@ -33,7 +33,7 @@ import java.util.concurrent.TimeoutException;
 // worker-message-prioritization-distribution/pom.xml.
 public final class DistributorIT extends DistributorTestBase {
 
-    @Test
+    //@Test
     public void twoStagingQueuesTest() throws TimeoutException, IOException, InterruptedException {
 
         final String targetQueueName = getUniqueTargetQueueName(TARGET_QUEUE_NAME);

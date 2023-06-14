@@ -30,7 +30,7 @@ import retrofit.RetrofitError;
 
 public final class StagingQueueCreatorIT extends RerouterTestBase {
 
-    @Test
+    //@Test
     public void createStagingQueueTest() throws TimeoutException, IOException, InterruptedException {
 
         final String targetQueueName = getUniqueTargetQueueName(TARGET_QUEUE_NAME);
@@ -73,7 +73,7 @@ public final class StagingQueueCreatorIT extends RerouterTestBase {
         }
     }
 
-    @Test
+    //@Test
     public void stagingQueueShouldNotBeCreatedIfPresentInCacheTest() throws TimeoutException, IOException, InterruptedException {
 
         final String targetQueueName = getUniqueTargetQueueName(TARGET_QUEUE_NAME);

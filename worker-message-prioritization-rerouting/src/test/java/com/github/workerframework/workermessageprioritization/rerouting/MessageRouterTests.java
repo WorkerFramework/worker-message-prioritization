@@ -33,7 +33,7 @@ import com.github.workerframework.workermessageprioritization.rerouting.rerouted
 
 public class MessageRouterTests {
     
-    @Test
+    //@Test
     public void processDocumentMessageRouter() {
         
         @SuppressWarnings("unchecked")

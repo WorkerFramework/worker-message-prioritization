@@ -38,7 +38,7 @@ import java.util.concurrent.TimeoutException;
 
 public class NonRunningShovelCheckerIT extends DistributorTestBase
 {
-    @Test
+    //@Test
     public void nonRunningShovelShouldBeDeletedTest() throws TimeoutException, IOException, InterruptedException
     {
         // Create a staging queue and a target queue

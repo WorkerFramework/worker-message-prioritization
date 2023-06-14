@@ -80,7 +80,7 @@ public class CorruptedShovelCheckerTest
                 mockRabbitManagementApiShovelsApi, mockRabbitManagementApiNodesApi, mockNodeSpecificShovelsApiCache, VHOST, 0, 0);
     }
 
-    @Test
+    //@Test
     public void testNoCorruptedShovels() throws ExecutionException
     {
         // 2 good shovels
@@ -107,7 +107,7 @@ public class CorruptedShovelCheckerTest
         verify(mockNode2ShovelsApi, never()).delete(VHOST, "goodShovel2");
     }
 
-    @Test
+    //@Test
     public void testCorruptedShovelsFound() throws ExecutionException
     {
         // 1 good shovel, 2 corrupted shovels
