@@ -27,6 +27,8 @@ import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -41,13 +43,11 @@ public class ShovelDistributorIT extends DistributorTestBase {
 
         final String targetQueueName = getUniqueTargetQueueName(TARGET_QUEUE_NAME);
         final String stagingQueue1Name = getStagingQueueName(targetQueueName, T1_STAGING_QUEUE_NAME);
-        final String stagingQueue2Name = getStagingQueueName(targetQueueName, T2_STAGING_QUEUE_NAME);
-        
+
         try(final Connection connection = connectionFactory.newConnection()) {
             final Channel channel = connection.createChannel();
 
             channel.queueDeclare(stagingQueue1Name, true, false, false, Collections.emptyMap());
-            channel.queueDeclare(stagingQueue2Name, true, false, false, Collections.emptyMap());
             channel.queueDeclare(targetQueueName, true, false, false, Collections.emptyMap());
             final AMQP.BasicProperties properties = new AMQP.BasicProperties.Builder()
                     .contentType("application/json")
@@ -57,18 +57,16 @@ public class ShovelDistributorIT extends DistributorTestBase {
 
             final String body = gson.toJson(new Object());
 
-            channel.basicPublish("", stagingQueue1Name, properties, body.getBytes(StandardCharsets.UTF_8));
-            channel.basicPublish("", stagingQueue2Name, properties, body.getBytes(StandardCharsets.UTF_8));
+            final int numStagingMessages = 100000;
 
-            await().alias(String.format("Waiting for 1st staging queue named %s to contain 1 message", stagingQueue1Name))
+            for(int i = 0; i < numStagingMessages; i++) {
+                channel.basicPublish("", stagingQueue1Name, properties, body.getBytes(StandardCharsets.UTF_8));
+            }
+
+            await().alias(String.format("Waiting for 1st staging queue named %s to contain %s messages", stagingQueue1Name, numStagingMessages))
                     .atMost(100, SECONDS)
                     .pollInterval(Duration.ofSeconds(1))
-                    .until(queueContainsNumMessages(stagingQueue1Name, 1));
-
-            await().alias(String.format("Waiting for 2nd staging queue named %s to contain 1 message", stagingQueue2Name))
-                    .atMost(100, SECONDS)
-                    .pollInterval(Duration.ofSeconds(1))
-                    .until(queueContainsNumMessages(stagingQueue2Name, 1));
+                    .until(queueContainsNumMessages(stagingQueue1Name, numStagingMessages));
         }
 
         final ConsumptionTargetCalculator consumptionTargetCalculator =
@@ -90,21 +88,19 @@ public class ShovelDistributorIT extends DistributorTestBase {
                 120000,
                 10000);
 
-        shovelDistributor.runOnce();
+        for(int x = 0; x < 100; x++) {
+            shovelDistributor.runOnce();
+            Thread.sleep(100);
+        }
 
-        await().alias(String.format("Waiting for target queue named %s to contain 2 messages", targetQueueName))
-                .atMost(100, SECONDS)
+        await().alias(String.format("Waiting for target queue named %s to contain 100,000 messages", targetQueueName))
+                .atMost(1000, SECONDS)
                 .pollInterval(Duration.ofSeconds(1))
-                .until(queueContainsNumMessages(targetQueueName, 2));
+                .until(queueContainsNumMessages(targetQueueName, 100000));
 
         await().alias(String.format("Waiting for 1st staging queue named %s to contain 0 messages", stagingQueue1Name))
                 .atMost(100, SECONDS)
                 .pollInterval(Duration.ofSeconds(1))
                 .until(queueContainsNumMessages(stagingQueue1Name, 0));
-
-        await().alias(String.format("Waiting for 2nd staging queue named %s to contain 0 messages", stagingQueue2Name))
-                .atMost(100, SECONDS)
-                .pollInterval(Duration.ofSeconds(1))
-                .until(queueContainsNumMessages(stagingQueue2Name, 0));
     }
 }

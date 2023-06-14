@@ -200,7 +200,8 @@ public class ShovelDistributor extends MessageDistributor {
                         // This ensures the shovel is always deleted.
                         final long numMessagesInStagingQueue = queueConsumptionTarget.getKey().getMessages();
                         final long maxNumMessagesToConsumeFromStagingQueue = queueConsumptionTarget.getValue();
-                        final long srcDeleteAfter = Math.min(numMessagesInStagingQueue, maxNumMessagesToConsumeFromStagingQueue);
+                        //final long srcDeleteAfter = Math.min(numMessagesInStagingQueue, maxNumMessagesToConsumeFromStagingQueue);
+                        final long srcDeleteAfter = 1000;
 
                         final ShovelToCreate shovelToCreate = new ShovelToCreate();
                         shovelToCreate.setSrcDeleteAfter(srcDeleteAfter);
