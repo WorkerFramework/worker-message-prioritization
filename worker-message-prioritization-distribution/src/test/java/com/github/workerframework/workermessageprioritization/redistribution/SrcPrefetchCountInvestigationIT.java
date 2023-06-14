@@ -38,7 +38,7 @@ import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
 
 public class SrcPrefetchCountInvestigationIT extends DistributorTestBase {
-    //@Test
+    @Test
     public void srcPrefetchCountTest() throws TimeoutException, IOException, InterruptedException {
 
         try(final Connection connection = connectionFactory.newConnection()) {
