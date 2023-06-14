@@ -13,17 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.workerframework.workermessageprioritization.targetcapacitycalculators;
+package com.github.workerframework.workermessageprioritization.targetqueue;
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 
 /**
  * An example implementation to be used as a reference for further, real world, implementations
  */
-public class FixedTargetQueueCapacityProvider implements TargetQueueCapacityProvider {
-    private static final long MAXIMUM_CAPACITY = 1000;
+public final class FixedTargetQueueSettingsProvider implements TargetQueueSettingsProvider
+{
+    private static final long QUEUE_MAX_LENGTH = 1000;
+    private static final long QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE = 10;
+
     @Override
-    public long get(final Queue targetQueue) {
-        return MAXIMUM_CAPACITY - targetQueue.getMessages();
+    public TargetQueueSettings get(final Queue targetQueue)
+    {
+        return new TargetQueueSettings(QUEUE_MAX_LENGTH - targetQueue.getMessages(), QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE);
     }
 }

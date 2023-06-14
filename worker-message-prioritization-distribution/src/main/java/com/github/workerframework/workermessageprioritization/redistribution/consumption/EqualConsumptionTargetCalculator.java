@@ -17,7 +17,7 @@ package com.github.workerframework.workermessageprioritization.redistribution.co
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 import com.github.workerframework.workermessageprioritization.redistribution.DistributorWorkItem;
-import com.github.workerframework.workermessageprioritization.targetcapacitycalculators.TargetQueueCapacityProvider;
+import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueSettingsProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,28 +27,23 @@ import java.util.stream.Collectors;
 /**
  * Attempts to send an equal number of message from each staging queue to the target queue
  */
-public class EqualConsumptionTargetCalculator implements ConsumptionTargetCalculator {
+public class EqualConsumptionTargetCalculator extends MinimumConsumptionTargetCalculator {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EqualConsumptionTargetCalculator.class);
-    private final TargetQueueCapacityProvider targetQueueCapacityProvider;
 
-    public EqualConsumptionTargetCalculator(final TargetQueueCapacityProvider targetQueueCapacityProvider) {
-
-        this.targetQueueCapacityProvider = targetQueueCapacityProvider;
+    public EqualConsumptionTargetCalculator(final TargetQueueSettingsProvider targetQueueSettingsProvider) {
+        super(targetQueueSettingsProvider);
     }
     
     @Override
     public Map<Queue, Long> calculateConsumptionTargets(final DistributorWorkItem distributorWorkItem) {
         
-        final long targetQueueCapacity = targetQueueCapacityProvider.get(distributorWorkItem.getTargetQueue());
-        
-        final long lastKnownTargetQueueLength = distributorWorkItem.getTargetQueue().getMessages();
+        final long consumptionTarget = getTargetQueueCapacity(distributorWorkItem.getTargetQueue());
 
         final long totalKnownPendingMessages =
                 distributorWorkItem.getStagingQueues().stream()
                         .map(Queue::getMessages).mapToLong(Long::longValue).sum();
 
-        final long consumptionTarget = targetQueueCapacity - lastKnownTargetQueueLength;
         final long sourceQueueConsumptionTarget;
         if(distributorWorkItem.getStagingQueues().isEmpty()) {
             sourceQueueConsumptionTarget = 0;
@@ -58,11 +53,12 @@ public class EqualConsumptionTargetCalculator implements ConsumptionTargetCalcul
                     distributorWorkItem.getStagingQueues().size());
         }
 
+        final Queue targetQueue = distributorWorkItem.getTargetQueue();
+
         LOGGER.info("TargetQueue {}, {} messages, SourceQueues {}, {} messages, " +
                         "Overall consumption target: {}, Individual Source Queue consumption target: {}",
-                distributorWorkItem.getTargetQueue().getName(), lastKnownTargetQueueLength,
-                (long) distributorWorkItem.getStagingQueues().size(), totalKnownPendingMessages,
-                consumptionTarget, sourceQueueConsumptionTarget);
+                targetQueue.getName(), targetQueue.getMessages(), (long) distributorWorkItem.getStagingQueues().size(),
+                totalKnownPendingMessages, consumptionTarget, sourceQueueConsumptionTarget);
         
         return distributorWorkItem.getStagingQueues().stream()
                 .collect(Collectors.toMap(q -> q, q-> sourceQueueConsumptionTarget));

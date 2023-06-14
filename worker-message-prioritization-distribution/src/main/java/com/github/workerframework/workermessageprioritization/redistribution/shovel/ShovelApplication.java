@@ -30,7 +30,7 @@ import com.github.workerframework.workermessageprioritization.rabbitmq.ShovelsAp
 import com.github.workerframework.workermessageprioritization.redistribution.config.MessageDistributorConfig;
 import com.github.workerframework.workermessageprioritization.redistribution.consumption.ConsumptionTargetCalculator;
 import com.github.workerframework.workermessageprioritization.redistribution.consumption.EqualConsumptionTargetCalculator;
-import com.github.workerframework.workermessageprioritization.targetcapacitycalculators.K8sTargetQueueCapacityProvider;
+import com.github.workerframework.workermessageprioritization.targetqueue.K8sTargetQueueSettingsProvider;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -99,12 +99,12 @@ public class ShovelApplication
                     }
                 });
 
-        final K8sTargetQueueCapacityProvider k8sTargetQueueCapacityProvider = new K8sTargetQueueCapacityProvider(
+        final K8sTargetQueueSettingsProvider k8sTargetQueueSettingsProvider = new K8sTargetQueueSettingsProvider(
                 messageDistributorConfig.getKubernetesNamespaces(),
                 messageDistributorConfig.getKubernetesLabelCacheExpiryMinutes());
 
         final ConsumptionTargetCalculator consumptionTargetCalculator =
-                new EqualConsumptionTargetCalculator(k8sTargetQueueCapacityProvider);
+                new EqualConsumptionTargetCalculator(k8sTargetQueueSettingsProvider);
 
         final ShovelDistributor shovelDistributor = new ShovelDistributor(
             queuesApi,

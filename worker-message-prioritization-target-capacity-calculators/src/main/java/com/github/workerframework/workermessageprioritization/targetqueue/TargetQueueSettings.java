@@ -13,19 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.workerframework.workermessageprioritization.targetcapacitycalculators;
+package com.github.workerframework.workermessageprioritization.targetqueue;
 
-import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
+public final class TargetQueueSettings
+{
+    private final long maxLength;
+    private final long eligibleForRefillPercentage;
 
-/**
- * Obtain the number of messages the target queue has capacity for
- */
-public interface TargetQueueCapacityProvider {
+    public TargetQueueSettings(final long maxLength, final long eligibleForRefillPercentage)
+    {
+        this.maxLength = maxLength;
+        this.eligibleForRefillPercentage = eligibleForRefillPercentage;
+    }
 
-    /**
-     * Obtain available capacity of the target queue
-     * @param targetQueue The target queue to obtain the available capacity
-     * @return The number of messages that can be sent to the target queue
-     */
-    long get(final Queue targetQueue);
+    public long getMaxLength()
+    {
+        return this.maxLength;
+    }
+
+    public long getEligibleForRefillPercentage()
+    {
+        return eligibleForRefillPercentage;
+    }
 }
