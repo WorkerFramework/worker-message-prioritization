@@ -86,7 +86,18 @@ public class LowLevelDistributor extends MessageDistributor {
     }
     
     public void runOnce(final Connection connection) throws IOException {
-        final Set<DistributorWorkItem> distributorWorkItems = getDistributorWorkItems();
+        final Set<DistributorWorkItem> distributorWorkItems;
+        try {
+            distributorWorkItems = getDistributorWorkItems();
+        } catch (final Exception e) {
+            final String errorMessage = String.format(
+                    "Failed to get a list of distributor work items. Will try again during the next run in %d milliseconds",
+                    distributorRunIntervalMilliseconds);
+
+            LOGGER.error(errorMessage, e);
+
+            return;
+        }
 
         for (final DistributorWorkItem distributorWorkItem : distributorWorkItems) {
             final Map<Queue, Long> consumptionTargets = consumptionTargetCalculator.calculateConsumptionTargets(distributorWorkItem);
