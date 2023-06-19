@@ -121,7 +121,7 @@ public class StagingQueueTargetQueuePair {
                     deliveryTag, true
             );
 
-            LOGGER.trace("Ack message source delivery {} from {} after publish confirm {} of message to {}",
+            LOGGER.trace("Ack (multiple) message source delivery {} from {} after publish confirm {} of message to {}",
                     confirmed.lastKey(), stagingQueue.getName(), outstandingConfirms.get(deliveryTag),
                     targetQueue.getName());
 
