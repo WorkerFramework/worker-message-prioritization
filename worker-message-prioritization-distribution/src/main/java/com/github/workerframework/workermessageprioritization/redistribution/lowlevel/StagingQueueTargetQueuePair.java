@@ -86,15 +86,7 @@ public class StagingQueueTargetQueuePair {
                     .priority(properties.getPriority())
                     .build();
 
-            //Hack the To See https://internal.almoctane.com/ui/entity-navigation?p=131002/6001&entityType=work_item&id=614206
-            final JsonObject jsonObject =
-                    gson.fromJson(new String(body, StandardCharsets.UTF_8), JsonObject.class);
-            jsonObject.addProperty("to", targetQueue.getName());
-            final String s = gson.toJson(jsonObject);
-            //End Hack
-
-            targetQueueChannel.basicPublish("", targetQueue.getName(), basicProperties, 
-                    s.getBytes(StandardCharsets.UTF_8));
+            targetQueueChannel.basicPublish("", targetQueue.getName(), basicProperties, body);
         }
         catch (final IOException e) {
             LOGGER.error("Exception publishing to '{}' {}", targetQueue.getName(),
