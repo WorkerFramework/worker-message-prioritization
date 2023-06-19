@@ -139,7 +139,7 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
                         // Check if there is a target queue eligible for refill percentage label
                         targetQueueEligibleForRefillPercentage = Long.parseLong(labels.get(
                             MESSAGE_PRIORITIZATION_TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_LABEL));
-                    } catch (final NullPointerException ex) {
+                    } catch (final NullPointerException | NumberFormatException ex) {
                         // No eligible for refill percentage label provided for worker, set to fall back value
                         LOGGER.error(String.format("Cannot get eligible for refill percentage for the %s queue. "
                             + "The %s worker is missing the %s label. "
