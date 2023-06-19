@@ -178,4 +178,7 @@ public class StagingQueueTargetQueuePair {
         return stagingQueueConsumer.getShutdownSignalException();
     }
 
+    public long getConsumptionLimit() {
+        return consumptionLimit;
+    }
 }

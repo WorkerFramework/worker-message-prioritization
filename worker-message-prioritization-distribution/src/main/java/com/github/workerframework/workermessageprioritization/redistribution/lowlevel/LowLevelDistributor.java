@@ -125,6 +125,11 @@ public class LowLevelDistributor extends MessageDistributor {
                 }
                 existingStagingQueueTargetQueuePairs
                         .put(stagingTargetPair.getIdentifier(), stagingTargetPair);
+
+                LOGGER.info("Starting StagingQueueTargetQueuePair '{}' to consume a maximum of '{}' messages",
+                        stagingTargetPair.getIdentifier(),
+                        stagingTargetPair.getConsumptionLimit());
+
                 stagingTargetPair.startConsuming();
             }
 
