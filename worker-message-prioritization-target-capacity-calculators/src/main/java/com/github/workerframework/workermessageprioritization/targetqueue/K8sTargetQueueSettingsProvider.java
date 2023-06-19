@@ -132,6 +132,13 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
                                                    targetQueueName, metadata.getName(), MESSAGE_PRIORITIZATION_TARGET_QUEUE_MAX_LENGTH_LABEL,
                                                    TARGET_QUEUE_MAX_LENGTH_FALLBACK));
                         targetQueueMaxLength = TARGET_QUEUE_MAX_LENGTH_FALLBACK;
+                    } catch (final NumberFormatException ex) {
+                        // Max length label is not a parsable long, set to fall back value
+                        LOGGER.error(String.format("Cannot get max length for the %s queue. An invalid %s label was provided. "
+                            + "Falling back to using max length of %s",
+                                                   targetQueueName, MESSAGE_PRIORITIZATION_TARGET_QUEUE_MAX_LENGTH_LABEL,
+                                                   TARGET_QUEUE_MAX_LENGTH_FALLBACK));
+                        targetQueueMaxLength = TARGET_QUEUE_MAX_LENGTH_FALLBACK;
                     }
 
                     long targetQueueEligibleForRefillPercentage;
@@ -146,6 +153,14 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
                             + "Falling back to using eligible for refill percentage of %s",
                                                    targetQueueName, metadata.getName(),
                                                    MESSAGE_PRIORITIZATION_TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_LABEL,
+                                                   TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK));
+                        targetQueueEligibleForRefillPercentage = TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK;
+                    } catch (final NumberFormatException ex) {
+                        // Eligible for refill percentage label is not a parsable long, set to fall back value
+                        LOGGER.error(String.format("Cannot get eligible for refill percentage for the %s queue. "
+                            + "An invalid %s label was provided. "
+                            + "Falling back to using max length of %s",
+                                                   targetQueueName, MESSAGE_PRIORITIZATION_TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_LABEL,
                                                    TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK));
                         targetQueueEligibleForRefillPercentage = TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK;
                     }
