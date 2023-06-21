@@ -27,8 +27,6 @@ public class Queue {
     private boolean auto_delete;
     private Map<String, Object> arguments;
 
-    private MessageStats message_stats;
-
     public String getName() {
         return name;
     }
@@ -85,14 +83,6 @@ public class Queue {
         this.arguments = arguments;
     }
 
-    public MessageStats getMessage_stats() {
-        return message_stats;
-    }
-
-    public void setMessage_stats(MessageStats message_stats) {
-        this.message_stats = message_stats;
-    }
-
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
@@ -103,31 +93,6 @@ public class Queue {
             .add("exclusive", exclusive)
             .add("auto_delete", auto_delete)
             .add("arguments", arguments)
-            .add("message_stats", message_stats)
             .toString();
-    }
-
-    public static class MessageStats {
-        private DeliverGetDetails deliver_get_details;
-
-        public DeliverGetDetails getDeliver_get_details() {
-            return deliver_get_details;
-        }
-
-        public void setDeliver_get_details(DeliverGetDetails deliver_get_details) {
-            this.deliver_get_details = deliver_get_details;
-        }
-    }
-
-    public static class DeliverGetDetails {
-        private double rate;
-
-        public double getRate() {
-            return rate;
-        }
-
-        public void setRate(double rate) {
-            this.rate = rate;
-        }
     }
 }
