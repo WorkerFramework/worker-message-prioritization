@@ -111,18 +111,26 @@ public class LowLevelDistributor extends MessageDistributor {
                             existingStagingQueueTargetQueuePairs.get(stagingTargetPair.getIdentifier());
 
                     if (!existingStagingQueueTargetQueuePair.isCompleted()) {
-                        LOGGER.warn("Existing StagingQueueTargetQueuePair '{}' was still running",
-                                existingStagingQueueTargetQueuePair.getIdentifier());
+                        LOGGER.warn("Existing StagingQueueTargetQueuePair '{}' was still running", existingStagingQueueTargetQueuePair);
                         continue;
                     } else {
                         if (existingStagingQueueTargetQueuePair.getShutdownSignalException() != null) {
-                            LOGGER.error("Exiting as '{}' recorded a shutdown exception.",
-                                    existingStagingQueueTargetQueuePair.getIdentifier());
+                            LOGGER.error("Exiting as '{}' recorded a shutdown exception.", existingStagingQueueTargetQueuePair);
                             return;
                         }
+
+                        LOGGER.debug("Removing '{}' from existingStagingQueueTargetQueuePairs '{}' as it has completed",
+                                existingStagingQueueTargetQueuePair,
+                                existingStagingQueueTargetQueuePairs);
+
                         existingStagingQueueTargetQueuePairs.remove(stagingTargetPair.getIdentifier());
                     }
                 }
+
+                LOGGER.debug("Adding '{}' to existingStagingQueueTargetQueuePairs '{}'",
+                        stagingTargetPair,
+                        existingStagingQueueTargetQueuePairs);
+
                 existingStagingQueueTargetQueuePairs
                         .put(stagingTargetPair.getIdentifier(), stagingTargetPair);
 

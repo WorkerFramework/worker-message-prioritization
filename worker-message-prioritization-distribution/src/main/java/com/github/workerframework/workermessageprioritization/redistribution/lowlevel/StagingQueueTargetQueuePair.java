@@ -15,9 +15,8 @@
  */
 package com.github.workerframework.workermessageprioritization.redistribution.lowlevel;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
+import com.google.common.base.MoreObjects;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
@@ -27,7 +26,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -41,7 +39,6 @@ public class StagingQueueTargetQueuePair {
     private Channel stagingQueueChannel;
     private Channel targetQueueChannel;
     private final ConcurrentNavigableMap<Long, Long> outstandingConfirms = new ConcurrentSkipListMap<>();
-    private final Gson gson = new Gson();
     private final AtomicInteger messageCount = new AtomicInteger(0);
     private final long consumptionLimit;
     private StagingQueueConsumer stagingQueueConsumer;
@@ -57,7 +54,28 @@ public class StagingQueueTargetQueuePair {
     
     public void startConsuming() throws IOException {
         stagingQueueChannel = connection.createChannel();
+        stagingQueueChannel.addShutdownListener(cause -> {
+            if (cause.isInitiatedByApplication()) {
+                LOGGER.debug("Shutdown of staging queue channel for {} initiated by application", stagingQueue.getName());
+            }
+            else {
+                LOGGER.debug(String.format(
+                        "Shutdown of staging queue channel for %s not initiated by application", stagingQueue.getName()), cause);
+            }
+        });
+        // The cast to int below is fine as I don't think consumptionLimit will be greater than Integer.MAX_VALUE. If it is, it doesn't
+        // really matter, as we'll consume the remaining messages during the next run(s) of the LowLevelDistributor.
+        stagingQueueChannel.basicQos((int)consumptionLimit);
         targetQueueChannel = connection.createChannel();
+        targetQueueChannel.addShutdownListener(cause -> {
+            if (cause.isInitiatedByApplication()) {
+                LOGGER.debug("Shutdown of target queue channel for {} initiated by application", targetQueue.getName());
+            }
+            else {
+                LOGGER.debug(String.format(
+                        "Shutdown of target queue channel for %s not initiated by application", targetQueue.getName()), cause);
+            }
+        });
         targetQueueChannel.confirmSelect();
 
         final TargetQueueConfirmListener targetQueueConfirmListener = new TargetQueueConfirmListener(this);
@@ -98,9 +116,17 @@ public class StagingQueueTargetQueuePair {
         messageCount.incrementAndGet();
 
         if(messageCount.get() >= consumptionLimit) {
-            LOGGER.info("Consumption target '{}' reached for '{}'.", consumptionLimit,
-                    stagingQueue.getName());
-            if (stagingQueueConsumer.isCancelled()) {
+            LOGGER.info("Consumption target '{}' reached for '{}'. Number of messages consumed: '{}'", consumptionLimit,
+                    stagingQueue.getName(), messageCount.get());
+            if (!stagingQueueConsumer.isCancelled()) {
+                // From: https://github.com/rabbitmq/rabbitmq-dotnet-client/issues/340#issuecomment-319649377
+                //
+                // "Cancelling a consumer cannot cancel messages that are "in flight". Closing a channel can't either because
+                // basicCancel takes time to reach the server and be processed. Use prefetch to limit the number of outstanding
+                // deliveries."
+                //
+                // i.e. Calling basicCancel won't prevent the consumer from consuming > consumptionLimit. To do that, we are setting
+                // the prefetch count (basicQos) to consumptionLimit in this class's constructor.
                 stagingQueueChannel.basicCancel(consumerTag);
             }
         }
@@ -172,5 +198,17 @@ public class StagingQueueTargetQueuePair {
 
     public long getConsumptionLimit() {
         return consumptionLimit;
+    }
+
+    @Override
+    public String toString()
+    {
+        return MoreObjects.toStringHelper(this)
+                .add("identifier", getIdentifier())
+                .add("consumptionLimit", consumptionLimit)
+                .add("messageCount", messageCount.get())
+                .add("numOutstandingConfirms", outstandingConfirms.keySet().size())
+                .add("isCompleted", stagingQueueConsumer != null ? isCompleted() : false)
+                .toString();
     }
 }

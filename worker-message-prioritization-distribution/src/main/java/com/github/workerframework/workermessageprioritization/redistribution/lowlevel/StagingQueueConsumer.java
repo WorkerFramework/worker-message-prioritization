@@ -49,12 +49,21 @@ public class StagingQueueConsumer extends DefaultConsumer {
     @Override
     public void handleCancel(final String consumerTag) throws IOException {
         //Stop tracking that we are consuming from the consumerTag queue
+        LOGGER.debug("handleCancel called for consumer with consumerTag {}", consumerTag);
+        cancelled = true;
+    }
+
+    @Override
+    public void handleCancelOk(final String consumerTag) {
+        //Stop tracking that we are consuming from the consumerTag queue
+        LOGGER.debug("handleCancelOk called for consumer with consumerTag {}", consumerTag);
         cancelled = true;
     }
 
     @Override
     public void handleShutdownSignal(final String consumerTag, final ShutdownSignalException sig) {
         //Connection lost, give up
+        LOGGER.debug("handleShutdownSignal called for consumer with consumerTag {}", consumerTag);
         shutdownSignalException = sig;
         cancelled = true;
     }
@@ -62,6 +71,9 @@ public class StagingQueueConsumer extends DefaultConsumer {
     @Override
     public void handleDelivery(final String consumerTag, final Envelope envelope, 
                                final AMQP.BasicProperties properties, final byte[] body) throws IOException {
+
+
+        LOGGER.debug("handleDelivery called for consumer with consumerTag {}", consumerTag);
         stagingQueueTargetQueuePair.handleStagedMessage(consumerTag, envelope, properties, body);
 
     }
