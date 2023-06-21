@@ -167,7 +167,7 @@ public class StagingQueueTargetQueuePair {
                                     "as it looks like the consumer has already been cancelled (cancelling a consumer can take some time, " +
                                     "so this scenario is to be expected). The StagingQueueTargetQueuePair this message relates to is %s",
                             consumerTag, this);
-                    LOGGER.info(errorMessage, e); // TODO debug
+                    LOGGER.debug(errorMessage, e);
                 } else {
                     final String errorMessage = String.format(
                             "Exception calling basicCancel on consumer with consumerTag '%s'. " +
