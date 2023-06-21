@@ -58,83 +58,82 @@ public class LowLevelDistributorIT extends DistributorTestBase {
 
             final String body = gson.toJson(new Object());
 
-            // Publish 2 messages to each staging queue, 4 in total
-            channel.basicPublish("", stagingQueue1Name, properties, body.getBytes(StandardCharsets.UTF_8));
-            channel.basicPublish("", stagingQueue1Name, properties, body.getBytes(StandardCharsets.UTF_8));
-            channel.basicPublish("", stagingQueue2Name, properties, body.getBytes(StandardCharsets.UTF_8));
-            channel.basicPublish("", stagingQueue2Name, properties, body.getBytes(StandardCharsets.UTF_8));
+            // Publish 500 messages to each staging queue, 1000 in total (note using large numbers of messages here as some issues only
+            // present themselves when there are large numbers of messages)
+            for (int i = 0; i < 500; i++) {
+                channel.basicPublish("", stagingQueue1Name, properties, body.getBytes(StandardCharsets.UTF_8));
+                channel.basicPublish("", stagingQueue2Name, properties, body.getBytes(StandardCharsets.UTF_8));
+            }
 
-            await().alias(String.format("Waiting for 1st staging queue named %s to contain 2 messages", stagingQueue1Name))
+            await().alias(String.format("Waiting for 1st staging queue named %s to contain 500 messages", stagingQueue1Name))
                     .atMost(100, SECONDS)
                     .pollInterval(Duration.ofSeconds(1))
-                    .until(queueContainsNumMessages(stagingQueue1Name, 2));
+                    .until(queueContainsNumMessages(stagingQueue1Name, 500));
 
-            await().alias(String.format("Waiting for 2nd staging queue named %s to contain 2 messages", stagingQueue2Name))
+            await().alias(String.format("Waiting for 2nd staging queue named %s to contain 500 messages", stagingQueue2Name))
                     .atMost(100, SECONDS)
                     .pollInterval(Duration.ofSeconds(1))
-                    .until(queueContainsNumMessages(stagingQueue2Name, 2));
+                    .until(queueContainsNumMessages(stagingQueue2Name, 500));
 
-            // Target queue has a max length of 2 messages
+            // Target queue has a max length of 200 messages
             final ConsumptionTargetCalculator consumptionTargetCalculator =
-                    new EqualConsumptionTargetCalculator(targetQueue -> new TargetQueueSettings(2, 0));
+                    new EqualConsumptionTargetCalculator(targetQueue -> new TargetQueueSettings(200, 0));
             final StagingTargetPairProvider stagingTargetPairProvider = new StagingTargetPairProvider();
             final LowLevelDistributor lowLevelDistributor = new LowLevelDistributor(queuesApi, connectionFactory,
                     consumptionTargetCalculator, stagingTargetPairProvider, 10000);
 
             // Run the distributor (1st time).
-            // stagingQueue1:            2 messages
-            // stagingQueue2:            2 messages
+            // stagingQueue1:            500 messages
+            // stagingQueue2:            500 messages
             // targetQueue:              0 messages
-            // targetQueueMaxLength:     2
-            // Expected result:          1 message from each staging queue moved to target queue
+            // targetQueueMaxLength:     200
+            // Expected result:          100 messages from each staging queue moved to target queue
             lowLevelDistributor.runOnce(connection);
 
-            Thread.sleep(10000000);
-
-            await().alias(String.format("Waiting for target queue named %s to contain 2 messages", targetQueueName))
+            await().alias(String.format("Waiting for target queue named %s to contain 100 messages", targetQueueName))
                     .atMost(100, SECONDS)
                     .pollInterval(Duration.ofSeconds(1))
-                    .until(queueContainsNumMessages(targetQueueName, 2));
+                    .until(queueContainsNumMessages(targetQueueName, 200));
 
-            await().alias(String.format("Waiting for 1st staging queue named %s to contain 1 message", stagingQueue1Name))
+            await().alias(String.format("Waiting for 1st staging queue named %s to contain 450 messages", stagingQueue1Name))
                     .atMost(100, SECONDS)
                     .pollInterval(Duration.ofSeconds(1))
-                    .until(queueContainsNumMessages(stagingQueue1Name, 1));
+                    .until(queueContainsNumMessages(stagingQueue1Name, 400));
 
-            await().alias(String.format("Waiting for 2nd staging queue named %s to contain 1 message", stagingQueue2Name))
+            await().alias(String.format("Waiting for 2nd staging queue named %s to contain 450 messages", stagingQueue2Name))
                     .atMost(100, SECONDS)
                     .pollInterval(Duration.ofSeconds(1))
-                    .until(queueContainsNumMessages(stagingQueue2Name, 1));
+                    .until(queueContainsNumMessages(stagingQueue2Name, 400));
 
             // Run the distributor (2nd time).
-            // stagingQueue1:            1 message
-            // stagingQueue2:            1 message
-            // targetQueue:              2 messages
-            // targetQueueMaxLength:     2
-            // Expected result:          0 messages from each staging queue moved to target queue because targetQueue is full
+            // stagingQueue1:            400 messages
+            // stagingQueue2:            400 messages
+            // targetQueue:              200 messages
+            // targetQueueMaxLength:     200
+            // Expected result:          0 messages from each staging queue moved to target queue because target queue is full
             lowLevelDistributor.runOnce(connection);
 
-            await().alias(String.format("Waiting for target queue named %s to contain 2 messages", targetQueueName))
+            await().alias(String.format("Waiting for target queue named %s to contain 200 messages", targetQueueName))
                     .atMost(100, SECONDS)
                     .pollInterval(Duration.ofSeconds(1))
-                    .until(queueContainsNumMessages(targetQueueName, 2));
+                    .until(queueContainsNumMessages(targetQueueName, 200));
 
-            await().alias(String.format("Waiting for 1st staging queue named %s to contain 1 message", stagingQueue1Name))
+            await().alias(String.format("Waiting for 1st staging queue named %s to contain 400 messages", stagingQueue1Name))
                     .atMost(100, SECONDS)
                     .pollInterval(Duration.ofSeconds(1))
-                    .until(queueContainsNumMessages(stagingQueue1Name, 1));
+                    .until(queueContainsNumMessages(stagingQueue1Name, 400));
 
-            await().alias(String.format("Waiting for 2nd staging queue named %s to contain 1 message", stagingQueue2Name))
+            await().alias(String.format("Waiting for 2nd staging queue named %s to contain 400 messages", stagingQueue2Name))
                     .atMost(100, SECONDS)
                     .pollInterval(Duration.ofSeconds(1))
-                    .until(queueContainsNumMessages(stagingQueue2Name, 1));
+                    .until(queueContainsNumMessages(stagingQueue2Name, 400));
 
             // Run the distributor (3rd time).
-            // stagingQueue1:            1 message
-            // stagingQueue2:            1 message
+            // stagingQueue1:            400 messages
+            // stagingQueue2:            400 messages
             // targetQueue:              0 messages (we have purged it)
-            // targetQueueMaxLength:     2
-            // Expected result:          1 message from each staging queue moved to target queue
+            // targetQueueMaxLength:     200
+            // Expected result:          100 messages from each staging queue moved to target queue
             channel.queuePurge(targetQueueName);
 
             await().alias(String.format("Waiting for target queue named %s to contain 0 messages", targetQueueName))
@@ -144,20 +143,20 @@ public class LowLevelDistributorIT extends DistributorTestBase {
 
             lowLevelDistributor.runOnce(connection);
 
-            await().alias(String.format("Waiting for target queue named %s to contain 2 messages", targetQueueName))
+            await().alias(String.format("Waiting for target queue named %s to contain 200 messages", targetQueueName))
                     .atMost(100, SECONDS)
                     .pollInterval(Duration.ofSeconds(1))
-                    .until(queueContainsNumMessages(targetQueueName, 2));
+                    .until(queueContainsNumMessages(targetQueueName, 200));
 
-            await().alias(String.format("Waiting for 1st staging queue named %s to contain 0 messages", stagingQueue1Name))
+            await().alias(String.format("Waiting for 1st staging queue named %s to contain 300 messages", stagingQueue1Name))
                     .atMost(100, SECONDS)
                     .pollInterval(Duration.ofSeconds(1))
-                    .until(queueContainsNumMessages(stagingQueue1Name, 0));
+                    .until(queueContainsNumMessages(stagingQueue1Name, 300));
 
-            await().alias(String.format("Waiting for 2nd staging queue named %s to contain 0 messages", stagingQueue2Name))
+            await().alias(String.format("Waiting for 2nd staging queue named %s to contain 300 messages", stagingQueue2Name))
                     .atMost(100, SECONDS)
                     .pollInterval(Duration.ofSeconds(1))
-                    .until(queueContainsNumMessages(stagingQueue2Name, 0));
+                    .until(queueContainsNumMessages(stagingQueue2Name, 300));
         }
     }
 }

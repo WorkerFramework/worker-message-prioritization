@@ -90,6 +90,112 @@ public class StagingQueueTargetQueuePair {
                                     final AMQP.BasicProperties properties, final byte[] body)
             throws IOException {
 
+        // When a consumer has consumed the number of messages specified by consumptionLimit, it will be cancelled.
+        //
+        // Be aware, calling basicCancel can take some time to take effect.
+        //
+        // From: https://github.com/rabbitmq/rabbitmq-dotnet-client/issues/340#issuecomment-319649377
+        //
+        // "Cancelling a consumer cannot cancel messages that are "in flight". Closing a channel can't either because basic.cancel
+        // takes time to reach the server and be processed. Use prefetch to limit the number of outstanding deliveries. A flag
+        // in your code that tells the consumer ignore or requeue (if you close the channel, explicitly requeueing isn't
+        // necessary) deliveries that arrive after."
+        //
+        // As such, after a period of time after it has been cancelled, a consumer may still consume messages from the staging queue
+        // over and above consumptionLimit/and or if it has already been cancelled.
+        //
+        // If we detect any of these scenarios, we need to put the message back on the staging queue so another consumer can pick it up.
+
+        if (stagingQueueConsumer.isCancelled()) {
+
+            final long deliveryTag = envelope.getDeliveryTag();
+
+            LOGGER.info("handleStagedMessage called with consumerTag {} and deliveryTag {}," +
+                            "but stagingQueueConsumer.isCancelled() = true, " +
+                            "so calling stagingQueueChannel.basicReject({}, true) to put this message back on the {} staging queue. " +
+                            "The StagingQueueTargetQueuePair this message relates to is {}",
+                    consumerTag,
+                    deliveryTag,
+                    deliveryTag,
+                    stagingQueue.getName(),
+                    this);
+
+            try {
+                stagingQueueChannel.basicReject(deliveryTag, true);
+                LOGGER.debug("Successfully called stagingQueueChannel.basicReject({}, true) " +
+                                "to put this message back on the {} staging queue. " +
+                                "The StagingQueueTargetQueuePair this message relates to is {}",
+                        deliveryTag,
+                        stagingQueue.getName(),
+                        this);
+                return;
+            } catch (final IOException e) {
+                final String errorMessage = String.format(
+                        "Exception calling basicReject(%s, true) to put this message back on the %s staging queue. " +
+                                "This means the staging queue will contain an unacked message. " +
+                                "The StagingQueueTargetQueuePair this message relates to is %s",
+                        deliveryTag, stagingQueue.getName(), this);
+                LOGGER.error(errorMessage, e);
+                return;
+            }
+        }
+
+        if (!stagingQueueConsumer.isCancelled() && messageCount.get() >= consumptionLimit) {
+
+            final long deliveryTag = envelope.getDeliveryTag();
+
+            LOGGER.info("Consumption target '{}' reached for '{}'. Number of messages consumed by this consumer was '{}'. " +
+                            "Calling basicCancel on consumer with consumerTag '{}', and then basicReject({}, true) to put this message " +
+                            "back on the staging queue. The StagingQueueTargetQueuePair this message relates to is '{}'",
+                    consumptionLimit,
+                    stagingQueue.getName(),
+                    messageCount.get(),
+                    consumerTag,
+                    deliveryTag,
+                    this);
+
+            try {
+                stagingQueueChannel.basicCancel(consumerTag);
+                LOGGER.debug("Successfully called stagingQueueChannel.basicCancel({}) to cancel this consumer. " +
+                                "The StagingQueueTargetQueuePair this message relates to is {}",
+                        consumerTag,
+                        this);
+            } catch (final IOException e) {
+                if (e.getMessage().contains("Unknown consumerTag")) {
+                    final String errorMessage = String.format(
+                            "Ignoring exception calling basicCancel on consumer with consumerTag %s, " +
+                                    "as it looks like the consumer has already been cancelled (cancelling a consumer can take some time, " +
+                                    "so this scenario is to be expected). The StagingQueueTargetQueuePair this message relates to is %s",
+                            consumerTag, this);
+                    LOGGER.info(errorMessage, e); // TODO debug
+                } else {
+                    final String errorMessage = String.format(
+                            "Exception calling basicCancel on consumer with consumerTag '%s'. " +
+                                    "The StagingQueueTargetQueuePair this message relates to is '%s'", consumerTag, this);
+                    LOGGER.error(errorMessage, e);
+                }
+            } finally {
+                try {
+                    stagingQueueChannel.basicReject(deliveryTag, true);
+                    LOGGER.debug("Successfully called stagingQueueChannel.basicReject({}, true) " +
+                                    "to put this message back on the {} staging queue. " +
+                                    "The StagingQueueTargetQueuePair this message relates to is {}",
+                            deliveryTag,
+                            stagingQueue.getName(),
+                            this);
+                    return;
+                } catch (final IOException e) {
+                    final String errorMessage = String.format(
+                            "Exception calling basicReject(%s, true) to put this message back on the %s staging queue. " +
+                                    "This means the staging queue will contain an unacked message. " +
+                                    "The StagingQueueTargetQueuePair this message relates to is %s",
+                            deliveryTag, stagingQueue.getName(), this);
+                    LOGGER.error(errorMessage, e);
+                    return;
+                }
+            }
+        }
+
         long nextPublishSeqNo = targetQueueChannel.getNextPublishSeqNo();
         outstandingConfirms.put(nextPublishSeqNo, envelope.getDeliveryTag());
 
@@ -114,23 +220,6 @@ public class StagingQueueTargetQueuePair {
         }
 
         messageCount.incrementAndGet();
-
-        if(messageCount.get() >= consumptionLimit) {
-            LOGGER.info("Consumption target '{}' reached for '{}'. Number of messages consumed: '{}'", consumptionLimit,
-                    stagingQueue.getName(), messageCount.get());
-            if (!stagingQueueConsumer.isCancelled()) {
-                // From: https://github.com/rabbitmq/rabbitmq-dotnet-client/issues/340#issuecomment-319649377
-                //
-                // "Cancelling a consumer cannot cancel messages that are "in flight". Closing a channel can't either because
-                // basicCancel takes time to reach the server and be processed. Use prefetch to limit the number of outstanding
-                // deliveries."
-                //
-                // i.e. Calling basicCancel won't prevent the consumer from consuming > consumptionLimit. To do that, we are setting
-                // the prefetch count (basicQos) to consumptionLimit in this class's constructor.
-                stagingQueueChannel.basicCancel(consumerTag);
-            }
-        }
-        
     }
     
     public void handleDeliveryToTargetQueueAck(final long deliveryTag, final boolean multiple) throws IOException {
