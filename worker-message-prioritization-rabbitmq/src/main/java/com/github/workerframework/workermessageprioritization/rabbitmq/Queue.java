@@ -82,7 +82,7 @@ public class Queue {
     public void setArguments(final Map<String, Object> arguments) {
         this.arguments = arguments;
     }
-
+    
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
