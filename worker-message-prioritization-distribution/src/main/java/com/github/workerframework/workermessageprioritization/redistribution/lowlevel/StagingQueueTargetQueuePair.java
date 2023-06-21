@@ -92,7 +92,7 @@ public class StagingQueueTargetQueuePair {
 
         // When a consumer has consumed the number of messages specified by consumptionLimit, it will be cancelled.
         //
-        // Be aware, calling basicCancel can take some time to take effect.
+        // However, calling basicCancel can take some time to take effect.
         //
         // From: https://github.com/rabbitmq/rabbitmq-dotnet-client/issues/340#issuecomment-319649377
         //
@@ -102,9 +102,9 @@ public class StagingQueueTargetQueuePair {
         // necessary) deliveries that arrive after."
         //
         // As such, after a period of time after it has been cancelled, a consumer may still consume messages from the staging queue
-        // over and above consumptionLimit/and or if it has already been cancelled.
+        // over and above consumptionLimit.
         //
-        // If we detect any of these scenarios, we need to put the message back on the staging queue so another consumer can pick it up.
+        // If we detect this scenario, we need to put the message back on the staging queue so another consumer can pick it up.
 
         if (stagingQueueConsumer.isCancelled()) {
 
