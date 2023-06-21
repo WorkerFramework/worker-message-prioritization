@@ -1,126 +1,87 @@
 package com.github.workerframework.workermessageprioritization.targetqueue;
 
-import com.google.common.collect.EvictingQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.util.HashMap;
-
 public class TunedTargetQueueLengthProvider {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(TunedTargetQueueLengthProvider.class);
     private final TargetQueuePerformanceMetricsProvider targetQueuePerformanceMetricsProvider;
     private final boolean noOpMode;
-
-    private final int minConsumptionRateHistorySize;
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(TunedTargetQueueLengthProvider.class);
-
-    private final int maximumConsumptionRateHistorySize = 100;
-
-    private final int roundingMultiple = 100;
-
-    private final HashMap<String, EvictingQueue<Double>> consumptionRateHistoryMap = new HashMap<>();
+    private final double queueProcessingTimeGoalSeconds;
+    private final HistoricalConsumptionRate historicalConsumptionRate;
+    private final RoundTargetQueueLength roundTargetQueueLength;
 
     public TunedTargetQueueLengthProvider (final TargetQueuePerformanceMetricsProvider targetQueuePerformanceMetricsProvider,
-                                           final boolean noOpMode, final int minConsumptionRateHistorySize){
+                                           final HistoricalConsumptionRate historicalConsumptionRate,
+                                           final RoundTargetQueueLength roundTargetQueueLength,
+                                           final boolean noOpMode,
+                                           final double queueProcessingTimeGoalSeconds) {
         this.targetQueuePerformanceMetricsProvider = targetQueuePerformanceMetricsProvider;
+        this.historicalConsumptionRate = historicalConsumptionRate;
+        this.roundTargetQueueLength = roundTargetQueueLength;
         this.noOpMode = noOpMode;
-        this.minConsumptionRateHistorySize = minConsumptionRateHistorySize;
+        this.queueProcessingTimeGoalSeconds = queueProcessingTimeGoalSeconds;
     }
 
-//    public TunedTargetQueueLengthProvider(final boolean noOpMode, final int minConsumptionRateHistorySize){
-//        this.noOpMode = noOpMode;
-//        this.minConsumptionRateHistorySize = minConsumptionRateHistorySize;
-//    }
+    public final long getTunedTargetQueueLength(final String targetQueueName, final long minTargetQueueLength,
+                                                final long maxTargetQueueLength){
 
-    public final long getTunedTargetQueueLength(final String targetQueueName,
-                                                final long minTargetQueueLength, final long maxTargetQueueLength,
-                                                final double queueProcessingTimeGoalSeconds){
+        final PerformanceMetrics performanceMetrics = targetQueuePerformanceMetricsProvider.getTargetQueuePerformanceMetrics(targetQueueName);
 
-        final HashMap<String, Double> performanceMetrics = targetQueuePerformanceMetricsProvider.getTargetQueuePerformanceMetrics(targetQueueName);
+        final long metricsTargetQueueLength = performanceMetrics.getTargetQueueLength();
+        final double metricsConsumptionRate = performanceMetrics.getConsumptionRate();
+        final double metricsCurrentInstances = performanceMetrics.getCurrentInstances();
+        final double metricsMaxInstances = performanceMetrics.getMaxInstances();
 
-        final double metricsTargetQueueLength = performanceMetrics.get("targetQueueLength");
-        final double metricsConsumptionRate = performanceMetrics.get("consumptionRate");
-        final double metricsCurrentInstances = performanceMetrics.get("currentInstances");
-        final double metricsMaxInstances = performanceMetrics.get("maxInstances");
-
-        checkMaxConsumptionRateHistorySize(maximumConsumptionRateHistorySize, minConsumptionRateHistorySize);
-
-        //        0.5/s 30 messages, 60 seconds
         logNoOpModeInformation();
-        logCurrentTargetQueueInformation((long)metricsTargetQueueLength, targetQueueName);
-        logTargetQueueRoundingInformation(roundingMultiple, minTargetQueueLength);
+        logCurrentTargetQueueInformation(metricsTargetQueueLength, targetQueueName);
 
-//        final Object targetQueuePerformanceMetrics =
-//                targetQueuePerformanceMetricsProvider.getTargetQueuePerformanceMetrics(targetQueueName);
-
-        final double theoreticalConsumptionRate = calculateTheoreticalConsumptionRate(metricsConsumptionRate, metricsCurrentInstances,
+        final double theoreticalConsumptionRate = calculateCurrentTheoreticalConsumptionRate(metricsConsumptionRate, metricsCurrentInstances,
                 metricsMaxInstances);
 
-        EvictingQueue<Double> theoreticalConsumptionRateHistory = getTheoreticalConsumptionRateHistory(targetQueueName);
-        theoreticalConsumptionRateHistory.add(theoreticalConsumptionRate);
-        consumptionRateHistoryMap.put(targetQueueName, theoreticalConsumptionRateHistory);
+        final double averageHistoricalConsumptionRate =
+                historicalConsumptionRate.recordCurrentConsumptionRateHistoryAndGetAverage(targetQueueName, theoreticalConsumptionRate);
 
-        long tunedTargetQueue = calculateTunedTargetQueue(theoreticalConsumptionRateHistory, queueProcessingTimeGoalSeconds);
-
-        final int consumptionRateHistorySize = theoreticalConsumptionRateHistory.size();
-        logConsumptionRateHistoryInformation(consumptionRateHistorySize);
+        final long tunedTargetQueue = calculateTunedTargetQueue(averageHistoricalConsumptionRate);
 
         LOGGER.info("Considering the average theoretical consumption rate of this worker, the target queue length should be: " +
                 tunedTargetQueue);
 
-        final RoundTargetQueueLength roundTargetQueueLength = new RoundTargetQueueLength(roundingMultiple);
-        long roundedTargetQueue = roundTargetQueueLength.getRoundedTargetQueueLength(tunedTargetQueue);
+        long roundedTargetQueue = roundAndCheckTargetQueue(tunedTargetQueue, maxTargetQueueLength, minTargetQueueLength);
 
-        roundedTargetQueue = checkMaxTargetQueueLength(roundedTargetQueue, maxTargetQueueLength);
-        roundedTargetQueue = checkMinTargetQueueLength(roundedTargetQueue, minTargetQueueLength);
-
-        return determineFinalTargetQueueLength(consumptionRateHistorySize, (long) metricsTargetQueueLength,
-                roundedTargetQueue);
+        return determineFinalTargetQueueLength(targetQueueName, metricsTargetQueueLength, roundedTargetQueue);
     }
 
-    private void checkMaxConsumptionRateHistorySize(final int maximumConsumptionRateHistorySize, final long minConsumptionRateHistorySize)
-            throws IllegalArgumentException {
-        if (maximumConsumptionRateHistorySize < minConsumptionRateHistorySize) {
-            LOGGER.error("Minimum history required cannot be larger than the maximum history storage size.");
-            throw new IllegalArgumentException();
-        }
-    }
-
-    private double calculateTheoreticalConsumptionRate(final double currentConsumptionRate, final double currentInstances,
-                                                       final double maxInstances){
+    private double calculateCurrentTheoreticalConsumptionRate(final double currentConsumptionRate, final double currentInstances,
+                                                              final double maxInstances){
         return (currentConsumptionRate / currentInstances) * maxInstances;
     }
 
-    private double calculateAverageTheoreticalConsumptionRate(final EvictingQueue<Double> evictingQueue){
-        return evictingQueue.stream().mapToDouble(d -> d).average().getAsDouble();
-    }
-
-    private long calculateTunedTargetQueue(final EvictingQueue<Double> consumptionRateHistory, final double queueProcessingTimeGoalSeconds){
-        final double averageTheoreticalConsumptionRate = calculateAverageTheoreticalConsumptionRate(consumptionRateHistory);
+    private long calculateTunedTargetQueue(final double averageTheoreticalConsumptionRate){
         final double suggestedTargetQueueLength = averageTheoreticalConsumptionRate * queueProcessingTimeGoalSeconds;
         return (long) suggestedTargetQueueLength;
     }
-    
-    private long checkMaxTargetQueueLength(final long tunedTargetQueue, final long maxTargetQueueLength){
-        if (tunedTargetQueue > maxTargetQueueLength) {
-            LOGGER.info(tunedTargetQueue+ " exceeds the maximum length that the queue can be set to. Therefore the maximum length: "
+
+    private long roundAndCheckTargetQueue(final long tunedTargetQueue, final long maxTargetQueueLength, final long minTargetQueueLength){
+        long roundedTargetQueue = roundTargetQueueLength.getRoundedTargetQueueLength(tunedTargetQueue);
+        LOGGER.info("In the case that the target queue length is rounded below the minimum target queue length or above the maximum target queue length. " +
+                "Target queue length will be set to that minimum or maximum value respectively.");
+
+        if (roundedTargetQueue > maxTargetQueueLength) {
+            LOGGER.info("Rounded queue length: " + roundedTargetQueue + " exceeds the maximum length that the queue can be set to. " +
+                    "Therefore the maximum length: "
                     + maxTargetQueueLength + " should be set.");
-            return maxTargetQueueLength;
-        }else {
-            return tunedTargetQueue;
+            roundedTargetQueue = maxTargetQueueLength;
         }
-    }    
-    
-    private long checkMinTargetQueueLength(final long tunedTargetQueue, final long minTargetQueueLength){
-        if(tunedTargetQueue < minTargetQueueLength){
-            LOGGER.info(tunedTargetQueue+ " is less than the minimum length that the queue can be set to. Therefore the minimum length: "
+
+        if(roundedTargetQueue < minTargetQueueLength){
+            LOGGER.info("Rounded queue length: " + roundedTargetQueue+ " is less than the minimum length that the queue can be set to. Therefore the minimum length: "
                     + minTargetQueueLength + " should be set.");
-            return minTargetQueueLength;
-        }else {
-            return tunedTargetQueue;
+            roundedTargetQueue = minTargetQueueLength;
         }
+
+        return roundedTargetQueue;
     }
 
     private void logNoOpModeInformation(){
@@ -137,41 +98,14 @@ public class TunedTargetQueueLengthProvider {
         LOGGER.info("Current target queue length for " + targetQueueName + ": " + targetQueueLength);
     }
 
-    private void logTargetQueueRoundingInformation(final long roundingMultiple, final long minTargetQueueLength){
-        LOGGER.info("RoundingMultiple value has been set to: " + roundingMultiple + ". This means any suggested target queues that are " +
-                "not a multiple of " + roundingMultiple + ", will be rounded to the nearest multiple. In the case that the target " +
-                "queue length is rounded to 0, The target queue length will be set to the minimum target queue length size: " +
-                minTargetQueueLength);
-    }
-
-    private void logConsumptionRateHistoryInformation(final int consumptionRateHistorySize){
-        if(consumptionRateHistorySize >= minConsumptionRateHistorySize && !noOpMode){
-            LOGGER.info("There is consumption rate history from the last " + consumptionRateHistorySize +" runs of this worker " +
-                    "present. An average of these rates will determine the new target queue length. If different to the current queue " +
-                    "length, the following suggestions will be implemented and the target queue length adjusted.");
-        }else if (!noOpMode){
-            LOGGER.info("There is not enough history to tune the target queue length accurately. The following logs are " +
-                    "recommendations. The target queue will not be adjusted until more history is present.");
-        }
-    }
-
-    private EvictingQueue<Double> getTheoreticalConsumptionRateHistory(final String targetQueueName){
-        if(consumptionRateHistoryMap.containsKey(targetQueueName)){
-            return consumptionRateHistoryMap.get(targetQueueName);
-        }else {
-            return EvictingQueue.create(maximumConsumptionRateHistorySize); //Make the hundred configurable
-        }
-    }
-
-    private long determineFinalTargetQueueLength(final int consumptionRateHistorySize, final long targetQueueLength,
-                                                 final long tunedTargetQueue){
+    private long determineFinalTargetQueueLength(final String targetQueueName, final long targetQueueLength, final long tunedTargetQueue){
 
         if(noOpMode) {
             LOGGER.info("NoOpMode True - Target queue length has not been adjusted.");
             return targetQueueLength;
         }
 
-        if(consumptionRateHistorySize < minConsumptionRateHistorySize ) {
+        if(!historicalConsumptionRate.isSufficientHistoryAvailable(targetQueueName)) {
             LOGGER.info("Not enough ConsumptionRateHistory to make an adjustment.");
             return targetQueueLength;
         }

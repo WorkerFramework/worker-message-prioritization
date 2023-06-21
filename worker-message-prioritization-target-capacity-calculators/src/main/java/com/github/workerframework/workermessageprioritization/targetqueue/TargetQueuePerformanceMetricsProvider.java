@@ -1,12 +1,8 @@
 package com.github.workerframework.workermessageprioritization.targetqueue;
 
-import com.google.common.collect.EvictingQueue;
-
-import java.util.HashMap;
-
 public class TargetQueuePerformanceMetricsProvider {
 
-        public HashMap<String, Double> getTargetQueuePerformanceMetrics(final String targetQueueName) {
+        public PerformanceMetrics getTargetQueuePerformanceMetrics(final String targetQueueName) {
 
 
 
