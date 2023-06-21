@@ -204,11 +204,12 @@ public class StagingQueueTargetQueuePair {
     public String toString()
     {
         return MoreObjects.toStringHelper(this)
-                .add("identifier", getIdentifier())
+                .add("getIdentifier()", getIdentifier())
                 .add("consumptionLimit", consumptionLimit)
                 .add("messageCount", messageCount.get())
                 .add("numOutstandingConfirms", outstandingConfirms.keySet().size())
-                .add("isCompleted", stagingQueueConsumer != null ? isCompleted() : false)
+                .add("isCompleted()", stagingQueueConsumer != null ? isCompleted() : false)
+                .add("getShutdownSignalException()", stagingQueueConsumer != null ? getShutdownSignalException() : null)
                 .toString();
     }
 }
