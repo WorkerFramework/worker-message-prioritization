@@ -203,13 +203,18 @@ public class StagingQueueTargetQueuePair {
     @Override
     public String toString()
     {
+        final String shutdownSignalExceptionMessage =
+                stagingQueueConsumer != null && stagingQueueConsumer.getShutdownSignalException() != null
+                ? stagingQueueConsumer.getShutdownSignalException().getMessage()
+                : null;
+
         return MoreObjects.toStringHelper(this)
                 .add("getIdentifier()", getIdentifier())
                 .add("consumptionLimit", consumptionLimit)
                 .add("messageCount", messageCount.get())
                 .add("numOutstandingConfirms", outstandingConfirms.keySet().size())
                 .add("isCompleted()", stagingQueueConsumer != null ? isCompleted() : false)
-                .add("getShutdownSignalException()", stagingQueueConsumer != null ? getShutdownSignalException() : null)
+                .add("getShutdownSignalException()", shutdownSignalExceptionMessage)
                 .toString();
     }
 }
