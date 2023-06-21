@@ -122,20 +122,22 @@ public class StagingQueueTargetQueuePair {
 
             try {
                 stagingQueueChannel.basicReject(deliveryTag, true);
+
                 LOGGER.debug("Successfully called stagingQueueChannel.basicReject({}, true) " +
                                 "to put this message back on the {} staging queue. " +
                                 "The StagingQueueTargetQueuePair this message relates to is {}",
                         deliveryTag,
                         stagingQueue.getName(),
                         this);
-                return;
-            } catch (final IOException e) {
+            } catch (final IOException basicRejectException) {
+                // TODO what to do if basicReject fails and the message is not put back on stagingQueue?
                 final String errorMessage = String.format(
-                        "Exception calling basicReject(%s, true) to put this message back on the %s staging queue. " +
-                                "This means the staging queue will contain an unacked message. " +
+                        "Exception calling stagingQueueChannel.basicReject(%s, true) to put this message back on the %s staging queue. " +
                                 "The StagingQueueTargetQueuePair this message relates to is %s",
                         deliveryTag, stagingQueue.getName(), this);
-                LOGGER.error(errorMessage, e);
+
+                LOGGER.error(errorMessage, basicRejectException);
+            } finally {
                 return;
             }
         }
@@ -145,54 +147,59 @@ public class StagingQueueTargetQueuePair {
             final long deliveryTag = envelope.getDeliveryTag();
 
             LOGGER.info("Consumption target '{}' reached for '{}'. Number of messages consumed by this consumer was '{}'. " +
-                            "Calling basicCancel on consumer with consumerTag '{}', and then basicReject({}, true) to put this message " +
-                            "back on the staging queue. The StagingQueueTargetQueuePair this message relates to is '{}'",
+                            "Calling stagingQueueChannel.basicReject({}, true) to put this message back on the staging queue. " +
+                            "Calling stagingQueueChannel.basicCancel({}) to cancel this consumer. " +
+                            "The StagingQueueTargetQueuePair this message relates to is '{}'",
                     consumptionLimit,
                     stagingQueue.getName(),
                     messageCount.get(),
-                    consumerTag,
                     deliveryTag,
+                    consumerTag,
                     this);
 
             try {
-                stagingQueueChannel.basicCancel(consumerTag);
-                LOGGER.debug("Successfully called stagingQueueChannel.basicCancel({}) to cancel this consumer. " +
+                stagingQueueChannel.basicReject(deliveryTag, true);
+
+                LOGGER.debug("Successfully called stagingQueueChannel.basicReject({}, true) " +
+                                "to put this message back on the {} staging queue. " +
                                 "The StagingQueueTargetQueuePair this message relates to is {}",
-                        consumerTag,
+                        deliveryTag,
+                        stagingQueue.getName(),
                         this);
-            } catch (final IOException e) {
-                if (e.getMessage().contains("Unknown consumerTag")) {
+            } catch (final IOException basicRejectException) {
+                // TODO what to do if basicReject fails and the message is not put back on stagingQueue?
+                final String errorMessage = String.format(
+                        "Exception calling basicReject(%s, true) to put this message back on the %s staging queue. " +
+                                "The StagingQueueTargetQueuePair this message relates to is %s",
+                        deliveryTag, stagingQueue.getName(), this);
+
+                LOGGER.error(errorMessage, basicRejectException);
+            }
+
+            try {
+                stagingQueueChannel.basicCancel(consumerTag);
+
+                LOGGER.debug("Successfully called stagingQueueChannel.basicCancel({}) to cancel this consumer. " +
+                                "The StagingQueueTargetQueuePair this message relates to is {}", consumerTag, this);
+            } catch (final IOException basicCancelException) {
+                if (basicCancelException.getMessage().contains("Unknown consumerTag")) {
                     final String errorMessage = String.format(
-                            "Ignoring exception calling basicCancel on consumer with consumerTag %s, " +
+                            "Ignoring exception calling stagingQueueChannel.basicCancel(%s), " +
                                     "as it looks like the consumer has already been cancelled (cancelling a consumer can take some time, " +
                                     "so this scenario is to be expected). The StagingQueueTargetQueuePair this message relates to is %s",
                             consumerTag, this);
-                    LOGGER.debug(errorMessage, e);
+
+                    LOGGER.debug(errorMessage, basicCancelException);
                 } else {
                     final String errorMessage = String.format(
-                            "Exception calling basicCancel on consumer with consumerTag '%s'. " +
-                                    "The StagingQueueTargetQueuePair this message relates to is '%s'", consumerTag, this);
-                    LOGGER.error(errorMessage, e);
+                            "Exception calling stagingQueueChannel.basicCancel(%s). " +
+                                    "The StagingQueueTargetQueuePair this message relates to is '%s'",
+                            consumerTag, this);
+
+                    LOGGER.error(errorMessage, basicCancelException);
                 }
-            } finally {
-                try {
-                    stagingQueueChannel.basicReject(deliveryTag, true);
-                    LOGGER.debug("Successfully called stagingQueueChannel.basicReject({}, true) " +
-                                    "to put this message back on the {} staging queue. " +
-                                    "The StagingQueueTargetQueuePair this message relates to is {}",
-                            deliveryTag,
-                            stagingQueue.getName(),
-                            this);
-                    return;
-                } catch (final IOException e) {
-                    final String errorMessage = String.format(
-                            "Exception calling basicReject(%s, true) to put this message back on the %s staging queue. " +
-                                    "This means the staging queue will contain an unacked message. " +
-                                    "The StagingQueueTargetQueuePair this message relates to is %s",
-                            deliveryTag, stagingQueue.getName(), this);
-                    LOGGER.error(errorMessage, e);
-                    return;
-                }
+            } finally  {
+                return;
             }
         }
 
@@ -212,11 +219,14 @@ public class StagingQueueTargetQueuePair {
 
             targetQueueChannel.basicPublish("", targetQueue.getName(), basicProperties, body);
         }
-        catch (final IOException e) {
+        catch (final IOException basicPublish) {
+            // TODO Should we call basicReject to put message back on stagingQueue if basicPublish fails?
+            // TODO What if basicReject also fails?
             LOGGER.error("Exception publishing to '{}' {}", targetQueue.getName(),
-                    e.toString());
-            stagingQueueChannel.basicCancel(consumerTag);
+                basicPublish.toString());
 
+            // TODO handle basicCancel exception
+            stagingQueueChannel.basicCancel(consumerTag);
         }
 
         messageCount.incrementAndGet();
@@ -232,6 +242,7 @@ public class StagingQueueTargetQueuePair {
                     confirmed.lastKey(), stagingQueue.getName(), outstandingConfirms.get(deliveryTag),
                     targetQueue.getName());
 
+            // TODO what if basicAck fails? I think message is redelivered to stagingQueue so maybe this is ok?
             stagingQueueChannel.basicAck(confirmed.lastKey(), true);
             confirmed.clear();
         } else {
@@ -239,6 +250,7 @@ public class StagingQueueTargetQueuePair {
                     outstandingConfirms.get(deliveryTag), stagingQueue.getName(), outstandingConfirms.get(deliveryTag),
                     targetQueue.getName());
 
+            // TODO what if basicAck fails? I think message is redelivered to stagingQueue so maybe this is ok?
             stagingQueueChannel.basicAck(outstandingConfirms.get(deliveryTag), false);
             outstandingConfirms.remove(deliveryTag);
         }
@@ -268,6 +280,7 @@ public class StagingQueueTargetQueuePair {
 
             confirmed.clear();
         } else {
+            // TODO what if basicNack fails?
             stagingQueueChannel.basicNack(outstandingConfirms.get(deliveryTag), false, true);
             outstandingConfirms.remove(deliveryTag);
         }        
