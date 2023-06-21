@@ -205,7 +205,7 @@ public class StagingQueueTargetQueuePair {
     {
         final String shutdownSignalExceptionMessage =
                 stagingQueueConsumer != null && stagingQueueConsumer.getShutdownSignalException() != null
-                ? stagingQueueConsumer.getShutdownSignalException().getMessage()
+                ? stagingQueueConsumer.getShutdownSignalException().toString()
                 : null;
 
         return MoreObjects.toStringHelper(this)

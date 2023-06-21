@@ -89,6 +89,8 @@ public class LowLevelDistributorIT extends DistributorTestBase {
             // Expected result:          1 message from each staging queue moved to target queue
             lowLevelDistributor.runOnce(connection);
 
+            Thread.sleep(10000000);
+
             await().alias(String.format("Waiting for target queue named %s to contain 2 messages", targetQueueName))
                     .atMost(100, SECONDS)
                     .pollInterval(Duration.ofSeconds(1))

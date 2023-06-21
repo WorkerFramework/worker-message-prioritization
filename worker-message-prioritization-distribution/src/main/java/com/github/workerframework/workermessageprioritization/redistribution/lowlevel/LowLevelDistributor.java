@@ -117,7 +117,7 @@ public class LowLevelDistributor extends MessageDistributor {
                         if (existingStagingQueueTargetQueuePair.getShutdownSignalException() != null) {
                             LOGGER.error("Exiting as '{}' recorded a shutdown exception: '{}'",
                                     existingStagingQueueTargetQueuePair,
-                                    existingStagingQueueTargetQueuePair.getShutdownSignalException().getMessage());
+                                    existingStagingQueueTargetQueuePair.getShutdownSignalException());
                             return;
                         }
 
