@@ -28,7 +28,7 @@ public class RoundTargetQueueLength {
         this.roundingMultiple = roundingMultiple;
     }
 
-    public final long getRoundedTargetQueueLength(final long tunedTargetQueue){
+    public long getRoundedTargetQueueLength(final long tunedTargetQueue){
 
         LOGGER.info("RoundingMultiple value has been set to: " + roundingMultiple + ". This means any suggested target queues that are " +
                 "not a multiple of " + roundingMultiple + ", will be rounded to the nearest multiple.");
