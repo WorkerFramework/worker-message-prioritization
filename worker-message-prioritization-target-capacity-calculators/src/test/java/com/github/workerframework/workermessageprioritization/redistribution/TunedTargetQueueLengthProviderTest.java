@@ -300,8 +300,8 @@ public class TunedTargetQueueLengthProviderTest {
         final double consumptionRate1 = 0.5;
         final double consumptionRate2 = 5;
 
-        long tunedTargetQueueLength1;
-        long tunedTargetQueueLength2;
+        final long tunedTargetQueueLength1;
+        final long tunedTargetQueueLength2;
 
         final PerformanceMetrics performanceMetrics1 = new PerformanceMetrics(targetQueueLength, consumptionRate1, currentInstances,
                 maxInstances);
@@ -363,7 +363,7 @@ public class TunedTargetQueueLengthProviderTest {
 
         tunedTargetQueueLength = getTunedTargetQueueLength(targetQueue1,targetQueue);
         performanceMetrics.setTargetQueueLength(tunedTargetQueueLength);
-        long repeatTunedTargetQueueLength = getTunedTargetQueueLength(targetQueue1,targetQueue);
+        final long repeatTunedTargetQueueLength = getTunedTargetQueueLength(targetQueue1,targetQueue);
 
         assertEquals("isSufficientHistoryAvailable set to true: Consumption rate history has been provided. Target queue length " +
                 "should be adjusted. Once the tuned target queue length has been adjusted, when trying to get the target tuned length " +

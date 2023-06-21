@@ -48,7 +48,7 @@ public class TunedTargetQueueLengthProvider {
         LOGGER.info("Considering the average theoretical consumption rate of this worker, the target queue length should be: " +
                 tunedTargetQueue);
 
-        long roundedTargetQueue = roundAndCheckTargetQueue(tunedTargetQueue, maxTargetQueueLength, minTargetQueueLength);
+        final long roundedTargetQueue = roundAndCheckTargetQueue(tunedTargetQueue, maxTargetQueueLength, minTargetQueueLength);
 
         return determineFinalTargetQueueLength(targetQueueName, metricsTargetQueueLength, roundedTargetQueue);
     }
@@ -63,8 +63,8 @@ public class TunedTargetQueueLengthProvider {
         return (long) suggestedTargetQueueLength;
     }
 
-    private long roundAndCheckTargetQueue(final long tunedTargetQueue, final long maxTargetQueueLength, final long minTargetQueueLength){
-        long roundedTargetQueue = roundTargetQueueLength.getRoundedTargetQueueLength(tunedTargetQueue);
+    private long roundAndCheckTargetQueue(final long tunedTargetQueue, final long maxTargetQueueLength, final long minTargetQueueLength) {
+        final long roundedTargetQueue = roundTargetQueueLength.getRoundedTargetQueueLength(tunedTargetQueue);
         LOGGER.info("In the case that the target queue length is rounded below the minimum target queue length or above the maximum target queue length. " +
                 "Target queue length will be set to that minimum or maximum value respectively.");
 
@@ -72,16 +72,16 @@ public class TunedTargetQueueLengthProvider {
             LOGGER.info("Rounded queue length: " + roundedTargetQueue + " exceeds the maximum length that the queue can be set to. " +
                     "Therefore the maximum length: "
                     + maxTargetQueueLength + " should be set.");
-            roundedTargetQueue = maxTargetQueueLength;
+            return maxTargetQueueLength;
         }
 
-        if(roundedTargetQueue < minTargetQueueLength){
-            LOGGER.info("Rounded queue length: " + roundedTargetQueue+ " is less than the minimum length that the queue can be set to. Therefore the minimum length: "
+        if (roundedTargetQueue < minTargetQueueLength) {
+            LOGGER.info("Rounded queue length: " + roundedTargetQueue + " is less than the minimum length that the queue can be set to. Therefore the minimum length: "
                     + minTargetQueueLength + " should be set.");
-            roundedTargetQueue = minTargetQueueLength;
+            return minTargetQueueLength;
+        } else {
+            return roundedTargetQueue;
         }
-
-        return roundedTargetQueue;
     }
 
     private void logNoOpModeInformation(){

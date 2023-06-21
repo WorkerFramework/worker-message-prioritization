@@ -63,7 +63,8 @@ public class HistoricalConsumptionRateTest {
 
         final boolean theoreticalConsumptionRateHistory = historicalConsumptionRate.isSufficientHistoryAvailable(targetQueue1);
 
-        assertTrue("Should return true as this is set to have the minimum consumption rate history.", theoreticalConsumptionRateHistory);
+        assertTrue("Should return true as this is set to provide the minimum consumption rate history.",
+                theoreticalConsumptionRateHistory);
     }
 
     @Test
@@ -85,8 +86,10 @@ public class HistoricalConsumptionRateTest {
 
         final boolean theoreticalConsumptionRateHistoryQueue2 = historicalConsumptionRate.isSufficientHistoryAvailable(targetQueue2);
 
-        assertTrue("Should return true as this is set to have the minimum consumption rate history.", theoreticalConsumptionRateHistoryQueue1);
-        assertTrue("Should return true as this is set to have above the minimum consumption rate history.", theoreticalConsumptionRateHistoryQueue2);
+        assertTrue("Should return true as this is set to provide the minimum consumption rate history.",
+                theoreticalConsumptionRateHistoryQueue1);
+        assertTrue("Should return true as this is set to provide above the minimum consumption rate history.",
+                theoreticalConsumptionRateHistoryQueue2);
     }
 
     @Test
@@ -125,9 +128,9 @@ public class HistoricalConsumptionRateTest {
         final double theoreticalConsumptionRateHistoryQueue2Average =
                 historicalConsumptionRate.recordCurrentConsumptionRateHistoryAndGetAverage(targetQueue2, theoreticalConsumptionRate2);
 
-        assertEquals("Should return true as this is set to have the minimum consumption rate history.", 2.5,
+        assertEquals("Should return true as this is set to provide the minimum consumption rate history.", 2.5,
                 theoreticalConsumptionRateHistoryQueue1Average, 0.001);
-        assertEquals("Should return true as this is set to have above the minimum consumption rate history.", 5.0,
+        assertEquals("Should return true as this is set to provide above the minimum consumption rate history.", 5.0,
                 theoreticalConsumptionRateHistoryQueue2Average, 0.001);
     }
 
@@ -156,9 +159,9 @@ public class HistoricalConsumptionRateTest {
         final double theoreticalConsumptionRateHistoryQueue2Average =
                 historicalConsumptionRate.recordCurrentConsumptionRateHistoryAndGetAverage(targetQueue2, theoreticalConsumptionRate2);
 
-        assertEquals("This should return the average for target queue 1", 4.791,
+        assertEquals("This should return the average consumption rate for target queue 1", 4.791,
                 theoreticalConsumptionRateHistoryQueue1Average, 0.001);
-        assertEquals("This should return the average for target queue 2", 7.352,
+        assertEquals("This should return the average consumption rate for target queue 2", 7.352,
                 theoreticalConsumptionRateHistoryQueue2Average, 0.001);
     }
 }
