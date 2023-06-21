@@ -71,12 +71,9 @@ public class RoundTargetQueueLengthTest {
     @Test
     public void roundingMultipleCannotBeSetToZeroTest() {
 
-        final long tunedTargetQueueLength = 50;
-
         IllegalArgumentException illegalArgumentException = null;
         try {
             final RoundTargetQueueLength roundTargetQueueLength = new RoundTargetQueueLength(0);
-            roundTargetQueueLength.getRoundedTargetQueueLength(tunedTargetQueueLength);
         } catch (final IllegalArgumentException exception) {
             illegalArgumentException = exception;
         }
