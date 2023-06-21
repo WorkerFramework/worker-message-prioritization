@@ -22,6 +22,8 @@ import org.junit.Test;
 import org.junit.rules.ErrorCollector;
 
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 public class RoundTargetQueueLengthTest {
 
@@ -63,5 +65,25 @@ public class RoundTargetQueueLengthTest {
 
         final long roundedTargetQueueLength10 = roundTargetQueueLength.getRoundedTargetQueueLength(749382);
         collector.checkThat("Target queue length should be rounded to the nearest 100",749400L, equalTo(roundedTargetQueueLength10));
+    }
+
+
+    @Test
+    public void roundingMultipleCannotBeSetToZeroTest() {
+
+        final long tunedTargetQueueLength = 50;
+
+        IllegalArgumentException illegalArgumentException = null;
+        try {
+            final RoundTargetQueueLength roundTargetQueueLength = new RoundTargetQueueLength(0);
+            roundTargetQueueLength.getRoundedTargetQueueLength(tunedTargetQueueLength);
+        } catch (final IllegalArgumentException exception) {
+            illegalArgumentException = exception;
+        }
+
+        assertNotNull("IllegalArgumentException was not thrown", illegalArgumentException);
+        assertEquals("Rounding multiple cannot be 0. Please set rounding multiple.",
+                illegalArgumentException.getMessage());
+
     }
 }
