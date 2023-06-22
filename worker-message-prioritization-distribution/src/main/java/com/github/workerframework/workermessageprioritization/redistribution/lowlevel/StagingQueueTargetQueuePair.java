@@ -46,7 +46,6 @@ public class StagingQueueTargetQueuePair {
     private static final RetryPolicy<Void> RABBIT_RETRY_POLICY =  RetryPolicy.<Void>builder()
             .handle(IOException.class)
             .withDelay(Duration.ofSeconds(1))
-            .onRetry(e -> LOGGER.warn("Failure #{}. Retrying.", e.getAttemptCount()))
             .withMaxAttempts(3)
             .build();
 
