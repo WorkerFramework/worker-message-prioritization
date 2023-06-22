@@ -39,7 +39,7 @@ public class RoundTargetQueueLengthTest {
                 equalTo(roundedTargetQueueLength1));
 
         final long roundedTargetQueueLength2 = roundTargetQueueLength.getRoundedTargetQueueLength(50);
-        collector.checkThat("Target queue length should be rounded to 100",100L, equalTo(roundedTargetQueueLength2));
+        collector.checkThat("Target queue length should be rounded to 100", 100L, equalTo(roundedTargetQueueLength2));
 
         final long roundedTargetQueueLength3 = roundTargetQueueLength.getRoundedTargetQueueLength(0);
         collector.checkThat("Target queue length should be rounded to 0",0L, equalTo(roundedTargetQueueLength3));
