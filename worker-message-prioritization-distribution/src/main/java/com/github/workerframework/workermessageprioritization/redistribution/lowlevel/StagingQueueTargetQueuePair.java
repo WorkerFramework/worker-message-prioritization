@@ -17,21 +17,46 @@ package com.github.workerframework.workermessageprioritization.redistribution.lo
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 import com.google.common.base.MoreObjects;
+import com.google.common.collect.Lists;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.ShutdownSignalException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.util.List;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import dev.failsafe.Failsafe;
+import dev.failsafe.Fallback;
+import dev.failsafe.Policy;
+import dev.failsafe.RetryPolicy;
+
 public class StagingQueueTargetQueuePair {
     private static final Logger LOGGER = LoggerFactory.getLogger(StagingQueueTargetQueuePair.class);
+
+    // A retry policy for when we get an exception when using the RabbitMQ client.
+    private static final RetryPolicy<Void> RABBIT_RETRY_POLICY =  RetryPolicy.<Void>builder()
+            .handle(IOException.class)
+            .withDelay(Duration.ofSeconds(1))
+            .onRetry(e -> LOGGER.warn("Failure #{}. Retrying.", e.getAttemptCount()))
+            .withMaxAttempts(3)
+            .build();
+
+    // Fallback.none() prevents the exception from being rethrown after all retries have failed.
+    // See: https://github.com/failsafe-lib/failsafe/issues/253#issuecomment-642142147
+    private static final Fallback<Void> RABBIT_RETRY_POLICY_FALLBACK = Fallback.none();
+
+    // Make sure that the fallback policy is before the retry policy.
+    private static final List<Policy<Void>>
+            RABBIT_RETRY_POLICIES = Lists.newArrayList(RABBIT_RETRY_POLICY_FALLBACK, RABBIT_RETRY_POLICY);
 
     private final Connection connection;
     private final Queue stagingQueue;
@@ -105,7 +130,6 @@ public class StagingQueueTargetQueuePair {
         // over and above consumptionLimit.
         //
         // If we detect this scenario, we need to put the message back on the staging queue so another consumer can pick it up.
-
         if (stagingQueueConsumer.isCancelled()) {
 
             final long deliveryTag = envelope.getDeliveryTag();
@@ -121,27 +145,37 @@ public class StagingQueueTargetQueuePair {
                     this);
 
             try {
-                stagingQueueChannel.basicReject(deliveryTag, true);
+                Failsafe.with(RABBIT_RETRY_POLICIES)
+                        .onFailure(failure -> {
+                            final String errorMessage = String.format(
+                                    "Failed to call stagingQueueChannel.basicReject(%s, true) (attempted %s times) to try and put this " +
+                                            "message back on the %s staging queue. The StagingQueueTargetQueuePair this message " +
+                                            "relates to is %s",
+                                    deliveryTag, failure.getAttemptCount(), stagingQueue.getName(), this);
 
-                LOGGER.debug("Successfully called stagingQueueChannel.basicReject({}, true) " +
-                                "to put this message back on the {} staging queue. " +
-                                "The StagingQueueTargetQueuePair this message relates to is {}",
-                        deliveryTag,
-                        stagingQueue.getName(),
-                        this);
-            } catch (final IOException basicRejectException) {
-                // TODO what to do if basicReject fails and the message is not put back on stagingQueue?
-                final String errorMessage = String.format(
-                        "Exception calling stagingQueueChannel.basicReject(%s, true) to put this message back on the %s staging queue. " +
-                                "The StagingQueueTargetQueuePair this message relates to is %s",
-                        deliveryTag, stagingQueue.getName(), this);
+                            LOGGER.error(errorMessage, failure.getException());
 
-                LOGGER.error(errorMessage, basicRejectException);
+                            // TODO We've tried 3 times to call basicReject to put message back on staging queue, but failed. What
+                            //  should we do now?
+                        })
+                        .run(() -> {
+                            stagingQueueChannel.basicReject(deliveryTag, true);
+                            // TODO debug
+                            LOGGER.info("Successfully called stagingQueueChannel.basicReject({}, true) " +
+                                            "to put this message back on the {} staging queue. " +
+                                            "The StagingQueueTargetQueuePair this message relates to is {}",
+                                    deliveryTag,
+                                    stagingQueue.getName(),
+                                    this);
+                        });
             } finally {
                 return;
             }
         }
 
+        // If the consumer has not been cancelled, but has consumed the number of messages specified by consumptionLimit, we need
+        // to put the message back on the staging queue so another consumer can pick it up. We also need to cancel the consumer to stop
+        // it consuming any more messages from the staging queue.
         if (!stagingQueueConsumer.isCancelled() && messageCount.get() >= consumptionLimit) {
 
             final long deliveryTag = envelope.getDeliveryTag();
@@ -157,24 +191,29 @@ public class StagingQueueTargetQueuePair {
                     consumerTag,
                     this);
 
-            try {
-                stagingQueueChannel.basicReject(deliveryTag, true);
+            Failsafe.with(RABBIT_RETRY_POLICIES)
+                    .onFailure(failure -> {
+                        final String errorMessage = String.format(
+                                "Failed to call stagingQueueChannel.basicReject(%s, true) (attempted %s times) to try and put this " +
+                                        "message back on the %s staging queue. The StagingQueueTargetQueuePair this message relates to " +
+                                        "is %s",
+                                deliveryTag, failure.getAttemptCount(), stagingQueue.getName(), this);
 
-                LOGGER.debug("Successfully called stagingQueueChannel.basicReject({}, true) " +
-                                "to put this message back on the {} staging queue. " +
-                                "The StagingQueueTargetQueuePair this message relates to is {}",
-                        deliveryTag,
-                        stagingQueue.getName(),
-                        this);
-            } catch (final IOException basicRejectException) {
-                // TODO what to do if basicReject fails and the message is not put back on stagingQueue?
-                final String errorMessage = String.format(
-                        "Exception calling basicReject(%s, true) to put this message back on the %s staging queue. " +
-                                "The StagingQueueTargetQueuePair this message relates to is %s",
-                        deliveryTag, stagingQueue.getName(), this);
+                        LOGGER.error(errorMessage, failure.getException());
 
-                LOGGER.error(errorMessage, basicRejectException);
-            }
+                        // TODO We've tried 3 times to call basicReject to put message back on staging queue, but failed. What
+                        //  should we do now? (remember we're about to cancel the consumer now as well below)
+                    })
+                    .run(() -> {
+                       stagingQueueChannel.basicReject(deliveryTag, true);
+
+                        LOGGER.info("Successfully called stagingQueueChannel.basicReject({}, true) " +
+                                        "to put this message back on the {} staging queue. " +
+                                        "The StagingQueueTargetQueuePair this message relates to is {}",
+                                deliveryTag,
+                                stagingQueue.getName(),
+                                this);
+                    });
 
             try {
                 stagingQueueChannel.basicCancel(consumerTag);
