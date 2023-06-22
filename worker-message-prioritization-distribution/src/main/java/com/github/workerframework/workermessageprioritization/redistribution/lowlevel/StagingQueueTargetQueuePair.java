@@ -46,7 +46,6 @@ public class StagingQueueTargetQueuePair {
     private static final RetryPolicy<Void> RABBIT_RETRY_POLICY =  RetryPolicy.<Void>builder()
             .handle(IOException.class)
             .withDelay(Duration.ofSeconds(1))
-            .onRetry(e -> LOGGER.warn("Failure #{}. Retrying.", e.getAttemptCount()))
             .withMaxAttempts(3)
             .build();
 
@@ -160,8 +159,8 @@ public class StagingQueueTargetQueuePair {
                         })
                         .run(() -> {
                             stagingQueueChannel.basicReject(deliveryTag, true);
-
-                            LOGGER.debug("Successfully called stagingQueueChannel.basicReject({}, true) " +
+                            // TODO debug
+                            LOGGER.info("Successfully called stagingQueueChannel.basicReject({}, true) " +
                                             "to put this message back on the {} staging queue. " +
                                             "The StagingQueueTargetQueuePair this message relates to is {}",
                                     deliveryTag,
@@ -207,7 +206,7 @@ public class StagingQueueTargetQueuePair {
                     .run(() -> {
                        stagingQueueChannel.basicReject(deliveryTag, true);
 
-                        LOGGER.debug("Successfully called stagingQueueChannel.basicReject({}, true) " +
+                        LOGGER.info("Successfully called stagingQueueChannel.basicReject({}, true) " +
                                         "to put this message back on the {} staging queue. " +
                                         "The StagingQueueTargetQueuePair this message relates to is {}",
                                 deliveryTag,
