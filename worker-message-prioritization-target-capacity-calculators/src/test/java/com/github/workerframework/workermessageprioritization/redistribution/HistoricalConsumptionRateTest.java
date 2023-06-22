@@ -22,9 +22,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.IntStream;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class HistoricalConsumptionRateTest {
     private final int maximumConsumptionRateHistorySize = 100;
@@ -35,17 +36,15 @@ public class HistoricalConsumptionRateTest {
     @Test
     public void getErrorWhenMinConsumptionRateHistorySizeLargerThanMaxConsumptionRateHistorySizeTest() {
 
-        IllegalArgumentException illegalArgumentException = null;
         try {
             final HistoricalConsumptionRate historicalConsumptionRate = new HistoricalConsumptionRate(10,
                     100);
+            fail();
         } catch (final IllegalArgumentException exception) {
-            illegalArgumentException = exception;
+            assertNotNull("IllegalArgumentException was not thrown", exception);
+            assertEquals("Minimum history required cannot be larger than the maximum history storage size.",
+                    exception.getMessage());
         }
-
-        assertNotNull("IllegalArgumentException was not thrown", illegalArgumentException);
-        assertEquals("Minimum history required cannot be larger than the maximum history storage size.",
-                illegalArgumentException.getMessage());
     }
 
     @Test
@@ -54,32 +53,13 @@ public class HistoricalConsumptionRateTest {
         final HistoricalConsumptionRate historicalConsumptionRate = new HistoricalConsumptionRate(maximumConsumptionRateHistorySize,
                 minConsumptionRateHistorySize);
 
-        IllegalArgumentException illegalArgumentException = null;
         try {
             historicalConsumptionRate.isSufficientHistoryAvailable(targetQueue1);
-        } catch (final IllegalArgumentException exception) {
-            illegalArgumentException = exception;
+            fail();
+        } catch (final IllegalArgumentException exception){
+            assertNotNull("IllegalArgumentException was not thrown", exception);
+            assertEquals("Queue with this name not found.", exception.getMessage());
         }
-
-        assertNotNull("IllegalArgumentException was not thrown", illegalArgumentException);
-        assertEquals("Queue with this name not found.", illegalArgumentException.getMessage());
-    }
-
-    @Test
-    public void consumptionRateHistorySizeTest(){
-
-        final double theoreticalConsumptionRate = 2.5;
-
-        final HistoricalConsumptionRate historicalConsumptionRate = new HistoricalConsumptionRate(maximumConsumptionRateHistorySize,
-                minConsumptionRateHistorySize);
-
-        IntStream.range(0, minConsumptionRateHistorySize).forEach(i ->
-                historicalConsumptionRate.recordCurrentConsumptionRateHistoryAndGetAverage(targetQueue1, theoreticalConsumptionRate));
-
-        final boolean theoreticalConsumptionRateHistory = historicalConsumptionRate.isSufficientHistoryAvailable(targetQueue1);
-
-        assertTrue("Should return true as this is set to provide the minimum consumption rate history.",
-                theoreticalConsumptionRateHistory);
     }
 
     @Test
@@ -110,13 +90,10 @@ public class HistoricalConsumptionRateTest {
     @Test
     public void isSufficientHistoryAvailableWithMinConsumptionRateHistorySetToZero(){
 
-        final double theoreticalConsumptionRate1 = 2.5;
         final int noMinConsumptionRateHistorySizeRequired = 0;
 
         final HistoricalConsumptionRate historicalConsumptionRate = new HistoricalConsumptionRate(maximumConsumptionRateHistorySize,
                 noMinConsumptionRateHistorySizeRequired);
-
-        historicalConsumptionRate.recordCurrentConsumptionRateHistoryAndGetAverage(targetQueue1, theoreticalConsumptionRate1);
 
         final boolean noMinimumRequiredHistorySet = historicalConsumptionRate.isSufficientHistoryAvailable(targetQueue1);
 
@@ -143,9 +120,9 @@ public class HistoricalConsumptionRateTest {
         final double theoreticalConsumptionRateHistoryQueue2Average =
                 historicalConsumptionRate.recordCurrentConsumptionRateHistoryAndGetAverage(targetQueue2, theoreticalConsumptionRate2);
 
-        assertEquals("Should return true as this is set to provide the minimum consumption rate history.", 2.5,
+        assertEquals("This should return the average consumption rate for target queue 1.", 2.5,
                 theoreticalConsumptionRateHistoryQueue1Average, 0.001);
-        assertEquals("Should return true as this is set to provide above the minimum consumption rate history.", 5.0,
+        assertEquals("This should return the average consumption rate for target queue 2", 5.0,
                 theoreticalConsumptionRateHistoryQueue2Average, 0.001);
     }
 

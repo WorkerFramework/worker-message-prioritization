@@ -31,7 +31,6 @@ public class HistoricalConsumptionRate {
     public HistoricalConsumptionRate(final int maximumConsumptionRateHistorySize, final int minimumHistorySize) throws IllegalArgumentException {
 
         if (maximumConsumptionRateHistorySize < minimumHistorySize) {
-            LOGGER.error("Minimum history required cannot be larger than the maximum history storage size.");
             throw new IllegalArgumentException("Minimum history required cannot be larger than the maximum history storage size.");
         }
 
@@ -41,13 +40,9 @@ public class HistoricalConsumptionRate {
 
     public double recordCurrentConsumptionRateHistoryAndGetAverage(final String targetQueueName, final double theoreticalConsumptionRate) {
 
-        final EvictingQueue<Double> theoreticalConsumptionRateHistory;
-        if (consumptionRateHistoryMap.containsKey(targetQueueName)) {
-            theoreticalConsumptionRateHistory = consumptionRateHistoryMap.get(targetQueueName);
-        } else {
-            theoreticalConsumptionRateHistory = EvictingQueue.create(maximumConsumptionRateHistorySize);
-            consumptionRateHistoryMap.put(targetQueueName, theoreticalConsumptionRateHistory);
-        }
+        final EvictingQueue<Double> theoreticalConsumptionRateHistory = consumptionRateHistoryMap.computeIfAbsent(targetQueueName,
+                s -> EvictingQueue.create(maximumConsumptionRateHistorySize));
+
         theoreticalConsumptionRateHistory.add(theoreticalConsumptionRate);
 
         final double averageTheoreticalConsumptionRate = theoreticalConsumptionRateHistory.stream().mapToDouble(d -> d).average().getAsDouble();
@@ -56,18 +51,21 @@ public class HistoricalConsumptionRate {
     }
 
     public boolean isSufficientHistoryAvailable(final String queueName) throws IllegalArgumentException {
+        if(minimumHistorySize == 0){
+            return true;
+        }
         if (!consumptionRateHistoryMap.containsKey(queueName)) {
             throw new IllegalArgumentException("Queue with this name not found.");
         } else {
             final boolean isSufficientHistory = consumptionRateHistoryMap.get(queueName).size() >= minimumHistorySize;
 
             if (isSufficientHistory) {
-                LOGGER.info("Consumption rate history from the last " + consumptionRateHistoryMap.get(queueName).size() +
+                LOGGER.debug("Consumption rate history from the last " + consumptionRateHistoryMap.get(queueName).size() +
                         " runs of this worker available. An average of these rates will determine the new target queue length. If " +
                         "different to the current queue length, the following suggestions will be implemented and the target queue " +
                         "length adjusted.");
             } else {
-                LOGGER.info("There is not enough history to tune the target queue length accurately. The following logs are " +
+                LOGGER.debug("There is not enough history to tune the target queue length accurately. The following logs are " +
                         "recommendations. The target queue will not be adjusted until more history is present.");
             }
             return isSufficientHistory;

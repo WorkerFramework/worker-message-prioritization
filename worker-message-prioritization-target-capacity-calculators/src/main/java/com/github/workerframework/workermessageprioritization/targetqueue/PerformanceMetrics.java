@@ -21,7 +21,8 @@ public class PerformanceMetrics {
     private final double currentInstances;
     private final double maxInstances;
 
-    public PerformanceMetrics(final long targetQueueLength, double consumptionRate, double currentInstances, double maxInstances) {
+    public PerformanceMetrics(final long targetQueueLength,final double consumptionRate,final double currentInstances,
+                              final double maxInstances) {
         this.targetQueueLength = targetQueueLength;
         this.consumptionRate = consumptionRate;
         this.currentInstances = currentInstances;

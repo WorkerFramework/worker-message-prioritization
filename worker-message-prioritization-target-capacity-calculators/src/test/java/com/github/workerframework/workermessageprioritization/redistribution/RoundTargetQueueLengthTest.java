@@ -22,8 +22,9 @@ import org.junit.Test;
 import org.junit.rules.ErrorCollector;
 
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertEquals;
 
 public class RoundTargetQueueLengthTest {
 
@@ -71,16 +72,13 @@ public class RoundTargetQueueLengthTest {
     @Test
     public void roundingMultipleCannotBeSetToZeroTest() {
 
-        IllegalArgumentException illegalArgumentException = null;
         try {
             final RoundTargetQueueLength roundTargetQueueLength = new RoundTargetQueueLength(0);
-        } catch (final IllegalArgumentException exception) {
-            illegalArgumentException = exception;
+            fail();
+        } catch (final IllegalArgumentException exception){
+            assertNotNull("IllegalArgumentException was not thrown", exception);
+            assertEquals("Rounding multiple cannot be 0. Please set rounding multiple.",
+                    exception.getMessage());
         }
-
-        assertNotNull("IllegalArgumentException was not thrown", illegalArgumentException);
-        assertEquals("Rounding multiple cannot be 0. Please set rounding multiple.",
-                illegalArgumentException.getMessage());
-
     }
 }
