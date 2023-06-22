@@ -63,7 +63,7 @@ public class HistoricalConsumptionRateTest {
     }
 
     @Test
-    public void consumptionRateHistorySizeMultipleQueuesTest(){
+    public void isSufficientHistoryAvailableForMultipleQueuesTest(){
 
         final double theoreticalConsumptionRate1 = 2.5;
         final double theoreticalConsumptionRate2 = 5.0;
@@ -88,7 +88,7 @@ public class HistoricalConsumptionRateTest {
     }
 
     @Test
-    public void isSufficientHistoryAvailableWithMinConsumptionRateHistorySetToZero(){
+    public void isSufficientHistoryAvailableWithMinConsumptionRateHistorySetToZeroTest(){
 
         final int noMinConsumptionRateHistorySizeRequired = 0;
 
