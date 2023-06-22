@@ -130,7 +130,6 @@ public class StagingQueueTargetQueuePair {
                         stagingQueue.getName(),
                         this);
             } catch (final IOException basicRejectException) {
-                // TODO what to do if basicReject fails and the message is not put back on stagingQueue?
                 final String errorMessage = String.format(
                         "Exception calling stagingQueueChannel.basicReject(%s, true) to put this message back on the %s staging queue. " +
                                 "The StagingQueueTargetQueuePair this message relates to is %s",
@@ -167,7 +166,6 @@ public class StagingQueueTargetQueuePair {
                         stagingQueue.getName(),
                         this);
             } catch (final IOException basicRejectException) {
-                // TODO what to do if basicReject fails and the message is not put back on stagingQueue?
                 final String errorMessage = String.format(
                         "Exception calling basicReject(%s, true) to put this message back on the %s staging queue. " +
                                 "The StagingQueueTargetQueuePair this message relates to is %s",
@@ -242,7 +240,6 @@ public class StagingQueueTargetQueuePair {
                     confirmed.lastKey(), stagingQueue.getName(), outstandingConfirms.get(deliveryTag),
                     targetQueue.getName());
 
-            // TODO what if basicAck fails? I think message is redelivered to stagingQueue so maybe this is ok?
             stagingQueueChannel.basicAck(confirmed.lastKey(), true);
             confirmed.clear();
         } else {
@@ -250,7 +247,6 @@ public class StagingQueueTargetQueuePair {
                     outstandingConfirms.get(deliveryTag), stagingQueue.getName(), outstandingConfirms.get(deliveryTag),
                     targetQueue.getName());
 
-            // TODO what if basicAck fails? I think message is redelivered to stagingQueue so maybe this is ok?
             stagingQueueChannel.basicAck(outstandingConfirms.get(deliveryTag), false);
             outstandingConfirms.remove(deliveryTag);
         }
@@ -280,7 +276,6 @@ public class StagingQueueTargetQueuePair {
 
             confirmed.clear();
         } else {
-            // TODO what if basicNack fails?
             stagingQueueChannel.basicNack(outstandingConfirms.get(deliveryTag), false, true);
             outstandingConfirms.remove(deliveryTag);
         }        
