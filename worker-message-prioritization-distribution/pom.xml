@@ -73,10 +73,6 @@
             <artifactId>retrofit</artifactId>
         </dependency>
         <dependency>
-            <groupId>dev.failsafe</groupId>
-            <artifactId>failsafe</artifactId>
-        </dependency>
-        <dependency>
             <groupId>net.jodah</groupId>
             <artifactId>expiringmap</artifactId>
         </dependency>
