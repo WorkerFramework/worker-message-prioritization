@@ -209,6 +209,7 @@ public class ShovelDistributor extends MessageDistributor {
                         shovelToCreate.setSrcUri(rabbitAmqpUri);
                         shovelToCreate.setDestQueue(distributorWorkItem.getTargetQueue().getName());
                         shovelToCreate.setDestUri(rabbitAmqpUri);
+                        shovelToCreate.setSrcPrefetchCount(srcDeleteAfter);
 
                         LOGGER.info("Creating shovel named {} with properties {} to consume {} messages",
                                 shovelName,
