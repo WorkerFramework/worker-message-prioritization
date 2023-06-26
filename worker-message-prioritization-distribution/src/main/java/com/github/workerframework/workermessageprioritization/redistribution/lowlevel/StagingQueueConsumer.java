@@ -63,7 +63,7 @@ public class StagingQueueConsumer extends DefaultConsumer {
     @Override
     public void handleShutdownSignal(final String consumerTag, final ShutdownSignalException sig) {
         //Connection lost, give up
-        LOGGER.debug("handleShutdownSignal called for consumer with consumerTag {}", consumerTag);
+        LOGGER.warn("handleShutdownSignal called for consumer with consumerTag {}", consumerTag);
         shutdownSignalException = sig;
         cancelled = true;
     }

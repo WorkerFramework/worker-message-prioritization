@@ -18,6 +18,7 @@ package com.github.workerframework.workermessageprioritization.redistribution.lo
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 import com.google.common.base.MoreObjects;
 import com.rabbitmq.client.AMQP;
+import com.rabbitmq.client.AlreadyClosedException;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.Envelope;
@@ -26,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -42,40 +44,28 @@ public class StagingQueueTargetQueuePair {
     private final AtomicInteger messageCount = new AtomicInteger(0);
     private final long consumptionLimit;
     private StagingQueueConsumer stagingQueueConsumer;
+    private long consumerPublisherPairRunningTooLongTimeoutMilliseconds;
+    private Instant startTime;
 
-    public StagingQueueTargetQueuePair(final Connection connection, 
-                                       final Queue stagingQueue, final Queue targetQueue,
-                                       final long consumptionLimit) {
+    public StagingQueueTargetQueuePair(final Connection connection,
+                                       final Queue stagingQueue,
+                                       final Queue targetQueue,
+                                       final long consumptionLimit,
+                                       final long consumerPublisherPairRunningTooLongTimeoutMilliseconds) {
         this.connection = connection;
         this.stagingQueue = stagingQueue;
         this.targetQueue = targetQueue;
         this.consumptionLimit = consumptionLimit;
+        this.consumerPublisherPairRunningTooLongTimeoutMilliseconds = consumerPublisherPairRunningTooLongTimeoutMilliseconds;
     }
     
     public void startConsuming() throws IOException {
+        startTime = Instant.now();
         stagingQueueChannel = connection.createChannel();
-        stagingQueueChannel.addShutdownListener(cause -> {
-            if (cause.isInitiatedByApplication()) {
-                LOGGER.debug("Shutdown of staging queue channel for {} initiated by application", stagingQueue.getName());
-            }
-            else {
-                LOGGER.debug(String.format(
-                        "Shutdown of staging queue channel for %s not initiated by application", stagingQueue.getName()), cause);
-            }
-        });
         // The cast to int below is fine as I don't think consumptionLimit will be greater than Integer.MAX_VALUE. If it is, it doesn't
         // really matter, as we'll consume the remaining messages during the next run(s) of the LowLevelDistributor.
         stagingQueueChannel.basicQos((int)consumptionLimit);
         targetQueueChannel = connection.createChannel();
-        targetQueueChannel.addShutdownListener(cause -> {
-            if (cause.isInitiatedByApplication()) {
-                LOGGER.debug("Shutdown of target queue channel for {} initiated by application", targetQueue.getName());
-            }
-            else {
-                LOGGER.debug(String.format(
-                        "Shutdown of target queue channel for %s not initiated by application", targetQueue.getName()), cause);
-            }
-        });
         targetQueueChannel.confirmSelect();
 
         final TargetQueueConfirmListener targetQueueConfirmListener = new TargetQueueConfirmListener(this);
@@ -110,7 +100,7 @@ public class StagingQueueTargetQueuePair {
 
             final long deliveryTag = envelope.getDeliveryTag();
 
-            LOGGER.info("handleStagedMessage called with consumerTag {} and deliveryTag {}," +
+            LOGGER.debug("handleStagedMessage called with consumerTag {} and deliveryTag {}," +
                             "but stagingQueueConsumer.isCancelled() = true, " +
                             "so calling stagingQueueChannel.basicReject({}, true) to put this message back on the {} staging queue. " +
                             "The StagingQueueTargetQueuePair this message relates to is {}",
@@ -135,7 +125,7 @@ public class StagingQueueTargetQueuePair {
                                 "The StagingQueueTargetQueuePair this message relates to is %s",
                         deliveryTag, stagingQueue.getName(), this);
 
-                LOGGER.error(errorMessage, basicRejectException);
+                LOGGER.warn(errorMessage, basicRejectException);
             } finally {
                 return;
             }
@@ -171,7 +161,7 @@ public class StagingQueueTargetQueuePair {
                                 "The StagingQueueTargetQueuePair this message relates to is %s",
                         deliveryTag, stagingQueue.getName(), this);
 
-                LOGGER.error(errorMessage, basicRejectException);
+                LOGGER.warn(errorMessage, basicRejectException);
             }
 
             try {
@@ -218,12 +208,9 @@ public class StagingQueueTargetQueuePair {
             targetQueueChannel.basicPublish("", targetQueue.getName(), basicProperties, body);
         }
         catch (final IOException basicPublish) {
-            // TODO Should we call basicReject to put message back on stagingQueue if basicPublish fails?
-            // TODO What if basicReject also fails?
             LOGGER.error("Exception publishing to '{}' {}", targetQueue.getName(),
                 basicPublish.toString());
 
-            // TODO handle basicCancel exception
             stagingQueueChannel.basicCancel(consumerTag);
         }
 
@@ -267,7 +254,6 @@ public class StagingQueueTargetQueuePair {
                     stagingQueueChannel.basicNack(messageDeliveryTagToNack, true, true);
                 }
                 catch (final IOException e) {
-                    //TODO Consider allowing a retry limit before escalating and removing this messageSource
                     LOGGER.error("Exception ack'ing '{}' {}",
                             messageDeliveryTagToNack,
                             e.toString());
@@ -284,11 +270,32 @@ public class StagingQueueTargetQueuePair {
     public String getIdentifier() {
         return stagingQueue.getName() + ">" + targetQueue.getName();
     }
-    
-    public boolean isCompleted() {
-        return stagingQueueConsumer.isCancelled();
+
+    public boolean isStagingQueueChannelOpen() {
+        return stagingQueueChannel != null ? stagingQueueChannel.isOpen() : true;
     }
-    
+
+    public boolean isTargetQueueChannelOpen() {
+        return targetQueueChannel != null ? targetQueueChannel.isOpen() : true;
+    }
+
+    public boolean isConsumingCompleted() {
+        return stagingQueueConsumer != null ? stagingQueueConsumer.isCancelled() : false;
+    }
+
+    public boolean isPublishingCompleted() {
+        return outstandingConfirms.isEmpty();
+    }
+
+    public boolean isRunningTooLong() {
+        if (consumerPublisherPairRunningTooLongTimeoutMilliseconds == 0) {
+            // A value of 0 means this feature has been disabled
+            return false;
+        } else {
+            return Instant.now().toEpochMilli() > (startTime.toEpochMilli() + consumerPublisherPairRunningTooLongTimeoutMilliseconds);
+        }
+    }
+
     public ShutdownSignalException getShutdownSignalException() {
         return stagingQueueConsumer.getShutdownSignalException();
     }
@@ -306,12 +313,38 @@ public class StagingQueueTargetQueuePair {
                 : null;
 
         return MoreObjects.toStringHelper(this)
-                .add("getIdentifier()", getIdentifier())
+                .add("identifier", getIdentifier())
+                .add("startTime", startTime)
+                .add("consumerPublisherPairRunningTooLongTimeoutMilliseconds", consumerPublisherPairRunningTooLongTimeoutMilliseconds)
                 .add("consumptionLimit", consumptionLimit)
                 .add("messageCount", messageCount.get())
+                .add("consumingCompleted", isConsumingCompleted())
                 .add("numOutstandingConfirms", outstandingConfirms.keySet().size())
-                .add("isCompleted()", stagingQueueConsumer != null ? isCompleted() : false)
-                .add("getShutdownSignalException()", shutdownSignalExceptionMessage)
+                .add("publishingCompleted", isPublishingCompleted())
+                .add("shutdownSignalException", shutdownSignalExceptionMessage)
+                .add("stagingQueueChannelOpen", isStagingQueueChannelOpen())
+                .add("targetQueueChannelOpen", isTargetQueueChannelOpen())
                 .toString();
+    }
+
+    public void close()
+    {
+        try {
+            stagingQueueChannel.close();
+        } catch (final AlreadyClosedException e) {
+            // Ignore
+        } catch (final Exception e) {
+            LOGGER.warn("Exception closing stagingQueueChannel", e);
+        }
+
+        try {
+            targetQueueChannel.close();
+        } catch (final AlreadyClosedException e) {
+            // Ignore
+        } catch (final Exception e) {
+            LOGGER.warn("Exception closing stagingQueueChannel", e);
+        }
+
+        // Don't close the connection, as it is shared with other StagingQueueTargetQueuePairs
     }
 }

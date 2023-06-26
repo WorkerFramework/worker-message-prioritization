@@ -69,7 +69,8 @@ public class LowLevelApplication {
                         connectionFactory,
                         consumptionTargetCalculator,
                         new StagingTargetPairProvider(),
-                        messageDistributorConfig.getDistributorRunIntervalMilliseconds());
+                        messageDistributorConfig.getDistributorRunIntervalMilliseconds(),
+                        messageDistributorConfig.getStagingQueueConsumerRunningTooLongTimeoutMilliseconds());
 
         lowLevelDistributor.run();
     }

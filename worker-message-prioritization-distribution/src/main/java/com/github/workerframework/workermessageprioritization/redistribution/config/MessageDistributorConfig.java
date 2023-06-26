@@ -49,6 +49,11 @@ public final class MessageDistributorConfig {
     private static final String CAF_WMP_DISTRIBUTOR_RUN_INTERVAL_MILLISECONDS = "CAF_WMP_DISTRIBUTOR_RUN_INTERVAL_MILLISECONDS";
     private static final long CAF_WMP_DISTRIBUTOR_RUN_INTERVAL_MILLISECONDS_DEFAULT = 10000;
 
+    private static final String CAF_WMP_STAGING_QUEUE_CONSUMER_RUNNING_TOO_LONG_TIMEOUT_MILLISECONDS
+            = "CAF_WMP_STAGING_QUEUE_CONSUMER_RUNNING_TOO_LONG_TIMEOUT_MILLISECONDS";
+    private static final long CAF_WMP_STAGING_QUEUE_CONSUMER_RUNNING_TOO_LONG_TIMEOUT_MILLISECONDS_DEFAULT
+            = 1800000;
+
     private static final String CAF_WMP_NON_RUNNING_SHOVEL_TIMEOUT_MILLISECONDS
         = "CAF_WMP_NON_RUNNING_SHOVEL_TIMEOUT_MILLISECONDS";
     private static final long CAF_WMP_NON_RUNNING_SHOVEL_TIMEOUT_MILLISECONDS_DEFAULT
@@ -95,6 +100,7 @@ public final class MessageDistributorConfig {
     private final String rabbitMQMgmtPassword;
     private final int rabbitMQMaxNodeCount;
     private final long distributorRunIntervalMilliseconds;
+    private final long consumerPublisherPairRunningTooLongTimeoutMilliseconds;
     private final long nonRunningShovelTimeoutMilliseconds;
     private final long nonRunningShovelCheckIntervalMilliseconds;
     private final long shovelRunningTooLongTimeoutMilliseconds;
@@ -118,6 +124,9 @@ public final class MessageDistributorConfig {
         distributorRunIntervalMilliseconds = getEnvOrDefault(
             CAF_WMP_DISTRIBUTOR_RUN_INTERVAL_MILLISECONDS,
             CAF_WMP_DISTRIBUTOR_RUN_INTERVAL_MILLISECONDS_DEFAULT);
+        consumerPublisherPairRunningTooLongTimeoutMilliseconds = getEnvOrDefault(
+                CAF_WMP_STAGING_QUEUE_CONSUMER_RUNNING_TOO_LONG_TIMEOUT_MILLISECONDS,
+                CAF_WMP_STAGING_QUEUE_CONSUMER_RUNNING_TOO_LONG_TIMEOUT_MILLISECONDS_DEFAULT);
         nonRunningShovelTimeoutMilliseconds = getEnvOrDefault(
             CAF_WMP_NON_RUNNING_SHOVEL_TIMEOUT_MILLISECONDS,
             CAF_WMP_NON_RUNNING_SHOVEL_TIMEOUT_MILLISECONDS_DEFAULT);
@@ -206,6 +215,10 @@ public final class MessageDistributorConfig {
         return distributorRunIntervalMilliseconds;
     }
 
+    public long getStagingQueueConsumerRunningTooLongTimeoutMilliseconds() {
+        return consumerPublisherPairRunningTooLongTimeoutMilliseconds;
+    }
+
     public List<String> getKubernetesNamespaces() {
         return kubernetesNamespaces;
     }
@@ -227,6 +240,7 @@ public final class MessageDistributorConfig {
             .add(CAF_RABBITMQ_MGMT_PASSWORD_ENVVAR, "<HIDDEN>")
             .add(CAF_RABBITMQ_MAX_NODE_COUNT, rabbitMQMaxNodeCount)
             .add(CAF_WMP_DISTRIBUTOR_RUN_INTERVAL_MILLISECONDS, distributorRunIntervalMilliseconds)
+            .add(CAF_WMP_STAGING_QUEUE_CONSUMER_RUNNING_TOO_LONG_TIMEOUT_MILLISECONDS, consumerPublisherPairRunningTooLongTimeoutMilliseconds)
             .add(CAF_WMP_NON_RUNNING_SHOVEL_TIMEOUT_MILLISECONDS, nonRunningShovelTimeoutMilliseconds)
             .add(CAF_WMP_NON_RUNNING_SHOVEL_CHECK_INTERVAL_MILLISECONDS, nonRunningShovelCheckIntervalMilliseconds)
             .add(CAF_WMP_SHOVEL_RUNNING_TOO_LONG_TIMEOUT_MILLISECONDS, shovelRunningTooLongTimeoutMilliseconds)

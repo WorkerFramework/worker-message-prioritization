@@ -43,6 +43,11 @@ This repository consists of the source to build a container that includes the
     **Default**: `10000`  
     **Description**: How often the distributor runs.
 
+* `CAF_WMP_CONSUMER_PUBLISHER_PAIR_RUNNING_TOO_LONG_TIMEOUT_MILLISECONDS`  
+    **Default**: `1800000`  
+    **Description**: The timeout in milliseconds after which to close a RabbitMQ staging queue consumer/target queue publisher pair that
+    have been running for too long. Set to 0 to disable this feature.
+
 * `CAF_WMP_NON_RUNNING_SHOVEL_TIMEOUT_MILLISECONDS`  
     **Default**: `120000`  
     **Description**: The timeout in milliseconds after which to delete RabbitMQ shovels that are in a bad state (i.e. not 'running'). The

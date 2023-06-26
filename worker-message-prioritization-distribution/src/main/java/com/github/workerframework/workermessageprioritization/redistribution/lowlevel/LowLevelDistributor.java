@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
@@ -42,12 +43,14 @@ public class LowLevelDistributor extends MessageDistributor {
     private final ConnectionFactory connectionFactory;
     private final String connectionDetails;
     private final long distributorRunIntervalMilliseconds;
+    private final long consumerPublisherPairRunningTooLongTimeoutMilliseconds;
 
     public LowLevelDistributor(final RabbitManagementApi<QueuesApi> queuesApi,
                                final ConnectionFactory connectionFactory,
                                final ConsumptionTargetCalculator consumptionTargetCalculator,
                                final StagingTargetPairProvider stagingTargetPairProvider,
-                               final long distributorRunIntervalMilliseconds) {
+                               final long distributorRunIntervalMilliseconds,
+                               final long consumerPublisherPairRunningTooLongTimeoutMilliseconds) {
         super(queuesApi);
         this.connectionFactory = connectionFactory;
         this.connectionDetails = String.format(
@@ -59,6 +62,7 @@ public class LowLevelDistributor extends MessageDistributor {
         this.consumptionTargetCalculator = consumptionTargetCalculator;
         this.stagingTargetPairProvider = stagingTargetPairProvider;
         this.distributorRunIntervalMilliseconds = distributorRunIntervalMilliseconds;
+        this.consumerPublisherPairRunningTooLongTimeoutMilliseconds = consumerPublisherPairRunningTooLongTimeoutMilliseconds;
     }
     
     public void run() throws IOException, TimeoutException, InterruptedException {
@@ -86,6 +90,51 @@ public class LowLevelDistributor extends MessageDistributor {
     }
     
     public void runOnce(final Connection connection) throws IOException {
+
+        // Check if any existing StagingQueueTargetQueuePairs need to be closed (either because they have completed or failed)
+        final Iterator<StagingQueueTargetQueuePair> existingStagingQueueTargetQueuePairsIterator =
+                existingStagingQueueTargetQueuePairs.values().iterator();
+
+        while (existingStagingQueueTargetQueuePairsIterator.hasNext()) {
+
+            final StagingQueueTargetQueuePair existingStagingQueueTargetQueuePair = existingStagingQueueTargetQueuePairsIterator.next();
+
+            if (existingStagingQueueTargetQueuePair.getShutdownSignalException() != null)  {
+
+                closeAndRemoveFailedStagingQueueTargetQueuePair(
+                        existingStagingQueueTargetQueuePair,
+                        existingStagingQueueTargetQueuePairsIterator,
+                        "it has recorded a shutdown exception"
+                );
+
+            } else if (!existingStagingQueueTargetQueuePair.isStagingQueueChannelOpen() || // TODO check just targetChannel maybe
+                    !existingStagingQueueTargetQueuePair.isTargetQueueChannelOpen())  {
+
+                closeAndRemoveFailedStagingQueueTargetQueuePair(
+                        existingStagingQueueTargetQueuePair,
+                        existingStagingQueueTargetQueuePairsIterator,
+                        "the staging queue and/or target queue channel(s) have been closed"
+                );
+
+            } else if (existingStagingQueueTargetQueuePair.isRunningTooLong()) {
+
+                closeAndRemoveFailedStagingQueueTargetQueuePair(
+                        existingStagingQueueTargetQueuePair,
+                        existingStagingQueueTargetQueuePairsIterator,
+                        "it has been running for too long"
+                );
+
+            } else if (existingStagingQueueTargetQueuePair.isConsumingCompleted() &&
+                    existingStagingQueueTargetQueuePair.isPublishingCompleted()) {
+
+                closeAndRemoveSuccessfulStagingQueueTargetQueuePair(
+                        existingStagingQueueTargetQueuePair,
+                        existingStagingQueueTargetQueuePairsIterator,
+                        "consuming and publishing have completed"
+                );
+            }
+        }
+
         final Set<DistributorWorkItem> distributorWorkItems;
         try {
             distributorWorkItems = getDistributorWorkItems();
@@ -103,30 +152,14 @@ public class LowLevelDistributor extends MessageDistributor {
             final Map<Queue, Long> consumptionTargets = consumptionTargetCalculator.calculateConsumptionTargets(distributorWorkItem);
             final Set<StagingQueueTargetQueuePair> stagingTargetPairs =
                     stagingTargetPairProvider.provideStagingTargetPairs(
-                            connection, distributorWorkItem, consumptionTargets);
+                            connection, distributorWorkItem, consumptionTargets, consumerPublisherPairRunningTooLongTimeoutMilliseconds);
 
             for (final StagingQueueTargetQueuePair stagingTargetPair : stagingTargetPairs) {
+
                 if (existingStagingQueueTargetQueuePairs.containsKey(stagingTargetPair.getIdentifier())) {
-                    final StagingQueueTargetQueuePair existingStagingQueueTargetQueuePair =
-                            existingStagingQueueTargetQueuePairs.get(stagingTargetPair.getIdentifier());
-
-                    if (!existingStagingQueueTargetQueuePair.isCompleted()) {
-                        LOGGER.warn("Existing StagingQueueTargetQueuePair '{}' was still running", existingStagingQueueTargetQueuePair);
-                        continue;
-                    } else {
-                        if (existingStagingQueueTargetQueuePair.getShutdownSignalException() != null) {
-                            LOGGER.error("Exiting as '{}' recorded a shutdown exception: '{}'",
-                                    existingStagingQueueTargetQueuePair,
-                                    existingStagingQueueTargetQueuePair.getShutdownSignalException());
-                            return;
-                        }
-
-                        LOGGER.debug("Removing '{}' from existingStagingQueueTargetQueuePairs '{}' as it has completed",
-                                existingStagingQueueTargetQueuePair,
-                                existingStagingQueueTargetQueuePairs);
-
-                        existingStagingQueueTargetQueuePairs.remove(stagingTargetPair.getIdentifier());
-                    }
+                    LOGGER.warn("Existing StagingQueueTargetQueuePair '{}' was still running",
+                            existingStagingQueueTargetQueuePairs.get(stagingTargetPair.getIdentifier()));
+                    continue;
                 }
 
                 LOGGER.debug("Adding '{}' to existingStagingQueueTargetQueuePairs '{}'",
@@ -142,7 +175,44 @@ public class LowLevelDistributor extends MessageDistributor {
 
                 stagingTargetPair.startConsuming();
             }
-
         }
+    }
+
+    private void closeAndRemoveSuccessfulStagingQueueTargetQueuePair(
+            final StagingQueueTargetQueuePair existingStagingQueueTargetQueuePair,
+            final Iterator<StagingQueueTargetQueuePair> existingStagingQueueTargetQueuePairsIterator,
+            final String reason) {
+
+        LOGGER.debug("Closing {} because {}: {}",
+                existingStagingQueueTargetQueuePair.getIdentifier(),
+                reason,
+                existingStagingQueueTargetQueuePair);
+        existingStagingQueueTargetQueuePair.close();
+
+        LOGGER.debug("Removing {} from existingStagingQueueTargetQueuePairs {} because {}: {}",
+                existingStagingQueueTargetQueuePair.getIdentifier(),
+                existingStagingQueueTargetQueuePairs,
+                reason,
+                existingStagingQueueTargetQueuePair);
+        existingStagingQueueTargetQueuePairsIterator.remove();
+    }
+
+    private void closeAndRemoveFailedStagingQueueTargetQueuePair(
+            final StagingQueueTargetQueuePair existingStagingQueueTargetQueuePair,
+            final Iterator<StagingQueueTargetQueuePair> existingStagingQueueTargetQueuePairsIterator,
+            final String reason) {
+
+        LOGGER.error("Closing {} because {}: {}",
+                existingStagingQueueTargetQueuePair.getIdentifier(),
+                reason,
+                existingStagingQueueTargetQueuePair);
+        existingStagingQueueTargetQueuePair.close();
+
+        LOGGER.error("Removing {} from existingStagingQueueTargetQueuePairs {} because {}: {}",
+                existingStagingQueueTargetQueuePair.getIdentifier(),
+                existingStagingQueueTargetQueuePairs,
+                reason,
+                existingStagingQueueTargetQueuePair);
+        existingStagingQueueTargetQueuePairsIterator.remove();
     }
 }

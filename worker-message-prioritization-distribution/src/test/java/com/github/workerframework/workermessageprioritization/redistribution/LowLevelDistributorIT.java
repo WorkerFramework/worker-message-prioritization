@@ -80,7 +80,7 @@ public class LowLevelDistributorIT extends DistributorTestBase {
                     new EqualConsumptionTargetCalculator(targetQueue -> new TargetQueueSettings(200, 0));
             final StagingTargetPairProvider stagingTargetPairProvider = new StagingTargetPairProvider();
             final LowLevelDistributor lowLevelDistributor = new LowLevelDistributor(queuesApi, connectionFactory,
-                    consumptionTargetCalculator, stagingTargetPairProvider, 10000);
+                    consumptionTargetCalculator, stagingTargetPairProvider, 10000, 1800000);
 
             // Run the distributor (1st time).
             // stagingQueue1:            500 messages
