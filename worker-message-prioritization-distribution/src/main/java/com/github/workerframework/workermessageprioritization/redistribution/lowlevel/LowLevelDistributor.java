@@ -185,7 +185,7 @@ public class LowLevelDistributor extends MessageDistributor {
             final Iterator<StagingQueueTargetQueuePair> existingStagingQueueTargetQueuePairsIterator,
             final String reason) {
 
-        LOGGER.debug("Closing {} because {}: {}",
+        LOGGER.info("Closing {} because {}: {}",
                 existingStagingQueueTargetQueuePair.getIdentifier(),
                 reason,
                 existingStagingQueueTargetQueuePair);
@@ -210,7 +210,7 @@ public class LowLevelDistributor extends MessageDistributor {
                 existingStagingQueueTargetQueuePair);
         existingStagingQueueTargetQueuePair.close();
 
-        LOGGER.error("Removing {} from existingStagingQueueTargetQueuePairs {} because {}: {}",
+        LOGGER.debug("Removing {} from existingStagingQueueTargetQueuePairs {} because {}: {}",
                 existingStagingQueueTargetQueuePair.getIdentifier(),
                 existingStagingQueueTargetQueuePairs,
                 reason,

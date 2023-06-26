@@ -135,7 +135,7 @@ public class StagingQueueTargetQueuePair {
 
             final long deliveryTag = envelope.getDeliveryTag();
 
-            LOGGER.info("Consumption target '{}' reached for '{}'. Number of messages consumed by this consumer was '{}'. " +
+            LOGGER.debug("Consumption target '{}' reached for '{}'. Number of messages consumed by this consumer was '{}'. " +
                             "Calling stagingQueueChannel.basicReject({}, true) to put this message back on the staging queue. " +
                             "Calling stagingQueueChannel.basicCancel({}) to cancel this consumer. " +
                             "The StagingQueueTargetQueuePair this message relates to is '{}'",
@@ -195,7 +195,7 @@ public class StagingQueueTargetQueuePair {
         outstandingConfirms.put(nextPublishSeqNo, envelope.getDeliveryTag());
 
         try {
-            LOGGER.info("Publishing message source {} from {} to {} and expecting publish confirm {}",
+            LOGGER.debug("Publishing message source {} from {} to {} and expecting publish confirm {}",
                     envelope.getDeliveryTag(), stagingQueue.getName(),
                     targetQueue.getName(), nextPublishSeqNo);
 
