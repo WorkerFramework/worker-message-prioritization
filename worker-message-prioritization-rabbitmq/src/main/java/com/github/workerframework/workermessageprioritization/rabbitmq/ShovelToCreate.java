@@ -33,6 +33,8 @@ public class ShovelToCreate extends CommonShovelProps
     private String ackMode;
     @SerializedName(value = "src-delete-after", alternate = "src_delete_after")
     private Object srcDeleteAfter;
+    @SerializedName(value = "src-prefetch-count", alternate = "src_prefetch_count")
+    private Object srcPrefetchCount;
 
     public String getSrcUri() {
         return srcUri;
@@ -66,6 +68,14 @@ public class ShovelToCreate extends CommonShovelProps
         this.srcDeleteAfter = srcDeleteAfter;
     }
 
+    public Object getSrcPrefetchCount() {
+        return srcPrefetchCount;
+    }
+
+    public void setSrcPrefetchCount(Object srcPrefetchCount) {
+        this.srcPrefetchCount = srcPrefetchCount;
+    }
+
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
@@ -75,6 +85,7 @@ public class ShovelToCreate extends CommonShovelProps
             .add("srcDeleteAfter", srcDeleteAfter)
             .add("srcQueue", getSrcQueue())
             .add("destQueue", getDestQueue())
+            .add("srcPrefetchCount", getSrcPrefetchCount())
             .toString();
     }
 }
