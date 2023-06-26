@@ -91,6 +91,8 @@ public class LowLevelDistributor extends MessageDistributor {
     
     public void runOnce(final Connection connection) throws IOException {
 
+        LOGGER.info("Existing StagingQueueTargetQueuePairs: {}", existingStagingQueueTargetQueuePairs);
+
         // Check if any existing StagingQueueTargetQueuePairs need to be closed (either because they have completed or failed)
         final Iterator<StagingQueueTargetQueuePair> existingStagingQueueTargetQueuePairsIterator =
                 existingStagingQueueTargetQueuePairs.values().iterator();
@@ -107,7 +109,7 @@ public class LowLevelDistributor extends MessageDistributor {
                         "it has recorded a shutdown exception"
                 );
 
-            } else if (!existingStagingQueueTargetQueuePair.isStagingQueueChannelOpen() || // TODO check just targetChannel maybe
+            } else if (!existingStagingQueueTargetQueuePair.isStagingQueueChannelOpen() ||
                     !existingStagingQueueTargetQueuePair.isTargetQueueChannelOpen())  {
 
                 closeAndRemoveFailedStagingQueueTargetQueuePair(
