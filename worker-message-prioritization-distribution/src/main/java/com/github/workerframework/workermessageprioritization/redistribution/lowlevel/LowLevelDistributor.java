@@ -185,13 +185,13 @@ public class LowLevelDistributor extends MessageDistributor {
             final Iterator<StagingQueueTargetQueuePair> existingStagingQueueTargetQueuePairsIterator,
             final String reason) {
 
-        LOGGER.info("Closing {} because {}: {}",
+        LOGGER.info("Closing StagingQueueTargetQueuePair {} because {}: {}",
                 existingStagingQueueTargetQueuePair.getIdentifier(),
                 reason,
                 existingStagingQueueTargetQueuePair);
         existingStagingQueueTargetQueuePair.close();
 
-        LOGGER.debug("Removing {} from existingStagingQueueTargetQueuePairs {} because {}: {}",
+        LOGGER.debug("Removing StagingQueueTargetQueuePair {} from existingStagingQueueTargetQueuePairs {} because {}: {}",
                 existingStagingQueueTargetQueuePair.getIdentifier(),
                 existingStagingQueueTargetQueuePairs,
                 reason,
@@ -204,13 +204,13 @@ public class LowLevelDistributor extends MessageDistributor {
             final Iterator<StagingQueueTargetQueuePair> existingStagingQueueTargetQueuePairsIterator,
             final String reason) {
 
-        LOGGER.error("Closing {} because {}: {}",
+        LOGGER.error("Closing StagingQueueTargetQueuePair {} because {}: {}",
                 existingStagingQueueTargetQueuePair.getIdentifier(),
                 reason,
                 existingStagingQueueTargetQueuePair);
         existingStagingQueueTargetQueuePair.close();
 
-        LOGGER.debug("Removing {} from existingStagingQueueTargetQueuePairs {} because {}: {}",
+        LOGGER.debug("Removing StagingQueueTargetQueuePair {} from existingStagingQueueTargetQueuePairs {} because {}: {}",
                 existingStagingQueueTargetQueuePair.getIdentifier(),
                 existingStagingQueueTargetQueuePairs,
                 reason,
