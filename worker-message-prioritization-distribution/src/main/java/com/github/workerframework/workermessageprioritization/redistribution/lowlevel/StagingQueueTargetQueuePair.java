@@ -130,56 +130,6 @@ public class StagingQueueTargetQueuePair {
             } finally {
                 return;
             }
-        } else if (messageCount.get() >= consumptionLimit) {
-
-            final long deliveryTag = envelope.getDeliveryTag();
-
-            LOGGER.debug("Consumption target '{}' reached for '{}'. Number of messages consumed by this consumer was '{}'. " +
-                            "Calling stagingQueueChannel.basicReject({}, true) to put this message back on the staging queue. " +
-                            "Calling stagingQueueChannel.basicCancel({}) to cancel this consumer. " +
-                            "The StagingQueueTargetQueuePair this message relates to is '{}'",
-                    consumptionLimit,
-                    stagingQueue.getName(),
-                    messageCount.get(),
-                    deliveryTag,
-                    consumerTag,
-                    this);
-
-            try {
-                stagingQueueChannel.basicReject(deliveryTag, true);
-
-                LOGGER.debug("Successfully called stagingQueueChannel.basicReject({}, true) " +
-                                "to put this message back on the {} staging queue. " +
-                                "The StagingQueueTargetQueuePair this message relates to is {}",
-                        deliveryTag,
-                        stagingQueue.getName(),
-                        this);
-            } catch (final IOException basicRejectException) {
-                final String errorMessage = String.format(
-                        "Exception calling basicReject(%s, true) to put this message back on the %s staging queue. " +
-                                "The StagingQueueTargetQueuePair this message relates to is %s",
-                        deliveryTag, stagingQueue.getName(), this);
-
-                LOGGER.warn(errorMessage, basicRejectException);
-            }
-
-            try {
-                stagingQueueConsumer.recordCancellationRequested();
-
-                stagingQueueChannel.basicCancel(consumerTag);
-
-                LOGGER.debug("Successfully called stagingQueueChannel.basicCancel({}) to cancel this consumer. " +
-                                "The StagingQueueTargetQueuePair this message relates to is {}", consumerTag, this);
-            } catch (final IOException basicCancelException) {
-                final String errorMessage = String.format(
-                        "Exception calling stagingQueueChannel.basicCancel(%s). " +
-                                "The StagingQueueTargetQueuePair this message relates to is '%s'",
-                        consumerTag, this);
-
-                LOGGER.error(errorMessage, basicCancelException);
-            } finally  {
-                return;
-            }
         }
 
         long nextPublishSeqNo = targetQueueChannel.getNextPublishSeqNo();
@@ -197,32 +147,50 @@ public class StagingQueueTargetQueuePair {
                     .build();
 
             targetQueueChannel.basicPublish("", targetQueue.getName(), basicProperties, body);
-        }
-        catch (final IOException basicPublishException) {
+        } catch (final IOException basicPublishException) {
 
             LOGGER.error("Exception publishing to '{}' for StagingQueueTargetQueuePair '{}' {}",
                     targetQueue.getName(), this, basicPublishException.toString());
 
-            try {
-                stagingQueueConsumer.recordCancellationRequested();
-
-                stagingQueueChannel.basicCancel(consumerTag);
-
-                LOGGER.debug("Successfully called stagingQueueChannel.basicCancel({}) to cancel this consumer. " +
-                        "The StagingQueueTargetQueuePair this message relates to is {}", consumerTag, this);
-            } catch (final IOException basicCancelException) {
-                final String errorMessage = String.format(
-                        "Exception calling stagingQueueChannel.basicCancel(%s). " +
-                                "The StagingQueueTargetQueuePair this message relates to is '%s'",
-                        consumerTag, this);
-
-                LOGGER.error(errorMessage, basicCancelException);
-            }
+            cancelConsumer(consumerTag);
         }
 
         messageCount.incrementAndGet();
+
+        if (messageCount.get() >= consumptionLimit) {
+
+            LOGGER.debug("Consumption target '{}' reached for '{}'. Number of messages consumed by this consumer was '{}'. " +
+                            "Calling stagingQueueChannel.basicCancel({}) to cancel this consumer. " +
+                            "The StagingQueueTargetQueuePair this message relates to is '{}'",
+                    consumptionLimit,
+                    stagingQueue.getName(),
+                    messageCount.get(),
+                    consumerTag,
+                    this);
+
+            cancelConsumer(consumerTag);
+        }
     }
-    
+
+    private void cancelConsumer(final String consumerTag)
+    {
+        try {
+            stagingQueueConsumer.recordCancellationRequested();
+
+            stagingQueueChannel.basicCancel(consumerTag);
+
+            LOGGER.debug("Successfully called stagingQueueChannel.basicCancel({}) to cancel this consumer. " +
+                    "The StagingQueueTargetQueuePair this message relates to is {}", consumerTag, this);
+        } catch (final IOException basicCancelException) {
+            final String errorMessage = String.format(
+                    "Exception calling stagingQueueChannel.basicCancel(%s). " +
+                            "The StagingQueueTargetQueuePair this message relates to is '%s'",
+                    consumerTag, this);
+
+            LOGGER.error(errorMessage, basicCancelException);
+        }
+    }
+
     public void handleDeliveryToTargetQueueAck(final long deliveryTag, final boolean multiple) throws IOException {
         if (multiple) {
             final ConcurrentNavigableMap<Long, Long> confirmed = outstandingConfirms.headMap(
