@@ -126,13 +126,13 @@ public class LowLevelDistributor extends MessageDistributor {
                         "it has been running for too long"
                 );
 
-            } else if (existingStagingQueueTargetQueuePair.isConsumingCompleted() &&
-                    existingStagingQueueTargetQueuePair.isPublishingCompleted()) {
+            } else if (existingStagingQueueTargetQueuePair.isConsumerCompleted() &&
+                    existingStagingQueueTargetQueuePair.isPublisherCompleted()) {
 
                 closeAndRemoveSuccessfulStagingQueueTargetQueuePair(
                         existingStagingQueueTargetQueuePair,
                         existingStagingQueueTargetQueuePairsIterator,
-                        "consuming and publishing have completed"
+                        "the consumer and publisher have completed"
                 );
             }
         }

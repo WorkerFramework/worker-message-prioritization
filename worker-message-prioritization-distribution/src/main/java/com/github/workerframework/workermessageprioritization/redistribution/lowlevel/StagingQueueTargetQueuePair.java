@@ -96,12 +96,12 @@ public class StagingQueueTargetQueuePair {
         //
         // If we detect this scenario, we need to put the message back on the staging queue so another consumer can pick it up.
 
-        if (stagingQueueConsumer.isCancelled()) {
+        if (stagingQueueConsumer.isCancellationRequested() || stagingQueueConsumer.isCancelled()) {
 
             final long deliveryTag = envelope.getDeliveryTag();
 
             LOGGER.debug("handleStagedMessage called with consumerTag {} and deliveryTag {}," +
-                            "but stagingQueueConsumer.isCancelled() = true, " +
+                            "but stagingQueueConsumer has been cancelled (or cancellation has been requested and is pending), " +
                             "so calling stagingQueueChannel.basicReject({}, true) to put this message back on the {} staging queue. " +
                             "The StagingQueueTargetQueuePair this message relates to is {}",
                     consumerTag,
@@ -129,9 +129,7 @@ public class StagingQueueTargetQueuePair {
             } finally {
                 return;
             }
-        }
-
-        if (!stagingQueueConsumer.isCancelled() && messageCount.get() >= consumptionLimit) {
+        } else if (messageCount.get() >= consumptionLimit) {
 
             final long deliveryTag = envelope.getDeliveryTag();
 
@@ -165,27 +163,22 @@ public class StagingQueueTargetQueuePair {
             }
 
             try {
+                stagingQueueConsumer.setCancellationRequested(true);
+
                 stagingQueueChannel.basicCancel(consumerTag);
 
                 LOGGER.debug("Successfully called stagingQueueChannel.basicCancel({}) to cancel this consumer. " +
                                 "The StagingQueueTargetQueuePair this message relates to is {}", consumerTag, this);
             } catch (final IOException basicCancelException) {
-                if (basicCancelException.getMessage().contains("Unknown consumerTag")) {
-                    final String errorMessage = String.format(
-                            "Ignoring exception calling stagingQueueChannel.basicCancel(%s), " +
-                                    "as it looks like the consumer has already been cancelled (cancelling a consumer can take some time, " +
-                                    "so this scenario is to be expected). The StagingQueueTargetQueuePair this message relates to is %s",
-                            consumerTag, this);
+                // Allow cancellation to be tried again the next time handleStagedMessage is called.
+                stagingQueueConsumer.setCancellationRequested(false);
 
-                    LOGGER.debug(errorMessage, basicCancelException);
-                } else {
-                    final String errorMessage = String.format(
-                            "Exception calling stagingQueueChannel.basicCancel(%s). " +
-                                    "The StagingQueueTargetQueuePair this message relates to is '%s'",
-                            consumerTag, this);
+                final String errorMessage = String.format(
+                        "Exception calling stagingQueueChannel.basicCancel(%s). " +
+                                "The StagingQueueTargetQueuePair this message relates to is '%s'",
+                        consumerTag, this);
 
-                    LOGGER.error(errorMessage, basicCancelException);
-                }
+                LOGGER.error(errorMessage, basicCancelException);
             } finally  {
                 return;
             }
@@ -207,11 +200,29 @@ public class StagingQueueTargetQueuePair {
 
             targetQueueChannel.basicPublish("", targetQueue.getName(), basicProperties, body);
         }
-        catch (final IOException basicPublish) {
-            LOGGER.error("Exception publishing to '{}' {}", targetQueue.getName(),
-                basicPublish.toString());
+        catch (final IOException basicPublishException) {
 
-            stagingQueueChannel.basicCancel(consumerTag);
+            LOGGER.error("Exception publishing to '{}' for StagingQueueTargetQueuePair '{}' {}",
+                    targetQueue.getName(), this, basicPublishException.toString());
+
+            try {
+                stagingQueueConsumer.setCancellationRequested(true);
+
+                stagingQueueChannel.basicCancel(consumerTag);
+
+                LOGGER.debug("Successfully called stagingQueueChannel.basicCancel({}) to cancel this consumer. " +
+                        "The StagingQueueTargetQueuePair this message relates to is {}", consumerTag, this);
+            } catch (final IOException basicCancelException) {
+                // Allow cancellation to be tried again the next time handleStagedMessage is called.
+                stagingQueueConsumer.setCancellationRequested(false);
+
+                final String errorMessage = String.format(
+                        "Exception calling stagingQueueChannel.basicCancel(%s). " +
+                                "The StagingQueueTargetQueuePair this message relates to is '%s'",
+                        consumerTag, this);
+
+                LOGGER.error(errorMessage, basicCancelException);
+            }
         }
 
         messageCount.incrementAndGet();
@@ -279,11 +290,20 @@ public class StagingQueueTargetQueuePair {
         return targetQueueChannel != null ? targetQueueChannel.isOpen() : true;
     }
 
-    public boolean isConsumingCompleted() {
+    public boolean isConsumerCancellationRequested() {
+        return stagingQueueConsumer != null ? stagingQueueConsumer.isCancellationRequested() : false;
+    }
+
+    private String getConsumerCancellationRequestSentTime()
+    {
+        return stagingQueueConsumer != null ? stagingQueueConsumer.getCancellationRequestSentTime().toString() : null;
+    }
+
+    public boolean isConsumerCompleted() {
         return stagingQueueConsumer != null ? stagingQueueConsumer.isCancelled() : false;
     }
 
-    public boolean isPublishingCompleted() {
+    public boolean isPublisherCompleted() {
         return outstandingConfirms.isEmpty();
     }
 
@@ -318,9 +338,11 @@ public class StagingQueueTargetQueuePair {
                 .add("consumerPublisherPairRunningTooLongTimeoutMilliseconds", consumerPublisherPairRunningTooLongTimeoutMilliseconds)
                 .add("consumptionLimit", consumptionLimit)
                 .add("messageCount", messageCount.get())
-                .add("consumingCompleted", isConsumingCompleted())
+                .add("consumerCancellationRequested", isConsumerCancellationRequested())
+                .add("consumerCancellationRequestSentTime", getConsumerCancellationRequestSentTime())
+                .add("consumerCompleted", isConsumerCompleted())
                 .add("numOutstandingConfirms", outstandingConfirms.keySet().size())
-                .add("publishingCompleted", isPublishingCompleted())
+                .add("publisherCompleted", isPublisherCompleted())
                 .add("shutdownSignalException", shutdownSignalExceptionMessage)
                 .add("stagingQueueChannelOpen", isStagingQueueChannelOpen())
                 .add("targetQueueChannelOpen", isTargetQueueChannelOpen())
