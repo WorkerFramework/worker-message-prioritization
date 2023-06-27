@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -163,16 +164,13 @@ public class StagingQueueTargetQueuePair {
             }
 
             try {
-                stagingQueueConsumer.setCancellationRequested(true);
+                stagingQueueConsumer.recordCancellationRequested();
 
                 stagingQueueChannel.basicCancel(consumerTag);
 
                 LOGGER.debug("Successfully called stagingQueueChannel.basicCancel({}) to cancel this consumer. " +
                                 "The StagingQueueTargetQueuePair this message relates to is {}", consumerTag, this);
             } catch (final IOException basicCancelException) {
-                // Allow cancellation to be tried again the next time handleStagedMessage is called.
-                stagingQueueConsumer.setCancellationRequested(false);
-
                 final String errorMessage = String.format(
                         "Exception calling stagingQueueChannel.basicCancel(%s). " +
                                 "The StagingQueueTargetQueuePair this message relates to is '%s'",
@@ -206,16 +204,13 @@ public class StagingQueueTargetQueuePair {
                     targetQueue.getName(), this, basicPublishException.toString());
 
             try {
-                stagingQueueConsumer.setCancellationRequested(true);
+                stagingQueueConsumer.recordCancellationRequested();
 
                 stagingQueueChannel.basicCancel(consumerTag);
 
                 LOGGER.debug("Successfully called stagingQueueChannel.basicCancel({}) to cancel this consumer. " +
                         "The StagingQueueTargetQueuePair this message relates to is {}", consumerTag, this);
             } catch (final IOException basicCancelException) {
-                // Allow cancellation to be tried again the next time handleStagedMessage is called.
-                stagingQueueConsumer.setCancellationRequested(false);
-
                 final String errorMessage = String.format(
                         "Exception calling stagingQueueChannel.basicCancel(%s). " +
                                 "The StagingQueueTargetQueuePair this message relates to is '%s'",
@@ -294,13 +289,9 @@ public class StagingQueueTargetQueuePair {
         return stagingQueueConsumer != null ? stagingQueueConsumer.isCancellationRequested() : false;
     }
 
-    private String getConsumerCancellationRequestSentTime()
+    private Optional<Instant> getConsumerCancellationRequestSentTime()
     {
-        if (stagingQueueConsumer != null && stagingQueueConsumer.getCancellationRequestSentTime() != null) {
-            return stagingQueueConsumer.getCancellationRequestSentTime().toString();
-        } else {
-            return null;
-        }
+        return stagingQueueConsumer.getCancellationRequestSentTime();
     }
 
     public boolean isConsumerCompleted() {

@@ -25,13 +25,14 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.Optional;
 
 public class StagingQueueConsumer extends DefaultConsumer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(StagingQueueConsumer.class);
     private final StagingQueueTargetQueuePair stagingQueueTargetQueuePair;
     private boolean cancellationRequested = false;
-    private Instant cancellationRequestSentTime;
+    private Optional<Instant> cancellationRequestSentTime;
     private boolean cancelled = false;
     private ShutdownSignalException shutdownSignalException;
 
@@ -40,20 +41,16 @@ public class StagingQueueConsumer extends DefaultConsumer {
         this.stagingQueueTargetQueuePair = stagingQueueTargetQueuePair;
     }
 
-    public void setCancellationRequested(final boolean cancellationRequested) {
-        if (cancellationRequested) {
-            cancellationRequestSentTime = Instant.now();
-        } else {
-            cancellationRequestSentTime = null;
-        }
-        this.cancellationRequested = cancellationRequested;
+    public void recordCancellationRequested() {
+        this.cancellationRequestSentTime = Optional.of(Instant.now());
+        this.cancellationRequested = true;
     }
 
     public boolean isCancellationRequested() {
         return cancellationRequested;
     }
 
-    public Instant getCancellationRequestSentTime() {
+    public Optional<Instant> getCancellationRequestSentTime() {
         return cancellationRequestSentTime;
     }
 
