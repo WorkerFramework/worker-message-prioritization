@@ -25,7 +25,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Attempts to send a equal (roughly) number of message from each staging queue to the target queue.
+ * Attempts to send an equal (roughly) number of message from each staging queue to the target queue.
  *
  * Examples:
  *
