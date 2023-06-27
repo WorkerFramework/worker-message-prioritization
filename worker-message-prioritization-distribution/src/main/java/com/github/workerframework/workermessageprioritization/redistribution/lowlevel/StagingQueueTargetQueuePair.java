@@ -296,7 +296,11 @@ public class StagingQueueTargetQueuePair {
 
     private String getConsumerCancellationRequestSentTime()
     {
-        return stagingQueueConsumer != null ? stagingQueueConsumer.getCancellationRequestSentTime().toString() : null;
+        if (stagingQueueConsumer != null && stagingQueueConsumer.getCancellationRequestSentTime() != null) {
+            return stagingQueueConsumer.getCancellationRequestSentTime().toString();
+        } else {
+            return null;
+        }
     }
 
     public boolean isConsumerCompleted() {
