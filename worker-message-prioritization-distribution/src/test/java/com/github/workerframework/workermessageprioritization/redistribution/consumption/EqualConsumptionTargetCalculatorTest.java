@@ -50,7 +50,7 @@ public final class EqualConsumptionTargetCalculatorTest
         final Queue q1 = new Queue();
         final Queue q2 = new Queue();
         final Set<Queue> stagingQueues = new HashSet<>(Arrays.asList(q1, q2));
-        stagingQueues.forEach((queue -> queue.setMessages(50)));
+        stagingQueues.forEach((queue -> queue.setMessages(200)));
 
         final EqualConsumptionTargetCalculator equalCalculator = new EqualConsumptionTargetCalculator(provider);
 
@@ -112,5 +112,33 @@ public final class EqualConsumptionTargetCalculatorTest
 
         assertFalse(consumptionTargets.isEmpty());
         assertEquals(0, consumptionTargets.get(q1).longValue());
+    }
+
+    @Test
+    public void calculateConsumptionTargetsTestStagingQueueContainsLessMessagesThanTargetQueueHasCapacityFor()
+    {
+        final TargetQueueSettingsProvider provider = mock(TargetQueueSettingsProvider.class);
+
+        final Queue targetQueue = new Queue();
+        targetQueue.setMessages(750);
+
+        final TargetQueueSettings settings = new TargetQueueSettings(1000, 20);
+        when(provider.get(targetQueue)).thenReturn(settings);
+
+        final Queue q1 = new Queue();
+        final Queue q2 = new Queue();
+        final Set<Queue> stagingQueues = new HashSet<>(Arrays.asList(q1, q2));
+        stagingQueues.forEach((queue -> queue.setMessages(50)));
+
+        final EqualConsumptionTargetCalculator equalCalculator = new EqualConsumptionTargetCalculator(provider);
+
+        final DistributorWorkItem workItem = mock(DistributorWorkItem.class);
+        when(workItem.getTargetQueue()).thenReturn(targetQueue);
+        when(workItem.getStagingQueues()).thenReturn(stagingQueues);
+
+        final Map<Queue, Long> consumptionTargets = equalCalculator.calculateConsumptionTargets(workItem);
+
+        assertFalse(consumptionTargets.isEmpty());
+        assertEquals(50, consumptionTargets.get(q1).longValue());
     }
 }

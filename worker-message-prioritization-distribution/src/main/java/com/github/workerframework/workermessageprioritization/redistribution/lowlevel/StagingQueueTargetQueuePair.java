@@ -285,7 +285,7 @@ public class StagingQueueTargetQueuePair {
         return targetQueueChannel != null ? targetQueueChannel.isOpen() : true;
     }
 
-    public boolean isConsumerCancellationRequested() {
+    private boolean isConsumerCancellationRequested() {
         return stagingQueueConsumer != null ? stagingQueueConsumer.isCancellationRequested() : false;
     }
 

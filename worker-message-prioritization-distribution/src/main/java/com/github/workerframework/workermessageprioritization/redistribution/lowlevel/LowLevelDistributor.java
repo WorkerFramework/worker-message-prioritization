@@ -159,7 +159,7 @@ public class LowLevelDistributor extends MessageDistributor {
             for (final StagingQueueTargetQueuePair stagingTargetPair : stagingTargetPairs) {
 
                 if (existingStagingQueueTargetQueuePairs.containsKey(stagingTargetPair.getIdentifier())) {
-                    LOGGER.warn("Existing StagingQueueTargetQueuePair '{}' was still running",
+                    LOGGER.info("Existing StagingQueueTargetQueuePair '{}' was still running",
                             existingStagingQueueTargetQueuePairs.get(stagingTargetPair.getIdentifier()));
                     continue;
                 }

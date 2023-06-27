@@ -195,12 +195,7 @@ public class ShovelDistributor extends MessageDistributor {
                     if (shovelExists) {
                         LOGGER.info("Shovel {} already exists, ignoring.", shovelName);
                     } else {
-                        // Delete this shovel after all the messages in the staging queue have been consumed OR we have reached the
-                        // maximum amount of messages we are allowed to consume from the staging queue (whichever is lower).
-                        // This ensures the shovel is always deleted.
-                        final long numMessagesInStagingQueue = queueConsumptionTarget.getKey().getMessages();
-                        final long maxNumMessagesToConsumeFromStagingQueue = queueConsumptionTarget.getValue();
-                        final long srcDeleteAfter = Math.min(numMessagesInStagingQueue, maxNumMessagesToConsumeFromStagingQueue);
+                        final long srcDeleteAfter = queueConsumptionTarget.getValue();
 
                         final ShovelToCreate shovelToCreate = new ShovelToCreate();
                         shovelToCreate.setSrcDeleteAfter(srcDeleteAfter);
