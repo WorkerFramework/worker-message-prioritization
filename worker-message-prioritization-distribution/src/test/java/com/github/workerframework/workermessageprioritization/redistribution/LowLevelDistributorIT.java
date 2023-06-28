@@ -26,6 +26,8 @@ import com.github.workerframework.workermessageprioritization.targetqueue.Target
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
+
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -88,7 +90,17 @@ public class LowLevelDistributorIT extends DistributorTestBase {
             // targetQueue:              0 messages
             // targetQueueMaxLength:     200
             // Expected result:          100 messages from each staging queue moved to target queue
+            Assert.assertEquals(
+                    "Expected 0 StagingQueueTargetQueuePairs before running the distributor for the 1st time",
+                    0,
+                    lowLevelDistributor.getExistingStagingQueueTargetQueuePairs().size());
+
             lowLevelDistributor.runOnce(connection);
+
+            Assert.assertEquals(
+                    "Expected 2 StagingQueueTargetQueuePairs to be created after running the distributor for the 1st time",
+                    2,
+                    lowLevelDistributor.getExistingStagingQueueTargetQueuePairs().size());
 
             await().alias(String.format("Waiting for target queue named %s to contain 100 messages", targetQueueName))
                     .atMost(100, SECONDS)
@@ -112,6 +124,13 @@ public class LowLevelDistributorIT extends DistributorTestBase {
             // targetQueueMaxLength:     200
             // Expected result:          0 messages from each staging queue moved to target queue because target queue is full
             lowLevelDistributor.runOnce(connection);
+
+            Assert.assertEquals(
+                    "Expected 0 StagingQueueTargetQueuePairs after running the distributor for the 2nd time (because the " +
+                            "initial 2 StagingQueueTargetQueuePairs should have been closed and removed as they have completed, " +
+                            "and no more StagingQueueTargetQueuePairs should have been created because the target queue is full)",
+                    0,
+                    lowLevelDistributor.getExistingStagingQueueTargetQueuePairs().size());
 
             await().alias(String.format("Waiting for target queue named %s to contain 200 messages", targetQueueName))
                     .atMost(100, SECONDS)
@@ -142,6 +161,12 @@ public class LowLevelDistributorIT extends DistributorTestBase {
                     .until(queueContainsNumMessages(targetQueueName, 0));
 
             lowLevelDistributor.runOnce(connection);
+
+            Assert.assertEquals(
+                    "Expected 2 StagingQueueTargetQueuePairs to be created after running the distributor for the 3rd time (because the " +
+                            "target queue has been purged and so now has capacity for more messages)",
+                    2,
+                    lowLevelDistributor.getExistingStagingQueueTargetQueuePairs().size());
 
             await().alias(String.format("Waiting for target queue named %s to contain 200 messages", targetQueueName))
                     .atMost(100, SECONDS)

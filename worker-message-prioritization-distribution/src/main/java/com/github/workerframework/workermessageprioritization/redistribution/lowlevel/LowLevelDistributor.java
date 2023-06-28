@@ -21,6 +21,7 @@ import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApi
 import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitManagementApi;
 import com.github.workerframework.workermessageprioritization.redistribution.DistributorWorkItem;
 import com.github.workerframework.workermessageprioritization.redistribution.MessageDistributor;
+import com.google.common.annotations.VisibleForTesting;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import org.slf4j.Logger;
@@ -216,5 +217,10 @@ public class LowLevelDistributor extends MessageDistributor {
                 reason,
                 existingStagingQueueTargetQueuePair);
         existingStagingQueueTargetQueuePairsIterator.remove();
+    }
+
+    @VisibleForTesting
+    public Map<String, StagingQueueTargetQueuePair> getExistingStagingQueueTargetQueuePairs() {
+        return existingStagingQueueTargetQueuePairs;
     }
 }
