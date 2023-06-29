@@ -96,7 +96,7 @@ public class EqualConsumptionTargetCalculator extends MinimumConsumptionTargetCa
 
         final Queue targetQueue = distributorWorkItem.getTargetQueue();
 
-        LOGGER.info("Number of messages in target queue {}: {}, " +
+        LOGGER.debug("Number of messages in target queue {}: {}, " +
                         "Target queue capacity is: {}, " +
                         "Number of staging queues: {}, " +
                         "Total number of messages in all staging queues: {}, " +

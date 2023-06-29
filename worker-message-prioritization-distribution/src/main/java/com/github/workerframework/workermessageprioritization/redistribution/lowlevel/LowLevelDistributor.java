@@ -175,7 +175,7 @@ public class LowLevelDistributor extends MessageDistributor {
                 existingStagingQueueTargetQueuePairs
                         .put(stagingTargetPair.getIdentifier(), stagingTargetPair);
 
-                LOGGER.info("Starting StagingQueueTargetQueuePair '{}' to consume a maximum of '{}' messages",
+                LOGGER.debug("Starting StagingQueueTargetQueuePair '{}' to consume a maximum of '{}' messages",
                         stagingTargetPair.getIdentifier(),
                         stagingTargetPair.getConsumptionLimit());
 
@@ -189,7 +189,7 @@ public class LowLevelDistributor extends MessageDistributor {
             final Iterator<StagingQueueTargetQueuePair> existingStagingQueueTargetQueuePairsIterator,
             final String reason) {
 
-        LOGGER.info("Closing StagingQueueTargetQueuePair {} because {}: {}",
+        LOGGER.debug("Closing StagingQueueTargetQueuePair {} because {}: {}",
                 existingStagingQueueTargetQueuePair.getIdentifier(),
                 reason,
                 existingStagingQueueTargetQueuePair);
