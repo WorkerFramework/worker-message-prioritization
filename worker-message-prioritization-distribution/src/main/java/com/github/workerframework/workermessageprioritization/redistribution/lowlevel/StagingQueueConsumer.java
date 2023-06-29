@@ -83,7 +83,7 @@ public class StagingQueueConsumer extends DefaultConsumer {
         // by a call to Channel.basicCancel(java.lang.String). For example, the queue has been deleted.
         //
         // So, handleCancel being called probably indicates an error condition, as the consumer has been cancelled unexpectedly, so go
-        // ahead and close the stagingQueueChannel to ensure any unacked messages are immediately required to the staging queue.
+        // ahead and close the stagingQueueChannel to ensure any unacked messages are immediately requeued to the staging queue.
         closeStagingQueueChannel();
     }
 
