@@ -20,7 +20,6 @@ import com.github.workerframework.workermessageprioritization.redistribution.con
 import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApi;
 import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitManagementApi;
 import com.github.workerframework.workermessageprioritization.redistribution.config.MessageDistributorConfig;
-import com.github.workerframework.workermessageprioritization.targetqueue.FixedTargetQueueSettingsProvider;
 import com.github.workerframework.workermessageprioritization.targetqueue.K8sTargetQueueSettingsProvider;
 import com.rabbitmq.client.ConnectionFactory;
 
@@ -70,7 +69,7 @@ public class LowLevelApplication {
                         consumptionTargetCalculator,
                         new StagingTargetPairProvider(),
                         messageDistributorConfig.getDistributorRunIntervalMilliseconds(),
-                        messageDistributorConfig.getStagingQueueConsumerRunningTooLongTimeoutMilliseconds());
+                        messageDistributorConfig.getConsumerPublisherPairLastDoneWorkTimeoutMilliseconds());
 
         lowLevelDistributor.run();
     }

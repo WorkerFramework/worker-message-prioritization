@@ -44,14 +44,14 @@ public class LowLevelDistributor extends MessageDistributor {
     private final ConnectionFactory connectionFactory;
     private final String connectionDetails;
     private final long distributorRunIntervalMilliseconds;
-    private final long consumerPublisherPairRunningTooLongTimeoutMilliseconds;
+    private final long consumerPublisherPairLastDoneWorkTimeoutMilliseconds;
 
     public LowLevelDistributor(final RabbitManagementApi<QueuesApi> queuesApi,
                                final ConnectionFactory connectionFactory,
                                final ConsumptionTargetCalculator consumptionTargetCalculator,
                                final StagingTargetPairProvider stagingTargetPairProvider,
                                final long distributorRunIntervalMilliseconds,
-                               final long consumerPublisherPairRunningTooLongTimeoutMilliseconds) {
+                               final long consumerPublisherPairLastDoneWorkTimeoutMilliseconds) {
         super(queuesApi);
         this.connectionFactory = connectionFactory;
         this.connectionDetails = String.format(
@@ -63,7 +63,7 @@ public class LowLevelDistributor extends MessageDistributor {
         this.consumptionTargetCalculator = consumptionTargetCalculator;
         this.stagingTargetPairProvider = stagingTargetPairProvider;
         this.distributorRunIntervalMilliseconds = distributorRunIntervalMilliseconds;
-        this.consumerPublisherPairRunningTooLongTimeoutMilliseconds = consumerPublisherPairRunningTooLongTimeoutMilliseconds;
+        this.consumerPublisherPairLastDoneWorkTimeoutMilliseconds = consumerPublisherPairLastDoneWorkTimeoutMilliseconds;
     }
     
     public void run() throws IOException, TimeoutException, InterruptedException {
@@ -119,12 +119,14 @@ public class LowLevelDistributor extends MessageDistributor {
                         "the staging queue and/or target queue channel(s) have been closed"
                 );
 
-            } else if (existingStagingQueueTargetQueuePair.isRunningTooLong()) {
+            } else if (existingStagingQueueTargetQueuePair.hasExceededLastDoneWorkTimeout()) {
 
                 closeAndRemoveFailedStagingQueueTargetQueuePair(
                         existingStagingQueueTargetQueuePair,
                         existingStagingQueueTargetQueuePairsIterator,
-                        "it has been running for too long"
+                        String.format(
+                                "%s milliseconds have elapsed since it last done work, so assuming that it is stuck",
+                                consumerPublisherPairLastDoneWorkTimeoutMilliseconds)
                 );
 
             } else if (existingStagingQueueTargetQueuePair.isConsumerCompleted() &&
@@ -155,7 +157,8 @@ public class LowLevelDistributor extends MessageDistributor {
             final Map<Queue, Long> consumptionTargets = consumptionTargetCalculator.calculateConsumptionTargets(distributorWorkItem);
             final Set<StagingQueueTargetQueuePair> stagingTargetPairs =
                     stagingTargetPairProvider.provideStagingTargetPairs(
-                            connection, distributorWorkItem, consumptionTargets, consumerPublisherPairRunningTooLongTimeoutMilliseconds);
+                            connection, distributorWorkItem, consumptionTargets,
+                            consumerPublisherPairLastDoneWorkTimeoutMilliseconds);
 
             for (final StagingQueueTargetQueuePair stagingTargetPair : stagingTargetPairs) {
 

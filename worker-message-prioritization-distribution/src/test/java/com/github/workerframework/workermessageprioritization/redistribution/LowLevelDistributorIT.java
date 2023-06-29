@@ -18,9 +18,11 @@ package com.github.workerframework.workermessageprioritization.redistribution;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 
+import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 import com.github.workerframework.workermessageprioritization.redistribution.consumption.ConsumptionTargetCalculator;
 import com.github.workerframework.workermessageprioritization.redistribution.consumption.EqualConsumptionTargetCalculator;
 import com.github.workerframework.workermessageprioritization.redistribution.lowlevel.LowLevelDistributor;
+import com.github.workerframework.workermessageprioritization.redistribution.lowlevel.StagingQueueTargetQueuePair;
 import com.github.workerframework.workermessageprioritization.redistribution.lowlevel.StagingTargetPairProvider;
 import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueSettings;
 import com.rabbitmq.client.AMQP;
@@ -29,11 +31,14 @@ import com.rabbitmq.client.Connection;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.mockito.Mockito;
+import org.mockito.internal.util.collections.Sets;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Collections;
+import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
 public class LowLevelDistributorIT extends DistributorTestBase {
@@ -82,7 +87,7 @@ public class LowLevelDistributorIT extends DistributorTestBase {
                     new EqualConsumptionTargetCalculator(targetQueue -> new TargetQueueSettings(200, 0));
             final StagingTargetPairProvider stagingTargetPairProvider = new StagingTargetPairProvider();
             final LowLevelDistributor lowLevelDistributor = new LowLevelDistributor(queuesApi, connectionFactory,
-                    consumptionTargetCalculator, stagingTargetPairProvider, 10000, 1800000);
+                    consumptionTargetCalculator, stagingTargetPairProvider, 10000, 600000);
 
             // Run the distributor (1st time).
             // stagingQueue1:            500 messages
@@ -182,6 +187,110 @@ public class LowLevelDistributorIT extends DistributorTestBase {
                     .atMost(100, SECONDS)
                     .pollInterval(Duration.ofSeconds(1))
                     .until(queueContainsNumMessages(stagingQueue2Name, 300));
+        }
+    }
+
+    @Test
+    public void stagingQueueTargetQueuePairIsClosedWhenLastDoneWorkTimeoutExceededTest()
+            throws TimeoutException, IOException, InterruptedException
+    {
+        final String targetQueueName = getUniqueTargetQueueName(TARGET_QUEUE_NAME);
+        final String stagingQueueName = getStagingQueueName(targetQueueName, T1_STAGING_QUEUE_NAME);
+
+        try(final Connection connection = connectionFactory.newConnection()) {
+            final Channel channel = connection.createChannel();
+
+            channel.queueDeclare(stagingQueueName, true, false, false, Collections.emptyMap());
+            channel.queueDeclare(targetQueueName, true, false, false, Collections.emptyMap());
+
+            final AMQP.BasicProperties properties = new AMQP.BasicProperties.Builder()
+                    .contentType("application/json")
+                    .deliveryMode(2)
+                    .priority(1)
+                    .build();
+
+            final String body = gson.toJson(new Object());
+
+            // Publish 1 message to the staging queue
+            channel.basicPublish("", stagingQueueName, properties, body.getBytes(StandardCharsets.UTF_8));
+
+            await().alias(String.format("Waiting for 1st staging queue named %s to contain 1 message", stagingQueueName))
+                    .atMost(100, SECONDS)
+                    .pollInterval(Duration.ofSeconds(1))
+                    .until(queueContainsNumMessages(stagingQueueName, 1));
+
+            // Mocking consumptionLimit so that is more (2) than the number of messages in the staging queue (1) to keep the
+            // StagingQueueTargetQueuePair running without doing any work after the first message is consumed
+            final Queue stagingQueue = new Queue();
+            stagingQueue.setName(stagingQueueName);
+            stagingQueue.setMessages(1);
+            stagingQueue.setMessages_ready(1);
+            stagingQueue.setDurable(true);
+            stagingQueue.setExclusive(false);
+            stagingQueue.setAuto_delete(false);
+            stagingQueue.setArguments(Collections.emptyMap());
+
+            final Queue targetQueue = new Queue();
+            targetQueue.setName(targetQueueName);
+            targetQueue.setMessages(0);
+            targetQueue.setMessages_ready(0);
+            targetQueue.setDurable(true);
+            targetQueue.setExclusive(false);
+            targetQueue.setAuto_delete(false);
+            targetQueue.setArguments(Collections.emptyMap());
+
+            final long consumerPublisherPairLastDoneWorkTimeoutMilliseconds = 1000;
+
+            final StagingQueueTargetQueuePair stagingQueueTargetQueuePair = new StagingQueueTargetQueuePair(
+                    connection,
+                    stagingQueue,
+                    targetQueue,
+                    2,
+                    consumerPublisherPairLastDoneWorkTimeoutMilliseconds
+            );
+
+            final ConsumptionTargetCalculator consumptionTargetCalculator =
+                    new EqualConsumptionTargetCalculator(tQ -> new TargetQueueSettings(2, 0));
+
+            final StagingTargetPairProvider stagingTargetPairProviderMock = Mockito.mock(StagingTargetPairProvider.class);
+
+            Mockito.when(stagingTargetPairProviderMock.provideStagingTargetPairs(
+                            Mockito.any(Connection.class),
+                            Mockito.any(DistributorWorkItem.class),
+                            Mockito.any(Map.class),
+                            Mockito.anyLong()))
+                    .thenReturn(Sets.newSet(stagingQueueTargetQueuePair))
+                    .thenAnswer(invocation -> Sets.newSet()); // Prevent new StagingTargetPairProvider from being created
+
+            final LowLevelDistributor lowLevelDistributor = new LowLevelDistributor(queuesApi, connectionFactory,
+                    consumptionTargetCalculator, stagingTargetPairProviderMock, 10000,
+                    consumerPublisherPairLastDoneWorkTimeoutMilliseconds);
+
+            // Run the distributor (1st time)
+            Assert.assertEquals(
+                    "Expected 0 StagingQueueTargetQueuePairs before running the distributor for the 1st time",
+                    0,
+                    lowLevelDistributor.getExistingStagingQueueTargetQueuePairs().size());
+
+            lowLevelDistributor.runOnce(connection);
+
+            Assert.assertEquals(
+                    "Expected 1 StagingQueueTargetQueuePair to be created after running the distributor for the 1st time",
+                    1,
+                    lowLevelDistributor.getExistingStagingQueueTargetQueuePairs().size());
+
+            // Wait for more than the consumerPublisherPairLastWorkTimeoutMilliseconds
+            Thread.sleep(consumerPublisherPairLastDoneWorkTimeoutMilliseconds + 5000);
+
+            // Run the distributor (2nd time)
+            lowLevelDistributor.runOnce(connection);
+
+            Assert.assertEquals(
+                    "Expected the StagingQueueTargetQueuePair to be closed and removed after the " +
+                            "consumerPublisherPairLastWorkTimeoutMilliseconds has been exceeded but it was not: "
+                            + lowLevelDistributor.getExistingStagingQueueTargetQueuePairs(),
+                    0,
+                    lowLevelDistributor.getExistingStagingQueueTargetQueuePairs().size());
         }
     }
 }

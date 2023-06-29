@@ -45,19 +45,20 @@ public class StagingQueueTargetQueuePair {
     private final AtomicInteger messageCount = new AtomicInteger(0);
     private final long consumptionLimit;
     private StagingQueueConsumer stagingQueueConsumer;
-    private long consumerPublisherPairRunningTooLongTimeoutMilliseconds;
+    private long consumerPublisherPairLastDoneWorkTimeoutMilliseconds;
     private Instant startTime;
+    private Instant timeSinceLastDoneWork;
 
     public StagingQueueTargetQueuePair(final Connection connection,
                                        final Queue stagingQueue,
                                        final Queue targetQueue,
                                        final long consumptionLimit,
-                                       final long consumerPublisherPairRunningTooLongTimeoutMilliseconds) {
+                                       final long consumerPublisherPairLastDoneWorkTimeoutMilliseconds) {
         this.connection = connection;
         this.stagingQueue = stagingQueue;
         this.targetQueue = targetQueue;
         this.consumptionLimit = consumptionLimit;
-        this.consumerPublisherPairRunningTooLongTimeoutMilliseconds = consumerPublisherPairRunningTooLongTimeoutMilliseconds;
+        this.consumerPublisherPairLastDoneWorkTimeoutMilliseconds = consumerPublisherPairLastDoneWorkTimeoutMilliseconds;
     }
     
     public void startConsuming() throws IOException {
@@ -96,8 +97,23 @@ public class StagingQueueTargetQueuePair {
         // over and above consumptionLimit.
         //
         // If we detect this scenario, we need to put the message back on the staging queue so another consumer can pick it up.
+        //
+        // If we cancel the consumer due to some problem (i.e. something other than the consumption limit being reached), we don't
+        // really know what state the system will be in, so we will also close the staging queue channel to ensure that unacked
+        // messages (unconfirmed deliveries) are requeued to the staging queue as quickly as possible.
+        //
+        // If we didn't close the staging queue channel, we'd potentially have to wait for the
+        // https://www.rabbitmq.com/consumers.html#acknowledgement-timeout to expire before the unacked messages are requeued.
+        //
+        // Its important that the staging queue channel is NOT closed if the consumer was cancelled due to the consumption limit
+        // being reached, as we need the staging queue channel to stay open long enough to:
+        //
+        // 1) Requeue messages (stagingQueueChannel.basicReject(deliveryTag, true)) arriving after stagingQueueChannel.basicCancel
+        // (consumerTag) has been called but before the StagingQueueConsumer.handleCancelOk callback is invoked
+        //
+        // 2) Send acks back to the staging queue for messages published to the target queue in handleDeliveryToTargetQueueAck
 
-        if (stagingQueueConsumer.isCancellationRequested() || stagingQueueConsumer.isCancelled()) {
+        if (stagingQueueConsumer.getCancellationRequestSentTime().isPresent() || stagingQueueConsumer.isCancelled()) {
 
             final long deliveryTag = envelope.getDeliveryTag();
 
@@ -120,14 +136,16 @@ public class StagingQueueTargetQueuePair {
                         deliveryTag,
                         stagingQueue.getName(),
                         this);
+
+                return;
             } catch (final IOException basicRejectException) {
                 final String errorMessage = String.format(
                         "Exception calling stagingQueueChannel.basicReject(%s, true) to put this message back on the %s staging queue. " +
                                 "The StagingQueueTargetQueuePair this message relates to is %s",
                         deliveryTag, stagingQueue.getName(), this);
 
-                LOGGER.warn(errorMessage, basicRejectException);
-            } finally {
+                LOGGER.error(errorMessage, basicRejectException);
+
                 return;
             }
         }
@@ -152,7 +170,9 @@ public class StagingQueueTargetQueuePair {
             LOGGER.error("Exception publishing to '{}' for StagingQueueTargetQueuePair '{}' {}",
                     targetQueue.getName(), this, basicPublishException.toString());
 
-            cancelConsumer(consumerTag);
+            cancelConsumer(consumerTag, StagingQueueConsumer.CancellationReason.EXCEPTION_PUBLISHING_TO_TARGET_QUEUE);
+
+            return;
         }
 
         messageCount.incrementAndGet();
@@ -168,30 +188,38 @@ public class StagingQueueTargetQueuePair {
                     consumerTag,
                     this);
 
-            cancelConsumer(consumerTag);
+            cancelConsumer(consumerTag, StagingQueueConsumer.CancellationReason.CONSUMPTION_LIMIT_REACHED);
         }
     }
 
-    private void cancelConsumer(final String consumerTag)
+    private void cancelConsumer(final String consumerTag, final StagingQueueConsumer.CancellationReason cancellationReason)
     {
         try {
-            stagingQueueConsumer.recordCancellationRequested();
+            stagingQueueConsumer.recordCancellationRequested(cancellationReason);
 
             stagingQueueChannel.basicCancel(consumerTag);
 
-            LOGGER.debug("Successfully called stagingQueueChannel.basicCancel({}) to cancel this consumer. " +
-                    "The StagingQueueTargetQueuePair this message relates to is {}", consumerTag, this);
+            LOGGER.debug("Successfully called stagingQueueChannel.basicCancel({}) to cancel this consumer. Cancellation reason: {}. " +
+                    "The StagingQueueTargetQueuePair this message relates to is {}", consumerTag, cancellationReason, this);
         } catch (final IOException basicCancelException) {
             final String errorMessage = String.format(
-                    "Exception calling stagingQueueChannel.basicCancel(%s). " +
+                    "Exception calling stagingQueueChannel.basicCancel(%s). Cancellation reason: {}" +
                             "The StagingQueueTargetQueuePair this message relates to is '%s'",
-                    consumerTag, this);
+                    consumerTag, cancellationReason, this);
 
             LOGGER.error(errorMessage, basicCancelException);
         }
     }
 
     public void handleDeliveryToTargetQueueAck(final long deliveryTag, final boolean multiple) throws IOException {
+        if (!stagingQueueChannel.isOpen()) {
+            LOGGER.warn("handleDeliveryToTargetQueueAck called for deliveryTag {} and multiple {}, " +
+                    "but the stagingQueueChannel is closed, so unable to send ack to stagingQueueChannel. " +
+                    "The StagingQueueTargetQueuePair this message relates to is {}", deliveryTag, multiple, this);
+
+            return;
+        }
+
         if (multiple) {
             final ConcurrentNavigableMap<Long, Long> confirmed = outstandingConfirms.headMap(
                     deliveryTag, true
@@ -203,6 +231,7 @@ public class StagingQueueTargetQueuePair {
 
             stagingQueueChannel.basicAck(confirmed.lastKey(), true);
             confirmed.clear();
+            timeSinceLastDoneWork = Instant.now();
         } else {
             LOGGER.trace("Ack message source delivery {} from {} after publish confirm {} of message to {}",
                     outstandingConfirms.get(deliveryTag), stagingQueue.getName(), outstandingConfirms.get(deliveryTag),
@@ -210,10 +239,19 @@ public class StagingQueueTargetQueuePair {
 
             stagingQueueChannel.basicAck(outstandingConfirms.get(deliveryTag), false);
             outstandingConfirms.remove(deliveryTag);
+            timeSinceLastDoneWork = Instant.now();
         }
     }
     
     public void handleDeliveryToTargetQueueNack(final long deliveryTag, final boolean multiple) throws IOException {
+        if (!stagingQueueChannel.isOpen()) {
+            LOGGER.warn("handleDeliveryToTargetQueueNack called for deliveryTag {} and multiple {}, " +
+                    "but the stagingQueueChannel is closed, so unable to send nack to stagingQueueChannel. " +
+                    "The StagingQueueTargetQueuePair this message relates to is {}", deliveryTag, multiple, this);
+
+            return;
+        }
+
         LOGGER.warn("Nack confirmation received for message(s) from '{}' published to '{}'",
                 stagingQueue.getName(),
                 targetQueue.getName());
@@ -253,13 +291,14 @@ public class StagingQueueTargetQueuePair {
         return targetQueueChannel != null ? targetQueueChannel.isOpen() : true;
     }
 
-    private boolean isConsumerCancellationRequested() {
-        return stagingQueueConsumer != null ? stagingQueueConsumer.isCancellationRequested() : false;
-    }
-
     private Optional<Instant> getConsumerCancellationRequestSentTime()
     {
         return stagingQueueConsumer != null ? stagingQueueConsumer.getCancellationRequestSentTime() : Optional.empty();
+    }
+
+    private Optional<StagingQueueConsumer.CancellationReason> getConsumerCancellationReason()
+    {
+        return stagingQueueConsumer != null ? stagingQueueConsumer.getCancellationReason() : Optional.empty();
     }
 
     public boolean isConsumerCompleted() {
@@ -270,12 +309,25 @@ public class StagingQueueTargetQueuePair {
         return outstandingConfirms.isEmpty();
     }
 
-    public boolean isRunningTooLong() {
-        if (consumerPublisherPairRunningTooLongTimeoutMilliseconds == 0) {
+    public boolean hasExceededLastDoneWorkTimeout() {
+        if (consumerPublisherPairLastDoneWorkTimeoutMilliseconds == 0) {
             // A value of 0 means this feature has been disabled
             return false;
         } else {
-            return Instant.now().toEpochMilli() > (startTime.toEpochMilli() + consumerPublisherPairRunningTooLongTimeoutMilliseconds);
+            if (timeSinceLastDoneWork != null) {
+                return Instant.now().toEpochMilli() >
+                        (timeSinceLastDoneWork.toEpochMilli() + consumerPublisherPairLastDoneWorkTimeoutMilliseconds);
+            } else {
+                // If timeSinceLastDoneWork is null, it means this StageQueueTargetQueuePair has not yet done any work yet, so in this
+                // case we'll use the startTime instead to determine if the timeout has been exceeded.
+                //
+                // This could happen if the something goes wrong with the consumer before it has a chance to do any work, or possibly
+                // if something is wrong with RabbitMQ. In any case, we'll want to ensure we return true here when the timeout has been
+                // exceeded so that this StageQueueTargetQueuePair can be closed and removed, allowing a new instance to be created (if
+                // required).
+                return Instant.now().toEpochMilli() >
+                        (startTime.toEpochMilli() + consumerPublisherPairLastDoneWorkTimeoutMilliseconds);
+            }
         }
     }
 
@@ -298,11 +350,12 @@ public class StagingQueueTargetQueuePair {
         return MoreObjects.toStringHelper(this)
                 .add("identifier", getIdentifier())
                 .add("startTime", startTime)
-                .add("consumerPublisherPairRunningTooLongTimeoutMilliseconds", consumerPublisherPairRunningTooLongTimeoutMilliseconds)
+                .add("timeSinceLastDoneWork", timeSinceLastDoneWork)
+                .add("consumerPublisherPairLastDoneWorkTimeoutMilliseconds", consumerPublisherPairLastDoneWorkTimeoutMilliseconds)
                 .add("consumptionLimit", consumptionLimit)
                 .add("messageCount", messageCount.get())
-                .add("consumerCancellationRequested", isConsumerCancellationRequested())
                 .add("consumerCancellationRequestSentTime", getConsumerCancellationRequestSentTime())
+                .add("consumerCancellationReason", getConsumerCancellationReason())
                 .add("consumerCompleted", isConsumerCompleted())
                 .add("numOutstandingConfirms", outstandingConfirms.keySet().size())
                 .add("publisherCompleted", isPublisherCompleted())

@@ -16,6 +16,7 @@
 package com.github.workerframework.workermessageprioritization.redistribution.lowlevel;
 
 import com.rabbitmq.client.AMQP;
+import com.rabbitmq.client.AlreadyClosedException;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
@@ -29,10 +30,15 @@ import java.util.Optional;
 
 public class StagingQueueConsumer extends DefaultConsumer {
 
+    public enum CancellationReason {
+        CONSUMPTION_LIMIT_REACHED,
+        EXCEPTION_PUBLISHING_TO_TARGET_QUEUE
+    };
+
     private static final Logger LOGGER = LoggerFactory.getLogger(StagingQueueConsumer.class);
     private final StagingQueueTargetQueuePair stagingQueueTargetQueuePair;
-    private boolean cancellationRequested = false;
-    private Optional<Instant> cancellationRequestSentTime;
+    private Optional<Instant> cancellationRequestSentTime = Optional.empty();
+    private Optional<CancellationReason> cancellationReason = Optional.empty();
     private boolean cancelled = false;
     private ShutdownSignalException shutdownSignalException;
 
@@ -41,13 +47,18 @@ public class StagingQueueConsumer extends DefaultConsumer {
         this.stagingQueueTargetQueuePair = stagingQueueTargetQueuePair;
     }
 
-    public void recordCancellationRequested() {
-        this.cancellationRequestSentTime = Optional.of(Instant.now());
-        this.cancellationRequested = true;
+    public void recordCancellationRequested(final CancellationReason cancellationReason) {
+        if (!this.cancellationRequestSentTime.isPresent()) {
+            this.cancellationRequestSentTime = Optional.of(Instant.now());
+        }
+
+        if (!this.cancellationReason.isPresent()) {
+            this.cancellationReason = Optional.of(cancellationReason);
+        }
     }
 
-    public boolean isCancellationRequested() {
-        return cancellationRequested;
+    public Optional<CancellationReason> getCancellationReason() {
+        return cancellationReason;
     }
 
     public Optional<Instant> getCancellationRequestSentTime() {
@@ -65,8 +76,12 @@ public class StagingQueueConsumer extends DefaultConsumer {
     @Override
     public void handleCancel(final String consumerTag) throws IOException {
         //Stop tracking that we are consuming from the consumerTag queue
-        LOGGER.debug("handleCancel called for consumer with consumerTag {}", consumerTag);
+        LOGGER.warn("handleCancel called for consumer with consumerTag {}", consumerTag);
         cancelled = true;
+
+        if (cancellationReason.isPresent() && cancellationReason.get() == CancellationReason.EXCEPTION_PUBLISHING_TO_TARGET_QUEUE) {
+            closeStagingQueueChannel();
+        }
     }
 
     @Override
@@ -74,6 +89,10 @@ public class StagingQueueConsumer extends DefaultConsumer {
         //Stop tracking that we are consuming from the consumerTag queue
         LOGGER.debug("handleCancelOk called for consumer with consumerTag {}", consumerTag);
         cancelled = true;
+
+        if (cancellationReason.isPresent() && cancellationReason.get() == CancellationReason.EXCEPTION_PUBLISHING_TO_TARGET_QUEUE) {
+            closeStagingQueueChannel();
+        }
     }
 
     @Override
@@ -92,5 +111,15 @@ public class StagingQueueConsumer extends DefaultConsumer {
         LOGGER.debug("handleDelivery called for consumer with consumerTag {}", consumerTag);
         stagingQueueTargetQueuePair.handleStagedMessage(consumerTag, envelope, properties, body);
 
+    }
+
+    private void closeStagingQueueChannel() {
+        try {
+            getChannel().close();
+        } catch (final AlreadyClosedException e) {
+            // Ignore
+        } catch (final Exception e) {
+            LOGGER.warn("Exception closing stagingQueueChannel", e);
+        }
     }
 }

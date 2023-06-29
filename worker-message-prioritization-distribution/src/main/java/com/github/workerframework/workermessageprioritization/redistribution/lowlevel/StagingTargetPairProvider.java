@@ -35,7 +35,7 @@ public class StagingTargetPairProvider {
             final Connection connection,
             final DistributorWorkItem distributorWorkItem,
             final Map<Queue, Long> consumptionTargets,
-            final long consumerPublisherPairRunningTooLongTimeoutMilliseconds) {
+            final long consumerPublisherPairLastDoneWorkTimeoutMilliseconds) {
 
         final Set<StagingQueueTargetQueuePair> stagingQueueTargetQueuePairs = new HashSet<>();
         
@@ -52,7 +52,7 @@ public class StagingTargetPairProvider {
             final StagingQueueTargetQueuePair stagingQueueTargetQueuePair = 
                     new StagingQueueTargetQueuePair(connection, 
                             stagingQueue, distributorWorkItem.getTargetQueue(),
-                            consumptionTarget, consumerPublisherPairRunningTooLongTimeoutMilliseconds);
+                            consumptionTarget, consumerPublisherPairLastDoneWorkTimeoutMilliseconds);
 
             stagingQueueTargetQueuePairs.add(stagingQueueTargetQueuePair);
         }
