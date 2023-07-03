@@ -39,7 +39,7 @@ public class HistoricalConsumptionRateTest {
         try {
             final HistoricalConsumptionRate historicalConsumptionRate = new HistoricalConsumptionRate(10,
                     100);
-            fail();
+            fail("IllegalArgumentException was not thrown");
         } catch (final IllegalArgumentException exception) {
             assertEquals("Minimum history required cannot be larger than the maximum history storage size.",
                     exception.getMessage());
