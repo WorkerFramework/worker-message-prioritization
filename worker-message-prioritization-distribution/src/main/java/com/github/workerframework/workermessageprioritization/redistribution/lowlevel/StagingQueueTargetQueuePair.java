@@ -98,9 +98,10 @@ public class StagingQueueTargetQueuePair {
         //
         // If we detect this scenario, we need to put the message back on the staging queue so another consumer can pick it up.
         //
-        // If we cancel the consumer due to some problem (i.e. something other than the consumption limit being reached), we don't
-        // really know what state the system will be in, so we will also close the staging queue channel to ensure that unacked
-        // messages (unconfirmed deliveries) are requeued to the staging queue as quickly as possible.
+        // If the consumer is cancelled for reasons *other* than the consumption limit being reached, then the
+        // StagingQueueConsumer.handleCancel (as opposed to StagingQueueConsumer.handleCancelOk) callback will be invoked. If that
+        // happens, we don't really know what state the system will be in, so we will also close the staging queue channel in that
+        // scenario, to ensure that unacked messages (unconfirmed deliveries) are requeued to the staging queue as quickly as possible.
         //
         // If we didn't close the staging queue channel, we'd potentially have to wait for the
         // https://www.rabbitmq.com/consumers.html#acknowledgement-timeout to expire before the unacked messages are requeued.
