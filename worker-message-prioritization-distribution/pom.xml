@@ -203,7 +203,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>com.github.workerframework.workermessageprioritization.redistribution.shovel.ShovelApplication</mainClass>
+                            <mainClass>com.github.workerframework.workermessageprioritization.redistribution.lowlevel.LowLevelApplication</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
