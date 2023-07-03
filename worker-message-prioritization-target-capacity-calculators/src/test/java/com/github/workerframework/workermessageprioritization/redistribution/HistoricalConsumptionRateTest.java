@@ -41,7 +41,6 @@ public class HistoricalConsumptionRateTest {
                     100);
             fail();
         } catch (final IllegalArgumentException exception) {
-            assertNotNull("IllegalArgumentException was not thrown", exception);
             assertEquals("Minimum history required cannot be larger than the maximum history storage size.",
                     exception.getMessage());
         }
