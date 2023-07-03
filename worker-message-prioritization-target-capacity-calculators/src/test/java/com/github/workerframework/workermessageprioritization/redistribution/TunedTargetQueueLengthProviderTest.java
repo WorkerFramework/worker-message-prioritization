@@ -68,7 +68,7 @@ public class TunedTargetQueueLengthProviderTest {
 
         final long tunedTargetQueueLength = getTunedTargetQueueLength(targetQueue1,targetQueue);
 
-        assertEquals("NoOpMode is on: Target queue length should not have changed.Suggested adjustment for the target queue length " +
+        assertEquals("NoOpMode is on: Target queue length should not have changed. Suggested adjustment for the target queue length " +
                 "should still be logged.", targetQueueLength, tunedTargetQueueLength);
     }
 
