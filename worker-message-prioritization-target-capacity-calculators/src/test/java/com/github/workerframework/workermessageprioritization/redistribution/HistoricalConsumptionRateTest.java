@@ -77,7 +77,7 @@ public class HistoricalConsumptionRateTest {
         IntStream.range(0, minConsumptionRateHistorySize + 5).forEach(i ->
             historicalConsumptionRate.recordCurrentConsumptionRateHistoryAndGetAverage(targetQueue2, theoreticalConsumptionRate2));
 
-        final boolean theoreticalConsumptionRateHistoryQueue1 = historicalConsumptionRate.isSufficientHistoryAvailable(targetQueue1);
+        final boolean isSufficientHistoryAvailableQueue1 = historicalConsumptionRate.isSufficientHistoryAvailable(targetQueue1);
 
         final boolean theoreticalConsumptionRateHistoryQueue2 = historicalConsumptionRate.isSufficientHistoryAvailable(targetQueue2);
 
