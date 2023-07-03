@@ -74,7 +74,7 @@ public class StagingQueueConsumer extends DefaultConsumer {
     }
     
     @Override
-    public void handleCancel(final String consumerTag) throws IOException {
+    public void handleCancel(final String consumerTag) {
         //Stop tracking that we are consuming from the consumerTag queue
         LOGGER.warn("handleCancel called for consumer with consumerTag {}", consumerTag);
         cancelled = true;

@@ -222,6 +222,8 @@ public class LowLevelDistributor extends MessageDistributor {
         existingStagingQueueTargetQueuePairsIterator.remove();
     }
 
+    // Added to allow us to test StagingQueueTargetQueuePairs are closed and removed correctly, but generally not recommended:
+    // https://timkranen.medium.com/using-visiblefortesting-to-test-your-private-functions-c9e511fd1c2a
     @VisibleForTesting
     public Map<String, StagingQueueTargetQueuePair> getExistingStagingQueueTargetQueuePairs() {
         return existingStagingQueueTargetQueuePairs;

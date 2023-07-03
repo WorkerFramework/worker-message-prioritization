@@ -45,7 +45,7 @@ public class StagingQueueTargetQueuePair {
     private final AtomicInteger messageCount = new AtomicInteger(0);
     private final long consumptionLimit;
     private StagingQueueConsumer stagingQueueConsumer;
-    private long consumerPublisherPairLastDoneWorkTimeoutMilliseconds;
+    private final long consumerPublisherPairLastDoneWorkTimeoutMilliseconds;
     private Instant startTime;
     private Instant timeSinceLastDoneWork;
 
@@ -127,53 +127,38 @@ public class StagingQueueTargetQueuePair {
                     stagingQueue.getName(),
                     this);
 
-            try {
-                stagingQueueChannel.basicReject(deliveryTag, true);
+            // If stagingQueueChannel.basicCancel encounters an error, StagingQueueConsumer.handleShutdownSignal will be called and the
+            // stagingQueueChannel will be closed. Then, the next time the LowLevelDistributor runs, it will remove *this*
+            // StagingQueueTargetQueuePair, allowing a new StagingQueueTargetQueuePair to be created (if still required).
+            stagingQueueChannel.basicReject(deliveryTag, true);
 
-                LOGGER.debug("Successfully called stagingQueueChannel.basicReject({}, true) " +
-                                "to put this message back on the {} staging queue. " +
-                                "The StagingQueueTargetQueuePair this message relates to is {}",
-                        deliveryTag,
-                        stagingQueue.getName(),
-                        this);
+            LOGGER.debug("Successfully called stagingQueueChannel.basicReject({}, true) " +
+                            "to put this message back on the {} staging queue. " +
+                            "The StagingQueueTargetQueuePair this message relates to is {}",
+                    deliveryTag,
+                    stagingQueue.getName(),
+                    this);
 
-                return;
-            } catch (final IOException basicRejectException) {
-                final String errorMessage = String.format(
-                        "Exception calling stagingQueueChannel.basicReject(%s, true) to put this message back on the %s staging queue. " +
-                                "The StagingQueueTargetQueuePair this message relates to is %s",
-                        deliveryTag, stagingQueue.getName(), this);
-
-                LOGGER.error(errorMessage, basicRejectException);
-
-                return;
-            }
+            return;
         }
 
         long nextPublishSeqNo = targetQueueChannel.getNextPublishSeqNo();
         outstandingConfirms.put(nextPublishSeqNo, envelope.getDeliveryTag());
 
-        try {
-            LOGGER.debug("Publishing message source {} from {} to {} and expecting publish confirm {}",
-                    envelope.getDeliveryTag(), stagingQueue.getName(),
-                    targetQueue.getName(), nextPublishSeqNo);
+        LOGGER.debug("Publishing message source {} from {} to {} and expecting publish confirm {}",
+                envelope.getDeliveryTag(), stagingQueue.getName(),
+                targetQueue.getName(), nextPublishSeqNo);
 
-            AMQP.BasicProperties basicProperties = new AMQP.BasicProperties.Builder()
-                    .contentType(properties.getContentType())
-                    .deliveryMode(properties.getDeliveryMode())
-                    .priority(properties.getPriority())
-                    .build();
+        AMQP.BasicProperties basicProperties = new AMQP.BasicProperties.Builder()
+                .contentType(properties.getContentType())
+                .deliveryMode(properties.getDeliveryMode())
+                .priority(properties.getPriority())
+                .build();
 
-            targetQueueChannel.basicPublish("", targetQueue.getName(), basicProperties, body);
-        } catch (final IOException basicPublishException) {
-
-            LOGGER.error("Exception publishing to '{}' for StagingQueueTargetQueuePair '{}' {}",
-                    targetQueue.getName(), this, basicPublishException.toString());
-
-            cancelConsumer(consumerTag, StagingQueueConsumer.CancellationReason.EXCEPTION_PUBLISHING_TO_TARGET_QUEUE);
-
-            return;
-        }
+        // If targetQueueChannel.basicPublish encounters an error, the targetQueueChannel will be closed. Then, the next time the
+        // LowLevelDistributor runs, it will remove *this* StagingQueueTargetQueuePair, allowing a new StagingQueueTargetQueuePair to
+        // be created (if still required).
+        targetQueueChannel.basicPublish("", targetQueue.getName(), basicProperties, body);
 
         messageCount.incrementAndGet();
 
@@ -193,25 +178,28 @@ public class StagingQueueTargetQueuePair {
     }
 
     private void cancelConsumer(final String consumerTag, final StagingQueueConsumer.CancellationReason cancellationReason)
-    {
-        try {
-            stagingQueueConsumer.recordCancellationRequested(cancellationReason);
+            throws IOException {
+        stagingQueueConsumer.recordCancellationRequested(cancellationReason);
 
-            stagingQueueChannel.basicCancel(consumerTag);
+        // If stagingQueueChannel.basicCancel encounters an error, StagingQueueConsumer.handleShutdownSignal will be called and the
+        // stagingQueueChannel will be closed. Then, the next time the LowLevelDistributor runs, it will remove *this*
+        // StagingQueueTargetQueuePair, allowing a new StagingQueueTargetQueuePair to be created (if still required).
+        stagingQueueChannel.basicCancel(consumerTag);
 
-            LOGGER.debug("Successfully called stagingQueueChannel.basicCancel({}) to cancel this consumer. Cancellation reason: {}. " +
-                    "The StagingQueueTargetQueuePair this message relates to is {}", consumerTag, cancellationReason, this);
-        } catch (final IOException basicCancelException) {
-            final String errorMessage = String.format(
-                    "Exception calling stagingQueueChannel.basicCancel(%s). Cancellation reason: {}" +
-                            "The StagingQueueTargetQueuePair this message relates to is '%s'",
-                    consumerTag, cancellationReason, this);
-
-            LOGGER.error(errorMessage, basicCancelException);
-        }
+        LOGGER.debug("Successfully called stagingQueueChannel.basicCancel({}) to cancel this consumer. Cancellation reason: {}. " +
+                "The StagingQueueTargetQueuePair this message relates to is {}", consumerTag, cancellationReason, this);
     }
 
     public void handleDeliveryToTargetQueueAck(final long deliveryTag, final boolean multiple) throws IOException {
+        // If stagingQueueChannel.basicAck encounters an error, we're relying on the IOException propagating up through:
+        //
+        // StagingQueueTargetQueuePair.handleDeliveryToTargetQueueAck
+        // TargetQueueConfirmListener.handleAck
+        // ChannelN.callConfirmListeners
+        //
+        // The DefaultExceptionHandler extends StrictExceptionHandler, which is an implementation of ExceptionHandler that DOES close
+        // channels on unhandled consumer exception: https://www.rabbitmq.com/api-guide.html#unhandled-exceptions
+
         if (!stagingQueueChannel.isOpen()) {
             LOGGER.warn("handleDeliveryToTargetQueueAck called for deliveryTag {} and multiple {}, " +
                     "but the stagingQueueChannel is closed, so unable to send ack to stagingQueueChannel. " +
@@ -242,8 +230,17 @@ public class StagingQueueTargetQueuePair {
             timeSinceLastDoneWork = Instant.now();
         }
     }
-    
+
     public void handleDeliveryToTargetQueueNack(final long deliveryTag, final boolean multiple) throws IOException {
+        // If stagingQueueChannel.basicNack encounters an error, we're relying on the IOException propagating up through
+        //
+        // StagingQueueTargetQueuePair.handleDeliveryToTargetQueueNack
+        // TargetQueueConfirmListener.handleNack
+        // ChannelN.callConfirmListeners
+        //
+        // The DefaultExceptionHandler extends StrictExceptionHandler, which is an implementation of ExceptionHandler that DOES close
+        // channels on unhandled consumer exception: https://www.rabbitmq.com/api-guide.html#unhandled-exceptions
+
         if (!stagingQueueChannel.isOpen()) {
             LOGGER.warn("handleDeliveryToTargetQueueNack called for deliveryTag {} and multiple {}, " +
                     "but the stagingQueueChannel is closed, so unable to send nack to stagingQueueChannel. " +
@@ -262,14 +259,7 @@ public class StagingQueueTargetQueuePair {
             );
 
             for(final Long messageDeliveryTagToNack: confirmed.values()) {
-                try {
-                    stagingQueueChannel.basicNack(messageDeliveryTagToNack, true, true);
-                }
-                catch (final IOException e) {
-                    LOGGER.error("Exception ack'ing '{}' {}",
-                            messageDeliveryTagToNack,
-                            e.toString());
-                }
+                stagingQueueChannel.basicNack(messageDeliveryTagToNack, true, true);
             }
 
             confirmed.clear();
