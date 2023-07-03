@@ -96,7 +96,7 @@ public class TunedTargetQueueLengthProviderTest {
         final TunedTargetQueueLengthProvider targetQueue = new TunedTargetQueueLengthProvider(targetQueuePerformanceMetricsProvider,
                 historicalConsumptionRate, roundTargetQueueLength, false, queueProcessingTimeGoalSeconds);
 
-        final long tunedTargetQueueLength = getTunedTargetQueueLength(targetQueue1,targetQueue);
+        final long tunedTargetQueueLength = getTunedTargetQueueLength(targetQueue1, targetQueue);
 
         assertEquals("isSufficientHistoryAvailable set to false: Not enough consumption rate history. Target queue length should not " +
                         "change.", targetQueueLength, tunedTargetQueueLength);
