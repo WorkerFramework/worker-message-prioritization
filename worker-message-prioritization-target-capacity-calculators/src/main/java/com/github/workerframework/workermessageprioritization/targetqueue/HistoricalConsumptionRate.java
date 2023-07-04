@@ -60,10 +60,9 @@ public class HistoricalConsumptionRate {
             final boolean isSufficientHistory = consumptionRateHistoryMap.get(queueName).size() >= minimumHistorySize;
 
             if (isSufficientHistory) {
-                LOGGER.debug("Consumption rate history from the last " + consumptionRateHistoryMap.get(queueName).size() +
-                        " runs of this worker available. An average of these rates will determine the new target queue length. If " +
-                        "different to the current queue length, the following suggestions will be implemented and the target queue " +
-                        "length adjusted.");
+                LOGGER.debug("Consumption rate history from the last {} runs of this worker available. An average of these rates will " +
+                        "determine the new target queue length. If different to the current queue length, the following suggestions " +
+                        "will be implemented and the target queue length adjusted.", consumptionRateHistoryMap.get(queueName).size());
             } else {
                 LOGGER.debug("There is not enough history to tune the target queue length accurately. The following logs are " +
                         "recommendations. The target queue will not be adjusted until more history is present.");

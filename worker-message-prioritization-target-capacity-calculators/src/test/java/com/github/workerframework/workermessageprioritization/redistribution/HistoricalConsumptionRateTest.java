@@ -54,9 +54,8 @@ public class HistoricalConsumptionRateTest {
 
         try {
             historicalConsumptionRate.isSufficientHistoryAvailable(targetQueue1);
-            fail();
+            fail("IllegalArgumentException was not thrown");
         } catch (final IllegalArgumentException exception){
-            assertNotNull("IllegalArgumentException was not thrown", exception);
             assertEquals("Queue with this name not found.", exception.getMessage());
         }
     }

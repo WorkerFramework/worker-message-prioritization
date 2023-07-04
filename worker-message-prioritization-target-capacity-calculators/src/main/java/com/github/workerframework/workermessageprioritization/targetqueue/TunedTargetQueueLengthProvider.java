@@ -73,16 +73,14 @@ public class TunedTargetQueueLengthProvider {
                 "target queue length. Target queue length will be set to that minimum or maximum value respectively.");
 
         if (roundedTargetQueueLength > maxTargetQueueLength) {
-            LOGGER.debug("Rounded queue length: " + roundedTargetQueueLength + " exceeds the maximum length that the queue can be set to. " +
-                    "Therefore the maximum length: "
-                    + maxTargetQueueLength + " should be set.");
+            LOGGER.debug("Rounded queue length: {} exceeds the maximum length that the queue can be set to. " +
+                    "Therefore the maximum length: {} should be set.", roundedTargetQueueLength, maxTargetQueueLength);
             return maxTargetQueueLength;
         }
 
         if (roundedTargetQueueLength < minTargetQueueLength) {
-            LOGGER.debug("Rounded queue length: " + roundedTargetQueueLength + " is less than the minimum length that the queue can be set to" +
-                    ". Therefore the minimum length: "
-                    + minTargetQueueLength + " should be set.");
+            LOGGER.debug("Rounded queue length: {} is less than the minimum length that the queue can be set to. Therefore the minimum " +
+                    "length: {} should be set.", roundedTargetQueueLength, minTargetQueueLength);
             return minTargetQueueLength;
         } else {
             return roundedTargetQueueLength;
@@ -91,10 +89,9 @@ public class TunedTargetQueueLengthProvider {
 
     private long determineFinalTargetQueueLength(final String targetQueueName, final long targetQueueLength, final long tunedTargetQueueLength){
 
-        LOGGER.info("Current target queue length for " + targetQueueName + ": " + targetQueueLength);
+        LOGGER.info("Current target queue length for {}: {}", targetQueueName, targetQueueLength);
 
-        LOGGER.info("Recommended tuned target queue length is: " +
-                tunedTargetQueueLength);
+        LOGGER.info("Recommended tuned target queue length is: {}", tunedTargetQueueLength);
 
         if(noOpMode) {
             LOGGER.info("NoOpMode True - Target queue length has not been adjusted.");
@@ -107,10 +104,10 @@ public class TunedTargetQueueLengthProvider {
         }
 
         if(targetQueueLength == tunedTargetQueueLength){
-            LOGGER.info("Target queue is already set to optimum length: " + targetQueueLength + ". No action required.");
+            LOGGER.info("Target queue is already set to optimum length: {}. No action required.", targetQueueLength);
             return targetQueueLength;
         }else{
-            LOGGER.info("Target queue length has been adjusted to: " + tunedTargetQueueLength);
+            LOGGER.info("Target queue length has been adjusted to: {}",tunedTargetQueueLength);
             return tunedTargetQueueLength;
         }
     }
