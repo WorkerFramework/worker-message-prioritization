@@ -80,9 +80,9 @@ public class HistoricalConsumptionRateTest {
         final boolean isSufficientHistoryAvailableQueue2 = historicalConsumptionRate.isSufficientHistoryAvailable(targetQueue2);
 
         assertTrue("Should return true as this is set to provide the minimum consumption rate history.",
-                theoreticalConsumptionRateHistoryQueue1);
+                isSufficientHistoryAvailableQueue1);
         assertTrue("Should return true as this is set to provide above the minimum consumption rate history.",
-                theoreticalConsumptionRateHistoryQueue2);
+                isSufficientHistoryAvailableQueue2);
     }
 
     @Test
