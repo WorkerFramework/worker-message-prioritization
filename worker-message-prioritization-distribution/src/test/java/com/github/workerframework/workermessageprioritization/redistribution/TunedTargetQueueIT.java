@@ -144,7 +144,8 @@ public class TunedTargetQueueIT extends DistributorTestBase {
                     connectionFactory,
                     consumptionTargetCalculator,
                     stagingTargetPairProvider,
-                    10000);
+                    10000,
+                    600000);
 
             lowLevelDistributor.runOnce(connection);
 

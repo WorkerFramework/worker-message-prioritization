@@ -15,6 +15,7 @@
  */
 package com.github.workerframework.workermessageprioritization.redistribution.lowlevel;
 
+import com.github.workerframework.workermessageprioritization.redistribution.consumption.ConsumptionTargetCalculator;
 import com.github.workerframework.workermessageprioritization.redistribution.consumption.EqualConsumptionTargetCalculator;
 import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApi;
 import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitManagementApi;
@@ -24,6 +25,7 @@ import com.github.workerframework.workermessageprioritization.targetqueue.Histor
 import com.github.workerframework.workermessageprioritization.targetqueue.RoundTargetQueueLength;
 import com.github.workerframework.workermessageprioritization.targetqueue.TunedTargetQueueLengthProvider;
 import com.github.workerframework.workermessageprioritization.targetqueue.FixedTargetQueueSettingsProvider;
+import com.github.workerframework.workermessageprioritization.targetqueue.K8sTargetQueueSettingsProvider;
 import com.rabbitmq.client.ConnectionFactory;
 
 import java.io.IOException;
@@ -47,7 +49,7 @@ public class LowLevelApplication {
         connectionFactory.setUsername(messageDistributorConfig.getRabbitMQUsername());
         connectionFactory.setPassword(messageDistributorConfig.getRabbitMQPassword());
         connectionFactory.setPort(messageDistributorConfig.getRabbitMQPort());
-        connectionFactory.setVirtualHost("/");
+        connectionFactory.setVirtualHost(messageDistributorConfig.getRabbitMQVHost());
 
         //https://www.rabbitmq.com/api-guide.html#java-nio
         //connectionFactory.useNio();
@@ -57,6 +59,10 @@ public class LowLevelApplication {
             messageDistributorConfig.getRabbitMQMgmtUrl(),
             messageDistributorConfig.getRabbitMQMgmtUsername(),
             messageDistributorConfig.getRabbitMQMgmtPassword());
+
+        final K8sTargetQueueSettingsProvider k8sTargetQueueSettingsProvider = new K8sTargetQueueSettingsProvider(
+                messageDistributorConfig.getKubernetesNamespaces(),
+                messageDistributorConfig.getKubernetesLabelCacheExpiryMinutes());
 
         final TargetQueuePerformanceMetricsProvider targetQueuePerformanceMetricsProvider =
                 new TargetQueuePerformanceMetricsProvider(queuesApi);
@@ -72,13 +78,17 @@ public class LowLevelApplication {
                         messageDistributorConfig.getNoOpMode(),
                         messageDistributorConfig.getQueueProcessingTimeGoalSeconds());
 
+        final ConsumptionTargetCalculator consumptionTargetCalculator =
+                new EqualConsumptionTargetCalculator(k8sTargetQueueSettingsProvider, tunedTargetQueueLengthProvider);
+
         final LowLevelDistributor lowLevelDistributor =
                 new LowLevelDistributor(
                         queuesApi,
                         connectionFactory,
-                        new EqualConsumptionTargetCalculator(new FixedTargetQueueSettingsProvider(), tunedTargetQueueLengthProvider),
+                        consumptionTargetCalculator,
                         new StagingTargetPairProvider(),
-                        messageDistributorConfig.getDistributorRunIntervalMilliseconds());
+                        messageDistributorConfig.getDistributorRunIntervalMilliseconds(),
+                        messageDistributorConfig.getConsumerPublisherPairLastDoneWorkTimeoutMilliseconds());
 
         lowLevelDistributor.run();
     }

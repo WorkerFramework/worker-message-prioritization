@@ -128,20 +128,13 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
                         continue;
                     }
 
-                    long targetQueueMaxLength;
-                    try {
-                        // Check if there is a target queue max length label
-                        targetQueueMaxLength = Long.parseLong(labels.get(
-                            MESSAGE_PRIORITIZATION_TARGET_QUEUE_MAX_LENGTH_LABEL));
-                    } catch (final NullPointerException ex) {
-                        // No max length label provided for worker, set to fall back value
-                        LOGGER.error(String.format("Cannot get max length for the %s queue. The %s worker is missing the %s label. "
-                            + "Falling back to using max length of %s",
-                                                   targetQueueName, metadata.getName(), MESSAGE_PRIORITIZATION_TARGET_QUEUE_MAX_LENGTH_LABEL,
-                                                   TARGET_QUEUE_MAX_LENGTH_FALLBACK));
-                        targetQueueMaxLength = TARGET_QUEUE_MAX_LENGTH_FALLBACK;
-                    }
+                    final long targetQueueMaxLength = getLabelOrDefault(
+                        labels, MESSAGE_PRIORITIZATION_TARGET_QUEUE_MAX_LENGTH_LABEL,
+                        metadata.getName(), targetQueueName, TARGET_QUEUE_MAX_LENGTH_FALLBACK);
 
+                    long targetQueueEligibleForRefillPercentage = getLabelOrDefault(
+                        labels, MESSAGE_PRIORITIZATION_TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_LABEL,
+                        metadata.getName(), targetQueueName, TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK);
                     int maxInstances;
                     try{
                         maxInstances = Integer.parseInt(labels.get(MESSAGE_PRIORITIZATION_MAX_INSTANCES_LABEL));
@@ -160,21 +153,21 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
                         currentInstances = CURRENT_INSTANCE_FALLBACK;
                     }
 
-                    long targetQueueEligibleForRefillPercentage;
-                    try {
-                        // Check if there is a target queue eligible for refill percentage label
-                        targetQueueEligibleForRefillPercentage = Long.parseLong(labels.get(
-                            MESSAGE_PRIORITIZATION_TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_LABEL));
-                    } catch (final NullPointerException ex) {
-                        // No eligible for refill percentage label provided for worker, set to fall back value
-                        LOGGER.error(String.format("Cannot get eligible for refill percentage for the %s queue. "
-                            + "The %s worker is missing the %s label. "
-                            + "Falling back to using eligible for refill percentage of %s",
-                                                   targetQueueName, metadata.getName(),
-                                                   MESSAGE_PRIORITIZATION_TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_LABEL,
-                                                   TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK));
-                        targetQueueEligibleForRefillPercentage = TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK;
-                    }
+//                    long targetQueueEligibleForRefillPercentage;
+//                    try {
+//                        // Check if there is a target queue eligible for refill percentage label
+//                        targetQueueEligibleForRefillPercentage = Long.parseLong(labels.get(
+//                            MESSAGE_PRIORITIZATION_TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_LABEL));
+//                    } catch (final NullPointerException ex) {
+//                        // No eligible for refill percentage label provided for worker, set to fall back value
+//                        LOGGER.error(String.format("Cannot get eligible for refill percentage for the %s queue. "
+//                            + "The %s worker is missing the %s label. "
+//                            + "Falling back to using eligible for refill percentage of %s",
+//                                                   targetQueueName, metadata.getName(),
+//                                                   MESSAGE_PRIORITIZATION_TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_LABEL,
+//                                                   TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK));
+//                        targetQueueEligibleForRefillPercentage = TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK;
+//                    }
 
                     if (targetQueueEligibleForRefillPercentage < 0 || targetQueueEligibleForRefillPercentage > 100) {
                         // Invalid eligible for refill percentage provided, set to fall back value
@@ -214,5 +207,33 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
         throw new RuntimeException(String.format(
             "Cannot get settings for the %s queue. Unable to find a worker with the required labels.",
             targetQueueName));
+    }
+
+    private static long getLabelOrDefault(
+        final Map<String, String> labels,
+        final String labelName,
+        final String workerName,
+        final String targetQueueName,
+        final long defaultValue)
+    {
+        if (!labels.containsKey(labelName)) {
+            LOGGER.error(
+                "Cannot get {} for the {} queue. The {} worker is missing the label. Falling back to using default value of {}",
+                labelName, targetQueueName, workerName, defaultValue);
+
+            return defaultValue;
+        }
+
+        final String labelValue = labels.get(labelName);
+        try {
+            return Long.parseLong(labelValue);
+        } catch (final NumberFormatException ex) {
+            LOGGER.error(
+                "Cannot get {} for the {} queue. The {} worker provided an invalid (not parsable to long) label value: {}. "
+                + "Falling back to using default value of {}",
+                labelName, targetQueueName, workerName, labelValue, defaultValue);
+
+            return defaultValue;
+        }
     }
 }

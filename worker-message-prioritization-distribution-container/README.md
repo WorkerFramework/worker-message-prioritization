@@ -43,36 +43,11 @@ This repository consists of the source to build a container that includes the
     **Default**: `10000`  
     **Description**: How often the distributor runs.
 
-* `CAF_WMP_NON_RUNNING_SHOVEL_TIMEOUT_MILLISECONDS`  
-    **Default**: `120000`  
-    **Description**: The timeout in milliseconds after which to delete RabbitMQ shovels that are in a bad state (i.e. not 'running'). The
-    timeout begins from the time this application first observed the shovel in a bad state, which will depend on how often the shovel
-    state check runs (the `CAF_WMP_NON_RUNNING_SHOVEL_CHECK_INTERVAL_MILLISECONDS` environment variable).
-
-* `CAF_WMP_NON_RUNNING_SHOVEL_CHECK_INTERVAL_MILLISECONDS`  
-    **Default**: `120000`  
-    **Description**: How often to check for non-running RabbitMQ shovels.
-
-* `CAF_WMP_SHOVEL_RUNNING_TOO_LONG_TIMEOUT_MILLISECONDS`  
-    **Default**: `1800000`  
-    **Description**: The timeout in milliseconds after which to delete RabbitMQ shovels that have been running too long. The
-    timeout begins from the time this application first observed the shovel in a running state, which will depend on how often the 
-    check runs (the `CAF_WMP_SHOVEL_RUNNING_TOO_LONG_CHECK_INTERVAL_MILLISECONDS` environment variable).
-
-* `CAF_WMP_SHOVEL_RUNNING_TOO_LONG_CHECK_INTERVAL_MILLISECONDS`  
-    **Default**: `120000`  
-    **Description**: How often to check for RabbitMQ shovels that have been running too long.
-
-* `CAF_WMP_CORRUPTED_SHOVEL_TIMEOUT_MILLISECONDS`  
+* `CAF_WMP_CONSUMER_PUBLISHER_PAIR_LAST_DONE_WORK_TIMEOUT_MILLISECONDS`  
     **Default**: `600000`  
-    **Description**: The timeout in milliseconds after which to delete corrupted RabbitMQ shovels. A corrupted shovel is defined as a 
-    shovel that is returned by /api/parameters/shovel but is NOT returned by /api/shovels/. The timeout begins from the time this
-    application first observed the corrupted shovel, which will depend on how often the check runs, which is configured by the 
-   `CAF_WMP_CORRUPTED_SHOVEL_CHECK_INTERVAL_MILLISECONDS` environment variable.
-
-* `CAF_WMP_CORRUPTED_SHOVEL_CHECK_INTERVAL_MILLISECONDS`  
-    **Default**: `120000`  
-    **Description**: How often to check for corrupted RabbitMQ shovels.
+    **Description**: The timeout in milliseconds since it has last done work after which to close a RabbitMQ staging queue consumer/target
+    queue publisher pair. This is used to clean up staging queue consumer/target queue publisher pairs that may have become stuck.
+    Set to 0 to disable this feature.
 
 * `CAF_WMP_KUBERNETES_NAMESPACES`  
     **Default**: None.  
