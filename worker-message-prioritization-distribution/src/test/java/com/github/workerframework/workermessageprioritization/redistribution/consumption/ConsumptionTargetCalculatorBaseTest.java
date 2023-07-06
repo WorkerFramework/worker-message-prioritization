@@ -36,7 +36,7 @@ public final class ConsumptionTargetCalculatorBaseTest
         final Queue targetQueue = new Queue();
         targetQueue.setMessages(750);
 
-        final TargetQueueSettings settings = new TargetQueueSettings(1000, 20);
+        final TargetQueueSettings settings = new TargetQueueSettings(1000, 20, 1, 1);
         when(provider.get(targetQueue)).thenReturn(settings);
 
         final ConsumptionTargetCalculatorBase calculator = mock(
@@ -53,7 +53,7 @@ public final class ConsumptionTargetCalculatorBaseTest
         final Queue targetQueue = new Queue();
         targetQueue.setMessages(1200);
 
-        final TargetQueueSettings settings = new TargetQueueSettings(1000, 20);
+        final TargetQueueSettings settings = new TargetQueueSettings(1000, 20, 1, 1);
         when(provider.get(targetQueue)).thenReturn(settings);
 
         final ConsumptionTargetCalculatorBase calculator = mock(

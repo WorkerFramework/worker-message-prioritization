@@ -220,6 +220,11 @@
                                     <CAF_RABBITMQ_MGMT_PASSWORD>guest</CAF_RABBITMQ_MGMT_PASSWORD>
                                     <CAF_LOG_LEVEL>DEBUG</CAF_LOG_LEVEL>
                                     <CAF_WMP_KUBERNETES_NAMESPACES>private</CAF_WMP_KUBERNETES_NAMESPACES>
+                                    <CAF_NOOP_MODE>true</CAF_NOOP_MODE>
+                                    <CAF_ROUNDING_MULTIPLE>100</CAF_ROUNDING_MULTIPLE>
+                                    <CAF_MAX_CONSUMPTION_RATE_HISTORY_SIZE>100</CAF_MAX_CONSUMPTION_RATE_HISTORY_SIZE>
+                                    <CAF_MIN_CONSUMPTION_RATE_HISTORY_SIZE>10</CAF_MIN_CONSUMPTION_RATE_HISTORY_SIZE>
+                                    <CAF_QUEUE_PROCESSING_TIME_GOAL_SECONDS>10</CAF_QUEUE_PROCESSING_TIME_GOAL_SECONDS>
                                 </env>
                                 <dependsOn>
                                     <container>rabbitmq</container>

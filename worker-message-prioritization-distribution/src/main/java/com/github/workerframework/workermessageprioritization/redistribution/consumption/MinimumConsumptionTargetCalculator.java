@@ -18,12 +18,14 @@ package com.github.workerframework.workermessageprioritization.redistribution.co
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueSettingsProvider;
 import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueSettings;
+import com.github.workerframework.workermessageprioritization.targetqueue.TunedTargetQueueLengthProvider;
 
 public abstract class MinimumConsumptionTargetCalculator extends ConsumptionTargetCalculatorBase
 {
-    public MinimumConsumptionTargetCalculator(final TargetQueueSettingsProvider targetQueueSettingsProvider)
+    public MinimumConsumptionTargetCalculator(final TargetQueueSettingsProvider targetQueueSettingsProvider,
+                                              final TunedTargetQueueLengthProvider tunedTargetQueueLengthProvider)
     {
-        super(targetQueueSettingsProvider);
+        super(targetQueueSettingsProvider, tunedTargetQueueLengthProvider);
     }
 
     @Override
@@ -31,7 +33,7 @@ public abstract class MinimumConsumptionTargetCalculator extends ConsumptionTarg
     {
         final TargetQueueSettings targetQueueSettings = getTargetQueueSettings(targetQueue);
         final long targetQueueCapacity = super.getTargetQueueCapacity(targetQueue);
-        final long targetQueueCapacityPercentage = targetQueueCapacity * 100 / targetQueueSettings.getMaxLength();
+        final long targetQueueCapacityPercentage = targetQueueCapacity * 100 / targetQueueSettings.getCurrentMaxLength();
 
         if (targetQueueCapacityPercentage < targetQueueSettings.getEligibleForRefillPercentage()) {
             return 0;

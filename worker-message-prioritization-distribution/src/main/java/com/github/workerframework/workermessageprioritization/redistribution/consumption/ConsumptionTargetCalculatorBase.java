@@ -18,19 +18,26 @@ package com.github.workerframework.workermessageprioritization.redistribution.co
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueSettingsProvider;
 import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueSettings;
+import com.github.workerframework.workermessageprioritization.targetqueue.TunedTargetQueueLengthProvider;
 
 public abstract class ConsumptionTargetCalculatorBase implements ConsumptionTargetCalculator
 {
     private final TargetQueueSettingsProvider targetQueueSettingsProvider;
+    private final TunedTargetQueueLengthProvider tunedTargetQueueLengthProvider;
 
-    public ConsumptionTargetCalculatorBase(final TargetQueueSettingsProvider targetQueueSettingsProvider)
+    public ConsumptionTargetCalculatorBase(final TargetQueueSettingsProvider targetQueueSettingsProvider,
+                                           final TunedTargetQueueLengthProvider tunedTargetQueueLengthProvider)
     {
         this.targetQueueSettingsProvider = targetQueueSettingsProvider;
+        this.tunedTargetQueueLengthProvider = tunedTargetQueueLengthProvider;
     }
 
     protected long getTargetQueueCapacity(final Queue targetQueue)
     {
-        return Math.max(0, getTargetQueueSettings(targetQueue).getMaxLength() - targetQueue.getMessages());
+        final long tunedTargetMaxQueueLength = tunedTargetQueueLengthProvider.getTunedTargetQueueLength(targetQueue.getName(),
+                100, 10000000, targetQueueSettingsProvider.get(targetQueue));
+        getTargetQueueSettings(targetQueue).setCurrentMaxLength(tunedTargetMaxQueueLength);
+        return Math.max(0, getTargetQueueSettings(targetQueue).getCurrentMaxLength() - targetQueue.getMessages());
     }
 
     protected TargetQueueSettings getTargetQueueSettings(final Queue targetQueue)

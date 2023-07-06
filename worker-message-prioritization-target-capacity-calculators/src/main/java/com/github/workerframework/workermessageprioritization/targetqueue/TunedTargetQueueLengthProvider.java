@@ -40,12 +40,13 @@ public class TunedTargetQueueLengthProvider {
     }
 
     public final long getTunedTargetQueueLength(final String targetQueueName, final long minTargetQueueLength,
-                                                final long maxTargetQueueLength){
+                                                final long maxTargetQueueLength, final TargetQueueSettings targetQueueSettings){
 
-        final PerformanceMetrics performanceMetrics = targetQueuePerformanceMetricsProvider.getTargetQueuePerformanceMetrics(targetQueueName);
+        final double performanceMetrics =
+                targetQueuePerformanceMetricsProvider.getTargetQueuePerformanceMetrics(targetQueueName);
 
-        final double theoreticalConsumptionRate = calculateCurrentTheoreticalConsumptionRate(performanceMetrics.getConsumptionRate(),
-                performanceMetrics.getCurrentInstances(), performanceMetrics.getMaxInstances());
+        final double theoreticalConsumptionRate = calculateCurrentTheoreticalConsumptionRate(performanceMetrics,
+                targetQueueSettings.getCurrentInstances(), targetQueueSettings.getMaxInstances());
 
         final double averageHistoricalConsumptionRate =
                 historicalConsumptionRate.recordCurrentConsumptionRateHistoryAndGetAverage(targetQueueName, theoreticalConsumptionRate);
@@ -54,7 +55,7 @@ public class TunedTargetQueueLengthProvider {
 
         final long roundedTargetQueueLength = roundAndCheckTargetQueue(tunedTargetQueue, maxTargetQueueLength, minTargetQueueLength);
 
-        return determineFinalTargetQueueLength(targetQueueName, performanceMetrics.getTargetQueueLength(), roundedTargetQueueLength);
+        return determineFinalTargetQueueLength(targetQueueName, targetQueueSettings.getCurrentMaxLength(), roundedTargetQueueLength);
     }
 
     private double calculateCurrentTheoreticalConsumptionRate(final double currentConsumptionRate, final double currentInstances,

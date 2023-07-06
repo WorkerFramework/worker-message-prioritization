@@ -41,7 +41,7 @@ public final class MinimumConsumptionTargetCalculatorTest
         final Queue targetQueue = new Queue();
         targetQueue.setMessages(750);
 
-        final TargetQueueSettings settings = new TargetQueueSettings(1000, 20);
+        final TargetQueueSettings settings = new TargetQueueSettings(1000, 20, 1, 1);
         when(provider.get(targetQueue)).thenReturn(settings);
 
         final MinimumConsumptionTargetCalculator minimumConsumptionTargetCalculator = mock(
@@ -63,7 +63,7 @@ public final class MinimumConsumptionTargetCalculatorTest
         final Queue targetQueue = new Queue();
         targetQueue.setMessages(750);
 
-        final TargetQueueSettings settings = new TargetQueueSettings(1000, 30);
+        final TargetQueueSettings settings = new TargetQueueSettings(1000, 30, 1 , 1);
         when(provider.get(targetQueue)).thenReturn(settings);
 
         final MinimumConsumptionTargetCalculator minimumConsumptionTargetCalculator = mock(

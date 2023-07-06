@@ -23,6 +23,7 @@ import io.kubernetes.client.extended.kubectl.Kubectl;
 import io.kubernetes.client.extended.kubectl.exception.KubectlException;
 import io.kubernetes.client.openapi.Configuration;
 import io.kubernetes.client.openapi.models.V1Deployment;
+import io.kubernetes.client.openapi.models.V1DeploymentSpec;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
 import io.kubernetes.client.util.ClientBuilder;
 import org.slf4j.Logger;
@@ -40,10 +41,13 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
     private static final Logger LOGGER = LoggerFactory.getLogger(K8sTargetQueueSettingsProvider.class);
     private static final String MESSAGE_PRIORITIZATION_TARGET_QUEUE_NAME_LABEL = "messageprioritization.targetqueuename";
     private static final String MESSAGE_PRIORITIZATION_TARGET_QUEUE_MAX_LENGTH_LABEL = "messageprioritization.targetqueuemaxlength";
+    private static final String MESSAGE_PRIORITIZATION_MAX_INSTANCES_LABEL = "autoscale.maxinstances";
     private static final String MESSAGE_PRIORITIZATION_TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_LABEL
         = "messageprioritization.targetqueueeligibleforrefillpercentage";
     private static final long TARGET_QUEUE_MAX_LENGTH_FALLBACK = 1000;
     private static final long TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK = 10;
+    private final int CURRENT_INSTANCE_FALLBACK = 1;
+    private final int MAX_INSTANCES_FALLBACK = 1;
     private final List<String> kubernetesNamespaces;
     private final LoadingCache<Queue, TargetQueueSettings> targetQueueToSettingsCache;
 
@@ -82,7 +86,8 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
                                        TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK),
                          executionException);
 
-            return new TargetQueueSettings(TARGET_QUEUE_MAX_LENGTH_FALLBACK, TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK);
+            return new TargetQueueSettings(TARGET_QUEUE_MAX_LENGTH_FALLBACK, TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK,
+                    MAX_INSTANCES_FALLBACK, CURRENT_INSTANCE_FALLBACK);
         }
     }
 
@@ -103,6 +108,9 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
                     if (metadata == null) {
                         continue;
                     }
+
+                    // Get the spec
+                    final V1DeploymentSpec spec = deployment.getSpec();
 
                     // Get the labels from the metadata
                     final Map<String, String> labels = metadata.getLabels();
@@ -132,6 +140,24 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
                                                    targetQueueName, metadata.getName(), MESSAGE_PRIORITIZATION_TARGET_QUEUE_MAX_LENGTH_LABEL,
                                                    TARGET_QUEUE_MAX_LENGTH_FALLBACK));
                         targetQueueMaxLength = TARGET_QUEUE_MAX_LENGTH_FALLBACK;
+                    }
+
+                    int maxInstances;
+                    try{
+                        maxInstances = Integer.parseInt(labels.get(MESSAGE_PRIORITIZATION_MAX_INSTANCES_LABEL));
+                    } catch (final NullPointerException ex) {
+                        // maxInstances not available for worker
+                        LOGGER.error(String.format("The %s worker is missing the maxInstances label. "));
+                        maxInstances = MAX_INSTANCES_FALLBACK;
+                    }
+
+                    int currentInstances;
+                    try{
+                        currentInstances = spec.getReplicas();
+                    } catch (final NullPointerException ex) {
+                        // maxInstances not available for worker
+                        LOGGER.error(String.format("The %s worker is missing the %s label. "));
+                        currentInstances = CURRENT_INSTANCE_FALLBACK;
                     }
 
                     long targetQueueEligibleForRefillPercentage;
@@ -169,7 +195,7 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
                                  targetQueueEligibleForRefillPercentage,
                                  targetQueueName);
 
-                    return new TargetQueueSettings(targetQueueMaxLength, targetQueueEligibleForRefillPercentage);
+                    return new TargetQueueSettings(targetQueueMaxLength, targetQueueEligibleForRefillPercentage, maxInstances,currentInstances);
                 }
             } catch (final KubectlException kubectlException) {
                 LOGGER.error(String.format("Cannot get settings for the %s queue as the Kubernetes API threw an exception. "
@@ -179,7 +205,9 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
                                            TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK));
 
                 return new TargetQueueSettings(TARGET_QUEUE_MAX_LENGTH_FALLBACK,
-                                               TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK);
+                                               TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK,
+                                               MAX_INSTANCES_FALLBACK,
+                                               CURRENT_INSTANCE_FALLBACK);
             }
         }
 

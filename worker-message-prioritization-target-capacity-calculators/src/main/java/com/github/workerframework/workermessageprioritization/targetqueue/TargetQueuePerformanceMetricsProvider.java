@@ -15,13 +15,34 @@
  */
 package com.github.workerframework.workermessageprioritization.targetqueue;
 
+import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
+import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApi;
+import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitManagementApi;
+
 public class TargetQueuePerformanceMetricsProvider {
 
-        public PerformanceMetrics getTargetQueuePerformanceMetrics(final String targetQueueName) {
+    protected RabbitManagementApi<QueuesApi> queuesApi;
 
+    public TargetQueuePerformanceMetricsProvider(final RabbitManagementApi<QueuesApi> queuesApi){
+        this.queuesApi = queuesApi;
+    }
 
+    public double getTargetQueuePerformanceMetrics(final String targetQueueName) {
 
-            //TODO We'll talk about this next week
-            return null;
+        final Queue.MessageStats message_stats = queuesApi.getApi().getQueue("/", targetQueueName).getMessage_stats();
+        final double consumptionRate;
+
+        if (message_stats != null) {
+            if(message_stats.getDeliver_get_details() != null){
+                consumptionRate = message_stats.getDeliver_get_details().getRate();
+            }else{
+                consumptionRate = 0D;
+            }
+        } else {
+            consumptionRate = 0D;
         }
+
+        return consumptionRate;
+    }
+
 }

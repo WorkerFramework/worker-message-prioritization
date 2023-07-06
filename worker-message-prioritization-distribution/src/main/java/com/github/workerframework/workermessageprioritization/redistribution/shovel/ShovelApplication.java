@@ -20,6 +20,11 @@ import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nonnull;
 
+import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueuePerformanceMetricsProvider;
+import com.github.workerframework.workermessageprioritization.targetqueue.HistoricalConsumptionRate;
+import com.github.workerframework.workermessageprioritization.targetqueue.RoundTargetQueueLength;
+import com.github.workerframework.workermessageprioritization.targetqueue.TunedTargetQueueLengthProvider;
+import com.github.workerframework.workermessageprioritization.targetqueue.K8sTargetQueueSettingsProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +35,6 @@ import com.github.workerframework.workermessageprioritization.rabbitmq.ShovelsAp
 import com.github.workerframework.workermessageprioritization.redistribution.config.MessageDistributorConfig;
 import com.github.workerframework.workermessageprioritization.redistribution.consumption.ConsumptionTargetCalculator;
 import com.github.workerframework.workermessageprioritization.redistribution.consumption.EqualConsumptionTargetCalculator;
-import com.github.workerframework.workermessageprioritization.targetqueue.K8sTargetQueueSettingsProvider;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -99,12 +103,26 @@ public class ShovelApplication
                     }
                 });
 
+        final TargetQueuePerformanceMetricsProvider targetQueuePerformanceMetricsProvider =
+                new TargetQueuePerformanceMetricsProvider(queuesApi);
+        final HistoricalConsumptionRate historicalConsumptionRate =
+                new HistoricalConsumptionRate(messageDistributorConfig.getMaxConsumptionRateHistorySize(),
+                messageDistributorConfig.getMinConsumptionRateHistorySize());
+        final RoundTargetQueueLength roundTargetQueueLength = new RoundTargetQueueLength(messageDistributorConfig.getRoundingMultiple());
+        final TunedTargetQueueLengthProvider tunedTargetQueueLengthProvider =
+                new TunedTargetQueueLengthProvider(
+                        targetQueuePerformanceMetricsProvider,
+                        historicalConsumptionRate,
+                        roundTargetQueueLength,
+                        messageDistributorConfig.getNoOpMode(),
+                        messageDistributorConfig.getQueueProcessingTimeGoalSeconds());
+
         final K8sTargetQueueSettingsProvider k8sTargetQueueSettingsProvider = new K8sTargetQueueSettingsProvider(
                 messageDistributorConfig.getKubernetesNamespaces(),
                 messageDistributorConfig.getKubernetesLabelCacheExpiryMinutes());
 
         final ConsumptionTargetCalculator consumptionTargetCalculator =
-                new EqualConsumptionTargetCalculator(k8sTargetQueueSettingsProvider);
+                new EqualConsumptionTargetCalculator(k8sTargetQueueSettingsProvider, tunedTargetQueueLengthProvider);
 
         final ShovelDistributor shovelDistributor = new ShovelDistributor(
             queuesApi,

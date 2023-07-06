@@ -18,6 +18,7 @@ package com.github.workerframework.workermessageprioritization.redistribution.co
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 import com.github.workerframework.workermessageprioritization.redistribution.DistributorWorkItem;
 import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueSettingsProvider;
+import com.github.workerframework.workermessageprioritization.targetqueue.TunedTargetQueueLengthProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,8 +32,9 @@ public class EqualConsumptionTargetCalculator extends MinimumConsumptionTargetCa
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EqualConsumptionTargetCalculator.class);
 
-    public EqualConsumptionTargetCalculator(final TargetQueueSettingsProvider targetQueueSettingsProvider) {
-        super(targetQueueSettingsProvider);
+    public EqualConsumptionTargetCalculator(final TargetQueueSettingsProvider targetQueueSettingsProvider,
+                                            final TunedTargetQueueLengthProvider tunedTargetQueueLengthProvider) {
+        super(targetQueueSettingsProvider, tunedTargetQueueLengthProvider);
     }
     
     @Override

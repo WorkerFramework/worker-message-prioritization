@@ -19,6 +19,10 @@ import com.github.workerframework.workermessageprioritization.redistribution.con
 import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApi;
 import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitManagementApi;
 import com.github.workerframework.workermessageprioritization.redistribution.config.MessageDistributorConfig;
+import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueuePerformanceMetricsProvider;
+import com.github.workerframework.workermessageprioritization.targetqueue.HistoricalConsumptionRate;
+import com.github.workerframework.workermessageprioritization.targetqueue.RoundTargetQueueLength;
+import com.github.workerframework.workermessageprioritization.targetqueue.TunedTargetQueueLengthProvider;
 import com.github.workerframework.workermessageprioritization.targetqueue.FixedTargetQueueSettingsProvider;
 import com.rabbitmq.client.ConnectionFactory;
 
@@ -54,11 +58,25 @@ public class LowLevelApplication {
             messageDistributorConfig.getRabbitMQMgmtUsername(),
             messageDistributorConfig.getRabbitMQMgmtPassword());
 
+        final TargetQueuePerformanceMetricsProvider targetQueuePerformanceMetricsProvider =
+                new TargetQueuePerformanceMetricsProvider(queuesApi);
+        final HistoricalConsumptionRate historicalConsumptionRate =
+                new HistoricalConsumptionRate(messageDistributorConfig.getMaxConsumptionRateHistorySize(),
+                messageDistributorConfig.getMinConsumptionRateHistorySize());
+        final RoundTargetQueueLength roundTargetQueueLength = new RoundTargetQueueLength(messageDistributorConfig.getRoundingMultiple());
+        final TunedTargetQueueLengthProvider tunedTargetQueueLengthProvider =
+                new TunedTargetQueueLengthProvider(
+                        targetQueuePerformanceMetricsProvider,
+                        historicalConsumptionRate,
+                        roundTargetQueueLength,
+                        messageDistributorConfig.getNoOpMode(),
+                        messageDistributorConfig.getQueueProcessingTimeGoalSeconds());
+
         final LowLevelDistributor lowLevelDistributor =
                 new LowLevelDistributor(
                         queuesApi,
                         connectionFactory,
-                        new EqualConsumptionTargetCalculator(new FixedTargetQueueSettingsProvider()),
+                        new EqualConsumptionTargetCalculator(new FixedTargetQueueSettingsProvider(), tunedTargetQueueLengthProvider),
                         new StagingTargetPairProvider(),
                         messageDistributorConfig.getDistributorRunIntervalMilliseconds());
 

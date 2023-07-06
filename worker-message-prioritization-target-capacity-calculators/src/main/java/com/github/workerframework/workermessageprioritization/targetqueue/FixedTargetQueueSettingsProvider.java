@@ -24,10 +24,13 @@ public final class FixedTargetQueueSettingsProvider implements TargetQueueSettin
 {
     private static final long QUEUE_MAX_LENGTH = 1000;
     private static final long QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE = 10;
+    private final int MAX_INSTANCES = 1;
+    private final int CURRENT_INSTANCES = 1;
 
     @Override
     public TargetQueueSettings get(final Queue targetQueue)
     {
-        return new TargetQueueSettings(QUEUE_MAX_LENGTH - targetQueue.getMessages(), QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE);
+        return new TargetQueueSettings(QUEUE_MAX_LENGTH - targetQueue.getMessages(), QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE,
+                MAX_INSTANCES, CURRENT_INSTANCES);
     }
 }
