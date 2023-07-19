@@ -16,11 +16,13 @@
 package com.github.workerframework.workermessageprioritization.targetqueue;
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import io.kubernetes.client.extended.kubectl.Kubectl;
 import io.kubernetes.client.extended.kubectl.exception.KubectlException;
+import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.Configuration;
 import io.kubernetes.client.openapi.models.V1Deployment;
 import io.kubernetes.client.openapi.models.V1DeploymentSpec;
@@ -69,6 +71,28 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
                     return getTargetQueueSettingsFromKubernetes(queue);
                 }
             });
+
+        this.kubernetesNamespaces = kubernetesNamespaces;
+
+
+    }
+
+    @VisibleForTesting
+    public K8sTargetQueueSettingsProvider(final List<String> kubernetesNamespaces, final int kubernetesLabelCacheExpiryMinutes,
+                                          final ApiClient client ){
+            //  https://github.houston.softwaregrp.net/Verity/deploy/blob/master/override/kube-config-larry
+            Configuration.setDefaultApiClient(client);
+
+        this.targetQueueToSettingsCache = CacheBuilder.newBuilder()
+                .expireAfterWrite(kubernetesLabelCacheExpiryMinutes, TimeUnit.MINUTES)
+                .build(new CacheLoader<Queue, TargetQueueSettings>()
+                {
+                    @Override
+                    public TargetQueueSettings load(@Nonnull final Queue queue)
+                    {
+                        return getTargetQueueSettingsFromKubernetes(queue);
+                    }
+                });
 
         this.kubernetesNamespaces = kubernetesNamespaces;
     }
