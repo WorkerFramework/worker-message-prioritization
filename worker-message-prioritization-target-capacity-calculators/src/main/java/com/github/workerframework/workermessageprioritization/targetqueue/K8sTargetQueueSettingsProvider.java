@@ -16,13 +16,11 @@
 package com.github.workerframework.workermessageprioritization.targetqueue;
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import io.kubernetes.client.extended.kubectl.Kubectl;
 import io.kubernetes.client.extended.kubectl.exception.KubectlException;
-import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.Configuration;
 import io.kubernetes.client.openapi.models.V1Deployment;
 import io.kubernetes.client.openapi.models.V1DeploymentSpec;
@@ -216,10 +214,13 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
                 }
             } catch (final KubectlException kubectlException) {
                 LOGGER.error(String.format("Cannot get settings for the %s queue as the Kubernetes API threw an exception. "
-                    + "Falling back to using a max length of %s and eligible for refill percentage of %s",
+                    + "Falling back to using a max length of %s, eligible for refill percentage of %s, maximum instance of %s and " +
+                                "current instance of %s",
                                            targetQueueName,
                                            TARGET_QUEUE_MAX_LENGTH_FALLBACK,
-                                           TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK));
+                                           TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK,
+                                           MAX_INSTANCES_FALLBACK,
+                                           CURRENT_INSTANCE_FALLBACK));
 
                 return new TargetQueueSettings(TARGET_QUEUE_MAX_LENGTH_FALLBACK,
                                                TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK,
