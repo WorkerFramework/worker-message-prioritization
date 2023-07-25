@@ -64,6 +64,14 @@ This repository consists of the source to build a container that includes the
   **Description**: Used to toggle the TunedTargetQueueLength functionality on and off. While NoOp mode is true, any recommended tuning 
   of the target queue length will not be implemented. Target queue length will only be altered if this is false. 
 
+* `CAF_MIN_TARGET_QUEUE_LENGTH`  
+  **Default**: `100`  
+  **Description**: Used to determine the minimum length the tunedTargetQueueLength can be reduced to. Will not go below this length. 
+
+* `CAF_MAX_TARGET_QUEUE_LENGTH`  
+  **Default**: `10000000`  
+  **Description**: Used to determine the maximum length the tunedTargetQueueLength can be increased to. Will not go above this length.
+* 
 * `CAF_ROUNDING_MULTIPLE`  
   **Default**: `100`  
   **Description**: Used to round the recommended tuned target queue length to the nearest rounding multiple value. The default value 

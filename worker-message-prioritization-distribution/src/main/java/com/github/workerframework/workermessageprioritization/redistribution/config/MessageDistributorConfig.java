@@ -92,6 +92,10 @@ public final class MessageDistributorConfig {
 
     private static final String CAF_NOOP_MODE = "CAF_NOOP_MODE";
     private static final boolean CAF_NOOP_MODE_DEFAULT = true;
+    private static final String CAF_MIN_TARGET_QUEUE_LENGTH = "CAF_MIN_TARGET_QUEUE_LENGTH";
+    private static final int CAF_MIN_TARGET_QUEUE_LENGTH_DEFAULT = 100;
+    private static final String CAF_MAX_TARGET_QUEUE_LENGTH = "CAF_MAX_TARGET_QUEUE_LENGTH";
+    private static final int CAF_MAX_TARGET_QUEUE_LENGTH_DEFAULT = 10000000;
     private static final String CAF_ROUNDING_MULTIPLE = "CAF_ROUNDING_MULTIPLE";
     private static final int CAF_ROUNDING_MULTIPLE_DEFAULT = 100;
     private static final String CAF_MAX_CONSUMPTION_RATE_HISTORY_SIZE = "CAF_MAX_CONSUMPTION_RATE_HISTORY_SIZE";
@@ -122,6 +126,8 @@ public final class MessageDistributorConfig {
     private final List<String> kubernetesNamespaces;
     private final int kubernetesLabelCacheExpiryMinutes;
     private final boolean noOpMode;
+    private final int minTargetQueueLength;
+    private final int maxTargetQueueLength;
     private final int roundingMultiple;
     private final int maxConsumptionRateHistorySize;
     private final int minConsumptionRateHistorySize;
@@ -166,6 +172,8 @@ public final class MessageDistributorConfig {
                 CAF_WMP_KUBERNETES_LABEL_CACHE_EXPIRY_MINUTES,
                 CAF_WMP_KUBERNETES_LABEL_CACHE_EXPIRY_MINUTES_DEFAULT);
         noOpMode = getEnvOrDefault(CAF_NOOP_MODE,CAF_NOOP_MODE_DEFAULT);
+        minTargetQueueLength = getEnvOrDefault(CAF_MIN_TARGET_QUEUE_LENGTH,CAF_MIN_TARGET_QUEUE_LENGTH_DEFAULT);
+        maxTargetQueueLength = getEnvOrDefault(CAF_MAX_TARGET_QUEUE_LENGTH,CAF_MAX_TARGET_QUEUE_LENGTH_DEFAULT);
         roundingMultiple = getEnvOrDefault(CAF_ROUNDING_MULTIPLE, CAF_ROUNDING_MULTIPLE_DEFAULT);
         maxConsumptionRateHistorySize = getEnvOrDefault(CAF_MAX_CONSUMPTION_RATE_HISTORY_SIZE,
                 CAF_MAX_CONSUMPTION_RATE_HISTORY_SIZE_DEFAULT);
@@ -251,6 +259,8 @@ public final class MessageDistributorConfig {
         return kubernetesLabelCacheExpiryMinutes;
     }
     public boolean getNoOpMode(){return noOpMode;}
+    public int getMinTargetQueueLength(){return minTargetQueueLength;}
+    public int getMaxTargetQueueLength(){return maxTargetQueueLength;}
     public int getRoundingMultiple(){return roundingMultiple;}
     public int getMaxConsumptionRateHistorySize(){return maxConsumptionRateHistorySize;}
     public int getMinConsumptionRateHistorySize(){return minConsumptionRateHistorySize;}
@@ -280,6 +290,8 @@ public final class MessageDistributorConfig {
             .add(CAF_WMP_KUBERNETES_NAMESPACES, kubernetesNamespaces)
             .add(CAF_WMP_KUBERNETES_LABEL_CACHE_EXPIRY_MINUTES, kubernetesLabelCacheExpiryMinutes)
             .add(CAF_NOOP_MODE, noOpMode)
+            .add(CAF_MIN_TARGET_QUEUE_LENGTH, minTargetQueueLength)
+            .add(CAF_MAX_TARGET_QUEUE_LENGTH, maxTargetQueueLength)
             .add(CAF_ROUNDING_MULTIPLE, roundingMultiple)
             .add(CAF_MAX_CONSUMPTION_RATE_HISTORY_SIZE, maxConsumptionRateHistorySize)
             .add(CAF_MIN_CONSUMPTION_RATE_HISTORY_SIZE, minConsumptionRateHistorySize)
