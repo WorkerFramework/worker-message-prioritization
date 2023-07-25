@@ -68,7 +68,7 @@ public class TunedTargetQueueIT extends DistributorTestBase {
     final String queueName = "elastic-query-worker";
     final String stagingQueue1Name = getStagingQueueName(queueName, T1_STAGING_QUEUE_NAME);
     final String stagingQueue2Name = getStagingQueueName(queueName, T2_STAGING_QUEUE_NAME);
-    public static final String MOCK_SERVER_PORT = "MOCK_SERVER_PORT";
+    public static final String MOCK_SERVER_PORT = "CAF_MOCK_SERVER_PORT";
     private static final String CAF_ROUNDING_MULTIPLE = "CAF_ROUNDING_MULTIPLE";
     private static final String CAF_MAX_CONSUMPTION_RATE_HISTORY_SIZE = "CAF_MAX_CONSUMPTION_RATE_HISTORY_SIZE";
     private static final String CAF_MIN_CONSUMPTION_RATE_HISTORY_SIZE = "CAF_MIN_CONSUMPTION_RATE_HISTORY_SIZE";
@@ -79,7 +79,7 @@ public class TunedTargetQueueIT extends DistributorTestBase {
     // This test is for development purposes only
     // This test is to observe the consumption rate altering the recommended target queue length.
     // Console outputs and debugger should be used to see these dynamic changes.
-    @Test
+//    @Test
     public void tunedTargetQueueNoOpModeTest() throws TimeoutException, IOException {
         try (final Connection connection = connectionFactory.newConnection()) {
 

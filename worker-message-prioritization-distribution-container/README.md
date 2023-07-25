@@ -84,3 +84,13 @@ This repository consists of the source to build a container that includes the
   **Default**: `300`  
   **Description**: Used to set the amount of time in which we want a target queue length to be processed. This time will be used to 
   compute how long the tuned target queue length should be to process the queue in this set amount of time. 
+
+* `CAF_MOCK_SERVER_PORT`  
+  **Default**: `63669`  
+  **Description**: Used only in TunedTargetQueueIT. This dictates the port used for the MockWebServer representing a kubernetes 
+  connection. This must be set to the same server port as that defined in kube-config-test.yaml. 
+
+* `KUBECONFIG`  
+  **Default**: `${project.basedir}/src/test/resources/k8s/kube-config-test.yaml`  
+  **Description**: Used only in TunedTargetQueueIT. This indicates where the kube config file is located. This file connects kubectl 
+  to the mocked up kubernetes information hosted within the test using MockWebServer. 
