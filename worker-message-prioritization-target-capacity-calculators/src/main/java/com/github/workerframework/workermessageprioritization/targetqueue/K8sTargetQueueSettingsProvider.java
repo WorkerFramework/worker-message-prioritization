@@ -75,26 +75,6 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
 
     }
 
-    @VisibleForTesting
-    public K8sTargetQueueSettingsProvider(final List<String> kubernetesNamespaces, final int kubernetesLabelCacheExpiryMinutes,
-                                          final ApiClient client ){
-            //  https://github.houston.softwaregrp.net/Verity/deploy/blob/master/override/kube-config-larry
-            Configuration.setDefaultApiClient(client);
-
-        this.targetQueueToSettingsCache = CacheBuilder.newBuilder()
-                .expireAfterWrite(kubernetesLabelCacheExpiryMinutes, TimeUnit.MINUTES)
-                .build(new CacheLoader<Queue, TargetQueueSettings>()
-                {
-                    @Override
-                    public TargetQueueSettings load(@Nonnull final Queue queue)
-                    {
-                        return getTargetQueueSettingsFromKubernetes(queue);
-                    }
-                });
-
-        this.kubernetesNamespaces = kubernetesNamespaces;
-    }
-
     @Override
     public TargetQueueSettings get(final Queue targetQueue)
     {
