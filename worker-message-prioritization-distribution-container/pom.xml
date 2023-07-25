@@ -225,8 +225,8 @@
                                     <CAF_MAX_CONSUMPTION_RATE_HISTORY_SIZE>100</CAF_MAX_CONSUMPTION_RATE_HISTORY_SIZE>
                                     <CAF_MIN_CONSUMPTION_RATE_HISTORY_SIZE>10</CAF_MIN_CONSUMPTION_RATE_HISTORY_SIZE>
                                     <CAF_QUEUE_PROCESSING_TIME_GOAL_SECONDS>300</CAF_QUEUE_PROCESSING_TIME_GOAL_SECONDS>
-                                    <KUBECONFIG>${project.basedir}/src/test/resources/k8s/kube-config-test</KUBECONFIG>
-                                    <MOCK_SERVER_PORT>63669</MOCK_SERVER_PORT>
+                                    <CAF_MOCK_SERVER_PORT>63669</CAF_MOCK_SERVER_PORT>
+                                    <KUBECONFIG>${project.basedir}/src/test/resources/k8s/kube-config-test.yaml</KUBECONFIG>
                                 </env>
                                 <dependsOn>
                                     <container>rabbitmq</container>
