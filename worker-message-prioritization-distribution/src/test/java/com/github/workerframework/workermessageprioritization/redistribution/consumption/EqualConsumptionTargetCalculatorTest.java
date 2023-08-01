@@ -35,8 +35,13 @@ import java.util.Set;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Answers.RETURNS_DEFAULTS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.withSettings;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.anyDouble;
+import static org.mockito.ArgumentMatchers.anyLong;
 
 public final class EqualConsumptionTargetCalculatorTest extends DistributorTestBase
 {
@@ -44,39 +49,39 @@ public final class EqualConsumptionTargetCalculatorTest extends DistributorTestB
     @Test
     public void calculateConsumptionTargetsTest()
     {
-        final TargetQueueSettingsProvider provider = mock(TargetQueueSettingsProvider.class);
+        final TargetQueueSettingsProvider targetQueueSettingsProvider = mock(TargetQueueSettingsProvider.class);
 
         final Queue targetQueue = new Queue();
         targetQueue.setMessages(750);
 
         final TargetQueueSettings settings = new TargetQueueSettings(1000, 20, 1, 1);
-        when(provider.get(targetQueue)).thenReturn(settings);
+        when(targetQueueSettingsProvider.get(targetQueue)).thenReturn(settings);
 
         final Queue q1 = new Queue();
         final Queue q2 = new Queue();
         final Set<Queue> stagingQueues = new HashSet<>(Arrays.asList(q1, q2));
         stagingQueues.forEach((queue -> queue.setMessages(200)));
 
+        final double consumptionRate = 0.5;
+        final TargetQueuePerformanceMetricsProvider targetQueuePerformanceMetricsProvider = mock(TargetQueuePerformanceMetricsProvider.class);
+        when(targetQueuePerformanceMetricsProvider.getTargetQueuePerformanceMetrics(anyString())).thenReturn(consumptionRate);
+
+        final HistoricalConsumptionRate historicalConsumptionRate = mock(HistoricalConsumptionRate.class);
+        when(historicalConsumptionRate.recordCurrentConsumptionRateHistoryAndGetAverage(anyString(), anyDouble())).thenReturn(consumptionRate);
+        when(historicalConsumptionRate.isSufficientHistoryAvailable(anyString())).thenReturn(false);
+
         final int roundingMultiple = 100;
-        final int maxConsumptionRateHistorySize = 100;
-        final int minConsumptionRateHistorySize = 100;
-        final int queueProcessingTimeGoalSeconds = 300;
+        final RoundTargetQueueLength roundTargetQueueLength= mock(RoundTargetQueueLength.class,
+                withSettings().useConstructor(roundingMultiple).defaultAnswer(RETURNS_DEFAULTS));
+        when(roundTargetQueueLength.getRoundedTargetQueueLength(anyLong())).thenReturn(1000L);
 
-        final TargetQueuePerformanceMetricsProvider targetQueuePerformanceMetricsProvider =
-                new TargetQueuePerformanceMetricsProvider(queuesApi);
-        final HistoricalConsumptionRate historicalConsumptionRate =
-                new HistoricalConsumptionRate(maxConsumptionRateHistorySize,
-                        minConsumptionRateHistorySize);
-        final RoundTargetQueueLength roundTargetQueueLength = new RoundTargetQueueLength(roundingMultiple);
-        final TunedTargetQueueLengthProvider tunedTargetQueueLengthProvider =
-                new TunedTargetQueueLengthProvider(
-                        targetQueuePerformanceMetricsProvider,
-                        historicalConsumptionRate,
-                        roundTargetQueueLength,
-                        true,
-                        queueProcessingTimeGoalSeconds);
+        final boolean noOpMode = true;
+        final double queueProcessingTimeGoalSeconds = 300D;
+        final TunedTargetQueueLengthProvider tunedTargetQueueLengthProvider = mock(TunedTargetQueueLengthProvider.class,
+                withSettings().useConstructor(targetQueuePerformanceMetricsProvider, historicalConsumptionRate,
+                        roundTargetQueueLength, noOpMode, queueProcessingTimeGoalSeconds).defaultAnswer(RETURNS_DEFAULTS));
 
-        final EqualConsumptionTargetCalculator equalCalculator = new EqualConsumptionTargetCalculator(provider,
+        final EqualConsumptionTargetCalculator equalCalculator = new EqualConsumptionTargetCalculator(targetQueueSettingsProvider,
                 tunedTargetQueueLengthProvider);
 
         final DistributorWorkItem workItem = mock(DistributorWorkItem.class);
@@ -92,34 +97,34 @@ public final class EqualConsumptionTargetCalculatorTest extends DistributorTestB
     @Test
     public void calculateConsumptionTargetsTestEmptyStagingQueueSetReturn0()
     {
-        final TargetQueueSettingsProvider provider = mock(TargetQueueSettingsProvider.class);
+        final TargetQueueSettingsProvider targetQueueSettingsProvider = mock(TargetQueueSettingsProvider.class);
 
         final Queue targetQueue = new Queue();
         targetQueue.setMessages(750);
 
         final TargetQueueSettings settings = new TargetQueueSettings(1000, 20, 1, 1);
-        when(provider.get(targetQueue)).thenReturn(settings);
+        when(targetQueueSettingsProvider.get(targetQueue)).thenReturn(settings);
+
+        final double consumptionRate = 0.5;
+        final TargetQueuePerformanceMetricsProvider targetQueuePerformanceMetricsProvider = mock(TargetQueuePerformanceMetricsProvider.class);
+        when(targetQueuePerformanceMetricsProvider.getTargetQueuePerformanceMetrics(anyString())).thenReturn(consumptionRate);
+
+        final HistoricalConsumptionRate historicalConsumptionRate = mock(HistoricalConsumptionRate.class);
+        when(historicalConsumptionRate.recordCurrentConsumptionRateHistoryAndGetAverage(anyString(), anyDouble())).thenReturn(consumptionRate);
+        when(historicalConsumptionRate.isSufficientHistoryAvailable(anyString())).thenReturn(false);
 
         final int roundingMultiple = 100;
-        final int maxConsumptionRateHistorySize = 100;
-        final int minConsumptionRateHistorySize = 100;
-        final int queueProcessingTimeGoalSeconds = 300;
+        final RoundTargetQueueLength roundTargetQueueLength= mock(RoundTargetQueueLength.class,
+                withSettings().useConstructor(roundingMultiple).defaultAnswer(RETURNS_DEFAULTS));
+        when(roundTargetQueueLength.getRoundedTargetQueueLength(anyLong())).thenReturn(1000L);
 
-        final TargetQueuePerformanceMetricsProvider targetQueuePerformanceMetricsProvider =
-                new TargetQueuePerformanceMetricsProvider(queuesApi);
-        final HistoricalConsumptionRate historicalConsumptionRate =
-                new HistoricalConsumptionRate(maxConsumptionRateHistorySize,
-                        minConsumptionRateHistorySize);
-        final RoundTargetQueueLength roundTargetQueueLength = new RoundTargetQueueLength(roundingMultiple);
-        final TunedTargetQueueLengthProvider tunedTargetQueueLengthProvider =
-                new TunedTargetQueueLengthProvider(
-                        targetQueuePerformanceMetricsProvider,
-                        historicalConsumptionRate,
-                        roundTargetQueueLength,
-                        true,
-                        queueProcessingTimeGoalSeconds);
+        final boolean noOpMode = true;
+        final double queueProcessingTimeGoalSeconds = 300D;
+        final TunedTargetQueueLengthProvider tunedTargetQueueLengthProvider = mock(TunedTargetQueueLengthProvider.class,
+                withSettings().useConstructor(targetQueuePerformanceMetricsProvider, historicalConsumptionRate,
+                        roundTargetQueueLength, noOpMode, queueProcessingTimeGoalSeconds).defaultAnswer(RETURNS_DEFAULTS));
 
-        final EqualConsumptionTargetCalculator equalCalculator = new EqualConsumptionTargetCalculator(provider, tunedTargetQueueLengthProvider);
+        final EqualConsumptionTargetCalculator equalCalculator = new EqualConsumptionTargetCalculator(targetQueueSettingsProvider, tunedTargetQueueLengthProvider);
 
         final DistributorWorkItem workItem = mock(DistributorWorkItem.class);
         when(workItem.getTargetQueue()).thenReturn(targetQueue);
@@ -133,39 +138,39 @@ public final class EqualConsumptionTargetCalculatorTest extends DistributorTestB
     @Test
     public void calculateConsumptionTargetTestInsufficientCapacityInTargetQueueReturn0()
     {
-        final TargetQueueSettingsProvider provider = mock(TargetQueueSettingsProvider.class);
+        final TargetQueueSettingsProvider targetQueueSettingsProvider = mock(TargetQueueSettingsProvider.class);
 
         final Queue targetQueue = new Queue();
         targetQueue.setMessages(900);
 
         final TargetQueueSettings settings = new TargetQueueSettings(1000, 20, 1, 1);
-        when(provider.get(targetQueue)).thenReturn(settings);
+        when(targetQueueSettingsProvider.get(targetQueue)).thenReturn(settings);
 
         final Queue q1 = new Queue();
         final Queue q2 = new Queue();
         final Set<Queue> stagingQueues = new HashSet<>(Arrays.asList(q1, q2));
         stagingQueues.forEach((queue -> queue.setMessages(50)));
 
+        final double consumptionRate = 0.5;
+        final TargetQueuePerformanceMetricsProvider targetQueuePerformanceMetricsProvider = mock(TargetQueuePerformanceMetricsProvider.class);
+        when(targetQueuePerformanceMetricsProvider.getTargetQueuePerformanceMetrics(anyString())).thenReturn(consumptionRate);
+
+        final HistoricalConsumptionRate historicalConsumptionRate = mock(HistoricalConsumptionRate.class);
+        when(historicalConsumptionRate.recordCurrentConsumptionRateHistoryAndGetAverage(anyString(), anyDouble())).thenReturn(consumptionRate);
+        when(historicalConsumptionRate.isSufficientHistoryAvailable(anyString())).thenReturn(false);
+
         final int roundingMultiple = 100;
-        final int maxConsumptionRateHistorySize = 100;
-        final int minConsumptionRateHistorySize = 100;
-        final int queueProcessingTimeGoalSeconds = 300;
+        final RoundTargetQueueLength roundTargetQueueLength= mock(RoundTargetQueueLength.class,
+                withSettings().useConstructor(roundingMultiple).defaultAnswer(RETURNS_DEFAULTS));
+        when(roundTargetQueueLength.getRoundedTargetQueueLength(anyLong())).thenReturn(1000L);
 
-        final TargetQueuePerformanceMetricsProvider targetQueuePerformanceMetricsProvider =
-                new TargetQueuePerformanceMetricsProvider(queuesApi);
-        final HistoricalConsumptionRate historicalConsumptionRate =
-                new HistoricalConsumptionRate(maxConsumptionRateHistorySize,
-                        minConsumptionRateHistorySize);
-        final RoundTargetQueueLength roundTargetQueueLength = new RoundTargetQueueLength(roundingMultiple);
-        final TunedTargetQueueLengthProvider tunedTargetQueueLengthProvider =
-                new TunedTargetQueueLengthProvider(
-                        targetQueuePerformanceMetricsProvider,
-                        historicalConsumptionRate,
-                        roundTargetQueueLength,
-                        true,
-                        queueProcessingTimeGoalSeconds);
+        final boolean noOpMode = true;
+        final double queueProcessingTimeGoalSeconds = 300D;
+        final TunedTargetQueueLengthProvider tunedTargetQueueLengthProvider = mock(TunedTargetQueueLengthProvider.class,
+                withSettings().useConstructor(targetQueuePerformanceMetricsProvider, historicalConsumptionRate,
+                        roundTargetQueueLength, noOpMode, queueProcessingTimeGoalSeconds).defaultAnswer(RETURNS_DEFAULTS));
 
-        final EqualConsumptionTargetCalculator equalCalculator = new EqualConsumptionTargetCalculator(provider, tunedTargetQueueLengthProvider);
+        final EqualConsumptionTargetCalculator equalCalculator = new EqualConsumptionTargetCalculator(targetQueueSettingsProvider, tunedTargetQueueLengthProvider);
 
         final DistributorWorkItem workItem = mock(DistributorWorkItem.class);
         when(workItem.getTargetQueue()).thenReturn(targetQueue);
@@ -180,39 +185,39 @@ public final class EqualConsumptionTargetCalculatorTest extends DistributorTestB
     @Test
     public void calculateConsumptionTargetsTestStagingQueueContainsLessMessagesThanTargetQueueHasCapacityFor()
     {
-        final TargetQueueSettingsProvider provider = mock(TargetQueueSettingsProvider.class);
+        final TargetQueueSettingsProvider targetQueueSettingsProvider = mock(TargetQueueSettingsProvider.class);
 
         final Queue targetQueue = new Queue();
         targetQueue.setMessages(750);
 
         final TargetQueueSettings settings = new TargetQueueSettings(1000, 20, 1, 1);
-        when(provider.get(targetQueue)).thenReturn(settings);
+        when(targetQueueSettingsProvider.get(targetQueue)).thenReturn(settings);
 
         final Queue q1 = new Queue();
         final Queue q2 = new Queue();
         final Set<Queue> stagingQueues = new HashSet<>(Arrays.asList(q1, q2));
         stagingQueues.forEach((queue -> queue.setMessages(50)));
 
+        final double consumptionRate = 0.5;
+        final TargetQueuePerformanceMetricsProvider targetQueuePerformanceMetricsProvider = mock(TargetQueuePerformanceMetricsProvider.class);
+        when(targetQueuePerformanceMetricsProvider.getTargetQueuePerformanceMetrics(anyString())).thenReturn(consumptionRate);
+
+        final HistoricalConsumptionRate historicalConsumptionRate = mock(HistoricalConsumptionRate.class);
+        when(historicalConsumptionRate.recordCurrentConsumptionRateHistoryAndGetAverage(anyString(), anyDouble())).thenReturn(consumptionRate);
+        when(historicalConsumptionRate.isSufficientHistoryAvailable(anyString())).thenReturn(false);
+
         final int roundingMultiple = 100;
-        final int maxConsumptionRateHistorySize = 100;
-        final int minConsumptionRateHistorySize = 100;
-        final int queueProcessingTimeGoalSeconds = 300;
+        final RoundTargetQueueLength roundTargetQueueLength= mock(RoundTargetQueueLength.class,
+                withSettings().useConstructor(roundingMultiple).defaultAnswer(RETURNS_DEFAULTS));
+        when(roundTargetQueueLength.getRoundedTargetQueueLength(anyLong())).thenReturn(1000L);
 
-        final TargetQueuePerformanceMetricsProvider targetQueuePerformanceMetricsProvider =
-                new TargetQueuePerformanceMetricsProvider(queuesApi);
-        final HistoricalConsumptionRate historicalConsumptionRate =
-                new HistoricalConsumptionRate(maxConsumptionRateHistorySize,
-                        minConsumptionRateHistorySize);
-        final RoundTargetQueueLength roundTargetQueueLength = new RoundTargetQueueLength(roundingMultiple);
-        final TunedTargetQueueLengthProvider tunedTargetQueueLengthProvider =
-                new TunedTargetQueueLengthProvider(
-                        targetQueuePerformanceMetricsProvider,
-                        historicalConsumptionRate,
-                        roundTargetQueueLength,
-                        true,
-                        queueProcessingTimeGoalSeconds);
+        final boolean noOpMode = true;
+        final double queueProcessingTimeGoalSeconds = 300D;
+        final TunedTargetQueueLengthProvider tunedTargetQueueLengthProvider = mock(TunedTargetQueueLengthProvider.class,
+                withSettings().useConstructor(targetQueuePerformanceMetricsProvider, historicalConsumptionRate,
+                        roundTargetQueueLength, noOpMode, queueProcessingTimeGoalSeconds).defaultAnswer(RETURNS_DEFAULTS));
 
-        final EqualConsumptionTargetCalculator equalCalculator = new EqualConsumptionTargetCalculator(provider, tunedTargetQueueLengthProvider);
+        final EqualConsumptionTargetCalculator equalCalculator = new EqualConsumptionTargetCalculator(targetQueueSettingsProvider, tunedTargetQueueLengthProvider);
 
         final DistributorWorkItem workItem = mock(DistributorWorkItem.class);
         when(workItem.getTargetQueue()).thenReturn(targetQueue);
