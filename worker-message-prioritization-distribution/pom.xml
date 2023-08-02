@@ -81,6 +81,16 @@
           <artifactId>slf4j-api</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>com.github.cafdataprocessing</groupId>
             <artifactId>worker-document-interface</artifactId>
             <scope>test</scope>
