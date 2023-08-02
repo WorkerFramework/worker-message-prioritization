@@ -220,6 +220,7 @@
                                     <CAF_RABBITMQ_MGMT_PASSWORD>guest</CAF_RABBITMQ_MGMT_PASSWORD>
                                     <CAF_LOG_LEVEL>DEBUG</CAF_LOG_LEVEL>
                                     <CAF_WMP_KUBERNETES_NAMESPACES>private</CAF_WMP_KUBERNETES_NAMESPACES>
+                                    <CAF_FAST_LANE_PROCESSING_MODE>false</CAF_FAST_LANE_PROCESSING_MODE>
                                 </env>
                                 <dependsOn>
                                     <container>rabbitmq</container>

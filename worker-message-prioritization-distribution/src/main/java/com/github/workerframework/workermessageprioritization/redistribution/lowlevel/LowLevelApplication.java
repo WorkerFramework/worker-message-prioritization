@@ -20,6 +20,7 @@ import com.github.workerframework.workermessageprioritization.redistribution.con
 import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApi;
 import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitManagementApi;
 import com.github.workerframework.workermessageprioritization.redistribution.config.MessageDistributorConfig;
+import com.github.workerframework.workermessageprioritization.redistribution.consumption.FastLaneConsumptionTargetCalculator;
 import com.github.workerframework.workermessageprioritization.targetqueue.K8sTargetQueueSettingsProvider;
 import com.rabbitmq.client.ConnectionFactory;
 
@@ -59,8 +60,17 @@ public class LowLevelApplication {
                 messageDistributorConfig.getKubernetesNamespaces(),
                 messageDistributorConfig.getKubernetesLabelCacheExpiryMinutes());
 
-        final ConsumptionTargetCalculator consumptionTargetCalculator =
-                new EqualConsumptionTargetCalculator(k8sTargetQueueSettingsProvider);
+        final ConsumptionTargetCalculator consumptionTargetCalculator;
+
+        // If the environment variable is set to true then fastLaneConsumptionTargetCalculator rather than
+        // EqualConsumptionTargetCalculator
+        if(Boolean.parseBoolean(System.getenv("CAF_FAST_LANE_PROCESSING_MODE"))){
+            consumptionTargetCalculator =
+                    new FastLaneConsumptionTargetCalculator(k8sTargetQueueSettingsProvider);
+        }else{
+            consumptionTargetCalculator =
+                    new EqualConsumptionTargetCalculator(k8sTargetQueueSettingsProvider);
+        }
 
         final LowLevelDistributor lowLevelDistributor =
                 new LowLevelDistributor(
