@@ -137,21 +137,17 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
                         labels, MESSAGE_PRIORITIZATION_TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_LABEL,
                         metadata.getName(), targetQueueName, TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK);
 
-                    int maxInstances;
-                    try{
-                        maxInstances = Integer.parseInt(labels.get(MESSAGE_PRIORITIZATION_MAX_INSTANCES_LABEL));
-                    } catch (final NullPointerException ex) {
-                        // maxInstances not available for worker
-                        LOGGER.error(String.format("The worker is missing the %s label. ", MESSAGE_PRIORITIZATION_MAX_INSTANCES_LABEL));
-                        maxInstances = MAX_INSTANCES_FALLBACK;
-                    }
+                    final long targetQueueMaxInstances = getLabelOrDefault(
+                            labels, MESSAGE_PRIORITIZATION_MAX_INSTANCES_LABEL,
+                            metadata.getName(),targetQueueName, MAX_INSTANCES_FALLBACK);
 
                     int currentInstances;
                     try{
                         currentInstances = spec.getReplicas();
                     } catch (final NullPointerException ex) {
-                        // maxInstances not available for worker
-                        LOGGER.error(String.format("The worker is missing the %s label. ", CURRENT_INSTANCES_LABEL));
+                        // currentInstances not available for worker
+                        LOGGER.error(String.format("The worker %s is missing the %s label. ", metadata.getName(),
+                                CURRENT_INSTANCES_LABEL));
                         currentInstances = CURRENT_INSTANCE_FALLBACK;
                     }
 
@@ -174,7 +170,8 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
                                  targetQueueEligibleForRefillPercentage,
                                  targetQueueName);
 
-                    return new TargetQueueSettings(targetQueueMaxLength, targetQueueEligibleForRefillPercentage, maxInstances,currentInstances);
+                    return new TargetQueueSettings(targetQueueMaxLength, targetQueueEligibleForRefillPercentage,
+                            targetQueueMaxInstances, currentInstances);
                 }
             } catch (final KubectlException kubectlException) {
                 LOGGER.error(String.format("Cannot get settings for the %s queue as the Kubernetes API threw an exception. "
