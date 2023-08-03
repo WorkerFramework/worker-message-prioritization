@@ -20,11 +20,10 @@ import com.github.workerframework.workermessageprioritization.redistribution.con
 import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApi;
 import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitManagementApi;
 import com.github.workerframework.workermessageprioritization.redistribution.config.MessageDistributorConfig;
-import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueuePerformanceMetricsProvider;
-import com.github.workerframework.workermessageprioritization.targetqueue.HistoricalConsumptionRate;
-import com.github.workerframework.workermessageprioritization.targetqueue.RoundTargetQueueLength;
+import com.github.workerframework.workermessageprioritization.targetqueue.QueueConsumptionRateProvider;
+import com.github.workerframework.workermessageprioritization.targetqueue.HistoricalConsumptionRateManager;
+import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueLengthRounder;
 import com.github.workerframework.workermessageprioritization.targetqueue.TunedTargetQueueLengthProvider;
-import com.github.workerframework.workermessageprioritization.targetqueue.FixedTargetQueueSettingsProvider;
 import com.github.workerframework.workermessageprioritization.targetqueue.K8sTargetQueueSettingsProvider;
 import com.rabbitmq.client.ConnectionFactory;
 
@@ -64,17 +63,17 @@ public class LowLevelApplication {
                 messageDistributorConfig.getKubernetesNamespaces(),
                 messageDistributorConfig.getKubernetesLabelCacheExpiryMinutes());
 
-        final TargetQueuePerformanceMetricsProvider targetQueuePerformanceMetricsProvider =
-                new TargetQueuePerformanceMetricsProvider(queuesApi);
-        final HistoricalConsumptionRate historicalConsumptionRate =
-                new HistoricalConsumptionRate(messageDistributorConfig.getMaxConsumptionRateHistorySize(),
+        final QueueConsumptionRateProvider queueConsumptionRateProvider =
+                new QueueConsumptionRateProvider(queuesApi);
+        final HistoricalConsumptionRateManager historicalConsumptionRateManager =
+                new HistoricalConsumptionRateManager(messageDistributorConfig.getMaxConsumptionRateHistorySize(),
                 messageDistributorConfig.getMinConsumptionRateHistorySize());
-        final RoundTargetQueueLength roundTargetQueueLength = new RoundTargetQueueLength(messageDistributorConfig.getRoundingMultiple());
+        final TargetQueueLengthRounder targetQueueLengthRounder = new TargetQueueLengthRounder(messageDistributorConfig.getRoundingMultiple());
         final TunedTargetQueueLengthProvider tunedTargetQueueLengthProvider =
                 new TunedTargetQueueLengthProvider(
-                        targetQueuePerformanceMetricsProvider,
-                        historicalConsumptionRate,
-                        roundTargetQueueLength,
+                        queueConsumptionRateProvider,
+                        historicalConsumptionRateManager,
+                        targetQueueLengthRounder,
                         messageDistributorConfig.getNoOpMode(),
                         messageDistributorConfig.getQueueProcessingTimeGoalSeconds());
 
@@ -88,7 +87,9 @@ public class LowLevelApplication {
                         consumptionTargetCalculator,
                         new StagingTargetPairProvider(),
                         messageDistributorConfig.getDistributorRunIntervalMilliseconds(),
-                        messageDistributorConfig.getConsumerPublisherPairLastDoneWorkTimeoutMilliseconds());
+                        messageDistributorConfig.getConsumerPublisherPairLastDoneWorkTimeoutMilliseconds(),
+                        messageDistributorConfig.getMaxTargetQueueLength(),
+                        messageDistributorConfig.getMinTargetQueueLength());
 
         lowLevelDistributor.run();
     }

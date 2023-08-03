@@ -56,6 +56,8 @@ public class ShovelDistributor extends MessageDistributor {
     private final ScheduledExecutorService nonRunningShovelCheckerExecutorService;
     private final ScheduledExecutorService shovelRunningTooLongCheckerExecutorService;
     private final ScheduledExecutorService corruptedShovelCheckerExecutorService;
+    private final long minTargetQueueLength;
+    private final long maxTargetQueueLength;
 
     public ShovelDistributor(
             final RabbitManagementApi<QueuesApi> queuesApi,
@@ -71,7 +73,9 @@ public class ShovelDistributor extends MessageDistributor {
             final long shovelRunningTooLongCheckIntervalMilliseconds,
             final long corruptedShovelTimeoutMilliseconds,
             final long corruptedShovelCheckIntervalMilliseconds,
-            final long distributorRunIntervalMilliseconds) throws UnsupportedEncodingException {
+            final long distributorRunIntervalMilliseconds,
+            final long minTargetQueueLength,
+            final long maxTargetQueueLength) throws UnsupportedEncodingException {
 
         super(queuesApi);
         this.shovelsApi = shovelsApi;
@@ -128,6 +132,8 @@ public class ShovelDistributor extends MessageDistributor {
                 0,
                 corruptedShovelCheckIntervalMilliseconds,
                 TimeUnit.MILLISECONDS);
+        this.minTargetQueueLength = minTargetQueueLength;
+        this.maxTargetQueueLength = maxTargetQueueLength;
     }
     
     public void run() throws InterruptedException {
@@ -177,7 +183,8 @@ public class ShovelDistributor extends MessageDistributor {
         
         for(final DistributorWorkItem distributorWorkItem : distributorWorkItems) {
             
-            final Map<Queue, Long> consumptionTarget = consumptionTargetCalculator.calculateConsumptionTargets(distributorWorkItem);
+            final Map<Queue, Long> consumptionTarget = consumptionTargetCalculator.calculateConsumptionTargets(distributorWorkItem,
+                    minTargetQueueLength, maxTargetQueueLength);
             
             final long overallConsumptionTarget = consumptionTarget.values().stream().mapToLong(Long::longValue).sum();
             

@@ -19,15 +19,15 @@ import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApi;
 import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitManagementApi;
 
-public class TargetQueuePerformanceMetricsProvider {
+public class QueueConsumptionRateProvider {
 
     protected RabbitManagementApi<QueuesApi> queuesApi;
 
-    public TargetQueuePerformanceMetricsProvider(final RabbitManagementApi<QueuesApi> queuesApi){
+    public QueueConsumptionRateProvider(final RabbitManagementApi<QueuesApi> queuesApi){
         this.queuesApi = queuesApi;
     }
 
-    public double getTargetQueuePerformanceMetrics(final String targetQueueName) {
+    public double getConsumptionRate(final String targetQueueName) {
 
         final Queue.MessageStats message_stats = queuesApi.getApi().getQueue("/", targetQueueName).getMessage_stats();
         final double consumptionRate;

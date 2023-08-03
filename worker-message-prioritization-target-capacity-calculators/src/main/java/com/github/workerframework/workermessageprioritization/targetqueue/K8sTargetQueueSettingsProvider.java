@@ -44,6 +44,7 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
     private static final String MESSAGE_PRIORITIZATION_MAX_INSTANCES_LABEL = "autoscale.maxinstances";
     private static final String MESSAGE_PRIORITIZATION_TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_LABEL
         = "messageprioritization.targetqueueeligibleforrefillpercentage";
+    private static final String CURRENT_INSTANCES_LABEL = "spec.replicas";
     private static final long TARGET_QUEUE_MAX_LENGTH_FALLBACK = 1000;
     private static final long TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK = 10;
     private final int CURRENT_INSTANCE_FALLBACK = 1;
@@ -71,8 +72,6 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
             });
 
         this.kubernetesNamespaces = kubernetesNamespaces;
-
-
     }
 
     @Override
@@ -137,12 +136,13 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
                     long targetQueueEligibleForRefillPercentage = getLabelOrDefault(
                         labels, MESSAGE_PRIORITIZATION_TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_LABEL,
                         metadata.getName(), targetQueueName, TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK);
+
                     int maxInstances;
                     try{
                         maxInstances = Integer.parseInt(labels.get(MESSAGE_PRIORITIZATION_MAX_INSTANCES_LABEL));
                     } catch (final NullPointerException ex) {
                         // maxInstances not available for worker
-                        LOGGER.error(String.format("The %s worker is missing the maxInstances label. "));
+                        LOGGER.error(String.format("The worker is missing the %s label. ", MESSAGE_PRIORITIZATION_MAX_INSTANCES_LABEL));
                         maxInstances = MAX_INSTANCES_FALLBACK;
                     }
 
@@ -151,25 +151,9 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
                         currentInstances = spec.getReplicas();
                     } catch (final NullPointerException ex) {
                         // maxInstances not available for worker
-                        LOGGER.error(String.format("The %s worker is missing the %s label. "));
+                        LOGGER.error(String.format("The worker is missing the %s label. ", CURRENT_INSTANCES_LABEL));
                         currentInstances = CURRENT_INSTANCE_FALLBACK;
                     }
-
-//                    long targetQueueEligibleForRefillPercentage;
-//                    try {
-//                        // Check if there is a target queue eligible for refill percentage label
-//                        targetQueueEligibleForRefillPercentage = Long.parseLong(labels.get(
-//                            MESSAGE_PRIORITIZATION_TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_LABEL));
-//                    } catch (final NullPointerException ex) {
-//                        // No eligible for refill percentage label provided for worker, set to fall back value
-//                        LOGGER.error(String.format("Cannot get eligible for refill percentage for the %s queue. "
-//                            + "The %s worker is missing the %s label. "
-//                            + "Falling back to using eligible for refill percentage of %s",
-//                                                   targetQueueName, metadata.getName(),
-//                                                   MESSAGE_PRIORITIZATION_TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_LABEL,
-//                                                   TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK));
-//                        targetQueueEligibleForRefillPercentage = TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK;
-//                    }
 
                     if (targetQueueEligibleForRefillPercentage < 0 || targetQueueEligibleForRefillPercentage > 100) {
                         // Invalid eligible for refill percentage provided, set to fall back value

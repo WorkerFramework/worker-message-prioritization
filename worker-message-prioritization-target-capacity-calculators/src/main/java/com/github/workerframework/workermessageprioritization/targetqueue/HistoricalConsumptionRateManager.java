@@ -21,14 +21,15 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 
-public class HistoricalConsumptionRate {
+@SuppressWarnings("UnstableApiUsage")
+public class HistoricalConsumptionRateManager {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(HistoricalConsumptionRate.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(HistoricalConsumptionRateManager.class);
     private final int maximumConsumptionRateHistorySize;
     private final int minimumHistorySize;
     private final HashMap<String, EvictingQueue<Double>> consumptionRateHistoryMap = new HashMap<>();
 
-    public HistoricalConsumptionRate(final int maximumConsumptionRateHistorySize, final int minimumHistorySize) throws IllegalArgumentException {
+    public HistoricalConsumptionRateManager(final int maximumConsumptionRateHistorySize, final int minimumHistorySize) throws IllegalArgumentException {
 
         if (maximumConsumptionRateHistorySize < minimumHistorySize) {
             throw new IllegalArgumentException("Minimum history required cannot be larger than the maximum history storage size.");
@@ -45,9 +46,7 @@ public class HistoricalConsumptionRate {
 
         theoreticalConsumptionRateHistory.add(theoreticalConsumptionRate);
 
-        final double averageTheoreticalConsumptionRate = theoreticalConsumptionRateHistory.stream().mapToDouble(d -> d).average().getAsDouble();
-
-        return averageTheoreticalConsumptionRate;
+        return theoreticalConsumptionRateHistory.stream().mapToDouble(d -> d).average().orElseThrow(IllegalStateException::new);
     }
 
     public boolean isSufficientHistoryAvailable(final String queueName) throws IllegalArgumentException {

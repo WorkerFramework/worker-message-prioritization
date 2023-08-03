@@ -45,13 +45,17 @@ public class LowLevelDistributor extends MessageDistributor {
     private final String connectionDetails;
     private final long distributorRunIntervalMilliseconds;
     private final long consumerPublisherPairLastDoneWorkTimeoutMilliseconds;
+    private final long minTargetQueueLength;
+    private final long maxTargetQueueLength;
 
     public LowLevelDistributor(final RabbitManagementApi<QueuesApi> queuesApi,
                                final ConnectionFactory connectionFactory,
                                final ConsumptionTargetCalculator consumptionTargetCalculator,
                                final StagingTargetPairProvider stagingTargetPairProvider,
                                final long distributorRunIntervalMilliseconds,
-                               final long consumerPublisherPairLastDoneWorkTimeoutMilliseconds) {
+                               final long consumerPublisherPairLastDoneWorkTimeoutMilliseconds,
+                               final long minTargetQueueLength,
+                               final long maxTargetQueueLength) {
         super(queuesApi);
         this.connectionFactory = connectionFactory;
         this.connectionDetails = String.format(
@@ -64,6 +68,8 @@ public class LowLevelDistributor extends MessageDistributor {
         this.stagingTargetPairProvider = stagingTargetPairProvider;
         this.distributorRunIntervalMilliseconds = distributorRunIntervalMilliseconds;
         this.consumerPublisherPairLastDoneWorkTimeoutMilliseconds = consumerPublisherPairLastDoneWorkTimeoutMilliseconds;
+        this.minTargetQueueLength = minTargetQueueLength;
+        this.maxTargetQueueLength = maxTargetQueueLength;
     }
     
     public void run() throws IOException, TimeoutException, InterruptedException {
@@ -154,7 +160,8 @@ public class LowLevelDistributor extends MessageDistributor {
         }
 
         for (final DistributorWorkItem distributorWorkItem : distributorWorkItems) {
-            final Map<Queue, Long> consumptionTargets = consumptionTargetCalculator.calculateConsumptionTargets(distributorWorkItem);
+            final Map<Queue, Long> consumptionTargets = consumptionTargetCalculator.calculateConsumptionTargets(distributorWorkItem,
+                    minTargetQueueLength, maxTargetQueueLength);
             final Set<StagingQueueTargetQueuePair> stagingTargetPairs =
                     stagingTargetPairProvider.provideStagingTargetPairs(
                             connection, distributorWorkItem, consumptionTargets,

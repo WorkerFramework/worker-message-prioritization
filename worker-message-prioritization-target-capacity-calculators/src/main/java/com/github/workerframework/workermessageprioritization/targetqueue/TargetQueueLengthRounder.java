@@ -18,13 +18,13 @@ package com.github.workerframework.workermessageprioritization.targetqueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RoundTargetQueueLength {
+public class TargetQueueLengthRounder {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(RoundTargetQueueLength.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(TargetQueueLengthRounder.class);
 
     private final int roundingMultiple;
 
-    public RoundTargetQueueLength(final int roundingMultiple) throws IllegalArgumentException {
+    public TargetQueueLengthRounder(final int roundingMultiple) throws IllegalArgumentException {
 
         if (roundingMultiple == 0) {
             throw new IllegalArgumentException("Rounding multiple cannot be 0. Please set rounding multiple.");

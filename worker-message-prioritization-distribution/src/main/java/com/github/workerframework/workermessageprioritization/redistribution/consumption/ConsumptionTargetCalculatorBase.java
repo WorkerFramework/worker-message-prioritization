@@ -19,7 +19,6 @@ import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueSettingsProvider;
 import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueSettings;
 import com.github.workerframework.workermessageprioritization.targetqueue.TunedTargetQueueLengthProvider;
-import com.google.common.base.Strings;
 
 public abstract class ConsumptionTargetCalculatorBase implements ConsumptionTargetCalculator
 {
@@ -33,12 +32,8 @@ public abstract class ConsumptionTargetCalculatorBase implements ConsumptionTarg
         this.tunedTargetQueueLengthProvider = tunedTargetQueueLengthProvider;
     }
 
-    protected long getTargetQueueCapacity(final Queue targetQueue)
+    protected long getTargetQueueCapacity(final Queue targetQueue, final long minTargetQueueLength, final long maxTargetQueueLength)
     {
-        int minTargetQueueLength = !Strings.isNullOrEmpty(System.getenv("CAF_MIN_TARGET_QUEUE_LENGTH")) ?
-                Integer.parseInt(System.getenv("CAF_MIN_TARGET_QUEUE_LENGTH")) : 100;
-        int maxTargetQueueLength = !Strings.isNullOrEmpty(System.getenv("CAF_MAX_TARGET_QUEUE_LENGTH")) ?
-                Integer.parseInt(System.getenv("CAF_MIN_TARGET_QUEUE_LENGTH")) : 10000000;
         final long tunedTargetMaxQueueLength = tunedTargetQueueLengthProvider.getTunedTargetQueueLength(targetQueue.getName(),
                 minTargetQueueLength, maxTargetQueueLength, targetQueueSettingsProvider.get(targetQueue));
         getTargetQueueSettings(targetQueue).setCurrentMaxLength(tunedTargetMaxQueueLength);

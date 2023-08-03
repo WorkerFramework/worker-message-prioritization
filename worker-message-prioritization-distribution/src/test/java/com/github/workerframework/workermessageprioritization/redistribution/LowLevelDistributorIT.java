@@ -25,11 +25,10 @@ import com.github.workerframework.workermessageprioritization.redistribution.low
 import com.github.workerframework.workermessageprioritization.redistribution.lowlevel.StagingQueueTargetQueuePair;
 import com.github.workerframework.workermessageprioritization.redistribution.lowlevel.StagingTargetPairProvider;
 import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueSettings;
-import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueuePerformanceMetricsProvider;
-import com.github.workerframework.workermessageprioritization.targetqueue.HistoricalConsumptionRate;
-import com.github.workerframework.workermessageprioritization.targetqueue.RoundTargetQueueLength;
+import com.github.workerframework.workermessageprioritization.targetqueue.QueueConsumptionRateProvider;
+import com.github.workerframework.workermessageprioritization.targetqueue.HistoricalConsumptionRateManager;
+import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueLengthRounder;
 import com.github.workerframework.workermessageprioritization.targetqueue.TunedTargetQueueLengthProvider;
-import com.github.workerframework.workermessageprioritization.targetqueue.FixedTargetQueueSettingsProvider;
 import com.google.common.base.Strings;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
@@ -92,18 +91,17 @@ public class LowLevelDistributorIT extends DistributorTestBase {
             final int minConsumptionRateHistorySize = 10;
             final int roundingMultiple = 100;
             final double queueProcessingTimeGoalSeconds = 300;
-            final TargetQueuePerformanceMetricsProvider targetQueuePerformanceMetricsProvider =
-                    new TargetQueuePerformanceMetricsProvider(queuesApi);
-            final HistoricalConsumptionRate historicalConsumptionRate = new HistoricalConsumptionRate(maxConsumptionRateHistorySize,
+            final QueueConsumptionRateProvider queueConsumptionRateProvider =
+                    new QueueConsumptionRateProvider(queuesApi);
+            final HistoricalConsumptionRateManager historicalConsumptionRateManager = new HistoricalConsumptionRateManager(maxConsumptionRateHistorySize,
                     minConsumptionRateHistorySize);
-            final RoundTargetQueueLength roundTargetQueueLength = new RoundTargetQueueLength(roundingMultiple);
+            final TargetQueueLengthRounder targetQueueLengthRounder = new TargetQueueLengthRounder(roundingMultiple);
             final TunedTargetQueueLengthProvider tunedTargetQueueLengthProvider =
                     new TunedTargetQueueLengthProvider(
-                            targetQueuePerformanceMetricsProvider,
-                            historicalConsumptionRate,
-                            roundTargetQueueLength,
-                            !Strings.isNullOrEmpty(System.getenv("CAF_NOOP_MODE")) ?
-                                    Boolean.parseBoolean(System.getenv("CAF_NOOP_MODE")) : true,
+                            queueConsumptionRateProvider,
+                            historicalConsumptionRateManager,
+                            targetQueueLengthRounder,
+                            Strings.isNullOrEmpty(System.getenv("CAF_NOOP_MODE")) || Boolean.parseBoolean(System.getenv("CAF_NOOP_MODE")),
                             queueProcessingTimeGoalSeconds);
 
             // Target queue has a max length of 200 messages
@@ -112,7 +110,7 @@ public class LowLevelDistributorIT extends DistributorTestBase {
                             tunedTargetQueueLengthProvider);
             final StagingTargetPairProvider stagingTargetPairProvider = new StagingTargetPairProvider();
             final LowLevelDistributor lowLevelDistributor = new LowLevelDistributor(queuesApi, connectionFactory,
-                    consumptionTargetCalculator, stagingTargetPairProvider, 10000, 600000);
+                    consumptionTargetCalculator, stagingTargetPairProvider, 10000, 600000, 100, 10000000);
 
             // Run the distributor (1st time).
             // stagingQueue1:            500 messages
@@ -278,18 +276,17 @@ public class LowLevelDistributorIT extends DistributorTestBase {
             final int minConsumptionRateHistorySize = 10;
             final int roundingMultiple = 100;
             final double queueProcessingTimeGoalSeconds = 300;
-            final TargetQueuePerformanceMetricsProvider targetQueuePerformanceMetricsProvider =
-                    new TargetQueuePerformanceMetricsProvider(queuesApi);
-            final HistoricalConsumptionRate historicalConsumptionRate = new HistoricalConsumptionRate(maxConsumptionRateHistorySize,
+            final QueueConsumptionRateProvider queueConsumptionRateProvider =
+                    new QueueConsumptionRateProvider(queuesApi);
+            final HistoricalConsumptionRateManager historicalConsumptionRateManager = new HistoricalConsumptionRateManager(maxConsumptionRateHistorySize,
                     minConsumptionRateHistorySize);
-            final RoundTargetQueueLength roundTargetQueueLength = new RoundTargetQueueLength(roundingMultiple);
+            final TargetQueueLengthRounder targetQueueLengthRounder = new TargetQueueLengthRounder(roundingMultiple);
             final TunedTargetQueueLengthProvider tunedTargetQueueLengthProvider =
                     new TunedTargetQueueLengthProvider(
-                            targetQueuePerformanceMetricsProvider,
-                            historicalConsumptionRate,
-                            roundTargetQueueLength,
-                            !Strings.isNullOrEmpty(System.getenv("CAF_NOOP_MODE")) ?
-                                    Boolean.parseBoolean(System.getenv("CAF_NOOP_MODE")) : true,
+                            queueConsumptionRateProvider,
+                            historicalConsumptionRateManager,
+                            targetQueueLengthRounder,
+                            Strings.isNullOrEmpty(System.getenv("CAF_NOOP_MODE")) || Boolean.parseBoolean(System.getenv("CAF_NOOP_MODE")),
                             queueProcessingTimeGoalSeconds);
 
             final ConsumptionTargetCalculator consumptionTargetCalculator =
@@ -308,7 +305,7 @@ public class LowLevelDistributorIT extends DistributorTestBase {
 
             final LowLevelDistributor lowLevelDistributor = new LowLevelDistributor(queuesApi, connectionFactory,
                     consumptionTargetCalculator, stagingTargetPairProviderMock, 10000,
-                    consumerPublisherPairLastDoneWorkTimeoutMilliseconds);
+                    consumerPublisherPairLastDoneWorkTimeoutMilliseconds, 100 , 10000000);
 
             // Run the distributor (1st time)
             Assert.assertEquals(
