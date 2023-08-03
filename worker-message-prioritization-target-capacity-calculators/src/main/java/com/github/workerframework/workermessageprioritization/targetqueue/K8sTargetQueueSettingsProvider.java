@@ -19,6 +19,8 @@ import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import io.kubernetes.client.extended.kubectl.Kubectl;
 import io.kubernetes.client.extended.kubectl.exception.KubectlException;
 import io.kubernetes.client.openapi.Configuration;
@@ -52,7 +54,10 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
     private final List<String> kubernetesNamespaces;
     private final LoadingCache<Queue, TargetQueueSettings> targetQueueToSettingsCache;
 
-    public K8sTargetQueueSettingsProvider(final List<String> kubernetesNamespaces, final int kubernetesLabelCacheExpiryMinutes)
+    @Inject
+    public K8sTargetQueueSettingsProvider(
+            @Named("KubernetesNamespaces") final List<String> kubernetesNamespaces, 
+            @Named("KubernetesLabelCacheExpiryMinutes") final int kubernetesLabelCacheExpiryMinutes)
     {
         try {
             Configuration.setDefaultApiClient(ClientBuilder.standard().build());

@@ -22,6 +22,7 @@ import java.util.stream.Stream;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
+import com.google.inject.Inject;
 
 public final class MessageDistributorConfig {
 
@@ -133,6 +134,7 @@ public final class MessageDistributorConfig {
     private final int minConsumptionRateHistorySize;
     private final int queueProcessingTimeGoalSeconds;
 
+    @Inject
     public MessageDistributorConfig() {
         rabbitMQVHost = getEnvOrDefault(CAF_RABBITMQ_VHOST, CAF_RABBITMQ_VHOST_DEFAULT);
         rabbitMQHost = getEnvOrDefault(CAF_RABBITMQ_HOST, CAF_RABBITMQ_HOST_DEFAULT);

@@ -15,6 +15,7 @@
  */
 package com.github.workerframework.workermessageprioritization.redistribution.lowlevel;
 
+import com.github.workerframework.workermessageprioritization.redistribution.DistributorModule;
 import com.github.workerframework.workermessageprioritization.redistribution.consumption.ConsumptionTargetCalculator;
 import com.github.workerframework.workermessageprioritization.redistribution.consumption.EqualConsumptionTargetCalculator;
 import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApi;
@@ -23,8 +24,11 @@ import com.github.workerframework.workermessageprioritization.redistribution.con
 import com.github.workerframework.workermessageprioritization.targetqueue.QueueConsumptionRateProvider;
 import com.github.workerframework.workermessageprioritization.targetqueue.HistoricalConsumptionRateManager;
 import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueLengthRounder;
+import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueSettingsProvider;
 import com.github.workerframework.workermessageprioritization.targetqueue.TunedTargetQueueLengthProvider;
 import com.github.workerframework.workermessageprioritization.targetqueue.K8sTargetQueueSettingsProvider;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import com.rabbitmq.client.ConnectionFactory;
 
 import java.io.IOException;
@@ -38,9 +42,14 @@ public class LowLevelApplication {
 
     public static void main(String[] args) throws IOException, TimeoutException, InterruptedException {
 
-        final ConnectionFactory connectionFactory = new ConnectionFactory();
+        final Injector injector = Guice.createInjector(new DistributorModule());
+        //TODO Ultimately the following two lines will replace everything below
+//        final LowLevelDistributor lowLevelDistributor = injector.getInstance(LowLevelDistributor.class);
+//        lowLevelDistributor.run();
 
-        final MessageDistributorConfig messageDistributorConfig = new MessageDistributorConfig();
+        final MessageDistributorConfig messageDistributorConfig = injector.getInstance(MessageDistributorConfig.class);
+
+        final ConnectionFactory connectionFactory = new ConnectionFactory();
 
         LOGGER.info("Read the following configuration: {}", messageDistributorConfig);
 
@@ -58,10 +67,14 @@ public class LowLevelApplication {
             messageDistributorConfig.getRabbitMQMgmtUrl(),
             messageDistributorConfig.getRabbitMQMgmtUsername(),
             messageDistributorConfig.getRabbitMQMgmtPassword());
+        
+        //TODO In the meantime we'll comment out each manual construction and replace it with a call to injector.getInstance
+//        final TargetQueueSettingsProvider k8sTargetQueueSettingsProvider = new K8sTargetQueueSettingsProvider(
+//                messageDistributorConfig.getKubernetesNamespaces(),
+//                messageDistributorConfig.getKubernetesLabelCacheExpiryMinutes());
 
-        final K8sTargetQueueSettingsProvider k8sTargetQueueSettingsProvider = new K8sTargetQueueSettingsProvider(
-                messageDistributorConfig.getKubernetesNamespaces(),
-                messageDistributorConfig.getKubernetesLabelCacheExpiryMinutes());
+        //TODO When we have all of the dependencies working then we can delete all this code
+        final TargetQueueSettingsProvider targetQueueSettingsProvider = injector.getInstance(TargetQueueSettingsProvider.class);
 
         final QueueConsumptionRateProvider queueConsumptionRateProvider =
                 new QueueConsumptionRateProvider(queuesApi);
@@ -78,7 +91,7 @@ public class LowLevelApplication {
                         messageDistributorConfig.getQueueProcessingTimeGoalSeconds());
 
         final ConsumptionTargetCalculator consumptionTargetCalculator =
-                new EqualConsumptionTargetCalculator(k8sTargetQueueSettingsProvider, tunedTargetQueueLengthProvider);
+                new EqualConsumptionTargetCalculator(targetQueueSettingsProvider, tunedTargetQueueLengthProvider);
 
         final LowLevelDistributor lowLevelDistributor =
                 new LowLevelDistributor(

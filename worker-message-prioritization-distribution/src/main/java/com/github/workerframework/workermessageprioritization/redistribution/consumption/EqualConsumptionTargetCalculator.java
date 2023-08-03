@@ -19,6 +19,7 @@ import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 import com.github.workerframework.workermessageprioritization.redistribution.DistributorWorkItem;
 import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueSettingsProvider;
 import com.github.workerframework.workermessageprioritization.targetqueue.TunedTargetQueueLengthProvider;
+import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,6 +45,7 @@ public class EqualConsumptionTargetCalculator extends MinimumConsumptionTargetCa
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EqualConsumptionTargetCalculator.class);
 
+    @Inject
     public EqualConsumptionTargetCalculator(final TargetQueueSettingsProvider targetQueueSettingsProvider,
                                             final TunedTargetQueueLengthProvider tunedTargetQueueLengthProvider) {
         super(targetQueueSettingsProvider, tunedTargetQueueLengthProvider);
