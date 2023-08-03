@@ -44,6 +44,9 @@ public final class ConsumptionTargetCalculatorBaseTest
         final Queue targetQueue = new Queue();
         targetQueue.setMessages(1000);
 
+        final TargetQueueSettings settings = new TargetQueueSettings(1200, 50, 1, 1);
+        when(targetQueueSettingsProvider.get(targetQueue)).thenReturn(settings);
+
         final double consumptionRate = 0.5;
         final QueueConsumptionRateProvider queueConsumptionRateProvider = mock(QueueConsumptionRateProvider.class);
         when(queueConsumptionRateProvider.getConsumptionRate(anyString())).thenReturn(consumptionRate);
@@ -63,12 +66,9 @@ public final class ConsumptionTargetCalculatorBaseTest
                 withSettings().useConstructor(queueConsumptionRateProvider, historicalConsumptionRateManager,
                         targetQueueLengthRounder, noOpMode, queueProcessingTimeGoalSeconds).defaultAnswer(RETURNS_DEFAULTS));
 
-        final TargetQueueSettings settings = new TargetQueueSettings(1200, 50, 1, 1);
-        when(targetQueueSettingsProvider.get(targetQueue)).thenReturn(settings);
-
         final ConsumptionTargetCalculatorBase calculator = mock(
-                ConsumptionTargetCalculatorBase.class,
-                withSettings().useConstructor(targetQueueSettingsProvider, tunedTargetQueueLengthProvider).defaultAnswer(CALLS_REAL_METHODS));
+            ConsumptionTargetCalculatorBase.class,
+            withSettings().useConstructor(targetQueueSettingsProvider, tunedTargetQueueLengthProvider).defaultAnswer(CALLS_REAL_METHODS));
 
         assertEquals("Message capacity available returned regardless of the eligible for refill percentage set.", 200,
                 calculator.getTargetQueueCapacity(targetQueue, 100,
