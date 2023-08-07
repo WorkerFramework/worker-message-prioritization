@@ -16,6 +16,8 @@
 package com.github.workerframework.workermessageprioritization.targetqueue;
 
 import com.google.common.collect.EvictingQueue;
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,7 +31,9 @@ public class HistoricalConsumptionRateManager {
     private final int minimumHistorySize;
     private final HashMap<String, EvictingQueue<Double>> consumptionRateHistoryMap = new HashMap<>();
 
-    public HistoricalConsumptionRateManager(final int maximumConsumptionRateHistorySize, final int minimumHistorySize) throws IllegalArgumentException {
+    @Inject
+    public HistoricalConsumptionRateManager(@Named("MaxConsumptionRateHistorySize") final int maximumConsumptionRateHistorySize,
+                                            @Named("MinConsumptionRateHistorySize")final int minimumHistorySize) throws IllegalArgumentException {
 
         if (maximumConsumptionRateHistorySize < minimumHistorySize) {
             throw new IllegalArgumentException("Minimum history required cannot be larger than the maximum history storage size.");

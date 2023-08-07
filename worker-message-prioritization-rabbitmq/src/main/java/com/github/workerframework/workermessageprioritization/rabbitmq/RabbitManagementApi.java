@@ -26,6 +26,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.ToNumberPolicy;
+import com.google.inject.name.Named;
 import com.squareup.okhttp.OkHttpClient;
 
 import retrofit.ErrorHandler;
@@ -38,6 +39,7 @@ import retrofit.mime.TypedInput;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.google.inject.Inject;
 
 public class RabbitManagementApi <T> {
 
@@ -46,8 +48,10 @@ public class RabbitManagementApi <T> {
     
     private T api;
 
-    public RabbitManagementApi(final Class<T> apiType, final String endpoint, final String user, 
-                               final String password) {
+    @Inject
+    public RabbitManagementApi(@Named("ApiType") final Class<T> apiType, @Named("RabbitMQMgmtUrl") final String endpoint, @Named(
+            "RabbitMQUsername") final String user,
+                               @Named("RabbitMQPassword") final String password) {
 
         final OkHttpClient okHttpClient = new OkHttpClient();
         okHttpClient.setReadTimeout(READ_TIMEOUT_SECONDS, TimeUnit.SECONDS);

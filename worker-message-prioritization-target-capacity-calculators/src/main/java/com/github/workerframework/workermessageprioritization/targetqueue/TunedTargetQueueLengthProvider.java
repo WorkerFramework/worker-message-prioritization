@@ -15,6 +15,8 @@
  */
 package com.github.workerframework.workermessageprioritization.targetqueue;
 
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,11 +29,12 @@ public class TunedTargetQueueLengthProvider {
     private final HistoricalConsumptionRateManager historicalConsumptionRateManager;
     private final TargetQueueLengthRounder targetQueueLengthRounder;
 
+    @Inject
     public TunedTargetQueueLengthProvider (final QueueConsumptionRateProvider queueConsumptionRateProvider,
                                            final HistoricalConsumptionRateManager historicalConsumptionRateManager,
                                            final TargetQueueLengthRounder targetQueueLengthRounder,
-                                           final boolean noOpMode,
-                                           final double queueProcessingTimeGoalSeconds) {
+                                           @Named("NoOpMode") final boolean noOpMode,
+                                           @Named("QueueProcessingTimeGoalSeconds") final double queueProcessingTimeGoalSeconds) {
         this.queueConsumptionRateProvider = queueConsumptionRateProvider;
         this.historicalConsumptionRateManager = historicalConsumptionRateManager;
         this.targetQueueLengthRounder = targetQueueLengthRounder;

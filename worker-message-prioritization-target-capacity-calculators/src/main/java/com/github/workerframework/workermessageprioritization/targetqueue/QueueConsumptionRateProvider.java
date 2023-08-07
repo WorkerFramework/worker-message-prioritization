@@ -18,11 +18,13 @@ package com.github.workerframework.workermessageprioritization.targetqueue;
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApi;
 import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitManagementApi;
+import com.google.inject.Inject;
 
 public class QueueConsumptionRateProvider {
 
     protected RabbitManagementApi<QueuesApi> queuesApi;
 
+    @Inject
     public QueueConsumptionRateProvider(final RabbitManagementApi<QueuesApi> queuesApi){
         this.queuesApi = queuesApi;
     }

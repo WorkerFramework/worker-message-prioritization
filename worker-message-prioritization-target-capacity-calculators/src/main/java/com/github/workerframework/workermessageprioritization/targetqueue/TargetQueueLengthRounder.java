@@ -15,6 +15,8 @@
  */
 package com.github.workerframework.workermessageprioritization.targetqueue;
 
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +26,8 @@ public class TargetQueueLengthRounder {
 
     private final int roundingMultiple;
 
-    public TargetQueueLengthRounder(final int roundingMultiple) throws IllegalArgumentException {
+    @Inject
+    public TargetQueueLengthRounder(@Named("RoundingMultiple") final int roundingMultiple) throws IllegalArgumentException {
 
         if (roundingMultiple == 0) {
             throw new IllegalArgumentException("Rounding multiple cannot be 0. Please set rounding multiple.");
