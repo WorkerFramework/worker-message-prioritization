@@ -147,11 +147,9 @@ public class DistributorModule extends AbstractModule {
         bind(HistoricalConsumptionRateManager.class);
         bind(TargetQueueLengthRounder.class);
         bind(QueueConsumptionRateProvider.class);
-        bind(new TypeLiteral<RabbitManagementApi<QueuesApi>>(){});
+        bind(new TypeLiteral<RabbitManagementApi<QueuesApi>>() {});
         bind(StagingTargetPairProvider.class);
         bind(TunedTargetQueueLengthProvider.class);
         bind(ConsumptionTargetCalculator.class).to(EqualConsumptionTargetCalculator.class);
-        
-        
     }
 }

@@ -183,8 +183,7 @@ public class ShovelDistributor extends MessageDistributor {
         
         for(final DistributorWorkItem distributorWorkItem : distributorWorkItems) {
             
-            final Map<Queue, Long> consumptionTarget = consumptionTargetCalculator.calculateConsumptionTargets(distributorWorkItem,
-                    minTargetQueueLength, maxTargetQueueLength);
+            final Map<Queue, Long> consumptionTarget = consumptionTargetCalculator.calculateConsumptionTargets(distributorWorkItem);
             
             final long overallConsumptionTarget = consumptionTarget.values().stream().mapToLong(Long::longValue).sum();
             

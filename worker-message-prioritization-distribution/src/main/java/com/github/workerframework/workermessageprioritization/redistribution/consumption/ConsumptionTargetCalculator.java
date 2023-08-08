@@ -28,7 +28,6 @@ public interface ConsumptionTargetCalculator {
      * @return A map containing the staging queues for a target queue and how many messages to consume from each 
      * staging queue
      */
-    Map<Queue, Long> calculateConsumptionTargets(final DistributorWorkItem distributorWorkItem, final long minTargetQueueLength,
-                                                 final long maxTargetQueueLength);
+    Map<Queue, Long> calculateConsumptionTargets(final DistributorWorkItem distributorWorkItem);
     
 }

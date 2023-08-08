@@ -76,7 +76,7 @@ public final class MinimumConsumptionTargetCalculatorTest
             withSettings().useConstructor(targetQueueSettingsProvider, tunedTargetQueueLengthProvider).defaultAnswer(CALLS_REAL_METHODS));
 
         assertEquals("Adequate percentage of message space available therefore this capacity is returned.", 250,
-                minimumConsumptionTargetCalculator.getTargetQueueCapacity(targetQueue, 100, 10000000));
+                minimumConsumptionTargetCalculator.getTargetQueueCapacity(targetQueue));
     }
 
     /**
@@ -118,7 +118,6 @@ public final class MinimumConsumptionTargetCalculatorTest
             withSettings().useConstructor(targetQueueSettingsProvider, tunedTargetQueueLengthProvider).defaultAnswer(CALLS_REAL_METHODS));
 
         assertEquals("The space available is less than the percentage of space required for refill, therefore 0 returned.", 0,
-                minimumConsumptionTargetCalculator.getTargetQueueCapacity(targetQueue, 100,
-                10000000));
+                minimumConsumptionTargetCalculator.getTargetQueueCapacity(targetQueue));
     }
 }

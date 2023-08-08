@@ -88,7 +88,7 @@ public final class EqualConsumptionTargetCalculatorTest extends DistributorTestB
         when(workItem.getTargetQueue()).thenReturn(targetQueue);
         when(workItem.getStagingQueues()).thenReturn(stagingQueues);
 
-        final Map<Queue, Long> consumptionTargets = equalCalculator.calculateConsumptionTargets(workItem, 100, 10000000);
+        final Map<Queue, Long> consumptionTargets = equalCalculator.calculateConsumptionTargets(workItem);
 
         assertFalse(consumptionTargets.isEmpty());
         assertEquals(125, consumptionTargets.get(q1).longValue());
@@ -130,7 +130,7 @@ public final class EqualConsumptionTargetCalculatorTest extends DistributorTestB
         when(workItem.getTargetQueue()).thenReturn(targetQueue);
         when(workItem.getStagingQueues()).thenReturn(Collections.emptySet());
 
-        final Map<Queue, Long> consumptionTargets = equalCalculator.calculateConsumptionTargets(workItem, 100 , 10000000);
+        final Map<Queue, Long> consumptionTargets = equalCalculator.calculateConsumptionTargets(workItem);
 
         assertTrue(consumptionTargets.isEmpty());
     }
@@ -176,7 +176,7 @@ public final class EqualConsumptionTargetCalculatorTest extends DistributorTestB
         when(workItem.getTargetQueue()).thenReturn(targetQueue);
         when(workItem.getStagingQueues()).thenReturn(stagingQueues);
 
-        final Map<Queue, Long> consumptionTargets = equalCalculator.calculateConsumptionTargets(workItem, 100, 10000000);
+        final Map<Queue, Long> consumptionTargets = equalCalculator.calculateConsumptionTargets(workItem);
 
         assertFalse(consumptionTargets.isEmpty());
         assertEquals(0, consumptionTargets.get(q1).longValue());
@@ -223,7 +223,7 @@ public final class EqualConsumptionTargetCalculatorTest extends DistributorTestB
         when(workItem.getTargetQueue()).thenReturn(targetQueue);
         when(workItem.getStagingQueues()).thenReturn(stagingQueues);
 
-        final Map<Queue, Long> consumptionTargets = equalCalculator.calculateConsumptionTargets(workItem, 100, 10000000);
+        final Map<Queue, Long> consumptionTargets = equalCalculator.calculateConsumptionTargets(workItem);
 
         assertFalse(consumptionTargets.isEmpty());
         assertEquals(50, consumptionTargets.get(q1).longValue());

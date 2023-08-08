@@ -52,11 +52,10 @@ public class EqualConsumptionTargetCalculator extends MinimumConsumptionTargetCa
     }
     
     @Override
-    public Map<Queue, Long> calculateConsumptionTargets(final DistributorWorkItem distributorWorkItem, final long minTargetQueueLength,
-                                                        final long maxTargetQueueLength) {
+    public Map<Queue, Long> calculateConsumptionTargets(final DistributorWorkItem distributorWorkItem) {
 
         // The number of messages the target queue has capacity for
-        final long targetQueueCapacity = getTargetQueueCapacity(distributorWorkItem.getTargetQueue(), minTargetQueueLength, maxTargetQueueLength);
+        final long targetQueueCapacity = getTargetQueueCapacity(distributorWorkItem.getTargetQueue());
 
         // The total number of messages in all the staging queues
         final long numMessagesInStagingQueues =

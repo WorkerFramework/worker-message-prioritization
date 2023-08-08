@@ -163,8 +163,7 @@ public class LowLevelDistributor extends MessageDistributor {
         }
 
         for (final DistributorWorkItem distributorWorkItem : distributorWorkItems) {
-            final Map<Queue, Long> consumptionTargets = consumptionTargetCalculator.calculateConsumptionTargets(distributorWorkItem,
-                    minTargetQueueLength, maxTargetQueueLength);
+            final Map<Queue, Long> consumptionTargets = consumptionTargetCalculator.calculateConsumptionTargets(distributorWorkItem);
             final Set<StagingQueueTargetQueuePair> stagingTargetPairs =
                     stagingTargetPairProvider.provideStagingTargetPairs(
                             connection, distributorWorkItem, consumptionTargets,

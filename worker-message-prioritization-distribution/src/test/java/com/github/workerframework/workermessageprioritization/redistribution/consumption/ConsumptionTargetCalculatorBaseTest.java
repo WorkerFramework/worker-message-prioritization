@@ -71,8 +71,7 @@ public final class ConsumptionTargetCalculatorBaseTest
             withSettings().useConstructor(targetQueueSettingsProvider, tunedTargetQueueLengthProvider).defaultAnswer(CALLS_REAL_METHODS));
 
         assertEquals("Message capacity available returned regardless of the eligible for refill percentage set.", 200,
-                calculator.getTargetQueueCapacity(targetQueue, 100,
-                10000000));
+                calculator.getTargetQueueCapacity(targetQueue));
     }
 
     @Test
@@ -110,6 +109,6 @@ public final class ConsumptionTargetCalculatorBaseTest
 
         assertEquals("There are more messages on the queue than the set maximum target queue length available therefore no space " +
                         "available and 0 returned.", 0,
-                calculator.getTargetQueueCapacity(targetQueue, 100, 10000000));
+                calculator.getTargetQueueCapacity(targetQueue));
     }
 }
