@@ -66,7 +66,8 @@ public class TunedTargetQueueLengthProviderTest {
                 .thenReturn(consumptionRate);
 
         final TunedTargetQueueLengthProvider targetQueue = new TunedTargetQueueLengthProvider(queueConsumptionRateProvider,
-                historicalConsumptionRateManager, targetQueueLengthRounder, true, queueProcessingTimeGoalSeconds);
+                historicalConsumptionRateManager, targetQueueLengthRounder, minTargetQueueLength, maxTargetQueueLength, true,
+                queueProcessingTimeGoalSeconds);
 
         final long tunedTargetQueueLength = getTunedTargetQueueLength(targetQueue1,targetQueue, targetQueueSettings);
 
@@ -97,7 +98,7 @@ public class TunedTargetQueueLengthProviderTest {
                 .thenReturn(consumptionRate);
 
         final TunedTargetQueueLengthProvider targetQueue = new TunedTargetQueueLengthProvider(queueConsumptionRateProvider,
-                historicalConsumptionRateManager, targetQueueLengthRounder, false, queueProcessingTimeGoalSeconds);
+                historicalConsumptionRateManager, targetQueueLengthRounder, minTargetQueueLength, maxTargetQueueLength, false, queueProcessingTimeGoalSeconds);
 
         final long tunedTargetQueueLength = getTunedTargetQueueLength(targetQueue1, targetQueue, targetQueueSettings);
 
@@ -136,7 +137,8 @@ public class TunedTargetQueueLengthProviderTest {
                 .thenReturn(consumptionRate2);
 
         final TunedTargetQueueLengthProvider targetQueue = new TunedTargetQueueLengthProvider(queueConsumptionRateProvider,
-                historicalConsumptionRateManager, targetQueueLengthRounder, false, queueProcessingTimeGoalSeconds);
+                historicalConsumptionRateManager, targetQueueLengthRounder, minTargetQueueLength, maxTargetQueueLength, false,
+                queueProcessingTimeGoalSeconds);
 
         final long tunedTargetQueueLength1 = getTunedTargetQueueLength(targetQueue1, targetQueue, targetQueueSettings);
         targetQueueSettings.setCurrentMaxLength(tunedTargetQueueLength1);
@@ -182,7 +184,7 @@ public class TunedTargetQueueLengthProviderTest {
                 .thenReturn(consumptionRate2);
 
         final TunedTargetQueueLengthProvider targetQueue = new TunedTargetQueueLengthProvider(queueConsumptionRateProvider,
-                historicalConsumptionRateManager, targetQueueLengthRounder, false, queueProcessingTimeGoalSeconds);
+                historicalConsumptionRateManager, targetQueueLengthRounder, minTargetQueueLength , maxTargetQueueLength, false, queueProcessingTimeGoalSeconds);
 
         final long tunedTargetQueueLength1 = getTunedTargetQueueLength(targetQueue1, targetQueue, targetQueueSettings);
         final long tunedTargetQueueLength2 = getTunedTargetQueueLength(targetQueue2, targetQueue, targetQueueSettings);
@@ -195,7 +197,7 @@ public class TunedTargetQueueLengthProviderTest {
 
     private long getTunedTargetQueueLength(final String queueName, final TunedTargetQueueLengthProvider targetQueue,
                                            final TargetQueueSettings targetQueueSettings) {
-        return targetQueue.getTunedTargetQueueLength(queueName, minTargetQueueLength, maxTargetQueueLength, targetQueueSettings);
+        return targetQueue.getTunedTargetQueueLength(queueName, targetQueueSettings);
     }
 
 }

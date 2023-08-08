@@ -114,6 +114,8 @@ public class ShovelApplication
                         queueConsumptionRateProvider,
                         historicalConsumptionRateManager,
                         targetQueueLengthRounder,
+                        messageDistributorConfig.getMinTargetQueueLength(),
+                        messageDistributorConfig.getMaxTargetQueueLength(),
                         messageDistributorConfig.getNoOpMode(),
                         messageDistributorConfig.getQueueProcessingTimeGoalSeconds());
 

@@ -90,6 +90,8 @@ public class ShovelDistributorIT extends DistributorTestBase {
                         queueConsumptionRateProvider,
                         historicalConsumptionRateManager,
                         targetQueueLengthRounder,
+                        100,
+                        10000000,
                         Strings.isNullOrEmpty(System.getenv("CAF_NOOP_MODE")) || Boolean.parseBoolean(System.getenv("CAF_NOOP_MODE")),
                         queueProcessingTimeGoalSeconds);
 

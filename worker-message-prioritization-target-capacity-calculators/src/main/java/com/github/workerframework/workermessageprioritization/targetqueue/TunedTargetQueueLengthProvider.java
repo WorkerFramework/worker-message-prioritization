@@ -28,22 +28,27 @@ public class TunedTargetQueueLengthProvider {
     private final double queueProcessingTimeGoalSeconds;
     private final HistoricalConsumptionRateManager historicalConsumptionRateManager;
     private final TargetQueueLengthRounder targetQueueLengthRounder;
+    private final long minTargetQueueLength;
+    private final long maxTargetQueueLength;
 
     @Inject
     public TunedTargetQueueLengthProvider (final QueueConsumptionRateProvider queueConsumptionRateProvider,
                                            final HistoricalConsumptionRateManager historicalConsumptionRateManager,
                                            final TargetQueueLengthRounder targetQueueLengthRounder,
+                                           @Named("MinTargetQueueLength") final long minTargetQueueLength,
+                                           @Named("MaxTargetQueueLength") final long maxTargetQueueLength,
                                            @Named("NoOpMode") final boolean noOpMode,
                                            @Named("QueueProcessingTimeGoalSeconds") final double queueProcessingTimeGoalSeconds) {
         this.queueConsumptionRateProvider = queueConsumptionRateProvider;
         this.historicalConsumptionRateManager = historicalConsumptionRateManager;
         this.targetQueueLengthRounder = targetQueueLengthRounder;
+        this.minTargetQueueLength = minTargetQueueLength;
+        this.maxTargetQueueLength = maxTargetQueueLength;
         this.noOpMode = noOpMode;
         this.queueProcessingTimeGoalSeconds = queueProcessingTimeGoalSeconds;
     }
 
-    public final long getTunedTargetQueueLength(final String targetQueueName, final long minTargetQueueLength,
-                                                final long maxTargetQueueLength, final TargetQueueSettings targetQueueSettings){
+    public final long getTunedTargetQueueLength(final String targetQueueName, final TargetQueueSettings targetQueueSettings){
 
         final double consumptionRate =
                 queueConsumptionRateProvider.getConsumptionRate(targetQueueName);
@@ -56,7 +61,7 @@ public class TunedTargetQueueLengthProvider {
 
         final long tunedTargetQueue = calculateTunedTargetQueue(averageHistoricalConsumptionRate);
 
-        final long roundedTargetQueueLength = roundAndCheckTargetQueue(tunedTargetQueue, maxTargetQueueLength, minTargetQueueLength);
+        final long roundedTargetQueueLength = roundAndCheckTargetQueue(tunedTargetQueue);
 
         return determineFinalTargetQueueLength(targetQueueName, targetQueueSettings.getCurrentMaxLength(), roundedTargetQueueLength);
     }
@@ -71,7 +76,7 @@ public class TunedTargetQueueLengthProvider {
         return (long) suggestedTargetQueueLength;
     }
 
-    private long roundAndCheckTargetQueue(final long tunedTargetQueue, final long maxTargetQueueLength, final long minTargetQueueLength) {
+    private long roundAndCheckTargetQueue(final long tunedTargetQueue) {
         final long roundedTargetQueueLength = targetQueueLengthRounder.getRoundedTargetQueueLength(tunedTargetQueue);
         LOGGER.debug("In the case that the target queue length is rounded below the minimum target queue length or above the maximum " +
                 "target queue length. Target queue length will be set to that minimum or maximum value respectively.");

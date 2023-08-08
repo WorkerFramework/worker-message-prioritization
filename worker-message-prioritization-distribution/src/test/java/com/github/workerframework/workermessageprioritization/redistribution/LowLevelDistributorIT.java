@@ -101,6 +101,8 @@ public class LowLevelDistributorIT extends DistributorTestBase {
                             queueConsumptionRateProvider,
                             historicalConsumptionRateManager,
                             targetQueueLengthRounder,
+                            100,
+                            10000000,
                             Strings.isNullOrEmpty(System.getenv("CAF_NOOP_MODE")) || Boolean.parseBoolean(System.getenv("CAF_NOOP_MODE")),
                             queueProcessingTimeGoalSeconds);
 
@@ -276,6 +278,8 @@ public class LowLevelDistributorIT extends DistributorTestBase {
             final int minConsumptionRateHistorySize = 10;
             final int roundingMultiple = 100;
             final double queueProcessingTimeGoalSeconds = 300;
+            final long minTargetQueueLength = 100;
+            final long  maxTargetQueueLength = 10000000;
             final QueueConsumptionRateProvider queueConsumptionRateProvider =
                     new QueueConsumptionRateProvider(queuesApi);
             final HistoricalConsumptionRateManager historicalConsumptionRateManager = new HistoricalConsumptionRateManager(maxConsumptionRateHistorySize,
@@ -286,6 +290,8 @@ public class LowLevelDistributorIT extends DistributorTestBase {
                             queueConsumptionRateProvider,
                             historicalConsumptionRateManager,
                             targetQueueLengthRounder,
+                            minTargetQueueLength,
+                            maxTargetQueueLength,
                             Strings.isNullOrEmpty(System.getenv("CAF_NOOP_MODE")) || Boolean.parseBoolean(System.getenv("CAF_NOOP_MODE")),
                             queueProcessingTimeGoalSeconds);
 

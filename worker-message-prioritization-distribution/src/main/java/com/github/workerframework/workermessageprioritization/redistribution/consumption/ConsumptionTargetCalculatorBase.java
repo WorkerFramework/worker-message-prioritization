@@ -35,7 +35,7 @@ public abstract class ConsumptionTargetCalculatorBase implements ConsumptionTarg
     protected long getTargetQueueCapacity(final Queue targetQueue, final long minTargetQueueLength, final long maxTargetQueueLength)
     {
         final long tunedTargetMaxQueueLength = tunedTargetQueueLengthProvider.getTunedTargetQueueLength(targetQueue.getName(),
-                minTargetQueueLength, maxTargetQueueLength, targetQueueSettingsProvider.get(targetQueue));
+         targetQueueSettingsProvider.get(targetQueue));
         getTargetQueueSettings(targetQueue).setCurrentMaxLength(tunedTargetMaxQueueLength);
         return Math.max(0, getTargetQueueSettings(targetQueue).getCurrentMaxLength() - targetQueue.getMessages());
     }

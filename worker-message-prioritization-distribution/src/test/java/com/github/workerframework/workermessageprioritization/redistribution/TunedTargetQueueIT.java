@@ -73,6 +73,8 @@ public class TunedTargetQueueIT extends DistributorTestBase {
     private static final String CAF_MAX_CONSUMPTION_RATE_HISTORY_SIZE = "CAF_MAX_CONSUMPTION_RATE_HISTORY_SIZE";
     private static final String CAF_MIN_CONSUMPTION_RATE_HISTORY_SIZE = "CAF_MIN_CONSUMPTION_RATE_HISTORY_SIZE";
     private static final String CAF_QUEUE_PROCESSING_TIME_GOAL_SECONDS = "CAF_QUEUE_PROCESSING_TIME_GOAL_SECONDS";
+    private static final String CAF_MIN_TARGET_QUEUE_LENGTH = "CAF_MIN_TARGET_QUEUE_LENGTH";
+    private static final String CAF_MAX_TARGET_QUEUE_LENGTH = "CAF_MAX_TARGET_QUEUE_LENGTH";
 
     // This test is for development purposes only
     // This test is to observe the consumption rate altering the recommended target queue length.
@@ -88,6 +90,8 @@ public class TunedTargetQueueIT extends DistributorTestBase {
                 final int maxConsumptionRateHistorySize = Integer.parseInt(System.getenv(CAF_MAX_CONSUMPTION_RATE_HISTORY_SIZE));
                 final int minConsumptionRateHistorySize = Integer.parseInt(System.getenv(CAF_MIN_CONSUMPTION_RATE_HISTORY_SIZE));
                 final int queueProcessingTimeGoalSeconds = Integer.parseInt(System.getenv(CAF_QUEUE_PROCESSING_TIME_GOAL_SECONDS));
+                final int minTargetQueueLength = Integer.parseInt(System.getenv(CAF_MIN_TARGET_QUEUE_LENGTH));
+                final int maxTargetQueueLength = Integer.parseInt(System.getenv(CAF_MAX_TARGET_QUEUE_LENGTH));
 
                 final boolean noOpMode = Strings.isNullOrEmpty(System.getenv("CAF_NOOP_MODE")) || Boolean.parseBoolean(System.getenv("CAF_NOOP_MODE"));
 
@@ -187,6 +191,8 @@ public class TunedTargetQueueIT extends DistributorTestBase {
                         queueConsumptionRateProvider,
                         historicalConsumptionRateManager,
                         targetQueueLengthRounder,
+                        minTargetQueueLength,
+                        maxTargetQueueLength,
                         noOpMode,
                         queueProcessingTimeGoalSeconds);
 
