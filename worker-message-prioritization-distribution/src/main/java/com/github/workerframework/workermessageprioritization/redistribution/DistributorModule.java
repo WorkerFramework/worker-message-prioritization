@@ -15,8 +15,10 @@
  */
 package com.github.workerframework.workermessageprioritization.redistribution;
 
+import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApi;
 import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitManagementApi;
+import com.github.workerframework.workermessageprioritization.rabbitmq.ShovelsApi;
 import com.github.workerframework.workermessageprioritization.redistribution.config.MessageDistributorConfig;
 import com.github.workerframework.workermessageprioritization.redistribution.consumption.ConsumptionTargetCalculator;
 import com.github.workerframework.workermessageprioritization.redistribution.consumption.EqualConsumptionTargetCalculator;
@@ -88,9 +90,10 @@ public class DistributorModule extends AbstractModule {
     }
 
     @Provides
-    @Named("ApiType")
-    Class<QueuesApi> provideApiType(){
-        return QueuesApi.class;
+    RabbitManagementApi<QueuesApi> provideQueuesApi(@Named("RabbitMQMgmtUrl") final String endpoint,
+                                                    @Named("RabbitMQUsername") final String user, @Named("RabbitMQPassword") final String password) {
+
+        return new RabbitManagementApi<>(QueuesApi.class, endpoint, user, password);
     }
 
     @Provides
@@ -147,9 +150,11 @@ public class DistributorModule extends AbstractModule {
         bind(HistoricalConsumptionRateManager.class);
         bind(TargetQueueLengthRounder.class);
         bind(QueueConsumptionRateProvider.class);
-        bind(new TypeLiteral<RabbitManagementApi<QueuesApi>>() {});
+//        bind(new TypeLiteral<RabbitManagementApi<QueuesApi>>() {});
         bind(StagingTargetPairProvider.class);
         bind(TunedTargetQueueLengthProvider.class);
         bind(ConsumptionTargetCalculator.class).to(EqualConsumptionTargetCalculator.class);
+
     }
+
 }

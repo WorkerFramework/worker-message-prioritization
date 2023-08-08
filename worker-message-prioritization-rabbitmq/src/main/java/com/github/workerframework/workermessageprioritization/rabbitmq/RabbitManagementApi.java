@@ -48,10 +48,8 @@ public class RabbitManagementApi <T> {
     
     private T api;
 
-    @Inject
-    public RabbitManagementApi(@Named("ApiType") final Class<T> apiType, @Named("RabbitMQMgmtUrl") final String endpoint, @Named(
-            "RabbitMQUsername") final String user,
-                               @Named("RabbitMQPassword") final String password) {
+    public RabbitManagementApi(final Class<T> apiType, final String endpoint,
+                              final String user, final String password) {
 
         final OkHttpClient okHttpClient = new OkHttpClient();
         okHttpClient.setReadTimeout(READ_TIMEOUT_SECONDS, TimeUnit.SECONDS);
