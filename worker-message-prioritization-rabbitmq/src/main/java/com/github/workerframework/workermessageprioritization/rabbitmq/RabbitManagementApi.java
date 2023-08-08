@@ -26,7 +26,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.ToNumberPolicy;
-import com.google.inject.name.Named;
 import com.squareup.okhttp.OkHttpClient;
 
 import retrofit.ErrorHandler;
@@ -39,7 +38,6 @@ import retrofit.mime.TypedInput;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.google.inject.Inject;
 
 public class RabbitManagementApi <T> {
 
