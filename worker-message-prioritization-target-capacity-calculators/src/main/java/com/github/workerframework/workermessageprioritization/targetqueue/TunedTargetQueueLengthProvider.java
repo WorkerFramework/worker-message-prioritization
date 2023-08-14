@@ -53,6 +53,8 @@ public class TunedTargetQueueLengthProvider {
         final double consumptionRate =
                 queueConsumptionRateProvider.getConsumptionRate(targetQueueName);
 
+        LOGGER.debug("Current consumption rate of " + targetQueueName + "is: " + consumptionRate);
+
         final double theoreticalConsumptionRate = calculateCurrentTheoreticalConsumptionRate(consumptionRate,
                 targetQueueSettings.getCurrentInstances(), targetQueueSettings.getMaxInstances());
 
