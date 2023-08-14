@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
 
 public class TargetQueueLengthRounder {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(TargetQueueLengthRounder.class);
+    private static final Logger TUNED_TARGET_LOGGER = LoggerFactory.getLogger("TUNED_TARGET");
 
     private final int roundingMultiple;
 
@@ -38,7 +38,7 @@ public class TargetQueueLengthRounder {
 
     public long getRoundedTargetQueueLength(final long tunedTargetQueue) {
 
-        LOGGER.debug("RoundingMultiple value has been set to: {}. This means any suggested target queues that are " +
+        TUNED_TARGET_LOGGER.debug("RoundingMultiple value has been set to: {}. This means any suggested target queues that are " +
                 "not a multiple of {}, will be rounded to the nearest multiple.", roundingMultiple, roundingMultiple);
 
         final long remainder = tunedTargetQueue % roundingMultiple;
@@ -52,7 +52,7 @@ public class TargetQueueLengthRounder {
         } else {
             roundedQueueLength =  tunedTargetQueue - remainder;
         }
-        LOGGER.debug("Target queue length has been rounded from: {} to: {}", tunedTargetQueue, roundedQueueLength);
+        TUNED_TARGET_LOGGER.debug("Target queue length has been rounded from: {} to: {}", tunedTargetQueue, roundedQueueLength);
         return roundedQueueLength;
     }
 }

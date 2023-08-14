@@ -26,7 +26,7 @@ import java.util.HashMap;
 @SuppressWarnings("UnstableApiUsage")
 public class HistoricalConsumptionRateManager {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(HistoricalConsumptionRateManager.class);
+    private static final Logger TUNED_TARGET_LOGGER = LoggerFactory.getLogger("TUNED_TARGET");
     private final int maximumConsumptionRateHistorySize;
     private final int minimumHistorySize;
     private final HashMap<String, EvictingQueue<Double>> consumptionRateHistoryMap = new HashMap<>();
@@ -63,11 +63,11 @@ public class HistoricalConsumptionRateManager {
             final boolean isSufficientHistory = consumptionRateHistoryMap.get(queueName).size() >= minimumHistorySize;
 
             if (isSufficientHistory) {
-                LOGGER.debug("Consumption rate history from the last {} runs of this worker available. An average of these rates will " +
+                TUNED_TARGET_LOGGER.debug("Consumption rate history from the last {} runs of this worker available. An average of these rates will " +
                         "determine the new target queue length. If different to the current queue length, the following suggestions " +
                         "will be implemented and the target queue length adjusted.", consumptionRateHistoryMap.get(queueName).size());
             } else {
-                LOGGER.debug("There is not enough history to tune the target queue length accurately. The following logs are " +
+                TUNED_TARGET_LOGGER.debug("There is not enough history to tune the target queue length accurately. The following logs are " +
                         "recommendations. The target queue will not be adjusted until more history is present.");
             }
             return isSufficientHistory;
