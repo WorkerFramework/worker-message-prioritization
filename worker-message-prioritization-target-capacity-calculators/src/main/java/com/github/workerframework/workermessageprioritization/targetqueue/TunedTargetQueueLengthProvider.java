@@ -53,7 +53,7 @@ public class TunedTargetQueueLengthProvider {
         final double consumptionRate =
                 queueConsumptionRateProvider.getConsumptionRate(targetQueueName);
 
-        TUNED_TARGET_LOGGER.debug("Current consumption rate of " + targetQueueName + "is: " + consumptionRate);
+        TUNED_TARGET_LOGGER.info("Current consumption rate of " + targetQueueName + "is: " + consumptionRate);
 
         final double theoreticalConsumptionRate = calculateCurrentTheoreticalConsumptionRate(consumptionRate,
                 targetQueueSettings.getCurrentInstances(), targetQueueSettings.getMaxInstances());
@@ -80,17 +80,19 @@ public class TunedTargetQueueLengthProvider {
 
     private long roundAndCheckTargetQueue(final long tunedTargetQueue) {
         final long roundedTargetQueueLength = targetQueueLengthRounder.getRoundedTargetQueueLength(tunedTargetQueue);
-        TUNED_TARGET_LOGGER.debug("In the case that the target queue length is rounded below the minimum target queue length or above the maximum " +
+        TUNED_TARGET_LOGGER.info("In the case that the target queue length is rounded below the minimum target queue length or above " +
+                "the maximum " +
                 "target queue length. Target queue length will be set to that minimum or maximum value respectively.");
 
         if (roundedTargetQueueLength > maxTargetQueueLength) {
-            TUNED_TARGET_LOGGER.debug("Rounded queue length: {} exceeds the maximum length that the queue can be set to. " +
+            TUNED_TARGET_LOGGER.info("Rounded queue length: {} exceeds the maximum length that the queue can be set to. " +
                     "Therefore the maximum length: {} should be set.", roundedTargetQueueLength, maxTargetQueueLength);
             return maxTargetQueueLength;
         }
 
         if (roundedTargetQueueLength < minTargetQueueLength) {
-            TUNED_TARGET_LOGGER.debug("Rounded queue length: {} is less than the minimum length that the queue can be set to. Therefore the minimum " +
+            TUNED_TARGET_LOGGER.info("Rounded queue length: {} is less than the minimum length that the queue can be set to. Therefore" +
+                    " the minimum " +
                     "length: {} should be set.", roundedTargetQueueLength, minTargetQueueLength);
             return minTargetQueueLength;
         } else {
