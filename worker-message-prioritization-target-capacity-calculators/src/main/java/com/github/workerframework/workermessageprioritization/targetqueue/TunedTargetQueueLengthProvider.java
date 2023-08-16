@@ -53,7 +53,7 @@ public class TunedTargetQueueLengthProvider {
         final double consumptionRate =
                 queueConsumptionRateProvider.getConsumptionRate(targetQueueName);
 
-        TUNED_TARGET_LOGGER.info("Current consumption rate of " + targetQueueName + "is: " + consumptionRate);
+        TUNED_TARGET_LOGGER.info("Current consumption rate of " + targetQueueName + " is: " + consumptionRate);
 
         final double theoreticalConsumptionRate = calculateCurrentTheoreticalConsumptionRate(consumptionRate,
                 targetQueueSettings.getCurrentInstances(), targetQueueSettings.getMaxInstances());
@@ -102,7 +102,7 @@ public class TunedTargetQueueLengthProvider {
 
     private long determineFinalTargetQueueLength(final String targetQueueName, final long targetQueueLength, final long tunedTargetQueueLength){
 
-        TUNED_TARGET_LOGGER.info("Current target queue length for {}: {}", targetQueueName, targetQueueLength);
+        TUNED_TARGET_LOGGER.info("Original target queue length for {}: {}", targetQueueName, targetQueueLength);
 
         TUNED_TARGET_LOGGER.info("Recommended tuned target queue length is: {}", tunedTargetQueueLength);
 
