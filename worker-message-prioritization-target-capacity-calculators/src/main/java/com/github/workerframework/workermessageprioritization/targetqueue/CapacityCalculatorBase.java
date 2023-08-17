@@ -29,7 +29,7 @@ public abstract class CapacityCalculatorBase {
     public TargetQueueSettings refine(final Queue targetQueue, final TargetQueueSettings targetQueueSettings) {
         final TargetQueueSettings refinedTargetQueueSettings = refineInternal(targetQueue, targetQueueSettings);
         if(next != null) {
-            return next.refine(targetQueue, targetQueueSettings);
+            return next.refine(targetQueue, refinedTargetQueueSettings);
         }
         return refinedTargetQueueSettings;
     }
