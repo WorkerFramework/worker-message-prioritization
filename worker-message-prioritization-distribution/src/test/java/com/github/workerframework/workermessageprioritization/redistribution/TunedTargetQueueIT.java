@@ -204,7 +204,7 @@ public class TunedTargetQueueIT extends DistributorTestBase {
                         60);
 
                 final ConsumptionTargetCalculator consumptionTargetCalculator =
-                        new EqualConsumptionTargetCalculator(k8sTargetQueueSettingsProvider, tunedTargetQueueLengthProvider);
+                        new EqualConsumptionTargetCalculator(k8sTargetQueueSettingsProvider, null);
                 final StagingTargetPairProvider stagingTargetPairProvider = new StagingTargetPairProvider();
 
                 final LowLevelDistributor lowLevelDistributor = new LowLevelDistributor(

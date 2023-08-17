@@ -16,31 +16,24 @@
 package com.github.workerframework.workermessageprioritization.redistribution.consumption;
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
+import com.github.workerframework.workermessageprioritization.targetqueue.CapacityCalculatorBase;
 import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueSettingsProvider;
-import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueSettings;
-import com.github.workerframework.workermessageprioritization.targetqueue.TunedTargetQueueLengthProvider;
 
 public abstract class ConsumptionTargetCalculatorBase implements ConsumptionTargetCalculator
 {
     private final TargetQueueSettingsProvider targetQueueSettingsProvider;
-    private final TunedTargetQueueLengthProvider tunedTargetQueueLengthProvider;
+    private final CapacityCalculatorBase capacityCalculatorBase;
 
     public ConsumptionTargetCalculatorBase(final TargetQueueSettingsProvider targetQueueSettingsProvider,
-                                           final TunedTargetQueueLengthProvider tunedTargetQueueLengthProvider)
+                                           final CapacityCalculatorBase capacityCalculatorBase)
     {
         this.targetQueueSettingsProvider = targetQueueSettingsProvider;
-        this.tunedTargetQueueLengthProvider = tunedTargetQueueLengthProvider;
+        this.capacityCalculatorBase = capacityCalculatorBase;
     }
 
     protected long getTargetQueueCapacity(final Queue targetQueue)
     {
-        final long tunedTargetMaxQueueLength = tunedTargetQueueLengthProvider.getTunedTargetQueueLength(targetQueue.getName(),
-            targetQueueSettingsProvider.get(targetQueue));
-        return Math.max(0, tunedTargetMaxQueueLength - targetQueue.getMessages());
+        return capacityCalculatorBase.refine(targetQueue, targetQueueSettingsProvider.get(targetQueue)).getCapacity();
     }
 
-    protected TargetQueueSettings getTargetQueueSettings(final Queue targetQueue)
-    {
-        return targetQueueSettingsProvider.get(targetQueue);
-    }
 }

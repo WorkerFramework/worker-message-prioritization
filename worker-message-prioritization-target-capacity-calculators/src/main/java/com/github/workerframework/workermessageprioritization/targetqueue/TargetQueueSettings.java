@@ -15,20 +15,22 @@
  */
 package com.github.workerframework.workermessageprioritization.targetqueue;
 
-public final class TargetQueueSettings
+public class TargetQueueSettings
 {
     private long currentMaxLength;
     private final long eligibleForRefillPercentage;
     private final double currentInstances;
     private final double maxInstances;
+    private final long capacity;
 
     public TargetQueueSettings(final long currentMaxLength, final long eligibleForRefillPercentage,
-                               final double maxInstances, final double currentInstances)
+                               final double maxInstances, final double currentInstances, final long capacity)
     {
         this.currentMaxLength = currentMaxLength;
         this.eligibleForRefillPercentage = eligibleForRefillPercentage;
         this.currentInstances = currentInstances;
         this.maxInstances = maxInstances;
+        this.capacity = capacity;
     }
 
     public long getCurrentMaxLength()
@@ -51,5 +53,9 @@ public final class TargetQueueSettings
 
     public double getMaxInstances() {
         return maxInstances;
+    }
+
+    public long getCapacity(){
+        return capacity;
     }
 }

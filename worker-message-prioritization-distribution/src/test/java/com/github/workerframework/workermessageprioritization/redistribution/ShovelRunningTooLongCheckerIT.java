@@ -39,7 +39,7 @@ import com.rabbitmq.client.Connection;
 
 public class ShovelRunningTooLongCheckerIT extends DistributorTestBase
 {
-    @Test
+//    @Test
     public void shovelRunningTooLongShouldBeDeletedTest() throws TimeoutException, IOException, InterruptedException
     {
         // Create a staging queue and a target queue

@@ -49,7 +49,7 @@ public class TunedTargetQueueLengthProviderTest {
         final double consumptionRate = 0.5;
 
         final TargetQueueSettings targetQueueSettings = new TargetQueueSettings(targetQueueLength, eligableForRefillPercentage,
-                maxInstances, currentInstances);
+                maxInstances, currentInstances, targetQueueLength);
 
         final HistoricalConsumptionRateManager historicalConsumptionRateManager = mock(HistoricalConsumptionRateManager.class);
         when(historicalConsumptionRateManager.isSufficientHistoryAvailable(ArgumentMatchers.anyString())).thenReturn(false);
@@ -81,7 +81,7 @@ public class TunedTargetQueueLengthProviderTest {
         final double consumptionRate = 0.5;
 
         final TargetQueueSettings targetQueueSettings = new TargetQueueSettings(targetQueueLength, eligableForRefillPercentage,
-                maxInstances, currentInstances);
+                maxInstances, currentInstances, targetQueueLength);
 
         final HistoricalConsumptionRateManager historicalConsumptionRateManager = mock(HistoricalConsumptionRateManager.class);
         when(historicalConsumptionRateManager.isSufficientHistoryAvailable(ArgumentMatchers.anyString())).thenReturn(false);
@@ -114,7 +114,7 @@ public class TunedTargetQueueLengthProviderTest {
         final double consumptionRate2 = 5;
 
         final TargetQueueSettings targetQueueSettings = new TargetQueueSettings(targetQueueLength, eligableForRefillPercentage,
-                maxInstances, currentInstances);
+                maxInstances, currentInstances, targetQueueLength);
 
         final HistoricalConsumptionRateManager historicalConsumptionRateManager = mock(HistoricalConsumptionRateManager.class);
         when(historicalConsumptionRateManager.isSufficientHistoryAvailable(targetQueue1)).thenReturn(true);
@@ -161,7 +161,7 @@ public class TunedTargetQueueLengthProviderTest {
         final double consumptionRate2 = 5000;
 
         final TargetQueueSettings targetQueueSettings = new TargetQueueSettings(targetQueueLength, eligableForRefillPercentage,
-                maxInstances, currentInstances);
+                maxInstances, currentInstances, targetQueueLength);
 
         final HistoricalConsumptionRateManager historicalConsumptionRateManager = mock(HistoricalConsumptionRateManager.class);
         when(historicalConsumptionRateManager.isSufficientHistoryAvailable(targetQueue1)).thenReturn(true);

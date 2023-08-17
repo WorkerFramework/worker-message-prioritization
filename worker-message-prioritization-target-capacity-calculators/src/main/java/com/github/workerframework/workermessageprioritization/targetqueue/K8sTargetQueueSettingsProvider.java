@@ -51,6 +51,7 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
     private static final long TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK = 10;
     private final int CURRENT_INSTANCE_FALLBACK = 1;
     private final int MAX_INSTANCES_FALLBACK = 1;
+    private static final long CAPACITY_FALLBACK = 1000;
     private final List<String> kubernetesNamespaces;
     private final LoadingCache<Queue, TargetQueueSettings> targetQueueToSettingsCache;
 
@@ -93,7 +94,7 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
                          executionException);
 
             return new TargetQueueSettings(TARGET_QUEUE_MAX_LENGTH_FALLBACK, TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK,
-                    MAX_INSTANCES_FALLBACK, CURRENT_INSTANCE_FALLBACK);
+                    MAX_INSTANCES_FALLBACK, CURRENT_INSTANCE_FALLBACK, CAPACITY_FALLBACK);
         }
     }
 
@@ -176,7 +177,7 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
                                  targetQueueName);
 
                     return new TargetQueueSettings(targetQueueMaxLength, targetQueueEligibleForRefillPercentage,
-                            targetQueueMaxInstances, currentInstances);
+                            targetQueueMaxInstances, currentInstances, targetQueueMaxLength);
                 }
             } catch (final KubectlException kubectlException) {
                 LOGGER.error(String.format("Cannot get settings for the %s queue as the Kubernetes API threw an exception. "
@@ -191,7 +192,8 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
                 return new TargetQueueSettings(TARGET_QUEUE_MAX_LENGTH_FALLBACK,
                                                TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK,
                                                MAX_INSTANCES_FALLBACK,
-                                               CURRENT_INSTANCE_FALLBACK);
+                                               CURRENT_INSTANCE_FALLBACK,
+                                               CAPACITY_FALLBACK);
             }
         }
 

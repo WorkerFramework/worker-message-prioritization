@@ -15,10 +15,8 @@
  */
 package com.github.workerframework.workermessageprioritization.redistribution;
 
-import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApi;
 import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitManagementApi;
-import com.github.workerframework.workermessageprioritization.rabbitmq.ShovelsApi;
 import com.github.workerframework.workermessageprioritization.redistribution.config.MessageDistributorConfig;
 import com.github.workerframework.workermessageprioritization.redistribution.consumption.ConsumptionTargetCalculator;
 import com.github.workerframework.workermessageprioritization.redistribution.consumption.EqualConsumptionTargetCalculator;
@@ -29,15 +27,16 @@ import com.github.workerframework.workermessageprioritization.targetqueue.Target
 import com.github.workerframework.workermessageprioritization.targetqueue.HistoricalConsumptionRateManager;
 import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueLengthRounder;
 import com.github.workerframework.workermessageprioritization.targetqueue.QueueConsumptionRateProvider;
+import com.github.workerframework.workermessageprioritization.targetqueue.CapacityCalculatorBase;
+import com.github.workerframework.workermessageprioritization.targetqueue.MinimumCapacityCalculator;
+import com.github.workerframework.workermessageprioritization.targetqueue.TunedCapacityCalculator;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
-import com.google.inject.TypeLiteral;
 import com.google.inject.name.Named;
 import com.rabbitmq.client.ConnectionFactory;
 
 import java.util.List;
-import java.util.Map;
 
 public class DistributorModule extends AbstractModule {
 
@@ -133,6 +132,16 @@ public class DistributorModule extends AbstractModule {
     }
 
     @Provides
+    CapacityCalculatorBase provideCapacityCalculator(final TunedTargetQueueLengthProvider tunedTargetQueueLengthProvider, final MinimumCapacityCalculator next) {
+        return new TunedCapacityCalculator(tunedTargetQueueLengthProvider, next);
+    }
+
+    @Provides
+    MinimumCapacityCalculator provideMinimumCapacityCalculator() {
+        return new MinimumCapacityCalculator(null);
+    }
+
+    @Provides
     ConnectionFactory provideConnectionFactory(final MessageDistributorConfig messageDistributorConfig) {
         ConnectionFactory connectionFactory = new ConnectionFactory();
         connectionFactory.setHost(messageDistributorConfig.getRabbitMQHost());
@@ -150,7 +159,6 @@ public class DistributorModule extends AbstractModule {
         bind(HistoricalConsumptionRateManager.class);
         bind(TargetQueueLengthRounder.class);
         bind(QueueConsumptionRateProvider.class);
-//        bind(new TypeLiteral<RabbitManagementApi<QueuesApi>>() {});
         bind(StagingTargetPairProvider.class);
         bind(TunedTargetQueueLengthProvider.class);
         bind(ConsumptionTargetCalculator.class).to(EqualConsumptionTargetCalculator.class);

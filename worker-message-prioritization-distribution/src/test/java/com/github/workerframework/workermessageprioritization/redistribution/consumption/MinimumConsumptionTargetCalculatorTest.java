@@ -16,22 +16,12 @@
 package com.github.workerframework.workermessageprioritization.redistribution.consumption;
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
-import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueSettingsProvider;
-import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueSettings;
-import com.github.workerframework.workermessageprioritization.targetqueue.QueueConsumptionRateProvider;
-import com.github.workerframework.workermessageprioritization.targetqueue.HistoricalConsumptionRateManager;
-import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueLengthRounder;
-import com.github.workerframework.workermessageprioritization.targetqueue.TunedTargetQueueLengthProvider;
+import com.github.workerframework.workermessageprioritization.targetqueue.*;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Answers.CALLS_REAL_METHODS;
-import static org.mockito.Answers.RETURNS_DEFAULTS;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.anyDouble;
-import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.withSettings;
 import static org.mockito.Mockito.when;
 
 public final class MinimumConsumptionTargetCalculatorTest
@@ -45,38 +35,19 @@ public final class MinimumConsumptionTargetCalculatorTest
     @Test
     public void getTargetQueueCapacityWithAdequateRefillPercentageTest()
     {
-        final TargetQueueSettingsProvider targetQueueSettingsProvider = mock(TargetQueueSettingsProvider.class);
         final Queue targetQueue = new Queue();
         targetQueue.setMessages(750);
 
-        final TargetQueueSettings settings = new TargetQueueSettings(1000, 20, 1, 1);
-        when(targetQueueSettingsProvider.get(targetQueue)).thenReturn(settings);
+        final TargetQueueSettings targetQueueSettings = mock(TargetQueueSettings.class);
+        when(targetQueueSettings.getCurrentMaxLength()).thenReturn(1000L);
+        when(targetQueueSettings.getEligibleForRefillPercentage()).thenReturn(20L);
 
-        final double consumptionRate = 0.5;
-        final QueueConsumptionRateProvider queueConsumptionRateProvider = mock(QueueConsumptionRateProvider.class);
-        when(queueConsumptionRateProvider.getConsumptionRate(anyString())).thenReturn(consumptionRate);
+        final CapacityCalculatorBase capacityCalculatorBase = mock(CapacityCalculatorBase.class);
+        when(capacityCalculatorBase.refine(any(), any())).thenReturn(targetQueueSettings);
 
-        final HistoricalConsumptionRateManager historicalConsumptionRateManager = mock(HistoricalConsumptionRateManager.class);
-        when(historicalConsumptionRateManager.recordCurrentConsumptionRateHistoryAndGetAverage(anyString(), anyDouble())).thenReturn(consumptionRate);
-        when(historicalConsumptionRateManager.isSufficientHistoryAvailable(anyString())).thenReturn(false);
-
-        final int roundingMultiple = 100;
-        final TargetQueueLengthRounder targetQueueLengthRounder = mock(TargetQueueLengthRounder.class,
-                withSettings().useConstructor(roundingMultiple).defaultAnswer(RETURNS_DEFAULTS));
-        when(targetQueueLengthRounder.getRoundedTargetQueueLength(anyLong())).thenReturn(1000L);
-
-        final boolean noOpMode = true;
-        final double queueProcessingTimeGoalSeconds = 300D;
-        final TunedTargetQueueLengthProvider tunedTargetQueueLengthProvider = mock(TunedTargetQueueLengthProvider.class,
-                withSettings().useConstructor(queueConsumptionRateProvider, historicalConsumptionRateManager,
-                        targetQueueLengthRounder, noOpMode, queueProcessingTimeGoalSeconds).defaultAnswer(RETURNS_DEFAULTS));
-
-        final MinimumConsumptionTargetCalculator minimumConsumptionTargetCalculator = mock(
-            MinimumConsumptionTargetCalculator.class,
-            withSettings().useConstructor(targetQueueSettingsProvider, tunedTargetQueueLengthProvider).defaultAnswer(CALLS_REAL_METHODS));
-
+        final MinimumCapacityCalculator minimumCapacityCalculator = new MinimumCapacityCalculator(null);
         assertEquals("Adequate percentage of message space available therefore this capacity is returned.", 250,
-                minimumConsumptionTargetCalculator.getTargetQueueCapacity(targetQueue));
+                minimumCapacityCalculator.refine(targetQueue, targetQueueSettings).getCapacity());
     }
 
     /**
@@ -87,37 +58,18 @@ public final class MinimumConsumptionTargetCalculatorTest
     @Test
     public void getTargetQueueCapacityWithoutAdequateRefillPercentageTestReturn0()
     {
-        final TargetQueueSettingsProvider targetQueueSettingsProvider = mock(TargetQueueSettingsProvider.class);
         final Queue targetQueue = new Queue();
         targetQueue.setMessages(1000);
 
-        final TargetQueueSettings settings = new TargetQueueSettings(1200, 30, 1 , 1);
-        when(targetQueueSettingsProvider.get(targetQueue)).thenReturn(settings);
+        final TargetQueueSettings targetQueueSettings = mock(TargetQueueSettings.class);
+        when(targetQueueSettings.getCurrentMaxLength()).thenReturn(1200L);
 
-        final double consumptionRate = 0.5;
-        final QueueConsumptionRateProvider queueConsumptionRateProvider = mock(QueueConsumptionRateProvider.class);
-        when(queueConsumptionRateProvider.getConsumptionRate(anyString())).thenReturn(consumptionRate);
+        final CapacityCalculatorBase capacityCalculatorBase = mock(CapacityCalculatorBase.class);
+        when(capacityCalculatorBase.refine(any(), any())).thenReturn(targetQueueSettings);
 
-        final HistoricalConsumptionRateManager historicalConsumptionRateManager = mock(HistoricalConsumptionRateManager.class);
-        when(historicalConsumptionRateManager.recordCurrentConsumptionRateHistoryAndGetAverage(anyString(), anyDouble())).thenReturn(consumptionRate);
-        when(historicalConsumptionRateManager.isSufficientHistoryAvailable(anyString())).thenReturn(false);
-
-        final int roundingMultiple = 100;
-        final TargetQueueLengthRounder targetQueueLengthRounder = mock(TargetQueueLengthRounder.class,
-                withSettings().useConstructor(roundingMultiple).defaultAnswer(RETURNS_DEFAULTS));
-        when(targetQueueLengthRounder.getRoundedTargetQueueLength(anyLong())).thenReturn(1000L);
-
-        final boolean noOpMode = true;
-        final double queueProcessingTimeGoalSeconds = 300D;
-        final TunedTargetQueueLengthProvider tunedTargetQueueLengthProvider = mock(TunedTargetQueueLengthProvider.class,
-                withSettings().useConstructor(queueConsumptionRateProvider, historicalConsumptionRateManager,
-                        targetQueueLengthRounder, noOpMode, queueProcessingTimeGoalSeconds).defaultAnswer(RETURNS_DEFAULTS));
-
-        final MinimumConsumptionTargetCalculator minimumConsumptionTargetCalculator = mock(
-            MinimumConsumptionTargetCalculator.class,
-            withSettings().useConstructor(targetQueueSettingsProvider, tunedTargetQueueLengthProvider).defaultAnswer(CALLS_REAL_METHODS));
+        final MinimumCapacityCalculator minimumCapacityCalculator = new MinimumCapacityCalculator(capacityCalculatorBase);
 
         assertEquals("The space available is less than the percentage of space required for refill, therefore 0 returned.", 0,
-                minimumConsumptionTargetCalculator.getTargetQueueCapacity(targetQueue));
+                minimumCapacityCalculator.refine(targetQueue, targetQueueSettings).getCapacity());
     }
 }

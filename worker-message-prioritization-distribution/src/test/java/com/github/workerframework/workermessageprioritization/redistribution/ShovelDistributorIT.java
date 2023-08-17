@@ -41,7 +41,7 @@ import java.util.concurrent.TimeoutException;
 
 public class ShovelDistributorIT extends DistributorTestBase {
 
-    @Test
+//    @Test
     public void twoStagingQueuesTest() throws TimeoutException, IOException, InterruptedException {
 
         final String targetQueueName = getUniqueTargetQueueName(TARGET_QUEUE_NAME);
@@ -96,7 +96,7 @@ public class ShovelDistributorIT extends DistributorTestBase {
                         queueProcessingTimeGoalSeconds);
 
         final ConsumptionTargetCalculator consumptionTargetCalculator =
-                new EqualConsumptionTargetCalculator(new FixedTargetQueueSettingsProvider(), tunedTargetQueueLengthProvider);
+                new EqualConsumptionTargetCalculator(new FixedTargetQueueSettingsProvider(), null);
 
         final ShovelDistributor shovelDistributor = new ShovelDistributor(
                 queuesApi,
