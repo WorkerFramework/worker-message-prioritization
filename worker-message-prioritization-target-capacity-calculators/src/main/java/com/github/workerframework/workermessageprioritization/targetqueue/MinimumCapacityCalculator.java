@@ -16,8 +16,12 @@
 package com.github.workerframework.workermessageprioritization.targetqueue;
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MinimumCapacityCalculator extends CapacityCalculatorBase {
+    private static final Logger TUNED_TARGET_LOGGER = LoggerFactory.getLogger("TUNED_TARGET");
+
     public MinimumCapacityCalculator(CapacityCalculatorBase next) {
         super(next);
     }
@@ -25,9 +29,15 @@ public class MinimumCapacityCalculator extends CapacityCalculatorBase {
     @Override
     protected TargetQueueSettings refineInternal(final Queue targetQueue, final TargetQueueSettings targetQueueSettings) {
 
+        TUNED_TARGET_LOGGER.info("Calculating the minimum capacity. Current length: " + targetQueueSettings.getCurrentMaxLength());
+
         final long targetQueueCapacity = Math.max(0, targetQueueSettings.getCurrentMaxLength() - targetQueue.getMessages());
 
+        TUNED_TARGET_LOGGER.info("Target queue capacity: " + targetQueueCapacity);
+
         final long targetQueueCapacityPercentage = targetQueueCapacity * 100 / targetQueueSettings.getCurrentMaxLength();
+
+        TUNED_TARGET_LOGGER.info("Target queue percentage: " + targetQueueCapacityPercentage);
 
         if (targetQueueCapacityPercentage < targetQueueSettings.getEligibleForRefillPercentage()) {
             return new TargetQueueSettings(targetQueueSettings.getCurrentMaxLength(),
