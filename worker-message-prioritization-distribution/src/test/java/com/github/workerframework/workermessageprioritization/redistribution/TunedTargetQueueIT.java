@@ -91,14 +91,6 @@ public class TunedTargetQueueIT extends DistributorTestBase {
             try (final MockWebServer mockK8sServer = new MockWebServer()) {
                 final int queueSize = 500000;
                 final int sleepTime = 100;
-                final int roundingMultiple = Integer.parseInt(System.getenv(CAF_ROUNDING_MULTIPLE));
-                final int maxConsumptionRateHistorySize = Integer.parseInt(System.getenv(CAF_MAX_CONSUMPTION_RATE_HISTORY_SIZE));
-                final int minConsumptionRateHistorySize = Integer.parseInt(System.getenv(CAF_MIN_CONSUMPTION_RATE_HISTORY_SIZE));
-//                final int queueProcessingTimeGoalSeconds = Integer.parseInt(System.getenv(CAF_QUEUE_PROCESSING_TIME_GOAL_SECONDS));
-//                final int minTargetQueueLength = Integer.parseInt(System.getenv(CAF_MIN_TARGET_QUEUE_LENGTH));
-//                final int maxTargetQueueLength = Integer.parseInt(System.getenv(CAF_MAX_TARGET_QUEUE_LENGTH));
-
-                final boolean noOpMode = Strings.isNullOrEmpty(System.getenv("CAF_NOOP_MODE")) || Boolean.parseBoolean(System.getenv("CAF_NOOP_MODE"));
 
                 Channel channel = connection.createChannel();
 
