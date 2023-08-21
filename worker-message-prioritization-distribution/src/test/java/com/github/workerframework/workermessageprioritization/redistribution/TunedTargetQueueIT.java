@@ -35,12 +35,12 @@ import com.github.workerframework.workermessageprioritization.redistribution.con
 import com.github.workerframework.workermessageprioritization.redistribution.consumption.EqualConsumptionTargetCalculator;
 import com.github.workerframework.workermessageprioritization.redistribution.lowlevel.LowLevelDistributor;
 import com.github.workerframework.workermessageprioritization.redistribution.lowlevel.StagingTargetPairProvider;
-import com.github.workerframework.workermessageprioritization.targetqueue.K8sTargetQueueSettingsProvider;
-import com.github.workerframework.workermessageprioritization.targetqueue.QueueConsumptionRateProvider;
-import com.github.workerframework.workermessageprioritization.targetqueue.HistoricalConsumptionRateManager;
-import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueLengthRounder;
-import com.github.workerframework.workermessageprioritization.targetqueue.TunedTargetQueueLengthProvider;
+import com.github.workerframework.workermessageprioritization.redistribution.shovel.ShovelDistributor;
+import com.github.workerframework.workermessageprioritization.targetqueue.CapacityCalculatorBase;
+import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueSettingsProvider;
 import com.google.common.base.Strings;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
@@ -52,6 +52,8 @@ import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -81,6 +83,9 @@ public class TunedTargetQueueIT extends DistributorTestBase {
     // Console outputs and debugger should be used to see these dynamic changes.
 //    @Test
     public void tunedTargetQueueNoOpModeTest() throws TimeoutException, IOException {
+
+        final Logger LOGGER = LoggerFactory.getLogger(TunedTargetQueueIT.class);
+
         try (final Connection connection = connectionFactory.newConnection()) {
 
             try (final MockWebServer mockK8sServer = new MockWebServer()) {
@@ -89,9 +94,9 @@ public class TunedTargetQueueIT extends DistributorTestBase {
                 final int roundingMultiple = Integer.parseInt(System.getenv(CAF_ROUNDING_MULTIPLE));
                 final int maxConsumptionRateHistorySize = Integer.parseInt(System.getenv(CAF_MAX_CONSUMPTION_RATE_HISTORY_SIZE));
                 final int minConsumptionRateHistorySize = Integer.parseInt(System.getenv(CAF_MIN_CONSUMPTION_RATE_HISTORY_SIZE));
-                final int queueProcessingTimeGoalSeconds = Integer.parseInt(System.getenv(CAF_QUEUE_PROCESSING_TIME_GOAL_SECONDS));
-                final int minTargetQueueLength = Integer.parseInt(System.getenv(CAF_MIN_TARGET_QUEUE_LENGTH));
-                final int maxTargetQueueLength = Integer.parseInt(System.getenv(CAF_MAX_TARGET_QUEUE_LENGTH));
+//                final int queueProcessingTimeGoalSeconds = Integer.parseInt(System.getenv(CAF_QUEUE_PROCESSING_TIME_GOAL_SECONDS));
+//                final int minTargetQueueLength = Integer.parseInt(System.getenv(CAF_MIN_TARGET_QUEUE_LENGTH));
+//                final int maxTargetQueueLength = Integer.parseInt(System.getenv(CAF_MAX_TARGET_QUEUE_LENGTH));
 
                 final boolean noOpMode = Strings.isNullOrEmpty(System.getenv("CAF_NOOP_MODE")) || Boolean.parseBoolean(System.getenv("CAF_NOOP_MODE"));
 
@@ -130,9 +135,17 @@ public class TunedTargetQueueIT extends DistributorTestBase {
                 });
 
                 DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-                    new String(delivery.getBody(), StandardCharsets.UTF_8);
+                    try {
+                        Thread.sleep(2000);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                    channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
+                    final String messageBody = new String(delivery.getBody(), StandardCharsets.UTF_8);
+                    LOGGER.debug("Message body: " + messageBody);
                 };
-                channel.basicConsume(queueName, true, deliverCallback, consumerTag -> {
+                channel.basicConsume(queueName, false, deliverCallback, consumerTag -> {
+                    LOGGER.debug("Consumer cancelled");
                 });
 
                 // Sleep to allow time for the messages to start being consumed.
@@ -183,28 +196,17 @@ public class TunedTargetQueueIT extends DistributorTestBase {
                         .setHeader("content-type", "application/json")
                         .setBody(deploymentList));
 
-                QueueConsumptionRateProvider queueConsumptionRateProvider = new QueueConsumptionRateProvider(queuesApi);
-                final HistoricalConsumptionRateManager historicalConsumptionRateManager = new HistoricalConsumptionRateManager(maxConsumptionRateHistorySize, minConsumptionRateHistorySize);
-                final TargetQueueLengthRounder targetQueueLengthRounder = new TargetQueueLengthRounder(roundingMultiple);
-
-                final TunedTargetQueueLengthProvider tunedTargetQueueLengthProvider = new TunedTargetQueueLengthProvider(
-                        queueConsumptionRateProvider,
-                        historicalConsumptionRateManager,
-                        targetQueueLengthRounder,
-                        minTargetQueueLength,
-                        maxTargetQueueLength,
-                        noOpMode,
-                        queueProcessingTimeGoalSeconds);
-
                 List<String> namespaces = new ArrayList<>();
                 namespaces.add("private");
 
-                final K8sTargetQueueSettingsProvider k8sTargetQueueSettingsProvider = new K8sTargetQueueSettingsProvider(
-                        namespaces,
-                        60);
+                final Injector injector = Guice.createInjector(new DistributorModule());
+                final TargetQueueSettingsProvider k8sTargetQueueSettingsProvider =
+                        injector.getInstance(TargetQueueSettingsProvider.class);
+
+                final CapacityCalculatorBase capacityCalculatorBase = injector.getInstance(CapacityCalculatorBase.class);
 
                 final ConsumptionTargetCalculator consumptionTargetCalculator =
-                        new EqualConsumptionTargetCalculator(k8sTargetQueueSettingsProvider, null);
+                        new EqualConsumptionTargetCalculator(k8sTargetQueueSettingsProvider, capacityCalculatorBase);
                 final StagingTargetPairProvider stagingTargetPairProvider = new StagingTargetPairProvider();
 
                 final LowLevelDistributor lowLevelDistributor = new LowLevelDistributor(

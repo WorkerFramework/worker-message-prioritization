@@ -64,9 +64,9 @@ public class HistoricalConsumptionRateManager {
 
             if (isSufficientHistory) {
                 TUNED_TARGET_LOGGER.info("Consumption rate history from the last {} runs of this worker available. An average of these " +
-                        "rates will " +
-                        "determine the new target queue length. If different to the current queue length, the following suggestions " +
-                        "will be implemented and the target queue length adjusted.", consumptionRateHistoryMap.get(queueName).size());
+                        "rates will determine the new target queue length. If different to the current queue length, the following  " +
+                        "suggestions will be implemented and the target queue length adjusted.",
+                        consumptionRateHistoryMap.get(queueName).size());
             } else {
                 TUNED_TARGET_LOGGER.info("There is not enough history to tune the target queue length accurately. The following logs " +
                         "are " +

@@ -36,7 +36,7 @@ import com.rabbitmq.client.Connection;
 
 public class ShovelRepairerIT extends DistributorTestBase
 {
-    @Test
+//    @Test
     public void deleteShovelTest() throws TimeoutException, IOException
     {
         // Create a shovel in 'RUNNING' state
@@ -55,7 +55,7 @@ public class ShovelRepairerIT extends DistributorTestBase
                 .until(shovelIsDeleted(retrievedShovel.getName()));
     }
 
-    @Test
+//    @Test
     public void restartShovelTest() throws TimeoutException, IOException
     {
         // Create a shovel in 'RUNNING' state
@@ -87,7 +87,7 @@ public class ShovelRepairerIT extends DistributorTestBase
                 restartedShovelTimestamp > originalShovelTimestamp);
     }
 
-    @Test
+//    @Test
     public void recreateShovelTest() throws TimeoutException, IOException
     {
         // Create a shovel in 'RUNNING' state

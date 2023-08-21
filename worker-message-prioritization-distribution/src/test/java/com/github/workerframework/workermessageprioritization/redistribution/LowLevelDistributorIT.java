@@ -25,7 +25,8 @@ import com.github.workerframework.workermessageprioritization.redistribution.low
 import com.github.workerframework.workermessageprioritization.redistribution.lowlevel.StagingQueueTargetQueuePair;
 import com.github.workerframework.workermessageprioritization.redistribution.lowlevel.StagingTargetPairProvider;
 import com.github.workerframework.workermessageprioritization.targetqueue.*;
-import com.google.common.base.Strings;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
@@ -44,8 +45,8 @@ import java.util.concurrent.TimeoutException;
 
 public class LowLevelDistributorIT extends DistributorTestBase {
 
-//    @Test
-    public void twoStagingQueuesTest() throws TimeoutException, IOException, InterruptedException {
+    @Test
+    public void twoStagingQueuesTest() throws TimeoutException, IOException {
 
         final String targetQueueName = getUniqueTargetQueueName(TARGET_QUEUE_NAME);
         final String stagingQueue1Name = getStagingQueueName(targetQueueName, T1_STAGING_QUEUE_NAME);
@@ -83,29 +84,12 @@ public class LowLevelDistributorIT extends DistributorTestBase {
                     .pollInterval(Duration.ofSeconds(1))
                     .until(queueContainsNumMessages(stagingQueue2Name, 500));
 
-            final int maxConsumptionRateHistorySize = 100;
-            final int minConsumptionRateHistorySize = 10;
-            final int roundingMultiple = 100;
-            final double queueProcessingTimeGoalSeconds = 300;
-            final QueueConsumptionRateProvider queueConsumptionRateProvider =
-                    new QueueConsumptionRateProvider(queuesApi);
-            final HistoricalConsumptionRateManager historicalConsumptionRateManager = new HistoricalConsumptionRateManager(maxConsumptionRateHistorySize,
-                    minConsumptionRateHistorySize);
-            final TargetQueueLengthRounder targetQueueLengthRounder = new TargetQueueLengthRounder(roundingMultiple);
-            final TunedTargetQueueLengthProvider tunedTargetQueueLengthProvider =
-                    new TunedTargetQueueLengthProvider(
-                            queueConsumptionRateProvider,
-                            historicalConsumptionRateManager,
-                            targetQueueLengthRounder,
-                            100,
-                            10000000,
-                            Strings.isNullOrEmpty(System.getenv("CAF_NOOP_MODE")) || Boolean.parseBoolean(System.getenv("CAF_NOOP_MODE")),
-                            queueProcessingTimeGoalSeconds);
-
-            // Target queue has a max length of 200 messages
+            final Injector injector = Guice.createInjector(new DistributorModule());
+            final CapacityCalculatorBase capacityCalculatorBase = injector.getInstance(CapacityCalculatorBase.class);
             final ConsumptionTargetCalculator consumptionTargetCalculator =
-                    new EqualConsumptionTargetCalculator(targetQueue -> new TargetQueueSettings(200, 0, 1, 1, 200), null);
-            final StagingTargetPairProvider stagingTargetPairProvider = new StagingTargetPairProvider();
+                    new EqualConsumptionTargetCalculator(targetQueue -> new TargetQueueSettings(200, 0, 1, 1, 200),
+                            capacityCalculatorBase);
+            final StagingTargetPairProvider stagingTargetPairProvider = injector.getInstance(StagingTargetPairProvider.class);
             final LowLevelDistributor lowLevelDistributor = new LowLevelDistributor(queuesApi, connectionFactory,
                     consumptionTargetCalculator, stagingTargetPairProvider, 10000, 600000, 100, 10000000);
 
@@ -210,7 +194,7 @@ public class LowLevelDistributorIT extends DistributorTestBase {
         }
     }
 
-//    @Test
+    @Test
     public void stagingQueueTargetQueuePairIsClosedWhenLastDoneWorkTimeoutExceededTest()
             throws TimeoutException, IOException, InterruptedException
     {
@@ -269,30 +253,12 @@ public class LowLevelDistributorIT extends DistributorTestBase {
                     consumerPublisherPairLastDoneWorkTimeoutMilliseconds
             );
 
-            final int maxConsumptionRateHistorySize = 100;
-            final int minConsumptionRateHistorySize = 10;
-            final int roundingMultiple = 100;
-            final double queueProcessingTimeGoalSeconds = 300;
-            final long minTargetQueueLength = 100;
-            final long  maxTargetQueueLength = 10000000;
-            final QueueConsumptionRateProvider queueConsumptionRateProvider =
-                    new QueueConsumptionRateProvider(queuesApi);
-            final HistoricalConsumptionRateManager historicalConsumptionRateManager = new HistoricalConsumptionRateManager(maxConsumptionRateHistorySize,
-                    minConsumptionRateHistorySize);
-            final TargetQueueLengthRounder targetQueueLengthRounder = new TargetQueueLengthRounder(roundingMultiple);
-            final TunedTargetQueueLengthProvider tunedTargetQueueLengthProvider =
-                    new TunedTargetQueueLengthProvider(
-                            queueConsumptionRateProvider,
-                            historicalConsumptionRateManager,
-                            targetQueueLengthRounder,
-                            minTargetQueueLength,
-                            maxTargetQueueLength,
-                            Strings.isNullOrEmpty(System.getenv("CAF_NOOP_MODE")) || Boolean.parseBoolean(System.getenv("CAF_NOOP_MODE")),
-                            queueProcessingTimeGoalSeconds);
+            final Injector injector = Guice.createInjector(new DistributorModule());
+            final CapacityCalculatorBase capacityCalculatorBase = injector.getInstance(CapacityCalculatorBase.class);
 
             final ConsumptionTargetCalculator consumptionTargetCalculator =
                     new EqualConsumptionTargetCalculator(tQ -> new TargetQueueSettings(2, 0,
-                            1, 1, 2), null);
+                            1, 1, 2), capacityCalculatorBase);
 
             final StagingTargetPairProvider stagingTargetPairProviderMock = Mockito.mock(StagingTargetPairProvider.class);
 

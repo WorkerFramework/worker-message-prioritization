@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.workerframework.workermessageprioritization.redistribution.consumption;
+package com.github.workerframework.workermessageprioritization.redistribution;
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 import com.github.workerframework.workermessageprioritization.targetqueue.*;
@@ -63,6 +63,7 @@ public final class MinimumConsumptionTargetCalculatorTest
 
         final TargetQueueSettings targetQueueSettings = mock(TargetQueueSettings.class);
         when(targetQueueSettings.getCurrentMaxLength()).thenReturn(1200L);
+        when(targetQueueSettings.getEligibleForRefillPercentage()).thenReturn(25L);
 
         final CapacityCalculatorBase capacityCalculatorBase = mock(CapacityCalculatorBase.class);
         when(capacityCalculatorBase.refine(any(), any())).thenReturn(targetQueueSettings);

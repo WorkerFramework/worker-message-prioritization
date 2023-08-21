@@ -145,15 +145,28 @@
                 </executions>
                 <configuration>
                     <systemPropertyVariables>
-                        <docker.host.address>${docker.host.address}</docker.host.address>
                         <rabbitmq.node.address>${docker.host.address}</rabbitmq.node.address>
-                        <rabbitmq.node.port>${rabbitmq.node.port}</rabbitmq.node.port>
-                        <rabbitmq.ctrl.port>${rabbitmq.ctrl.port}</rabbitmq.ctrl.port>
-                        <rabbitmq.username>guest</rabbitmq.username>
-                        <rabbitmq.password>guest</rabbitmq.password>
                         <timeout.ms>120000</timeout.ms>
                     </systemPropertyVariables>
                     <environmentVariables>
+                        <CAF_RABBITMQ_CTRL_PORT>${rabbitmq.ctrl.port}</CAF_RABBITMQ_CTRL_PORT>
+                        <CAF_RABBITMQ_HOST>${docker.host.address}</CAF_RABBITMQ_HOST>
+                        <CAF_RABBITMQ_PORT>${rabbitmq.node.port}</CAF_RABBITMQ_PORT>
+                        <CAF_RABBITMQ_MGMT_USERNAME>guest</CAF_RABBITMQ_MGMT_USERNAME>
+                        <CAF_RABBITMQ_MGMT_PASSWORD>guest</CAF_RABBITMQ_MGMT_PASSWORD>
+                        <CAF_RABBITMQ_USERNAME>guest</CAF_RABBITMQ_USERNAME>
+                        <CAF_RABBITMQ_PASSWORD>guest</CAF_RABBITMQ_PASSWORD>
+                        <CAF_WMP_KUBERNETES_NAMESPACES>private</CAF_WMP_KUBERNETES_NAMESPACES>
+                        <CAF_LOG_LEVEL>INFO</CAF_LOG_LEVEL>
+                        <CAF_NOOP_MODE>true</CAF_NOOP_MODE>
+                        <CAF_MIN_TARGET_QUEUE_LENGTH>100</CAF_MIN_TARGET_QUEUE_LENGTH>
+                        <CAF_MAX_TARGET_QUEUE_LENGTH>10000000</CAF_MAX_TARGET_QUEUE_LENGTH>
+                        <CAF_ROUNDING_MULTIPLE>100</CAF_ROUNDING_MULTIPLE>
+                        <CAF_MAX_CONSUMPTION_RATE_HISTORY_SIZE>100</CAF_MAX_CONSUMPTION_RATE_HISTORY_SIZE>
+                        <CAF_MIN_CONSUMPTION_RATE_HISTORY_SIZE>10</CAF_MIN_CONSUMPTION_RATE_HISTORY_SIZE>
+                        <CAF_QUEUE_PROCESSING_TIME_GOAL_SECONDS>300</CAF_QUEUE_PROCESSING_TIME_GOAL_SECONDS>
+                        <TUNED_TARGET_LOG_LEVEL>DEBUG</TUNED_TARGET_LOG_LEVEL>
+                        <CAF_RABBITMQ_MGMT_URL>http://localhost:25673</CAF_RABBITMQ_MGMT_URL>
                     </environmentVariables>
                 </configuration>
             </plugin>

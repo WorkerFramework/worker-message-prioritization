@@ -22,6 +22,7 @@ public abstract class CapacityCalculatorBase {
 
     private final CapacityCalculatorBase next;
 
+    @Inject
     public CapacityCalculatorBase(final CapacityCalculatorBase next) {
         this.next = next;
     }

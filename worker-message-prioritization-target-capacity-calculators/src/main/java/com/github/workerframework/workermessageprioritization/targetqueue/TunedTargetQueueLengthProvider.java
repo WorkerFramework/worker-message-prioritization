@@ -48,7 +48,7 @@ public class TunedTargetQueueLengthProvider {
         this.queueProcessingTimeGoalSeconds = queueProcessingTimeGoalSeconds;
     }
 
-    public final long getTunedTargetQueueLength(final String targetQueueName, final TargetQueueSettings targetQueueSettings){
+    public long getTunedTargetQueueLength(final String targetQueueName, final TargetQueueSettings targetQueueSettings){
 
         final double consumptionRate =
                 queueConsumptionRateProvider.getConsumptionRate(targetQueueName);
