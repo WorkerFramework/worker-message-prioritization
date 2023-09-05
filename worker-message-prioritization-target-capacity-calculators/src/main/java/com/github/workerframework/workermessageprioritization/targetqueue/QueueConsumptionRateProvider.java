@@ -19,10 +19,13 @@ import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApi;
 import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitManagementApi;
 import com.google.inject.Inject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class QueueConsumptionRateProvider {
 
     protected RabbitManagementApi<QueuesApi> queuesApi;
+    private static final Logger TUNED_TARGET_LOGGER = LoggerFactory.getLogger("TUNED_TARGET");
 
     @Inject
     public QueueConsumptionRateProvider(final RabbitManagementApi<QueuesApi> queuesApi){
@@ -32,7 +35,12 @@ public class QueueConsumptionRateProvider {
     public double getConsumptionRate(final String targetQueueName) {
 
         final Queue.MessageStats message_stats = queuesApi.getApi().getQueue("/", targetQueueName).getMessage_stats();
+        final double consumer_capacity = queuesApi.getApi().getQueue("/", targetQueueName).getConsumer_Capacity();
+        final double consumers = queuesApi.getApi().getQueue("/", targetQueueName).getConsumers();
         final double consumptionRate;
+
+        TUNED_TARGET_LOGGER.info("Current consumer_capacity of " + targetQueueName + " is: " + consumer_capacity);
+        TUNED_TARGET_LOGGER.info("Current consumers of " + targetQueueName + " is: " + consumers);
 
         if (message_stats != null) {
             if(message_stats.getDeliver_get_details() != null){

@@ -28,6 +28,8 @@ public class Queue {
     private Map<String, Object> arguments;
 
     private MessageStats message_stats;
+    private double consumer_capacity;
+    private double consumers;
 
     public String getName() {
         return name;
@@ -89,6 +91,9 @@ public class Queue {
         return message_stats;
     }
 
+    public double getConsumer_Capacity(){return consumer_capacity;}
+    public double getConsumers(){return consumers;}
+
     public void setMessage_stats(MessageStats message_stats) {
         this.message_stats = message_stats;
     }
@@ -104,6 +109,8 @@ public class Queue {
             .add("auto_delete", auto_delete)
             .add("arguments", arguments)
             .add("message_stats", message_stats)
+            .add("consumer_capacity", consumer_capacity)
+            .add("consumers", consumers)
             .toString();
     }
 
