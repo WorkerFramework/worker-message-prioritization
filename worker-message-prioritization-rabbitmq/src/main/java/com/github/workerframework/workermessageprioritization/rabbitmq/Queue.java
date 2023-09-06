@@ -30,7 +30,7 @@ public class Queue {
     private MessageStats message_stats;
     private double consumer_capacity;
     private double consumers;
-
+    private double message_bytes_ready;
     public String getName() {
         return name;
     }
@@ -93,6 +93,7 @@ public class Queue {
 
     public double getConsumer_Capacity(){return consumer_capacity;}
     public double getConsumers(){return consumers;}
+    public double getMessageBytesReady(){return message_bytes_ready;}
 
     public void setMessage_stats(MessageStats message_stats) {
         this.message_stats = message_stats;
@@ -111,6 +112,7 @@ public class Queue {
             .add("message_stats", message_stats)
             .add("consumer_capacity", consumer_capacity)
             .add("consumers", consumers)
+            .add("message_bytes_ready", message_bytes_ready)
             .toString();
     }
 
