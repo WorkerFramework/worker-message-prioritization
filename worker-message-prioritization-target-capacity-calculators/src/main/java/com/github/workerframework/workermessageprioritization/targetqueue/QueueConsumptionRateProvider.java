@@ -45,7 +45,7 @@ public class QueueConsumptionRateProvider {
         TUNED_TARGET_LOGGER.info("Current no of message bytes ready of " + targetQueueName + " is: " + message_bytes_ready);
 
         if (message_stats != null) {
-            if(message_stats.getDeliver_get_details() != null){
+            if(message_stats.getDeliver_get_details() != null && message_bytes_ready != 0){
                 consumptionRate = message_stats.getDeliver_get_details().getRate();
             }else{
                 consumptionRate = 0D;
