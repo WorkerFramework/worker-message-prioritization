@@ -64,6 +64,8 @@ public class TunedTargetQueueLengthProviderTest {
                 mock(QueueConsumptionRateProvider.class);
         when(queueConsumptionRateProvider.getConsumptionRate(targetQueue1))
                 .thenReturn(consumptionRate);
+        when(queueConsumptionRateProvider.getMessageBytesReady(targetQueue1))
+                .thenReturn(1D);
 
         final TunedTargetQueueLengthProvider targetQueue = new TunedTargetQueueLengthProvider(queueConsumptionRateProvider,
                 historicalConsumptionRateManager, targetQueueLengthRounder, minTargetQueueLength, maxTargetQueueLength, true,
@@ -96,6 +98,8 @@ public class TunedTargetQueueLengthProviderTest {
                 mock(QueueConsumptionRateProvider.class);
         when(queueConsumptionRateProvider.getConsumptionRate(targetQueue1))
                 .thenReturn(consumptionRate);
+        when(queueConsumptionRateProvider.getMessageBytesReady(targetQueue1))
+                .thenReturn(1D);
 
         final TunedTargetQueueLengthProvider targetQueue = new TunedTargetQueueLengthProvider(queueConsumptionRateProvider,
                 historicalConsumptionRateManager, targetQueueLengthRounder, minTargetQueueLength, maxTargetQueueLength, false, queueProcessingTimeGoalSeconds);
@@ -133,8 +137,12 @@ public class TunedTargetQueueLengthProviderTest {
                 mock(QueueConsumptionRateProvider.class);
         when(queueConsumptionRateProvider.getConsumptionRate(targetQueue1))
                 .thenReturn(consumptionRate1);
+        when(queueConsumptionRateProvider.getMessageBytesReady(targetQueue1))
+                .thenReturn(1D);
         when(queueConsumptionRateProvider.getConsumptionRate(targetQueue2))
                 .thenReturn(consumptionRate2);
+        when(queueConsumptionRateProvider.getMessageBytesReady(targetQueue2))
+                .thenReturn(1D);
 
         final TunedTargetQueueLengthProvider targetQueue = new TunedTargetQueueLengthProvider(queueConsumptionRateProvider,
                 historicalConsumptionRateManager, targetQueueLengthRounder, minTargetQueueLength, maxTargetQueueLength, false,
@@ -180,8 +188,12 @@ public class TunedTargetQueueLengthProviderTest {
                 mock(QueueConsumptionRateProvider.class);
         when(queueConsumptionRateProvider.getConsumptionRate(targetQueue1))
                 .thenReturn(consumptionRate1);
+        when(queueConsumptionRateProvider.getMessageBytesReady(targetQueue1))
+                .thenReturn(1D);
         when(queueConsumptionRateProvider.getConsumptionRate(targetQueue2))
                 .thenReturn(consumptionRate2);
+        when(queueConsumptionRateProvider.getMessageBytesReady(targetQueue2))
+                .thenReturn(1D);
 
         final TunedTargetQueueLengthProvider targetQueue = new TunedTargetQueueLengthProvider(queueConsumptionRateProvider,
                 historicalConsumptionRateManager, targetQueueLengthRounder, minTargetQueueLength , maxTargetQueueLength, false, queueProcessingTimeGoalSeconds);
