@@ -37,15 +37,13 @@ public class QueueConsumptionRateProvider {
         final Queue.MessageStats message_stats = queuesApi.getApi().getQueue("/", targetQueueName).getMessage_stats();
         final double consumer_capacity = queuesApi.getApi().getQueue("/", targetQueueName).getConsumer_Capacity();
         final double consumers = queuesApi.getApi().getQueue("/", targetQueueName).getConsumers();
-        final double message_bytes_ready = queuesApi.getApi().getQueue("/", targetQueueName).getMessageBytesReady();
         final double consumptionRate;
 
         TUNED_TARGET_LOGGER.info("Current consumer_capacity of " + targetQueueName + " is: " + consumer_capacity);
         TUNED_TARGET_LOGGER.info("Current consumers of " + targetQueueName + " is: " + consumers);
-        TUNED_TARGET_LOGGER.info("Current no of message bytes ready of " + targetQueueName + " is: " + message_bytes_ready);
 
         if (message_stats != null) {
-            if(message_stats.getDeliver_get_details() != null && message_bytes_ready != 0){
+            if(message_stats.getDeliver_get_details() != null){
                 consumptionRate = message_stats.getDeliver_get_details().getRate();
             }else{
                 consumptionRate = 0D;
@@ -55,6 +53,15 @@ public class QueueConsumptionRateProvider {
         }
 
         return consumptionRate;
+    }
+
+    public double getMessageBytesReady(final String targetQueueName){
+
+        final double message_bytes_ready = queuesApi.getApi().getQueue("/", targetQueueName).getMessageBytesReady();
+
+        TUNED_TARGET_LOGGER.info("Current no of message bytes ready of " + targetQueueName + " is: " + message_bytes_ready);
+
+        return message_bytes_ready;
     }
 
 }
