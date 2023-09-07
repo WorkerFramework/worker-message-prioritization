@@ -183,7 +183,7 @@
                             <name>${dockerWorkerFrameworkOrg}worker-message-distribution${dockerProjectVersion}</name>
                             <!-- Build the image for this module -->
                             <build>
-                                <from>${dockerHubPublic}/cafapi/opensuse-jre17:1</from>
+                                <from>${dockerHubPublic}/cafapi/prereleases:opensuse-jre17-1.3.0-SNAPSHOT</from>
                                 <labels>
                                     <Build.Number>${project.version}</Build.Number>
                                     <Build.Date>${maven.build.timestamp}</Build.Date>
