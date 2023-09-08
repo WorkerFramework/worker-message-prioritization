@@ -58,14 +58,18 @@ public class HistoricalConsumptionRateManagerTest {
         final double theoreticalConsumptionRate1 = 2.5;
         final double theoreticalConsumptionRate2 = 5.0;
 
+        final double messageBytesReady = 1D;
+
         final HistoricalConsumptionRateManager historicalConsumptionRateManager = new HistoricalConsumptionRateManager(maximumConsumptionRateHistorySize,
                 minConsumptionRateHistorySize);
 
         IntStream.range(0, minConsumptionRateHistorySize).forEach(i ->
-            historicalConsumptionRateManager.recordCurrentConsumptionRateHistoryAndGetAverage(targetQueue1, theoreticalConsumptionRate1));
+            historicalConsumptionRateManager.recordCurrentConsumptionRateHistoryAndGetAverage(targetQueue1, theoreticalConsumptionRate1
+                    , messageBytesReady));
 
         IntStream.range(0, minConsumptionRateHistorySize + 5).forEach(i ->
-            historicalConsumptionRateManager.recordCurrentConsumptionRateHistoryAndGetAverage(targetQueue2, theoreticalConsumptionRate2));
+            historicalConsumptionRateManager.recordCurrentConsumptionRateHistoryAndGetAverage(targetQueue2, theoreticalConsumptionRate2
+                    , messageBytesReady));
 
         final boolean isSufficientHistoryAvailableQueue1 = historicalConsumptionRateManager.isSufficientHistoryAvailable(targetQueue1);
 
@@ -96,19 +100,25 @@ public class HistoricalConsumptionRateManagerTest {
         final double theoreticalConsumptionRate1 = 2.5;
         final double theoreticalConsumptionRate2 = 5.0;
 
+        final double messageBytesReady = 1;
+
         final HistoricalConsumptionRateManager historicalConsumptionRateManager = new HistoricalConsumptionRateManager(maximumConsumptionRateHistorySize,
                 minConsumptionRateHistorySize);
 
         IntStream.range(0, minConsumptionRateHistorySize).forEach(i ->
-            historicalConsumptionRateManager.recordCurrentConsumptionRateHistoryAndGetAverage(targetQueue1, theoreticalConsumptionRate1));
+            historicalConsumptionRateManager.recordCurrentConsumptionRateHistoryAndGetAverage(targetQueue1, theoreticalConsumptionRate1
+                    , messageBytesReady));
 
         IntStream.range(0, minConsumptionRateHistorySize + 5).forEach(i ->
-            historicalConsumptionRateManager.recordCurrentConsumptionRateHistoryAndGetAverage(targetQueue2, theoreticalConsumptionRate2));
+            historicalConsumptionRateManager.recordCurrentConsumptionRateHistoryAndGetAverage(targetQueue2, theoreticalConsumptionRate2
+                    , messageBytesReady));
 
         final double theoreticalConsumptionRateHistoryQueue1Average =
-                historicalConsumptionRateManager.recordCurrentConsumptionRateHistoryAndGetAverage(targetQueue1, theoreticalConsumptionRate1);
+                historicalConsumptionRateManager.recordCurrentConsumptionRateHistoryAndGetAverage(targetQueue1,
+                        theoreticalConsumptionRate1, messageBytesReady);
         final double theoreticalConsumptionRateHistoryQueue2Average =
-                historicalConsumptionRateManager.recordCurrentConsumptionRateHistoryAndGetAverage(targetQueue2, theoreticalConsumptionRate2);
+                historicalConsumptionRateManager.recordCurrentConsumptionRateHistoryAndGetAverage(targetQueue2,
+                        theoreticalConsumptionRate2, messageBytesReady);
 
         assertEquals("This should return the average consumption rate for target queue 1.", 2.5,
                 theoreticalConsumptionRateHistoryQueue1Average, 0.001);
@@ -122,24 +132,28 @@ public class HistoricalConsumptionRateManagerTest {
         final double theoreticalConsumptionRate1 = 2.5;
         final double theoreticalConsumptionRate2 = 5.0;
 
+        final double messageBytesReady = 1D;
+
         final HistoricalConsumptionRateManager historicalConsumptionRateManager = new HistoricalConsumptionRateManager(maximumConsumptionRateHistorySize,
                 minConsumptionRateHistorySize);
 
         final List<Double> targetQueue1ConsumptionRates = Arrays.asList(0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0);
         for(final Double rate: targetQueue1ConsumptionRates){
-            historicalConsumptionRateManager.recordCurrentConsumptionRateHistoryAndGetAverage(targetQueue1, rate);
+            historicalConsumptionRateManager.recordCurrentConsumptionRateHistoryAndGetAverage(targetQueue1, rate, messageBytesReady);
         }
 
         final List<Double> targetQueue2ConsumptionRates = Arrays.asList(0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0,
                 12.0, 13.0, 14.0, 15.0);
         for(final Double rate: targetQueue2ConsumptionRates){
-            historicalConsumptionRateManager.recordCurrentConsumptionRateHistoryAndGetAverage(targetQueue2, rate);
+            historicalConsumptionRateManager.recordCurrentConsumptionRateHistoryAndGetAverage(targetQueue2, rate, messageBytesReady);
         }
 
         final double theoreticalConsumptionRateHistoryQueue1Average =
-                historicalConsumptionRateManager.recordCurrentConsumptionRateHistoryAndGetAverage(targetQueue1, theoreticalConsumptionRate1);
+                historicalConsumptionRateManager.recordCurrentConsumptionRateHistoryAndGetAverage(targetQueue1,
+                        theoreticalConsumptionRate1, messageBytesReady);
         final double theoreticalConsumptionRateHistoryQueue2Average =
-                historicalConsumptionRateManager.recordCurrentConsumptionRateHistoryAndGetAverage(targetQueue2, theoreticalConsumptionRate2);
+                historicalConsumptionRateManager.recordCurrentConsumptionRateHistoryAndGetAverage(targetQueue2,
+                        theoreticalConsumptionRate2, messageBytesReady);
 
         assertEquals("This should return the average consumption rate for target queue 1", 4.791,
                 theoreticalConsumptionRateHistoryQueue1Average, 0.001);

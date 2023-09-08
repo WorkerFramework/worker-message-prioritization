@@ -43,12 +43,26 @@ public class HistoricalConsumptionRateManager {
         this.minimumHistorySize = minimumHistorySize;
     }
 
-    public double recordCurrentConsumptionRateHistoryAndGetAverage(final String targetQueueName, final double theoreticalConsumptionRate) {
+    public double recordCurrentConsumptionRateHistoryAndGetAverage(final String targetQueueName, final double theoreticalConsumptionRate,
+                                                                   final double messageBytesReady) {
 
         final EvictingQueue<Double> theoreticalConsumptionRateHistory = consumptionRateHistoryMap.computeIfAbsent(targetQueueName,
                 s -> EvictingQueue.create(maximumConsumptionRateHistorySize));
 
-        theoreticalConsumptionRateHistory.add(theoreticalConsumptionRate);
+        if(messageBytesReady != 0 || theoreticalConsumptionRateHistory.isEmpty()) {
+
+            if(theoreticalConsumptionRateHistory.isEmpty()){
+                TUNED_TARGET_LOGGER.info("History rate for "  +targetQueueName + " is empty therefore this consumption rate will be " +
+                        "recorded.");
+            }
+
+            if (messageBytesReady != 0) {
+                TUNED_TARGET_LOGGER.info("There are message bytes ready for: " + targetQueueName + ", therefore this consumption rate will " +
+                        "be recorded.");
+            }
+
+            theoreticalConsumptionRateHistory.add(theoreticalConsumptionRate);
+        }
 
         return theoreticalConsumptionRateHistory.stream().mapToDouble(d -> d).average().orElseThrow(IllegalStateException::new);
     }

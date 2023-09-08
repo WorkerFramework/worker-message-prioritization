@@ -60,14 +60,9 @@ public class TunedTargetQueueLengthProvider {
         final double theoreticalConsumptionRate = calculateCurrentTheoreticalConsumptionRate(consumptionRate,
                 targetQueueSettings.getCurrentInstances(), targetQueueSettings.getMaxInstances());
 
-        double averageHistoricalConsumptionRate = 0;
-        if(messageBytesReady != 0){
-
-            TUNED_TARGET_LOGGER.info("There are message bytes ready therefore this consumption rate will be recorded.");
-
-            averageHistoricalConsumptionRate =
-                    historicalConsumptionRateManager.recordCurrentConsumptionRateHistoryAndGetAverage(targetQueueName, theoreticalConsumptionRate);
-        }
+        final double averageHistoricalConsumptionRate =
+                historicalConsumptionRateManager.recordCurrentConsumptionRateHistoryAndGetAverage(targetQueueName,
+                        theoreticalConsumptionRate, messageBytesReady);
 
         final long tunedTargetQueue = calculateTunedTargetQueue(averageHistoricalConsumptionRate);
 

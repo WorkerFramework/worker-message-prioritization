@@ -54,7 +54,7 @@ public class TunedTargetQueueLengthProviderTest {
         final HistoricalConsumptionRateManager historicalConsumptionRateManager = mock(HistoricalConsumptionRateManager.class);
         when(historicalConsumptionRateManager.isSufficientHistoryAvailable(ArgumentMatchers.anyString())).thenReturn(false);
         when(historicalConsumptionRateManager.recordCurrentConsumptionRateHistoryAndGetAverage(ArgumentMatchers.anyString(),
-                ArgumentMatchers.anyDouble())).thenReturn(1.0);
+                ArgumentMatchers.anyDouble(), ArgumentMatchers.anyDouble())).thenReturn(1.0);
 
         final TargetQueueLengthRounder targetQueueLengthRounder = mock(TargetQueueLengthRounder.class,
                 withSettings().useConstructor(roundingMultiple).defaultAnswer(RETURNS_DEFAULTS));
@@ -88,7 +88,7 @@ public class TunedTargetQueueLengthProviderTest {
         final HistoricalConsumptionRateManager historicalConsumptionRateManager = mock(HistoricalConsumptionRateManager.class);
         when(historicalConsumptionRateManager.isSufficientHistoryAvailable(ArgumentMatchers.anyString())).thenReturn(false);
         when(historicalConsumptionRateManager.recordCurrentConsumptionRateHistoryAndGetAverage(ArgumentMatchers.anyString(),
-                ArgumentMatchers.anyDouble())).thenReturn(1.0);
+                ArgumentMatchers.anyDouble(), ArgumentMatchers.anyDouble())).thenReturn(1.0);
 
         final TargetQueueLengthRounder targetQueueLengthRounder = mock(TargetQueueLengthRounder.class,
                 withSettings().useConstructor(roundingMultiple).defaultAnswer(RETURNS_DEFAULTS));
@@ -117,6 +117,8 @@ public class TunedTargetQueueLengthProviderTest {
         final double consumptionRate1 = 0.5;
         final double consumptionRate2 = 5;
 
+        final double messageBytesReady = 1D;
+
         final TargetQueueSettings targetQueueSettings = new TargetQueueSettings(targetQueueLength, eligableForRefillPercentage,
                 maxInstances, currentInstances, targetQueueLength);
 
@@ -124,9 +126,9 @@ public class TunedTargetQueueLengthProviderTest {
         when(historicalConsumptionRateManager.isSufficientHistoryAvailable(targetQueue1)).thenReturn(true);
         when(historicalConsumptionRateManager.isSufficientHistoryAvailable(targetQueue2)).thenReturn(true);
         when(historicalConsumptionRateManager.recordCurrentConsumptionRateHistoryAndGetAverage(targetQueue1,
-                1.0)).thenReturn(1.0);
+                1.0, messageBytesReady)).thenReturn(1.0);
         when(historicalConsumptionRateManager.recordCurrentConsumptionRateHistoryAndGetAverage(targetQueue2,
-                10.0)).thenReturn(10.0);
+                10.0, messageBytesReady)).thenReturn(10.0);
 
         final TargetQueueLengthRounder targetQueueLengthRounder = mock(TargetQueueLengthRounder.class,
                 withSettings().useConstructor(roundingMultiple).defaultAnswer(RETURNS_DEFAULTS));
@@ -168,6 +170,8 @@ public class TunedTargetQueueLengthProviderTest {
         final double consumptionRate1 = 0.00005;
         final double consumptionRate2 = 5000;
 
+        final double messageBytesReady = 1D;
+
         final TargetQueueSettings targetQueueSettings = new TargetQueueSettings(targetQueueLength, eligableForRefillPercentage,
                 maxInstances, currentInstances, targetQueueLength);
 
@@ -175,9 +179,9 @@ public class TunedTargetQueueLengthProviderTest {
         when(historicalConsumptionRateManager.isSufficientHistoryAvailable(targetQueue1)).thenReturn(true);
         when(historicalConsumptionRateManager.isSufficientHistoryAvailable(targetQueue2)).thenReturn(true);
         when(historicalConsumptionRateManager.recordCurrentConsumptionRateHistoryAndGetAverage(targetQueue1,
-                0.01)).thenReturn(0.01);
+                0.01, messageBytesReady)).thenReturn(0.01);
         when(historicalConsumptionRateManager.recordCurrentConsumptionRateHistoryAndGetAverage(targetQueue2,
-                10000.0)).thenReturn(10000.0);
+                10000.0, messageBytesReady)).thenReturn(10000.0);
 
         final TargetQueueLengthRounder targetQueueLengthRounder = mock(TargetQueueLengthRounder.class,
                 withSettings().useConstructor(roundingMultiple).defaultAnswer(RETURNS_DEFAULTS));
