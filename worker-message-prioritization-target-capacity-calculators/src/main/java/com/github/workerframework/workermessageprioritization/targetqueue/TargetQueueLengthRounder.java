@@ -52,7 +52,7 @@ public class TargetQueueLengthRounder {
         } else {
             roundedQueueLength =  tunedTargetQueue - remainder;
         }
-        TUNED_TARGET_LOGGER.info("Target queue length has been rounded from: {} to: {}", tunedTargetQueue, roundedQueueLength);
+        TUNED_TARGET_LOGGER.debug("Target queue length has been rounded from: {} to: {}", tunedTargetQueue, roundedQueueLength);
         return roundedQueueLength;
     }
 }
