@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
 public class TunedTargetQueueLengthProvider {
 
     private static final Logger TUNED_TARGET_LOGGER = LoggerFactory.getLogger("TUNED_TARGET");
-    private final QueueConsumptionRateProvider queueConsumptionRateProvider;
+    private final QueueInformationProvider queueInformationProvider;
     private final boolean noOpMode;
     private final double queueProcessingTimeGoalSeconds;
     private final HistoricalConsumptionRateManager historicalConsumptionRateManager;
@@ -32,14 +32,14 @@ public class TunedTargetQueueLengthProvider {
     private final long maxTargetQueueLength;
 
     @Inject
-    public TunedTargetQueueLengthProvider (final QueueConsumptionRateProvider queueConsumptionRateProvider,
+    public TunedTargetQueueLengthProvider (final QueueInformationProvider queueInformationProvider,
                                            final HistoricalConsumptionRateManager historicalConsumptionRateManager,
                                            final TargetQueueLengthRounder targetQueueLengthRounder,
                                            @Named("MinTargetQueueLength") final long minTargetQueueLength,
                                            @Named("MaxTargetQueueLength") final long maxTargetQueueLength,
                                            @Named("NoOpMode") final boolean noOpMode,
                                            @Named("QueueProcessingTimeGoalSeconds") final double queueProcessingTimeGoalSeconds) {
-        this.queueConsumptionRateProvider = queueConsumptionRateProvider;
+        this.queueInformationProvider = queueInformationProvider;
         this.historicalConsumptionRateManager = historicalConsumptionRateManager;
         this.targetQueueLengthRounder = targetQueueLengthRounder;
         this.minTargetQueueLength = minTargetQueueLength;
@@ -51,11 +51,11 @@ public class TunedTargetQueueLengthProvider {
     public long getTunedTargetQueueLength(final String targetQueueName, final TargetQueueSettings targetQueueSettings){
 
         final double consumptionRate =
-                queueConsumptionRateProvider.getConsumptionRate(targetQueueName);
+                queueInformationProvider.getConsumptionRate(targetQueueName);
 
-        TUNED_TARGET_LOGGER.info("Current consumption rate of " + targetQueueName + " is: " + consumptionRate);
+        TUNED_TARGET_LOGGER.debug("Current consumption rate of " + targetQueueName + " is: " + consumptionRate);
 
-        final double messageBytesReady = queueConsumptionRateProvider.getMessageBytesReady(targetQueueName);
+        final double messageBytesReady = queueInformationProvider.getMessageBytesReady(targetQueueName);
 
         final double theoreticalConsumptionRate = calculateCurrentTheoreticalConsumptionRate(consumptionRate,
                 targetQueueSettings.getCurrentInstances(), targetQueueSettings.getMaxInstances());
@@ -83,20 +83,18 @@ public class TunedTargetQueueLengthProvider {
 
     private long roundAndCheckTargetQueue(final long tunedTargetQueue) {
         final long roundedTargetQueueLength = targetQueueLengthRounder.getRoundedTargetQueueLength(tunedTargetQueue);
-        TUNED_TARGET_LOGGER.info("In the case that the target queue length is rounded below the minimum target queue length or above " +
-                "the maximum " +
-                "target queue length. Target queue length will be set to that minimum or maximum value respectively.");
+        TUNED_TARGET_LOGGER.debug("In the case that the target queue length is rounded below the minimum target queue length or above " +
+                "the maximum target queue length. Target queue length will be set to that minimum or maximum value respectively.");
 
         if (roundedTargetQueueLength > maxTargetQueueLength) {
-            TUNED_TARGET_LOGGER.info("Rounded queue length: {} exceeds the maximum length that the queue can be set to. " +
+            TUNED_TARGET_LOGGER.debug("Rounded queue length: {} exceeds the maximum length that the queue can be set to. " +
                     "Therefore the maximum length: {} should be set.", roundedTargetQueueLength, maxTargetQueueLength);
             return maxTargetQueueLength;
         }
 
         if (roundedTargetQueueLength < minTargetQueueLength) {
-            TUNED_TARGET_LOGGER.info("Rounded queue length: {} is less than the minimum length that the queue can be set to. Therefore" +
-                    " the minimum " +
-                    "length: {} should be set.", roundedTargetQueueLength, minTargetQueueLength);
+            TUNED_TARGET_LOGGER.debug("Rounded queue length: {} is less than the minimum length that the queue can be set to. Therefore" +
+                    " the minimum length: {} should be set.", roundedTargetQueueLength, minTargetQueueLength);
             return minTargetQueueLength;
         } else {
             return roundedTargetQueueLength;
@@ -105,25 +103,26 @@ public class TunedTargetQueueLengthProvider {
 
     private long determineFinalTargetQueueLength(final String targetQueueName, final long targetQueueLength, final long tunedTargetQueueLength){
 
-        TUNED_TARGET_LOGGER.info("Original target queue length for {}: {}", targetQueueName, targetQueueLength);
+        TUNED_TARGET_LOGGER.info("Original target queue length of {}: {}", targetQueueName, targetQueueLength);
 
-        TUNED_TARGET_LOGGER.info("Recommended tuned target queue length is: {}", tunedTargetQueueLength);
+        TUNED_TARGET_LOGGER.info("Recommended tuned target queue length of {} is: {}", targetQueueName, tunedTargetQueueLength);
 
         if(noOpMode) {
-            TUNED_TARGET_LOGGER.info("NoOpMode True - Target queue length has not been adjusted.");
+            TUNED_TARGET_LOGGER.info("NoOpMode True - Target queue length of {} has not been adjusted.", targetQueueName);
             return targetQueueLength;
         }
 
         if(!historicalConsumptionRateManager.isSufficientHistoryAvailable(targetQueueName)) {
-            TUNED_TARGET_LOGGER.info("Not enough ConsumptionRateHistory to make an adjustment.");
+            TUNED_TARGET_LOGGER.info("Not enough ConsumptionRateHistory to make an adjustment to {} target queue length.", targetQueueName);
             return targetQueueLength;
         }
 
         if(targetQueueLength == tunedTargetQueueLength){
-            TUNED_TARGET_LOGGER.info("Target queue is already set to optimum length: {}. No action required.", targetQueueLength);
+            TUNED_TARGET_LOGGER.info("Target queue length of {} is already set to optimum length: {}. No action required.",
+                    targetQueueName, targetQueueLength);
             return targetQueueLength;
         }else{
-            TUNED_TARGET_LOGGER.info("Target queue length has been adjusted to: {}",tunedTargetQueueLength);
+            TUNED_TARGET_LOGGER.info("Target queue length of {} has been adjusted to: {}", targetQueueName, tunedTargetQueueLength);
             return tunedTargetQueueLength;
         }
     }

@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nonnull;
 
-import com.github.workerframework.workermessageprioritization.targetqueue.QueueConsumptionRateProvider;
+import com.github.workerframework.workermessageprioritization.targetqueue.QueueInformationProvider;
 import com.github.workerframework.workermessageprioritization.targetqueue.HistoricalConsumptionRateManager;
 import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueLengthRounder;
 import com.github.workerframework.workermessageprioritization.targetqueue.TunedTargetQueueLengthProvider;
@@ -103,15 +103,15 @@ public class ShovelApplication
                     }
                 });
 
-        final QueueConsumptionRateProvider queueConsumptionRateProvider =
-                new QueueConsumptionRateProvider(queuesApi);
+        final QueueInformationProvider queueInformationProvider =
+                new QueueInformationProvider(queuesApi);
         final HistoricalConsumptionRateManager historicalConsumptionRateManager =
                 new HistoricalConsumptionRateManager(messageDistributorConfig.getMaxConsumptionRateHistorySize(),
                 messageDistributorConfig.getMinConsumptionRateHistorySize());
         final TargetQueueLengthRounder targetQueueLengthRounder = new TargetQueueLengthRounder(messageDistributorConfig.getRoundingMultiple());
         final TunedTargetQueueLengthProvider tunedTargetQueueLengthProvider =
                 new TunedTargetQueueLengthProvider(
-                        queueConsumptionRateProvider,
+                        queueInformationProvider,
                         historicalConsumptionRateManager,
                         targetQueueLengthRounder,
                         messageDistributorConfig.getMinTargetQueueLength(),

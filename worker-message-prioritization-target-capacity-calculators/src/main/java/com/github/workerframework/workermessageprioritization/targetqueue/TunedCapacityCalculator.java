@@ -17,13 +17,10 @@ package com.github.workerframework.workermessageprioritization.targetqueue;
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 import com.google.inject.Inject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class TunedCapacityCalculator extends CapacityCalculatorBase {
 
     private final TunedTargetQueueLengthProvider tunedTargetQueueLengthProvider;
-    private static final Logger TUNED_TARGET_LOGGER = LoggerFactory.getLogger("TUNED_TARGET");
 
     @Inject
     public TunedCapacityCalculator(final TunedTargetQueueLengthProvider tunedTargetQueueLengthProvider,
@@ -35,12 +32,8 @@ public class TunedCapacityCalculator extends CapacityCalculatorBase {
     @Override
     protected TargetQueueSettings refineInternal(final Queue targetQueue, final TargetQueueSettings targetQueueSettings) {
 
-        TUNED_TARGET_LOGGER.info("Calculating the tuned target length. Current length:" + targetQueueSettings.getCurrentMaxLength() );
-
         final long tunedTargetMaxQueueLength = tunedTargetQueueLengthProvider.getTunedTargetQueueLength(targetQueue.getName(),
                 targetQueueSettings);
-
-        TUNED_TARGET_LOGGER.info("After tuning. Current length:" + targetQueueSettings.getCurrentMaxLength() );
 
         return new TargetQueueSettings(tunedTargetMaxQueueLength,
                 targetQueueSettings.getEligibleForRefillPercentage(), targetQueueSettings.getMaxInstances(),

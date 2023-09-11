@@ -21,7 +21,7 @@ import static org.awaitility.Awaitility.await;
 import com.github.workerframework.workermessageprioritization.redistribution.consumption.ConsumptionTargetCalculator;
 import com.github.workerframework.workermessageprioritization.redistribution.consumption.EqualConsumptionTargetCalculator;
 import com.github.workerframework.workermessageprioritization.redistribution.shovel.ShovelDistributor;
-import com.github.workerframework.workermessageprioritization.targetqueue.QueueConsumptionRateProvider;
+import com.github.workerframework.workermessageprioritization.targetqueue.QueueInformationProvider;
 import com.github.workerframework.workermessageprioritization.targetqueue.HistoricalConsumptionRateManager;
 import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueLengthRounder;
 import com.github.workerframework.workermessageprioritization.targetqueue.TunedTargetQueueLengthProvider;
@@ -31,7 +31,6 @@ import com.rabbitmq.client.AMQP;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
-import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -80,14 +79,14 @@ public class ShovelDistributorIT extends DistributorTestBase {
         final int minConsumptionRateHistorySize = 10;
         final int roundingMultiple = 100;
         final double queueProcessingTimeGoalSeconds = 300;
-        final QueueConsumptionRateProvider queueConsumptionRateProvider =
-                new QueueConsumptionRateProvider(queuesApi);
+        final QueueInformationProvider queueInformationProvider =
+                new QueueInformationProvider(queuesApi);
         final HistoricalConsumptionRateManager historicalConsumptionRateManager = new HistoricalConsumptionRateManager(maxConsumptionRateHistorySize,
                 minConsumptionRateHistorySize);
         final TargetQueueLengthRounder targetQueueLengthRounder = new TargetQueueLengthRounder(roundingMultiple);
         final TunedTargetQueueLengthProvider tunedTargetQueueLengthProvider =
                 new TunedTargetQueueLengthProvider(
-                        queueConsumptionRateProvider,
+                        queueInformationProvider,
                         historicalConsumptionRateManager,
                         targetQueueLengthRounder,
                         100,

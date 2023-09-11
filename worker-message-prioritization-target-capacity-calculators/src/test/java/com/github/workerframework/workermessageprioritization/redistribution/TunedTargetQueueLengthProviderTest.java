@@ -17,7 +17,7 @@ package com.github.workerframework.workermessageprioritization.redistribution;
 
 import com.github.workerframework.workermessageprioritization.targetqueue.TunedTargetQueueLengthProvider;
 import com.github.workerframework.workermessageprioritization.targetqueue.HistoricalConsumptionRateManager;
-import com.github.workerframework.workermessageprioritization.targetqueue.QueueConsumptionRateProvider;
+import com.github.workerframework.workermessageprioritization.targetqueue.QueueInformationProvider;
 import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueLengthRounder;
 import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueSettings;
 import org.junit.Test;
@@ -60,14 +60,14 @@ public class TunedTargetQueueLengthProviderTest {
                 withSettings().useConstructor(roundingMultiple).defaultAnswer(RETURNS_DEFAULTS));
         when(targetQueueLengthRounder.getRoundedTargetQueueLength(ArgumentMatchers.anyLong())).thenReturn(300L);
 
-        final QueueConsumptionRateProvider queueConsumptionRateProvider =
-                mock(QueueConsumptionRateProvider.class);
-        when(queueConsumptionRateProvider.getConsumptionRate(targetQueue1))
+        final QueueInformationProvider queueInformationProvider =
+                mock(QueueInformationProvider.class);
+        when(queueInformationProvider.getConsumptionRate(targetQueue1))
                 .thenReturn(consumptionRate);
-        when(queueConsumptionRateProvider.getMessageBytesReady(targetQueue1))
+        when(queueInformationProvider.getMessageBytesReady(targetQueue1))
                 .thenReturn(1D);
 
-        final TunedTargetQueueLengthProvider targetQueue = new TunedTargetQueueLengthProvider(queueConsumptionRateProvider,
+        final TunedTargetQueueLengthProvider targetQueue = new TunedTargetQueueLengthProvider(queueInformationProvider,
                 historicalConsumptionRateManager, targetQueueLengthRounder, minTargetQueueLength, maxTargetQueueLength, true,
                 queueProcessingTimeGoalSeconds);
 
@@ -94,14 +94,14 @@ public class TunedTargetQueueLengthProviderTest {
                 withSettings().useConstructor(roundingMultiple).defaultAnswer(RETURNS_DEFAULTS));
         when(targetQueueLengthRounder.getRoundedTargetQueueLength(ArgumentMatchers.anyLong())).thenReturn(300L);
 
-        final QueueConsumptionRateProvider queueConsumptionRateProvider =
-                mock(QueueConsumptionRateProvider.class);
-        when(queueConsumptionRateProvider.getConsumptionRate(targetQueue1))
+        final QueueInformationProvider queueInformationProvider =
+                mock(QueueInformationProvider.class);
+        when(queueInformationProvider.getConsumptionRate(targetQueue1))
                 .thenReturn(consumptionRate);
-        when(queueConsumptionRateProvider.getMessageBytesReady(targetQueue1))
+        when(queueInformationProvider.getMessageBytesReady(targetQueue1))
                 .thenReturn(1D);
 
-        final TunedTargetQueueLengthProvider targetQueue = new TunedTargetQueueLengthProvider(queueConsumptionRateProvider,
+        final TunedTargetQueueLengthProvider targetQueue = new TunedTargetQueueLengthProvider(queueInformationProvider,
                 historicalConsumptionRateManager, targetQueueLengthRounder, minTargetQueueLength, maxTargetQueueLength, false, queueProcessingTimeGoalSeconds);
 
         final long tunedTargetQueueLength = getTunedTargetQueueLength(targetQueue1, targetQueue, targetQueueSettings);
@@ -135,18 +135,18 @@ public class TunedTargetQueueLengthProviderTest {
         when(targetQueueLengthRounder.getRoundedTargetQueueLength(300)).thenReturn(300L);
         when(targetQueueLengthRounder.getRoundedTargetQueueLength(3000)).thenReturn(3000L);
 
-        final QueueConsumptionRateProvider queueConsumptionRateProvider =
-                mock(QueueConsumptionRateProvider.class);
-        when(queueConsumptionRateProvider.getConsumptionRate(targetQueue1))
+        final QueueInformationProvider queueInformationProvider =
+                mock(QueueInformationProvider.class);
+        when(queueInformationProvider.getConsumptionRate(targetQueue1))
                 .thenReturn(consumptionRate1);
-        when(queueConsumptionRateProvider.getMessageBytesReady(targetQueue1))
+        when(queueInformationProvider.getMessageBytesReady(targetQueue1))
                 .thenReturn(1D);
-        when(queueConsumptionRateProvider.getConsumptionRate(targetQueue2))
+        when(queueInformationProvider.getConsumptionRate(targetQueue2))
                 .thenReturn(consumptionRate2);
-        when(queueConsumptionRateProvider.getMessageBytesReady(targetQueue2))
+        when(queueInformationProvider.getMessageBytesReady(targetQueue2))
                 .thenReturn(1D);
 
-        final TunedTargetQueueLengthProvider targetQueue = new TunedTargetQueueLengthProvider(queueConsumptionRateProvider,
+        final TunedTargetQueueLengthProvider targetQueue = new TunedTargetQueueLengthProvider(queueInformationProvider,
                 historicalConsumptionRateManager, targetQueueLengthRounder, minTargetQueueLength, maxTargetQueueLength, false,
                 queueProcessingTimeGoalSeconds);
 
@@ -188,18 +188,18 @@ public class TunedTargetQueueLengthProviderTest {
         when(targetQueueLengthRounder.getRoundedTargetQueueLength(3)).thenReturn(0L);
         when(targetQueueLengthRounder.getRoundedTargetQueueLength(3000000)).thenReturn(3000000L);
 
-        final QueueConsumptionRateProvider queueConsumptionRateProvider =
-                mock(QueueConsumptionRateProvider.class);
-        when(queueConsumptionRateProvider.getConsumptionRate(targetQueue1))
+        final QueueInformationProvider queueInformationProvider =
+                mock(QueueInformationProvider.class);
+        when(queueInformationProvider.getConsumptionRate(targetQueue1))
                 .thenReturn(consumptionRate1);
-        when(queueConsumptionRateProvider.getMessageBytesReady(targetQueue1))
+        when(queueInformationProvider.getMessageBytesReady(targetQueue1))
                 .thenReturn(1D);
-        when(queueConsumptionRateProvider.getConsumptionRate(targetQueue2))
+        when(queueInformationProvider.getConsumptionRate(targetQueue2))
                 .thenReturn(consumptionRate2);
-        when(queueConsumptionRateProvider.getMessageBytesReady(targetQueue2))
+        when(queueInformationProvider.getMessageBytesReady(targetQueue2))
                 .thenReturn(1D);
 
-        final TunedTargetQueueLengthProvider targetQueue = new TunedTargetQueueLengthProvider(queueConsumptionRateProvider,
+        final TunedTargetQueueLengthProvider targetQueue = new TunedTargetQueueLengthProvider(queueInformationProvider,
                 historicalConsumptionRateManager, targetQueueLengthRounder, minTargetQueueLength , maxTargetQueueLength, false, queueProcessingTimeGoalSeconds);
 
         final long tunedTargetQueueLength1 = getTunedTargetQueueLength(targetQueue1, targetQueue, targetQueueSettings);

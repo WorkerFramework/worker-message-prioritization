@@ -26,7 +26,7 @@ import com.github.workerframework.workermessageprioritization.targetqueue.TunedT
 import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueSettingsProvider;
 import com.github.workerframework.workermessageprioritization.targetqueue.HistoricalConsumptionRateManager;
 import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueLengthRounder;
-import com.github.workerframework.workermessageprioritization.targetqueue.QueueConsumptionRateProvider;
+import com.github.workerframework.workermessageprioritization.targetqueue.QueueInformationProvider;
 import com.github.workerframework.workermessageprioritization.targetqueue.CapacityCalculatorBase;
 import com.github.workerframework.workermessageprioritization.targetqueue.MinimumCapacityCalculator;
 import com.github.workerframework.workermessageprioritization.targetqueue.TunedCapacityCalculator;
@@ -158,7 +158,7 @@ public class DistributorModule extends AbstractModule {
         bind(TargetQueueSettingsProvider.class).to(K8sTargetQueueSettingsProvider.class);
         bind(HistoricalConsumptionRateManager.class);
         bind(TargetQueueLengthRounder.class);
-        bind(QueueConsumptionRateProvider.class);
+        bind(QueueInformationProvider.class);
         bind(StagingTargetPairProvider.class);
         bind(TunedTargetQueueLengthProvider.class);
         bind(ConsumptionTargetCalculator.class).to(EqualConsumptionTargetCalculator.class);

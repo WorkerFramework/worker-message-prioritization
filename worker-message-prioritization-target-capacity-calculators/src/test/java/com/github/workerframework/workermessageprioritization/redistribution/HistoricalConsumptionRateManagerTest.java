@@ -160,4 +160,29 @@ public class HistoricalConsumptionRateManagerTest {
         assertEquals("This should return the average consumption rate for target queue 2", 7.352,
                 theoreticalConsumptionRateHistoryQueue2Average, 0.001);
     }
+
+    @Test
+    public void consumptionRateNotRecordedIfNoMessageBytesReadyTest(){
+
+        final double theoreticalConsumptionRate1 = 2.5;
+
+        final double messageBytesReady = 0D;
+
+        final HistoricalConsumptionRateManager historicalConsumptionRateManager = new HistoricalConsumptionRateManager(maximumConsumptionRateHistorySize,
+                minConsumptionRateHistorySize);
+
+        final List<Double> targetQueue1ConsumptionRates = Arrays.asList(2.5, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0);
+        for(final Double rate: targetQueue1ConsumptionRates){
+            historicalConsumptionRateManager.recordCurrentConsumptionRateHistoryAndGetAverage(targetQueue1, rate, messageBytesReady);
+        }
+
+        final double theoreticalConsumptionRateHistoryQueue1Average =
+                historicalConsumptionRateManager.recordCurrentConsumptionRateHistoryAndGetAverage(targetQueue1,
+                        theoreticalConsumptionRate1, messageBytesReady);
+
+        assertEquals("For a queue with no message bytes ready, only the first consumption rate should be recorded to ensure the queue " +
+                        "exists and has a history. The rest of the consumption rates should be discarded. In this case the average " +
+                        "consumption rate should be equal to the first consumption rate passed.", 2.5,
+                theoreticalConsumptionRateHistoryQueue1Average, 0.001);
+    }
 }
