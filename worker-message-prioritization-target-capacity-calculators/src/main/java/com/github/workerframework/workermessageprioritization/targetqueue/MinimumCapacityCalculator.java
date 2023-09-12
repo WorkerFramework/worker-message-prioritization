@@ -29,15 +29,15 @@ public class MinimumCapacityCalculator extends CapacityCalculatorBase {
     @Override
     protected TargetQueueSettings refineInternal(final Queue targetQueue, final TargetQueueSettings targetQueueSettings) {
 
-        TUNED_TARGET_LOGGER.debug("Calculating the minimum capacity. Current length: " + targetQueueSettings.getCurrentMaxLength());
+        TUNED_TARGET_LOGGER.debug("Calculating the minimum capacity. Current length: {}", targetQueueSettings.getCurrentMaxLength());
 
         final long targetQueueCapacity = Math.max(0, targetQueueSettings.getCurrentMaxLength() - targetQueue.getMessages());
 
-        TUNED_TARGET_LOGGER.debug("Target queue capacity: " + targetQueueCapacity);
+        TUNED_TARGET_LOGGER.debug("Target queue capacity: {}", targetQueueCapacity);
 
         final long targetQueueCapacityPercentage = targetQueueCapacity * 100 / targetQueueSettings.getCurrentMaxLength();
 
-        TUNED_TARGET_LOGGER.debug("Target queue percentage: " + targetQueueCapacityPercentage);
+        TUNED_TARGET_LOGGER.debug("Target queue percentage: {}", targetQueueCapacityPercentage);
 
         if (targetQueueCapacityPercentage < targetQueueSettings.getEligibleForRefillPercentage()) {
             return new TargetQueueSettings(targetQueueSettings.getCurrentMaxLength(),

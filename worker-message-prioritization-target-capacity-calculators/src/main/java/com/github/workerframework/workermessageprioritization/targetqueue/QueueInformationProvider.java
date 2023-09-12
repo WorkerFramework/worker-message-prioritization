@@ -54,7 +54,7 @@ public class QueueInformationProvider {
 
         final double message_bytes_ready = queuesApi.getApi().getQueue("/", targetQueueName).getMessageBytesReady();
 
-        TUNED_TARGET_LOGGER.debug("Current no of message bytes ready of " + targetQueueName + " is: " + message_bytes_ready);
+        TUNED_TARGET_LOGGER.debug("Current no of message bytes ready of {} is: {}", targetQueueName, message_bytes_ready);
 
         return message_bytes_ready;
     }

@@ -52,13 +52,13 @@ public class HistoricalConsumptionRateManager {
         if(messageBytesReady != 0 || theoreticalConsumptionRateHistory.isEmpty()) {
 
             if(theoreticalConsumptionRateHistory.isEmpty()){
-                TUNED_TARGET_LOGGER.debug("History rate for "  +targetQueueName + " is empty therefore this consumption rate will be " +
-                        "recorded.");
+                TUNED_TARGET_LOGGER.debug("History rate for {} is empty therefore this consumption rate will be recorded.",
+                        targetQueueName);
             }
 
             if (messageBytesReady != 0) {
-                TUNED_TARGET_LOGGER.debug("There are message bytes ready for: " + targetQueueName + ", therefore this consumption rate " +
-                        "will be recorded.");
+                TUNED_TARGET_LOGGER.debug("There are message bytes ready for: {}, therefore this consumption rate will be recorded.",
+                        targetQueueName);
             }
 
             theoreticalConsumptionRateHistory.add(theoreticalConsumptionRate);

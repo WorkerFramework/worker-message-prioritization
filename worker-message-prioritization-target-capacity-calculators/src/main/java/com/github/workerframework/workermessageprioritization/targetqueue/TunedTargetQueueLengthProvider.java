@@ -53,7 +53,7 @@ public class TunedTargetQueueLengthProvider {
         final double consumptionRate =
                 queueInformationProvider.getConsumptionRate(targetQueueName);
 
-        TUNED_TARGET_LOGGER.debug("Current consumption rate of " + targetQueueName + " is: " + consumptionRate);
+        TUNED_TARGET_LOGGER.debug("Current consumption rate of {} is: {}", targetQueueName, consumptionRate);
 
         final double messageBytesReady = queueInformationProvider.getMessageBytesReady(targetQueueName);
 

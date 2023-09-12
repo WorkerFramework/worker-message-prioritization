@@ -27,8 +27,8 @@ public class LowLevelApplication {
 
     public static void main(String[] args) throws IOException, TimeoutException, InterruptedException {
 
-        final Injector injector = Guice.createInjector(new DistributorModule());
-        final LowLevelDistributor lowLevelDistributor = injector.getInstance(LowLevelDistributor.class);
-        lowLevelDistributor.run();
+      final Injector injector = Guice.createInjector(new DistributorModule());
+      final LowLevelDistributor lowLevelDistributor = injector.getInstance(LowLevelDistributor.class);
+      lowLevelDistributor.run();
     }
 }
