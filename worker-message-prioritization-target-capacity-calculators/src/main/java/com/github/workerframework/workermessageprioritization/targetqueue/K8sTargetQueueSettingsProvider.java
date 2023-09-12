@@ -145,7 +145,7 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
 
                     final long targetQueueMaxInstances = getLabelOrDefault(
                             labels, MESSAGE_PRIORITIZATION_MAX_INSTANCES_LABEL,
-                            metadata.getName(),targetQueueName, MAX_INSTANCES_FALLBACK);
+                            metadata.getName(), targetQueueName, MAX_INSTANCES_FALLBACK);
 
                     int currentInstances;
                     try{

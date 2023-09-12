@@ -71,12 +71,6 @@ public class TunedTargetQueueIT extends DistributorTestBase {
     final String stagingQueue1Name = getStagingQueueName(queueName, T1_STAGING_QUEUE_NAME);
     final String stagingQueue2Name = getStagingQueueName(queueName, T2_STAGING_QUEUE_NAME);
     public static final String MOCK_SERVER_PORT = "CAF_MOCK_SERVER_PORT";
-    private static final String CAF_ROUNDING_MULTIPLE = "CAF_ROUNDING_MULTIPLE";
-    private static final String CAF_MAX_CONSUMPTION_RATE_HISTORY_SIZE = "CAF_MAX_CONSUMPTION_RATE_HISTORY_SIZE";
-    private static final String CAF_MIN_CONSUMPTION_RATE_HISTORY_SIZE = "CAF_MIN_CONSUMPTION_RATE_HISTORY_SIZE";
-    private static final String CAF_QUEUE_PROCESSING_TIME_GOAL_SECONDS = "CAF_QUEUE_PROCESSING_TIME_GOAL_SECONDS";
-    private static final String CAF_MIN_TARGET_QUEUE_LENGTH = "CAF_MIN_TARGET_QUEUE_LENGTH";
-    private static final String CAF_MAX_TARGET_QUEUE_LENGTH = "CAF_MAX_TARGET_QUEUE_LENGTH";
 
     // This test is for development purposes only
     // This test is to observe the consumption rate altering the recommended target queue length.

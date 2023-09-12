@@ -45,8 +45,8 @@ public final class ConsumptionTargetCalculatorBaseTest
         when(capacityCalculatorBase.refine(any(), any())).thenReturn(targetQueueSettings);
 
         final ConsumptionTargetCalculatorBase calculator = mock(
-                ConsumptionTargetCalculatorBase.class,
-                withSettings().useConstructor(targetQueueSettingsProvider, capacityCalculatorBase).defaultAnswer(CALLS_REAL_METHODS));
+            ConsumptionTargetCalculatorBase.class,
+            withSettings().useConstructor(targetQueueSettingsProvider, capacityCalculatorBase).defaultAnswer(CALLS_REAL_METHODS));
 
         assertEquals("Message capacity available returned regardless of the eligible for refill percentage set.", 200,
                 calculator.getTargetQueueCapacity(targetQueue));

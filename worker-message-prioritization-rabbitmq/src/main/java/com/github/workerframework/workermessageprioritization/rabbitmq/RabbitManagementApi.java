@@ -46,8 +46,8 @@ public class RabbitManagementApi <T> {
     
     private T api;
 
-    public RabbitManagementApi(final Class<T> apiType, final String endpoint,
-                              final String user, final String password) {
+    public RabbitManagementApi(final Class<T> apiType, final String endpoint, final String user,
+                               final String password) {
 
         final OkHttpClient okHttpClient = new OkHttpClient();
         okHttpClient.setReadTimeout(READ_TIMEOUT_SECONDS, TimeUnit.SECONDS);

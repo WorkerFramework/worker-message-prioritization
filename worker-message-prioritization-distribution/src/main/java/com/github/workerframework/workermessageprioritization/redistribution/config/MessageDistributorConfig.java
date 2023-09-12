@@ -173,9 +173,9 @@ public final class MessageDistributorConfig {
         kubernetesLabelCacheExpiryMinutes = getEnvOrDefault(
                 CAF_WMP_KUBERNETES_LABEL_CACHE_EXPIRY_MINUTES,
                 CAF_WMP_KUBERNETES_LABEL_CACHE_EXPIRY_MINUTES_DEFAULT);
-        noOpMode = getEnvOrDefault(CAF_NOOP_MODE,CAF_NOOP_MODE_DEFAULT);
-        minTargetQueueLength = getEnvOrDefault(CAF_MIN_TARGET_QUEUE_LENGTH,CAF_MIN_TARGET_QUEUE_LENGTH_DEFAULT);
-        maxTargetQueueLength = getEnvOrDefault(CAF_MAX_TARGET_QUEUE_LENGTH,CAF_MAX_TARGET_QUEUE_LENGTH_DEFAULT);
+        noOpMode = getEnvOrDefault(CAF_NOOP_MODE, CAF_NOOP_MODE_DEFAULT);
+        minTargetQueueLength = getEnvOrDefault(CAF_MIN_TARGET_QUEUE_LENGTH, CAF_MIN_TARGET_QUEUE_LENGTH_DEFAULT);
+        maxTargetQueueLength = getEnvOrDefault(CAF_MAX_TARGET_QUEUE_LENGTH, CAF_MAX_TARGET_QUEUE_LENGTH_DEFAULT);
         roundingMultiple = getEnvOrDefault(CAF_ROUNDING_MULTIPLE, CAF_ROUNDING_MULTIPLE_DEFAULT);
         maxConsumptionRateHistorySize = getEnvOrDefault(CAF_MAX_CONSUMPTION_RATE_HISTORY_SIZE,
                 CAF_MAX_CONSUMPTION_RATE_HISTORY_SIZE_DEFAULT);

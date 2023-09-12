@@ -16,7 +16,9 @@
 package com.github.workerframework.workermessageprioritization.redistribution;
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
-import com.github.workerframework.workermessageprioritization.targetqueue.*;
+import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueSettings;
+import com.github.workerframework.workermessageprioritization.targetqueue.MinimumCapacityCalculator;
+import com.github.workerframework.workermessageprioritization.targetqueue.CapacityCalculatorBase;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

@@ -66,7 +66,6 @@ public class TargetQueueLengthRounderTest {
         collector.checkThat("Target queue length should be rounded to the nearest 100", 749400L, equalTo(roundedTargetQueueLength10));
     }
 
-
     @Test
     public void roundingMultipleCannotBeSetToZeroTest() {
 

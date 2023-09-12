@@ -24,7 +24,8 @@ import com.github.workerframework.workermessageprioritization.redistribution.con
 import com.github.workerframework.workermessageprioritization.redistribution.lowlevel.LowLevelDistributor;
 import com.github.workerframework.workermessageprioritization.redistribution.lowlevel.StagingQueueTargetQueuePair;
 import com.github.workerframework.workermessageprioritization.redistribution.lowlevel.StagingTargetPairProvider;
-import com.github.workerframework.workermessageprioritization.targetqueue.*;
+import com.github.workerframework.workermessageprioritization.targetqueue.CapacityCalculatorBase;
+import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueSettings;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.rabbitmq.client.AMQP;
@@ -272,7 +273,7 @@ public class LowLevelDistributorIT extends DistributorTestBase {
 
             final LowLevelDistributor lowLevelDistributor = new LowLevelDistributor(queuesApi, connectionFactory,
                     consumptionTargetCalculator, stagingTargetPairProviderMock, 10000,
-                    consumerPublisherPairLastDoneWorkTimeoutMilliseconds, 100 , 10000000);
+                    consumerPublisherPairLastDoneWorkTimeoutMilliseconds, 100, 10000000);
 
             // Run the distributor (1st time)
             Assert.assertEquals(
