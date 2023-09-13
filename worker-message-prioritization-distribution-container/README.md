@@ -58,3 +58,37 @@ This repository consists of the source to build a container that includes the
     **Default**: 60.  
     **Description**: Used to specify the 'expire after write' minutes after which a Kubernetes label that has been added to the cache
     should be removed. Set this to 0 to disable caching.
+
+* `CAF_NOOP_MODE`  
+  **Default**: `true`  
+  **Description**: Used to toggle the TunedTargetQueueLength functionality on and off. While NoOp mode is true, any recommended tuning 
+  of the target queue length will not be implemented. Target queue length will only be altered if this is false. 
+
+* `CAF_MIN_TARGET_QUEUE_LENGTH`  
+  **Default**: `100`  
+  **Description**: Used to determine the minimum length the tunedTargetQueueLength can be reduced to. Will not go below this length. 
+
+* `CAF_MAX_TARGET_QUEUE_LENGTH`  
+  **Default**: `10000000`  
+  **Description**: Used to determine the maximum length the tunedTargetQueueLength can be increased to. Will not go above this length.
+* 
+* `CAF_ROUNDING_MULTIPLE`  
+  **Default**: `100`  
+  **Description**: Used to round the recommended tuned target queue length to the nearest rounding multiple value. The default value 
+  is 100, therefore the recommended tuned target queue length will be rounded to the nearest 100.
+
+* `CAF_MAX_CONSUMPTION_RATE_HISTORY_SIZE`  
+  **Default**: `100`  
+  **Description**: Used to set the maximum amount of tuned target queue length history that will be stored. This will be used to 
+  recommend an average tuned target queue length, based on up to 100 values. 
+
+* `CAF_MIN_CONSUMPTION_RATE_HISTORY_SIZE`  
+  **Default**: `10`  
+  **Description**: Used to set the minimum tuned target queue length history that is required before an actual change to the target 
+  queue length can be made. When noOp mode is false and the history rate size is above the minimum set value, then the target queue 
+  length will be altered. 
+
+* `CAF_QUEUE_PROCESSING_TIME_GOAL_SECONDS`  
+  **Default**: `300`  
+  **Description**: Used to set the amount of time in which we want a target queue length to be processed. This time will be used to 
+  compute how long the tuned target queue length should be to process the queue in this set amount of time. 

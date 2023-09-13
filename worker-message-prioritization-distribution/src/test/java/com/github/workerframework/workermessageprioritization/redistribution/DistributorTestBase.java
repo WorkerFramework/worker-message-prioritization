@@ -22,6 +22,7 @@ import javax.annotation.Nonnull;
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.NodesApi;
 import com.github.workerframework.workermessageprioritization.rabbitmq.ShovelState;
+import com.google.common.base.Strings;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -45,18 +46,22 @@ public class DistributorTestBase {
     protected RabbitManagementApi<ShovelsApi> shovelsApi;
     protected RabbitManagementApi<NodesApi> nodesApi;
     private final String managementUrl;
+    private static final String CAF_RABBITMQ_HOST = "CAF_RABBITMQ_HOST";
+    private static final String CAF_RABBITMQ_PORT = "CAF_RABBITMQ_PORT";
+    private static final String CAF_RABBITMQ_USERNAME = "CAF_RABBITMQ_USERNAME";
+    private static final String CAF_RABBITMQ_PASSWORD = "CAF_RABBITMQ_PASSWORD";
+    private static final String CAF_RABBITMQ_CTRL_PORT = "CAF_RABBITMQ_CTRL_PORT";
 
     public DistributorTestBase() {
         connectionFactory = new ConnectionFactory();
-
-        connectionFactory.setHost(System.getProperty("rabbitmq.node.address", "localhost"));
-        connectionFactory.setUsername(System.getProperty("rabbitmq.username", "guest"));
-        connectionFactory.setPassword(System.getProperty("rabbitmq.password", "guest"));
-        connectionFactory.setPort(Integer.parseInt(System.getProperty("rabbitmq.node.port", "25672")));
+        connectionFactory.setHost(getEnvOrDefault(CAF_RABBITMQ_HOST, "localhost"));
+        connectionFactory.setPort(Integer.parseInt(getEnvOrDefault(CAF_RABBITMQ_PORT, "25672")));
+        connectionFactory.setUsername(getEnvOrDefault(CAF_RABBITMQ_USERNAME, "guest"));
+        connectionFactory.setPassword(getEnvOrDefault(CAF_RABBITMQ_PASSWORD, "guest"));
         connectionFactory.setVirtualHost("/");
         this.connectionFactory = connectionFactory;
 
-        managementPort = Integer.parseInt(System.getProperty("rabbitmq.ctrl.port", "25673"));
+        managementPort = Integer.parseInt(getEnvOrDefault(CAF_RABBITMQ_CTRL_PORT, "25673"));
 
         managementUrl = "http://" + connectionFactory.getHost() + ":" + managementPort + "/";
 
@@ -72,6 +77,12 @@ public class DistributorTestBase {
         nodesApi = new RabbitManagementApi<>(NodesApi.class,
                 managementUrl,
                 connectionFactory.getUsername(), connectionFactory.getPassword());
+    }
+
+    private static String getEnvOrDefault(final String name, final String defaultValue) {
+        final String value = System.getenv(name);
+
+        return !Strings.isNullOrEmpty(value) ? value : defaultValue;
     }
     
     protected String getUniqueTargetQueueName(final String targetQueueName) {

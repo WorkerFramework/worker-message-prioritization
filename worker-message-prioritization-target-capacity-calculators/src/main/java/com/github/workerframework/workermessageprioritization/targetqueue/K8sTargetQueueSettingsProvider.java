@@ -19,10 +19,13 @@ import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import io.kubernetes.client.extended.kubectl.Kubectl;
 import io.kubernetes.client.extended.kubectl.exception.KubectlException;
 import io.kubernetes.client.openapi.Configuration;
 import io.kubernetes.client.openapi.models.V1Deployment;
+import io.kubernetes.client.openapi.models.V1DeploymentSpec;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
 import io.kubernetes.client.util.ClientBuilder;
 import org.slf4j.Logger;
@@ -38,16 +41,26 @@ import java.util.concurrent.TimeUnit;
 public final class K8sTargetQueueSettingsProvider implements TargetQueueSettingsProvider
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(K8sTargetQueueSettingsProvider.class);
-    private static final String MESSAGE_PRIORITIZATION_TARGET_QUEUE_NAME_LABEL = "messageprioritization.targetqueuename";
-    private static final String MESSAGE_PRIORITIZATION_TARGET_QUEUE_MAX_LENGTH_LABEL = "messageprioritization.targetqueuemaxlength";
+    private static final String MESSAGE_PRIORITIZATION_TARGET_QUEUE_NAME_LABEL = 
+            "messageprioritization.targetqueuename";
+    private static final String MESSAGE_PRIORITIZATION_TARGET_QUEUE_MAX_LENGTH_LABEL = 
+            "messageprioritization.targetqueuemaxlength";
+    private static final String MESSAGE_PRIORITIZATION_MAX_INSTANCES_LABEL = "autoscale.maxinstances";
     private static final String MESSAGE_PRIORITIZATION_TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_LABEL
         = "messageprioritization.targetqueueeligibleforrefillpercentage";
+    private static final String CURRENT_INSTANCES_LABEL = "spec.replicas";
     private static final long TARGET_QUEUE_MAX_LENGTH_FALLBACK = 1000;
     private static final long TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK = 10;
+    private final int CURRENT_INSTANCE_FALLBACK = 1;
+    private final int MAX_INSTANCES_FALLBACK = 1;
+    private static final long CAPACITY_FALLBACK = 1000;
     private final List<String> kubernetesNamespaces;
     private final LoadingCache<Queue, TargetQueueSettings> targetQueueToSettingsCache;
 
-    public K8sTargetQueueSettingsProvider(final List<String> kubernetesNamespaces, final int kubernetesLabelCacheExpiryMinutes)
+    @Inject
+    public K8sTargetQueueSettingsProvider(
+            @Named("KubernetesNamespaces") final List<String> kubernetesNamespaces, 
+            @Named("KubernetesLabelCacheExpiryMinutes") final int kubernetesLabelCacheExpiryMinutes)
     {
         try {
             Configuration.setDefaultApiClient(ClientBuilder.standard().build());
@@ -82,7 +95,9 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
                                        TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK),
                          executionException);
 
-            return new TargetQueueSettings(TARGET_QUEUE_MAX_LENGTH_FALLBACK, TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK);
+            return new TargetQueueSettings(TARGET_QUEUE_MAX_LENGTH_FALLBACK, 
+                    TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK,
+                    MAX_INSTANCES_FALLBACK, CURRENT_INSTANCE_FALLBACK, CAPACITY_FALLBACK);
         }
     }
 
@@ -96,13 +111,17 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
 
             try {
                 // Loop through all deployments
-                for (final V1Deployment deployment : Kubectl.get(V1Deployment.class).namespace(kubernetesNamespace).execute()) {
+                for (final V1Deployment deployment : Kubectl.get(V1Deployment.class)
+                        .namespace(kubernetesNamespace).execute()) {
 
                     // Get the metadata
                     final V1ObjectMeta metadata = deployment.getMetadata();
                     if (metadata == null) {
                         continue;
                     }
+
+                    // Get the spec
+                    final V1DeploymentSpec spec = deployment.getSpec();
 
                     // Get the labels from the metadata
                     final Map<String, String> labels = metadata.getLabels();
@@ -128,13 +147,28 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
                         labels, MESSAGE_PRIORITIZATION_TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_LABEL,
                         metadata.getName(), targetQueueName, TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK);
 
+                    final long targetQueueMaxInstances = getLabelOrDefault(
+                            labels, MESSAGE_PRIORITIZATION_MAX_INSTANCES_LABEL,
+                            metadata.getName(), targetQueueName, MAX_INSTANCES_FALLBACK);
+
+                    final int currentInstances;
+                    if(spec.getReplicas() != null){
+                        currentInstances = spec.getReplicas();
+                    }else{
+                        // currentInstances not available for worker
+                        LOGGER.debug(String.format("The worker %s is missing the %s label. ", metadata.getName(),
+                                CURRENT_INSTANCES_LABEL));
+                        currentInstances = CURRENT_INSTANCE_FALLBACK;
+                    }
+
                     if (targetQueueEligibleForRefillPercentage < 0 || targetQueueEligibleForRefillPercentage > 100) {
                         // Invalid eligible for refill percentage provided, set to fall back value
                         LOGGER.error(String.format("Cannot get eligible for refill percentage for the %s queue. "
                             + "An invalid %s label was provided for the %s worker. "
                             + "Falling back to using eligible for refill percentage of %s",
-                                                   targetQueueName, MESSAGE_PRIORITIZATION_TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_LABEL,
-                                                   metadata.getName(), TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK));
+                                targetQueueName, 
+                                MESSAGE_PRIORITIZATION_TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_LABEL,
+                                metadata.getName(), TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK));
                         targetQueueEligibleForRefillPercentage = TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK;
                     }
 
@@ -147,17 +181,25 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
                                  targetQueueEligibleForRefillPercentage,
                                  targetQueueName);
 
-                    return new TargetQueueSettings(targetQueueMaxLength, targetQueueEligibleForRefillPercentage);
+                    return new TargetQueueSettings(targetQueueMaxLength, targetQueueEligibleForRefillPercentage,
+                            targetQueueMaxInstances, currentInstances, targetQueueMaxLength);
                 }
             } catch (final KubectlException kubectlException) {
-                LOGGER.error(String.format("Cannot get settings for the %s queue as the Kubernetes API threw an exception. "
-                    + "Falling back to using a max length of %s and eligible for refill percentage of %s",
+                LOGGER.error(String.format(
+                        "Cannot get settings for the %s queue as the Kubernetes API threw an exception. " +
+                                "Falling back to using a max length of %s, eligible for refill percentage of %s, " +
+                                "maximum instance of %s and current instance of %s",
                                            targetQueueName,
                                            TARGET_QUEUE_MAX_LENGTH_FALLBACK,
-                                           TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK));
+                                           TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK,
+                                           MAX_INSTANCES_FALLBACK,
+                                           CURRENT_INSTANCE_FALLBACK));
 
                 return new TargetQueueSettings(TARGET_QUEUE_MAX_LENGTH_FALLBACK,
-                                               TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK);
+                                               TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK,
+                                               MAX_INSTANCES_FALLBACK,
+                                               CURRENT_INSTANCE_FALLBACK,
+                                               CAPACITY_FALLBACK);
             }
         }
 
@@ -175,7 +217,8 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
     {
         if (!labels.containsKey(labelName)) {
             LOGGER.error(
-                "Cannot get {} for the {} queue. The {} worker is missing the label. Falling back to using default value of {}",
+                "Cannot get {} for the {} queue. The {} worker is missing the label. " +
+                        "Falling back to using default value of {}",
                 labelName, targetQueueName, workerName, defaultValue);
 
             return defaultValue;
@@ -186,8 +229,9 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
             return Long.parseLong(labelValue);
         } catch (final NumberFormatException ex) {
             LOGGER.error(
-                "Cannot get {} for the {} queue. The {} worker provided an invalid (not parsable to long) label value: {}. "
-                + "Falling back to using default value of {}",
+                    "Cannot get {} for the {} queue. " +
+                    "The {} worker provided an invalid (not parsable to long) label value: {}. " +
+                    "Falling back to using default value of {}",
                 labelName, targetQueueName, workerName, labelValue, defaultValue);
 
             return defaultValue;

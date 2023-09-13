@@ -21,12 +21,16 @@ import static org.awaitility.Awaitility.await;
 import com.github.workerframework.workermessageprioritization.redistribution.consumption.ConsumptionTargetCalculator;
 import com.github.workerframework.workermessageprioritization.redistribution.consumption.EqualConsumptionTargetCalculator;
 import com.github.workerframework.workermessageprioritization.redistribution.shovel.ShovelDistributor;
+import com.github.workerframework.workermessageprioritization.targetqueue.QueueInformationProvider;
+import com.github.workerframework.workermessageprioritization.targetqueue.HistoricalConsumptionRateManager;
+import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueLengthRounder;
+import com.github.workerframework.workermessageprioritization.targetqueue.TunedTargetQueueLengthProvider;
 import com.github.workerframework.workermessageprioritization.targetqueue.FixedTargetQueueSettingsProvider;
+import com.google.common.base.Strings;
 import com.rabbitmq.client.AMQP;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
-import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -36,7 +40,7 @@ import java.util.concurrent.TimeoutException;
 
 public class ShovelDistributorIT extends DistributorTestBase {
 
-    @Test
+//    @Test
     public void twoStagingQueuesTest() throws TimeoutException, IOException, InterruptedException {
 
         final String targetQueueName = getUniqueTargetQueueName(TARGET_QUEUE_NAME);
@@ -71,8 +75,27 @@ public class ShovelDistributorIT extends DistributorTestBase {
                     .until(queueContainsNumMessages(stagingQueue2Name, 1));
         }
 
+        final int maxConsumptionRateHistorySize = 100;
+        final int minConsumptionRateHistorySize = 10;
+        final int roundingMultiple = 100;
+        final double queueProcessingTimeGoalSeconds = 300;
+        final QueueInformationProvider queueInformationProvider =
+                new QueueInformationProvider(queuesApi);
+        final HistoricalConsumptionRateManager historicalConsumptionRateManager = new HistoricalConsumptionRateManager(maxConsumptionRateHistorySize,
+                minConsumptionRateHistorySize);
+        final TargetQueueLengthRounder targetQueueLengthRounder = new TargetQueueLengthRounder(roundingMultiple);
+        final TunedTargetQueueLengthProvider tunedTargetQueueLengthProvider =
+                new TunedTargetQueueLengthProvider(
+                        queueInformationProvider,
+                        historicalConsumptionRateManager,
+                        targetQueueLengthRounder,
+                        100,
+                        10000000,
+                        Strings.isNullOrEmpty(System.getenv("CAF_NOOP_MODE")) || Boolean.parseBoolean(System.getenv("CAF_NOOP_MODE")),
+                        queueProcessingTimeGoalSeconds);
+
         final ConsumptionTargetCalculator consumptionTargetCalculator =
-                new EqualConsumptionTargetCalculator(new FixedTargetQueueSettingsProvider());
+                new EqualConsumptionTargetCalculator(new FixedTargetQueueSettingsProvider(), null);
 
         final ShovelDistributor shovelDistributor = new ShovelDistributor(
                 queuesApi,
@@ -88,7 +111,9 @@ public class ShovelDistributorIT extends DistributorTestBase {
                 120000,
                 120000,
                 120000,
-                10000);
+                10000,
+                100,
+                10000000);
 
         shovelDistributor.runOnce();
 

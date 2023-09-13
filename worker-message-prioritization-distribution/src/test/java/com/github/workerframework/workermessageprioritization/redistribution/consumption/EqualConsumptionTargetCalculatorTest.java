@@ -16,9 +16,11 @@
 package com.github.workerframework.workermessageprioritization.redistribution.consumption;
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
+import com.github.workerframework.workermessageprioritization.redistribution.DistributorTestBase;
 import com.github.workerframework.workermessageprioritization.redistribution.DistributorWorkItem;
 import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueSettingsProvider;
 import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueSettings;
+import com.github.workerframework.workermessageprioritization.targetqueue.CapacityCalculatorBase;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -30,29 +32,33 @@ import java.util.Set;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public final class EqualConsumptionTargetCalculatorTest
+public final class EqualConsumptionTargetCalculatorTest extends DistributorTestBase
 {
 
     @Test
     public void calculateConsumptionTargetsTest()
     {
-        final TargetQueueSettingsProvider provider = mock(TargetQueueSettingsProvider.class);
+        final TargetQueueSettingsProvider targetQueueSettingsProvider = mock(TargetQueueSettingsProvider.class);
 
         final Queue targetQueue = new Queue();
         targetQueue.setMessages(750);
-
-        final TargetQueueSettings settings = new TargetQueueSettings(1000, 20);
-        when(provider.get(targetQueue)).thenReturn(settings);
 
         final Queue q1 = new Queue();
         final Queue q2 = new Queue();
         final Set<Queue> stagingQueues = new HashSet<>(Arrays.asList(q1, q2));
         stagingQueues.forEach((queue -> queue.setMessages(200)));
 
-        final EqualConsumptionTargetCalculator equalCalculator = new EqualConsumptionTargetCalculator(provider);
+        final TargetQueueSettings targetQueueSettings = mock(TargetQueueSettings.class);
+        when(targetQueueSettings.getCapacity()).thenReturn(250L);
+
+        final CapacityCalculatorBase capacityCalculatorBase = mock(CapacityCalculatorBase.class);
+        when(capacityCalculatorBase.refine(any(), any())).thenReturn(targetQueueSettings);
+
+        final EqualConsumptionTargetCalculator equalCalculator = new EqualConsumptionTargetCalculator(targetQueueSettingsProvider, capacityCalculatorBase);
 
         final DistributorWorkItem workItem = mock(DistributorWorkItem.class);
         when(workItem.getTargetQueue()).thenReturn(targetQueue);
@@ -67,15 +73,18 @@ public final class EqualConsumptionTargetCalculatorTest
     @Test
     public void calculateConsumptionTargetsTestEmptyStagingQueueSetReturn0()
     {
-        final TargetQueueSettingsProvider provider = mock(TargetQueueSettingsProvider.class);
+        final TargetQueueSettingsProvider targetQueueSettingsProvider = mock(TargetQueueSettingsProvider.class);
 
         final Queue targetQueue = new Queue();
         targetQueue.setMessages(750);
 
-        final TargetQueueSettings settings = new TargetQueueSettings(1000, 20);
-        when(provider.get(targetQueue)).thenReturn(settings);
+        final TargetQueueSettings targetQueueSettings = mock(TargetQueueSettings.class);
+        when(targetQueueSettings.getCapacity()).thenReturn(250L);
 
-        final EqualConsumptionTargetCalculator equalCalculator = new EqualConsumptionTargetCalculator(provider);
+        final CapacityCalculatorBase capacityCalculatorBase = mock(CapacityCalculatorBase.class);
+        when(capacityCalculatorBase.refine(any(), any())).thenReturn(targetQueueSettings);
+
+        final EqualConsumptionTargetCalculator equalCalculator = new EqualConsumptionTargetCalculator(targetQueueSettingsProvider, capacityCalculatorBase);
 
         final DistributorWorkItem workItem = mock(DistributorWorkItem.class);
         when(workItem.getTargetQueue()).thenReturn(targetQueue);
@@ -89,20 +98,23 @@ public final class EqualConsumptionTargetCalculatorTest
     @Test
     public void calculateConsumptionTargetTestInsufficientCapacityInTargetQueueReturn0()
     {
-        final TargetQueueSettingsProvider provider = mock(TargetQueueSettingsProvider.class);
+        final TargetQueueSettingsProvider targetQueueSettingsProvider = mock(TargetQueueSettingsProvider.class);
 
         final Queue targetQueue = new Queue();
         targetQueue.setMessages(900);
-
-        final TargetQueueSettings settings = new TargetQueueSettings(1000, 20);
-        when(provider.get(targetQueue)).thenReturn(settings);
 
         final Queue q1 = new Queue();
         final Queue q2 = new Queue();
         final Set<Queue> stagingQueues = new HashSet<>(Arrays.asList(q1, q2));
         stagingQueues.forEach((queue -> queue.setMessages(50)));
 
-        final EqualConsumptionTargetCalculator equalCalculator = new EqualConsumptionTargetCalculator(provider);
+        final TargetQueueSettings targetQueueSettings = mock(TargetQueueSettings.class);
+        when(targetQueueSettings.getCapacity()).thenReturn(0L);
+
+        final CapacityCalculatorBase capacityCalculatorBase = mock(CapacityCalculatorBase.class);
+        when(capacityCalculatorBase.refine(any(), any())).thenReturn(targetQueueSettings);
+
+        final EqualConsumptionTargetCalculator equalCalculator = new EqualConsumptionTargetCalculator(targetQueueSettingsProvider, capacityCalculatorBase);
 
         final DistributorWorkItem workItem = mock(DistributorWorkItem.class);
         when(workItem.getTargetQueue()).thenReturn(targetQueue);
@@ -117,20 +129,23 @@ public final class EqualConsumptionTargetCalculatorTest
     @Test
     public void calculateConsumptionTargetsTestStagingQueueContainsLessMessagesThanTargetQueueHasCapacityFor()
     {
-        final TargetQueueSettingsProvider provider = mock(TargetQueueSettingsProvider.class);
+        final TargetQueueSettingsProvider targetQueueSettingsProvider = mock(TargetQueueSettingsProvider.class);
 
         final Queue targetQueue = new Queue();
         targetQueue.setMessages(750);
-
-        final TargetQueueSettings settings = new TargetQueueSettings(1000, 20);
-        when(provider.get(targetQueue)).thenReturn(settings);
 
         final Queue q1 = new Queue();
         final Queue q2 = new Queue();
         final Set<Queue> stagingQueues = new HashSet<>(Arrays.asList(q1, q2));
         stagingQueues.forEach((queue -> queue.setMessages(50)));
 
-        final EqualConsumptionTargetCalculator equalCalculator = new EqualConsumptionTargetCalculator(provider);
+        final TargetQueueSettings targetQueueSettings = mock(TargetQueueSettings.class);
+        when(targetQueueSettings.getCapacity()).thenReturn(250L);
+
+        final CapacityCalculatorBase capacityCalculatorBase = mock(CapacityCalculatorBase.class);
+        when(capacityCalculatorBase.refine(any(), any())).thenReturn(targetQueueSettings);
+
+        final EqualConsumptionTargetCalculator equalCalculator = new EqualConsumptionTargetCalculator(targetQueueSettingsProvider, capacityCalculatorBase);
 
         final DistributorWorkItem workItem = mock(DistributorWorkItem.class);
         when(workItem.getTargetQueue()).thenReturn(targetQueue);
