@@ -151,12 +151,12 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
                             labels, MESSAGE_PRIORITIZATION_MAX_INSTANCES_LABEL,
                             metadata.getName(), targetQueueName, MAX_INSTANCES_FALLBACK);
 
-                    int currentInstances;
-                    try{
+                    final int currentInstances;
+                    if(spec.getReplicas() != null){
                         currentInstances = spec.getReplicas();
-                    } catch (final NullPointerException ex) {
+                    }else{
                         // currentInstances not available for worker
-                        LOGGER.error(String.format("The worker %s is missing the %s label. ", metadata.getName(),
+                        LOGGER.debug(String.format("The worker %s is missing the %s label. ", metadata.getName(),
                                 CURRENT_INSTANCES_LABEL));
                         currentInstances = CURRENT_INSTANCE_FALLBACK;
                     }
