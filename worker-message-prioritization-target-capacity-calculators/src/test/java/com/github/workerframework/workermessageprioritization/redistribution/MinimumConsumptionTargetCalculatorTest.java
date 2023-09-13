@@ -53,8 +53,8 @@ public final class MinimumConsumptionTargetCalculatorTest
     }
 
     /**
-     * Target Queue Max Length: 1000 Target Queue Available Capacity: 750 (25%) Target Queue Eligible For Refill Percentage: 30%
-     *
+     * Target Queue Max Length: 1000 Target Queue Available Capacity: 750 (25%) Target Queue Eligible For 
+     * Refill Percentage: 30%
      * Therefore, no messages should be moved - expect 0 to be returned
      */
     @Test
@@ -72,7 +72,9 @@ public final class MinimumConsumptionTargetCalculatorTest
 
         final MinimumCapacityCalculator minimumCapacityCalculator = new MinimumCapacityCalculator(capacityCalculatorBase);
 
-        assertEquals("The space available is less than the percentage of space required for refill, therefore 0 returned.", 0,
+        assertEquals(
+                "The space available is less than the percentage of space required for refill, therefore 0 returned.", 
+                0,
                 minimumCapacityCalculator.refine(targetQueue, targetQueueSettings).getCapacity());
     }
 }

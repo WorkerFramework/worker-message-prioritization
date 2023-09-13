@@ -32,39 +32,45 @@ public class HistoricalConsumptionRateManager {
     private final HashMap<String, EvictingQueue<Double>> consumptionRateHistoryMap = new HashMap<>();
 
     @Inject
-    public HistoricalConsumptionRateManager(@Named("MaxConsumptionRateHistorySize") final int maximumConsumptionRateHistorySize,
-                                            @Named("MinConsumptionRateHistorySize")final int minimumHistorySize) throws IllegalArgumentException {
+    public HistoricalConsumptionRateManager(
+            @Named("MaxConsumptionRateHistorySize") final int maximumConsumptionRateHistorySize,
+            @Named("MinConsumptionRateHistorySize")final int minimumHistorySize) throws IllegalArgumentException {
 
         if (maximumConsumptionRateHistorySize < minimumHistorySize) {
-            throw new IllegalArgumentException("Minimum history required cannot be larger than the maximum history storage size.");
+            throw new IllegalArgumentException(
+                    "Minimum history required cannot be larger than the maximum history storage size.");
         }
 
         this.maximumConsumptionRateHistorySize = maximumConsumptionRateHistorySize;
         this.minimumHistorySize = minimumHistorySize;
     }
 
-    public double recordCurrentConsumptionRateHistoryAndGetAverage(final String targetQueueName, final double theoreticalConsumptionRate,
+    public double recordCurrentConsumptionRateHistoryAndGetAverage(final String targetQueueName, 
+                                                                   final double theoreticalConsumptionRate,
                                                                    final double messageBytesReady) {
 
-        final EvictingQueue<Double> theoreticalConsumptionRateHistory = consumptionRateHistoryMap.computeIfAbsent(targetQueueName,
-                s -> EvictingQueue.create(maximumConsumptionRateHistorySize));
+        final EvictingQueue<Double> theoreticalConsumptionRateHistory = consumptionRateHistoryMap
+                .computeIfAbsent(targetQueueName, s -> EvictingQueue.create(maximumConsumptionRateHistorySize));
 
         if(messageBytesReady != 0 || theoreticalConsumptionRateHistory.isEmpty()) {
 
             if(theoreticalConsumptionRateHistory.isEmpty()){
-                TUNED_TARGET_LOGGER.debug("History rate for {} is empty therefore this consumption rate will be recorded.",
+                TUNED_TARGET_LOGGER.debug(
+                        "History rate for {} is empty therefore this consumption rate will be recorded.",
                         targetQueueName);
             }
 
             if (messageBytesReady != 0) {
-                TUNED_TARGET_LOGGER.debug("There are message bytes ready for: {}, therefore this consumption rate will be recorded.",
+                TUNED_TARGET_LOGGER.debug(
+                        "There are message bytes ready for: {}, therefore this consumption rate will be recorded.",
                         targetQueueName);
             }
 
             theoreticalConsumptionRateHistory.add(theoreticalConsumptionRate);
         }
 
-        return theoreticalConsumptionRateHistory.stream().mapToDouble(d -> d).average().orElseThrow(IllegalStateException::new);
+        return theoreticalConsumptionRateHistory.stream().mapToDouble(d -> d).average()
+                .orElseThrow(IllegalStateException::new);
     }
 
     public boolean isSufficientHistoryAvailable(final String queueName) throws IllegalArgumentException {
@@ -77,8 +83,10 @@ public class HistoricalConsumptionRateManager {
             final boolean isSufficientHistory = consumptionRateHistoryMap.get(queueName).size() >= minimumHistorySize;
 
             if (isSufficientHistory) {
-                TUNED_TARGET_LOGGER.debug("Consumption rate history from the last {} runs of this worker available. An average of these" +
-                        " rates will determine the new target queue length. If different to the current queue length, the following " +
+                TUNED_TARGET_LOGGER.debug(
+                        "Consumption rate history from the last {} runs of this worker available. An average of these" +
+                        " rates will determine the new target queue length. If different to the current queue length," +
+                                " the following " +
                         "suggestions will be implemented and the target queue length adjusted.",
                         consumptionRateHistoryMap.get(queueName).size());
             } else {

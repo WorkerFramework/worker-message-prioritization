@@ -47,8 +47,6 @@ public class LowLevelDistributor extends MessageDistributor {
     private final String connectionDetails;
     private final long distributorRunIntervalMilliseconds;
     private final long consumerPublisherPairLastDoneWorkTimeoutMilliseconds;
-    private final long minTargetQueueLength;
-    private final long maxTargetQueueLength;
 
     @Inject
     public LowLevelDistributor(final RabbitManagementApi<QueuesApi> queuesApi,
@@ -71,8 +69,6 @@ public class LowLevelDistributor extends MessageDistributor {
         this.stagingTargetPairProvider = stagingTargetPairProvider;
         this.distributorRunIntervalMilliseconds = distributorRunIntervalMilliseconds;
         this.consumerPublisherPairLastDoneWorkTimeoutMilliseconds = consumerPublisherPairLastDoneWorkTimeoutMilliseconds;
-        this.minTargetQueueLength = minTargetQueueLength;
-        this.maxTargetQueueLength = maxTargetQueueLength;
     }
     
     public void run() throws IOException, TimeoutException, InterruptedException {

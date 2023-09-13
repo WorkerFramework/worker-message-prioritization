@@ -41,8 +41,10 @@ import java.util.concurrent.TimeUnit;
 public final class K8sTargetQueueSettingsProvider implements TargetQueueSettingsProvider
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(K8sTargetQueueSettingsProvider.class);
-    private static final String MESSAGE_PRIORITIZATION_TARGET_QUEUE_NAME_LABEL = "messageprioritization.targetqueuename";
-    private static final String MESSAGE_PRIORITIZATION_TARGET_QUEUE_MAX_LENGTH_LABEL = "messageprioritization.targetqueuemaxlength";
+    private static final String MESSAGE_PRIORITIZATION_TARGET_QUEUE_NAME_LABEL = 
+            "messageprioritization.targetqueuename";
+    private static final String MESSAGE_PRIORITIZATION_TARGET_QUEUE_MAX_LENGTH_LABEL = 
+            "messageprioritization.targetqueuemaxlength";
     private static final String MESSAGE_PRIORITIZATION_MAX_INSTANCES_LABEL = "autoscale.maxinstances";
     private static final String MESSAGE_PRIORITIZATION_TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_LABEL
         = "messageprioritization.targetqueueeligibleforrefillpercentage";
@@ -93,7 +95,8 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
                                        TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK),
                          executionException);
 
-            return new TargetQueueSettings(TARGET_QUEUE_MAX_LENGTH_FALLBACK, TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK,
+            return new TargetQueueSettings(TARGET_QUEUE_MAX_LENGTH_FALLBACK, 
+                    TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK,
                     MAX_INSTANCES_FALLBACK, CURRENT_INSTANCE_FALLBACK, CAPACITY_FALLBACK);
         }
     }
@@ -108,7 +111,8 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
 
             try {
                 // Loop through all deployments
-                for (final V1Deployment deployment : Kubectl.get(V1Deployment.class).namespace(kubernetesNamespace).execute()) {
+                for (final V1Deployment deployment : Kubectl.get(V1Deployment.class)
+                        .namespace(kubernetesNamespace).execute()) {
 
                     // Get the metadata
                     final V1ObjectMeta metadata = deployment.getMetadata();
@@ -162,8 +166,9 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
                         LOGGER.error(String.format("Cannot get eligible for refill percentage for the %s queue. "
                             + "An invalid %s label was provided for the %s worker. "
                             + "Falling back to using eligible for refill percentage of %s",
-                                                   targetQueueName, MESSAGE_PRIORITIZATION_TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_LABEL,
-                                                   metadata.getName(), TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK));
+                                targetQueueName, 
+                                MESSAGE_PRIORITIZATION_TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_LABEL,
+                                metadata.getName(), TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK));
                         targetQueueEligibleForRefillPercentage = TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK;
                     }
 
@@ -180,9 +185,10 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
                             targetQueueMaxInstances, currentInstances, targetQueueMaxLength);
                 }
             } catch (final KubectlException kubectlException) {
-                LOGGER.error(String.format("Cannot get settings for the %s queue as the Kubernetes API threw an exception. "
-                    + "Falling back to using a max length of %s, eligible for refill percentage of %s, maximum instance of %s and " +
-                                "current instance of %s",
+                LOGGER.error(String.format(
+                        "Cannot get settings for the %s queue as the Kubernetes API threw an exception. " +
+                                "Falling back to using a max length of %s, eligible for refill percentage of %s, " +
+                                "maximum instance of %s and current instance of %s",
                                            targetQueueName,
                                            TARGET_QUEUE_MAX_LENGTH_FALLBACK,
                                            TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK,
@@ -211,7 +217,8 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
     {
         if (!labels.containsKey(labelName)) {
             LOGGER.error(
-                "Cannot get {} for the {} queue. The {} worker is missing the label. Falling back to using default value of {}",
+                "Cannot get {} for the {} queue. The {} worker is missing the label. " +
+                        "Falling back to using default value of {}",
                 labelName, targetQueueName, workerName, defaultValue);
 
             return defaultValue;
@@ -222,8 +229,9 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
             return Long.parseLong(labelValue);
         } catch (final NumberFormatException ex) {
             LOGGER.error(
-                "Cannot get {} for the {} queue. The {} worker provided an invalid (not parsable to long) label value: {}. "
-                + "Falling back to using default value of {}",
+                    "Cannot get {} for the {} queue. " +
+                    "The {} worker provided an invalid (not parsable to long) label value: {}. " +
+                    "Falling back to using default value of {}",
                 labelName, targetQueueName, workerName, labelValue, defaultValue);
 
             return defaultValue;

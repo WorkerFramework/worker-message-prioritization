@@ -24,8 +24,8 @@ public final class FixedTargetQueueSettingsProvider implements TargetQueueSettin
 {
     private static final long QUEUE_MAX_LENGTH = 1000;
     private static final long QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE = 10;
-    private final int MAX_INSTANCES = 1;
-    private final int CURRENT_INSTANCES = 1;
+    private static final int MAX_INSTANCES = 1;
+    private static final int CURRENT_INSTANCES = 1;
     private static final long CAPACITY = 1000;
 
     @Override

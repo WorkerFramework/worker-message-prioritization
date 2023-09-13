@@ -145,7 +145,6 @@
                 </executions>
                 <configuration>
                     <systemPropertyVariables>
-                        <rabbitmq.node.address>${docker.host.address}</rabbitmq.node.address>
                         <timeout.ms>120000</timeout.ms>
                     </systemPropertyVariables>
                     <environmentVariables>

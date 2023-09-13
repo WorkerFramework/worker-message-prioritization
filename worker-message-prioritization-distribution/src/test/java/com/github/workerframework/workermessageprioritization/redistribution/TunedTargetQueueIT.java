@@ -182,9 +182,6 @@ public class TunedTargetQueueIT extends DistributorTestBase {
                         .setHeader("content-type", "application/json")
                         .setBody(deploymentList));
 
-                List<String> namespaces = new ArrayList<>();
-                namespaces.add("private");
-
                 final Injector injector = Guice.createInjector(new DistributorModule());
                 final TargetQueueSettingsProvider k8sTargetQueueSettingsProvider =
                         injector.getInstance(TargetQueueSettingsProvider.class);
