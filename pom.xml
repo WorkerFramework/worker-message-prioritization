@@ -34,7 +34,7 @@
   
   <groupId>com.github.workerframework</groupId>
   <artifactId>worker-message-prioritization-aggregator</artifactId>
-  <version>1.2.0-SNAPSHOT</version>
+  <version>1.3.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>worker-message-prioritization-aggregator</name>
@@ -58,7 +58,7 @@
       <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
-        <version>30.1.1-jre</version>
+        <version>32.1.2-jre</version>
       </dependency>
       <dependency>
         <groupId>com.github.cafapi</groupId>
