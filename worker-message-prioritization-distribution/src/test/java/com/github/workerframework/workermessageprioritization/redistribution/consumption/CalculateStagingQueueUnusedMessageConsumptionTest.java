@@ -55,7 +55,7 @@ public class CalculateStagingQueueUnusedMessageConsumptionTest {
                 stagingQueueUnusedMessageConsumptionCalculator.calculateStagingQueueUnusedWeight(targetQueueCapacity, 2D);
 
         collector.checkThat("Result should be zero as all queues have been set less than the targetQueueCapacity offered to " +
-                        "the queue. This means no leftover is required as there is no staging queue to use the leftover.", 0D,
+                        "the queue. This means no leftover is required as there are no larger staging queues to use the leftover.", 0D,
                 equalTo(weightIncrease));
     }
 
@@ -135,7 +135,7 @@ public class CalculateStagingQueueUnusedMessageConsumptionTest {
                         .calculateStagingQueueUnusedWeight(targetQueueCapacity, stagingQueues.size());
 
         collector.checkThat("Result should be the sum of leftover weight space. Eg. 1000/10 = 100. q5 only has 90 messages, " +
-                        "therefore 0.1 out of the weight 1 is leftover.", 0.598D,
+                        "therefore 0.1 out of the weight 1 is leftover, and so on.", 0.598D,
                 equalTo(weightIncrease));
 
     }

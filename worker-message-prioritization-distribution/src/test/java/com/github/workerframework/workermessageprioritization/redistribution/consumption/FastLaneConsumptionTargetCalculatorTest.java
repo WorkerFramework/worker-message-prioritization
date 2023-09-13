@@ -142,7 +142,6 @@ public final class FastLaneConsumptionTargetCalculatorTest {
                 targetQueueCapacity, queue1Result+queue2Result);
     }
 
-
     @Test
     public void calculateConsumptionTargetForMultipleStagingQueueTest() {
 

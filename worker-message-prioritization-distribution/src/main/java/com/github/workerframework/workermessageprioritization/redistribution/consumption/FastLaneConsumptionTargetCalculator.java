@@ -34,30 +34,31 @@ public class FastLaneConsumptionTargetCalculator extends MinimumConsumptionTarge
     @Override
     public Map<Queue, Long> calculateConsumptionTargets(final DistributorWorkItem distributorWorkItem) {
 
-        // The number of messages the target queue has capacity for
+        // The number of messages the target queue has capacity for.
         final long targetQueueCapacity = getTargetQueueCapacity(distributorWorkItem.getTargetQueue());
 
-        final StagingQueueUnusedMessageConsumptionCalculator stagingQueueUnusedMessageConsumptionCalculator = new StagingQueueUnusedMessageConsumptionCalculator(distributorWorkItem);
+        final StagingQueueUnusedMessageConsumptionCalculator stagingQueueUnusedMessageConsumptionCalculator =
+                new StagingQueueUnusedMessageConsumptionCalculator(distributorWorkItem);
 
         final StagingQueueWeightCalculator stagingQueueWeightCalculator = new StagingQueueWeightCalculator(distributorWorkItem);
 
-        // The total number of messages in all the staging queues
+        // The total number of messages in all the staging queues.
         final long numMessagesInStagingQueues =
                 distributorWorkItem.getStagingQueues().stream()
                         .map(Queue::getMessages).mapToLong(Long::longValue).sum();
 
-        // The total number of weights across all staging queues
+        // The total number of weights across all staging queues.
         final double stagingQueueWeight = stagingQueueWeightCalculator.calculateTotalStagingQueueWeight();
 
-        // Target Queue capacity available per weight
+        // Target Queue capacity available per weight.
         final double capacityPerWeight = targetQueueCapacity / stagingQueueWeight;
 
         // Calculates, in terms of weights, the unused messages caused by staging queues smaller than the available target queue
-        // capacity per staging queue
+        // capacity per staging queue.
         final double unusedWeightToDistribute =
-                stagingQueueUnusedMessageConsumptionCalculator.calculateStagingQueueUnusedWeight(targetQueueCapacity,stagingQueueWeight);
+                stagingQueueUnusedMessageConsumptionCalculator.calculateStagingQueueUnusedWeight(targetQueueCapacity, stagingQueueWeight);
 
-        // Map staging queue to corresponding weight
+        // Map staging queue to corresponding weight.
         final Map<Queue, Long> stagingQueueToConsumptionTargetMap = new HashMap<>();
         final Map<Queue, Double> stagingQueueWeightMap = stagingQueueWeightCalculator.getStagingQueueWeights();
 

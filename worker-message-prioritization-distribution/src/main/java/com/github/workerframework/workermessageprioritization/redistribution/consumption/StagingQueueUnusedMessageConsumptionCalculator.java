@@ -49,7 +49,7 @@ public class StagingQueueUnusedMessageConsumptionCalculator {
             // There is an unused weight of 1.75 in this case.
             if (numMessagesInStagingQueue < queueValueGiven) {
                 unsedStagingQueueWeight += (stagingQueueWeightFromSettingService - (numMessagesInStagingQueue / queueValueGiven));
-                // Keep trac of the total weights that are not used to their potential. In this case weight of 2 is added, as that full
+                // Keep track of the total weights that are not used to their potential. In this case weight of 2 is added, as that full
                 // potential was not used.
                 stagingQueueWeightTotalReduced += stagingQueueWeightFromSettingService;
             }
