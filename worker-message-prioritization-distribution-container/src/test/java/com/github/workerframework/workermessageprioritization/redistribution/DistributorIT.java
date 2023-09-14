@@ -29,7 +29,7 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.concurrent.TimeoutException;
 
-// This test will use whatever distributor implementation (low level or shovel) has been set as the mainClass in the maven-jar-plugin in
+// This test will use whatever distributor implementation (low level) has been set as the mainClass in the maven-jar-plugin in
 // worker-message-prioritization-distribution/pom.xml.
 public final class DistributorIT extends DistributorTestBase {
 

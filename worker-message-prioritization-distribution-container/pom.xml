@@ -149,7 +149,7 @@
                     <verbose>true</verbose>
                     <images>
 
-                        <!-- Build a RabbitMQ image with the shovel plugins enabled for testing purposes -->
+                        <!-- Run the RabbitMQ image -->
                         <image>
                             <alias>rabbitmq</alias>
                             <name>${dockerWorkerFrameworkOrg}test-rabbitmq-with-shovel-plugin:${project.version}</name>

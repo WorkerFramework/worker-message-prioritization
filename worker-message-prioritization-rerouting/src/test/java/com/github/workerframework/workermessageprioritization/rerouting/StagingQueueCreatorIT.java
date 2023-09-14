@@ -31,7 +31,7 @@ import retrofit.RetrofitError;
 public final class StagingQueueCreatorIT extends RerouterTestBase {
 
     @Test
-    public void createStagingQueueTest() throws TimeoutException, IOException, InterruptedException {
+    public void createStagingQueueTest() throws TimeoutException, IOException {
 
         final String targetQueueName = getUniqueTargetQueueName(TARGET_QUEUE_NAME);
         final String stagingQueueName = getStagingQueueName(targetQueueName, T1_STAGING_QUEUE_NAME);

@@ -140,7 +140,7 @@
                     <containerNamePattern>%a-%t</containerNamePattern>
                     <verbose>true</verbose>
                     <images>
-                        <!-- Build a RabbitMQ image with the shovel plugins enabled for testing purposes -->
+                        <!-- Run the RabbitMQ image -->
                         <image>
                             <alias>rabbitmq</alias>
                             <name>${dockerHubPublic}/library/rabbitmq:3-management</name>
