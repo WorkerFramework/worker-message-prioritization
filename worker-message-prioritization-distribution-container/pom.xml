@@ -152,7 +152,7 @@
                         <!-- Run the RabbitMQ image -->
                         <image>
                             <alias>rabbitmq</alias>
-                            <name>${dockerWorkerFrameworkOrg}test-rabbitmq-with-shovel-plugin:${project.version}</name>
+                            <name>${dockerHubPublic}/library/rabbitmq:3-management</name>
                             <run>
                                 <ports>
                                     <port>${rabbitmq.ctrl.port}:15672</port>
