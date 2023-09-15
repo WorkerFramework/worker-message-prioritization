@@ -153,12 +153,6 @@
                         <image>
                             <alias>rabbitmq</alias>
                             <name>${dockerWorkerFrameworkOrg}test-rabbitmq-with-shovel-plugin:${project.version}</name>
-                            <build>
-                                <dockerFile>${project.basedir}/src/test/docker/Dockerfile</dockerFile>
-                                <args>
-                                    <RABBITMQ_IMAGE>${dockerHubPublic}/library/rabbitmq:3-management</RABBITMQ_IMAGE>
-                                </args>
-                            </build>
                             <run>
                                 <ports>
                                     <port>${rabbitmq.ctrl.port}:15672</port>
