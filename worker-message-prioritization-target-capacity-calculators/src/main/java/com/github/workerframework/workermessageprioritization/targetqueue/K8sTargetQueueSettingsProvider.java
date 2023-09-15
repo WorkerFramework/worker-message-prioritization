@@ -16,9 +16,7 @@
 package com.github.workerframework.workermessageprioritization.targetqueue;
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
+import com.google.common.base.Suppliers;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import io.kubernetes.client.extended.kubectl.Kubectl;
@@ -28,15 +26,16 @@ import io.kubernetes.client.openapi.models.V1Deployment;
 import io.kubernetes.client.openapi.models.V1DeploymentSpec;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
 import io.kubernetes.client.util.ClientBuilder;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nonnull;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 public final class K8sTargetQueueSettingsProvider implements TargetQueueSettingsProvider
 {
@@ -51,11 +50,17 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
     private static final String CURRENT_INSTANCES_LABEL = "spec.replicas";
     private static final long TARGET_QUEUE_MAX_LENGTH_FALLBACK = 1000;
     private static final long TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK = 10;
-    private final int CURRENT_INSTANCE_FALLBACK = 1;
-    private final int MAX_INSTANCES_FALLBACK = 1;
+    private static final int CURRENT_INSTANCE_FALLBACK = 1;
+    private static final int MAX_INSTANCES_FALLBACK = 1;
     private static final long CAPACITY_FALLBACK = 1000;
+    private static final TargetQueueSettings FALLBACK_TARGET_QUEUE_SETTINGS = new TargetQueueSettings(
+            TARGET_QUEUE_MAX_LENGTH_FALLBACK,
+            TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK,
+            MAX_INSTANCES_FALLBACK,
+            CURRENT_INSTANCE_FALLBACK,
+            CAPACITY_FALLBACK);
     private final List<String> kubernetesNamespaces;
-    private final LoadingCache<Queue, TargetQueueSettings> targetQueueToSettingsCache;
+    private final Supplier<Map<String, TargetQueueSettings>> memoizedTargetQueueSettingsSupplier;
 
     @Inject
     public K8sTargetQueueSettingsProvider(
@@ -68,144 +73,123 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
             throw new RuntimeException("IOException thrown trying to create a Kubernetes client", ioException);
         }
 
-        this.targetQueueToSettingsCache = CacheBuilder.newBuilder()
-            .expireAfterWrite(kubernetesLabelCacheExpiryMinutes, TimeUnit.MINUTES)
-            .build(new CacheLoader<Queue, TargetQueueSettings>()
-            {
-                @Override
-                public TargetQueueSettings load(@Nonnull final Queue queue)
-                {
-                    return getTargetQueueSettingsFromKubernetes(queue);
-                }
-            });
-
         this.kubernetesNamespaces = kubernetesNamespaces;
+        this.memoizedTargetQueueSettingsSupplier = Suppliers.memoizeWithExpiration(
+                this::getTargetQueueSettingsFromKubernetes, kubernetesLabelCacheExpiryMinutes, TimeUnit.MINUTES);
     }
 
     @Override
     public TargetQueueSettings get(final Queue targetQueue)
     {
-        try {
-            return targetQueueToSettingsCache.get(targetQueue);
-        } catch (final ExecutionException executionException) {
-            LOGGER.error(String.format("Cannot get settings for the %s queue as an ExecutionException was thrown. "
-                + "Falling back to using max length of %s and eligible for refill percentage of %s",
-                                       targetQueue,
-                                       TARGET_QUEUE_MAX_LENGTH_FALLBACK,
-                                       TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK),
-                         executionException);
+        final TargetQueueSettings targetQueueSettings = memoizedTargetQueueSettingsSupplier.get().get(targetQueue.getName());
 
-            return new TargetQueueSettings(TARGET_QUEUE_MAX_LENGTH_FALLBACK, 
-                    TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK,
-                    MAX_INSTANCES_FALLBACK, CURRENT_INSTANCE_FALLBACK, CAPACITY_FALLBACK);
+        if (targetQueueSettings == null) {
+            LOGGER.error("Cannot get settings for the {} queue. Using fallback settings: {}",
+                    targetQueue.getName(),
+                    FALLBACK_TARGET_QUEUE_SETTINGS);
+
+            return FALLBACK_TARGET_QUEUE_SETTINGS;
+        } else {
+            LOGGER.debug("Got settings for the {} queue: {}", targetQueue.getName(), targetQueueSettings);
+
+            return targetQueueSettings;
         }
     }
 
-    private TargetQueueSettings getTargetQueueSettingsFromKubernetes(final Queue targetQueue)
+    private Map<String, TargetQueueSettings> getTargetQueueSettingsFromKubernetes()
     {
-        // Get the target queue name
-        final String targetQueueName = targetQueue.getName();
+        // Map of target queue name -> settings
+        final Map<String, TargetQueueSettings> targetQueueNameToSettingsMap = new HashMap<>();
 
         // Loop through all provided namespaces
         for (final String kubernetesNamespace : kubernetesNamespaces) {
 
+            // Get all deployments in this namespace
+            final List<V1Deployment> deployments;
             try {
-                // Loop through all deployments
-                for (final V1Deployment deployment : Kubectl.get(V1Deployment.class)
-                        .namespace(kubernetesNamespace).execute()) {
+                deployments = Kubectl.get(V1Deployment.class).namespace(kubernetesNamespace).execute();
+            }  catch (final KubectlException kubectlException) {
+                LOGGER.error(String.format(
+                        "Cannot get settings for the target queues in the %s namespace as the Kubernetes API threw an exception.",
+                        kubernetesNamespace), kubectlException);
 
-                    // Get the metadata
-                    final V1ObjectMeta metadata = deployment.getMetadata();
-                    if (metadata == null) {
-                        continue;
-                    }
+                // Try the next namespace
+                continue;
+            }
 
-                    // Get the spec
-                    final V1DeploymentSpec spec = deployment.getSpec();
+            // Loop through all deployments
+            for (final V1Deployment deployment : deployments) {
 
-                    // Get the labels from the metadata
-                    final Map<String, String> labels = metadata.getLabels();
-                    if (labels == null) {
-                        continue;
-                    }
+                // Get the metadata
+                final V1ObjectMeta metadata = deployment.getMetadata();
+                if (metadata == null) {
+                    continue;
+                }
 
-                    // Check if there is a target queue name label
-                    if (!labels.containsKey(MESSAGE_PRIORITIZATION_TARGET_QUEUE_NAME_LABEL)) {
-                        continue;
-                    }
+                // Get the spec
+                final V1DeploymentSpec spec = deployment.getSpec();
 
-                    // Check if the target queue name label value matches the target queue name provided to this method
-                    if (!labels.get(MESSAGE_PRIORITIZATION_TARGET_QUEUE_NAME_LABEL).equals(targetQueueName)) {
-                        continue;
-                    }
+                // Get the labels from the metadata
+                final Map<String, String> labels = metadata.getLabels();
+                if (labels == null) {
+                    continue;
+                }
 
-                    final long targetQueueMaxLength = getLabelOrDefault(
+                // Check if there is a target queue name label
+                if (!labels.containsKey(MESSAGE_PRIORITIZATION_TARGET_QUEUE_NAME_LABEL)) {
+                    continue;
+                }
+
+                // Get the target queue name
+                final String targetQueueName = labels.get(MESSAGE_PRIORITIZATION_TARGET_QUEUE_NAME_LABEL);
+
+                final long targetQueueMaxLength = getLabelOrDefault(
                         labels, MESSAGE_PRIORITIZATION_TARGET_QUEUE_MAX_LENGTH_LABEL,
                         metadata.getName(), targetQueueName, TARGET_QUEUE_MAX_LENGTH_FALLBACK);
 
-                    long targetQueueEligibleForRefillPercentage = getLabelOrDefault(
+                long targetQueueEligibleForRefillPercentage = getLabelOrDefault(
                         labels, MESSAGE_PRIORITIZATION_TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_LABEL,
                         metadata.getName(), targetQueueName, TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK);
 
-                    final long targetQueueMaxInstances = getLabelOrDefault(
-                            labels, MESSAGE_PRIORITIZATION_MAX_INSTANCES_LABEL,
-                            metadata.getName(), targetQueueName, MAX_INSTANCES_FALLBACK);
+                final long targetQueueMaxInstances = getLabelOrDefault(
+                        labels, MESSAGE_PRIORITIZATION_MAX_INSTANCES_LABEL,
+                        metadata.getName(), targetQueueName, MAX_INSTANCES_FALLBACK);
 
-                    final int currentInstances;
-                    if(spec.getReplicas() != null){
-                        currentInstances = spec.getReplicas();
-                    }else{
-                        // currentInstances not available for worker
-                        LOGGER.debug(String.format("The worker %s is missing the %s label. ", metadata.getName(),
-                                CURRENT_INSTANCES_LABEL));
-                        currentInstances = CURRENT_INSTANCE_FALLBACK;
-                    }
-
-                    if (targetQueueEligibleForRefillPercentage < 0 || targetQueueEligibleForRefillPercentage > 100) {
-                        // Invalid eligible for refill percentage provided, set to fall back value
-                        LOGGER.error(String.format("Cannot get eligible for refill percentage for the %s queue. "
-                            + "An invalid %s label was provided for the %s worker. "
-                            + "Falling back to using eligible for refill percentage of %s",
-                                targetQueueName, 
-                                MESSAGE_PRIORITIZATION_TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_LABEL,
-                                metadata.getName(), TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK));
-                        targetQueueEligibleForRefillPercentage = TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK;
-                    }
-
-                    LOGGER.debug("Read the {} and {} labels belonging to {}. "
-                        + "Setting max length to {} and eligible for refill percentage to {}% for the {} queue",
-                                 MESSAGE_PRIORITIZATION_TARGET_QUEUE_MAX_LENGTH_LABEL,
-                                 MESSAGE_PRIORITIZATION_TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_LABEL,
-                                 metadata.getName(),
-                                 targetQueueMaxLength,
-                                 targetQueueEligibleForRefillPercentage,
-                                 targetQueueName);
-
-                    return new TargetQueueSettings(targetQueueMaxLength, targetQueueEligibleForRefillPercentage,
-                            targetQueueMaxInstances, currentInstances, targetQueueMaxLength);
+                final int currentInstances;
+                if(spec.getReplicas() != null){
+                    currentInstances = spec.getReplicas();
+                }else{
+                    // currentInstances not available for worker
+                    LOGGER.debug(String.format("The worker %s is missing the %s label. ", metadata.getName(),
+                            CURRENT_INSTANCES_LABEL));
+                    currentInstances = CURRENT_INSTANCE_FALLBACK;
                 }
-            } catch (final KubectlException kubectlException) {
-                LOGGER.error(String.format(
-                        "Cannot get settings for the %s queue as the Kubernetes API threw an exception. " +
-                                "Falling back to using a max length of %s, eligible for refill percentage of %s, " +
-                                "maximum instance of %s and current instance of %s",
-                                           targetQueueName,
-                                           TARGET_QUEUE_MAX_LENGTH_FALLBACK,
-                                           TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK,
-                                           MAX_INSTANCES_FALLBACK,
-                                           CURRENT_INSTANCE_FALLBACK));
 
-                return new TargetQueueSettings(TARGET_QUEUE_MAX_LENGTH_FALLBACK,
-                                               TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK,
-                                               MAX_INSTANCES_FALLBACK,
-                                               CURRENT_INSTANCE_FALLBACK,
-                                               CAPACITY_FALLBACK);
+                if (targetQueueEligibleForRefillPercentage < 0 || targetQueueEligibleForRefillPercentage > 100) {
+                    // Invalid eligible for refill percentage provided, set to fall back value
+                    LOGGER.error(String.format("Cannot get eligible for refill percentage for the %s queue. "
+                                    + "An invalid %s label was provided for the %s worker. "
+                                    + "Falling back to using eligible for refill percentage of %s",
+                            targetQueueName,
+                            MESSAGE_PRIORITIZATION_TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_LABEL,
+                            metadata.getName(), TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK));
+                    targetQueueEligibleForRefillPercentage = TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK;
+                }
+
+                final TargetQueueSettings targetQueueSettings = new TargetQueueSettings(
+                        targetQueueMaxLength,
+                        targetQueueEligibleForRefillPercentage,
+                        targetQueueMaxInstances,
+                        currentInstances,
+                        targetQueueMaxLength);
+
+                LOGGER.debug("Adding entry to targetQueueNameToSettingsMap: {}={}", targetQueueName, targetQueueSettings);
+
+                targetQueueNameToSettingsMap.put(targetQueueName, targetQueueSettings);
             }
         }
 
-        throw new RuntimeException(String.format(
-            "Cannot get settings for the %s queue. Unable to find a worker with the required labels.",
-            targetQueueName));
+        return targetQueueNameToSettingsMap;
     }
 
     private static long getLabelOrDefault(

@@ -15,6 +15,8 @@
  */
 package com.github.workerframework.workermessageprioritization.targetqueue;
 
+import com.google.common.base.MoreObjects;
+
 public class TargetQueueSettings
 {
     private long currentMaxLength;
@@ -57,5 +59,17 @@ public class TargetQueueSettings
 
     public long getCapacity(){
         return capacity;
+    }
+
+    @Override
+    public String toString()
+    {
+        return MoreObjects.toStringHelper(this)
+                .add("currentMaxLength", currentMaxLength)
+                .add("eligibleForRefillPercentage", eligibleForRefillPercentage)
+                .add("currentInstances", currentInstances)
+                .add("maxInstances", maxInstances)
+                .add("capacity", capacity)
+                .toString();
     }
 }
