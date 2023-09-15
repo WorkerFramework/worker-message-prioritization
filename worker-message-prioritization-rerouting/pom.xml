@@ -140,7 +140,7 @@
                     <containerNamePattern>%a-%t</containerNamePattern>
                     <verbose>true</verbose>
                     <images>
-                        <!-- Run the RabbitMQ image -->
+                        <!-- Build a RabbitMQ image -->
                         <image>
                             <alias>rabbitmq</alias>
                             <name>${dockerHubPublic}/library/rabbitmq:3-management</name>
