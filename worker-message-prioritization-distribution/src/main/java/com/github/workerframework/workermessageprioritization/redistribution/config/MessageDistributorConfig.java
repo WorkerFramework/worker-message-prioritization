@@ -55,36 +55,6 @@ public final class MessageDistributorConfig {
     private static final long CAF_WMP_CONSUMER_PUBLISHER_PAIR_LAST_DONE_WORK_TIMEOUT_MILLISECONDS_DEFAULT
             = 600000;
 
-    private static final String CAF_WMP_NON_RUNNING_SHOVEL_TIMEOUT_MILLISECONDS
-        = "CAF_WMP_NON_RUNNING_SHOVEL_TIMEOUT_MILLISECONDS";
-    private static final long CAF_WMP_NON_RUNNING_SHOVEL_TIMEOUT_MILLISECONDS_DEFAULT
-        = 120000;
-
-    private static final String CAF_WMP_NON_RUNNING_SHOVEL_CHECK_INTERVAL_MILLISECONDS
-        = "CAF_WMP_NON_RUNNING_SHOVEL_CHECK_INTERVAL_MILLISECONDS";
-    private static final long CAF_WMP_NON_RUNNING_SHOVEL_CHECK_INTERVAL_MILLISECONDS_DEFAULT
-        = 120000;
-
-    private static final String CAF_WMP_SHOVEL_RUNNING_TOO_LONG_TIMEOUT_MILLISECONDS
-            = "CAF_WMP_SHOVEL_RUNNING_TOO_LONG_TIMEOUT_MILLISECONDS";
-    private static final long CAF_WMP_SHOVEL_RUNNING_TOO_LONG_TIMEOUT_MILLISECONDS_DEFAULT
-            = 1800000;
-
-    private static final String CAF_WMP_SHOVEL_RUNNING_TOO_LONG_CHECK_INTERVAL_MILLISECONDS
-            = "CAF_WMP_SHOVEL_RUNNING_TOO_LONG_CHECK_INTERVAL_MILLISECONDS";
-    private static final long CAF_WMP_SHOVEL_RUNNING_TOO_LONG_CHECK_INTERVAL_MILLISECONDS_DEFAULT
-            = 120000;
-
-    private static final String CAF_WMP_CORRUPTED_SHOVEL_TIMEOUT_MILLISECONDS
-            = "CAF_WMP_CORRUPTED_SHOVEL_TIMEOUT_MILLISECONDS";
-    private static final long CAF_WMP_CORRUPTED_SHOVEL_TIMEOUT_MILLISECONDS_DEFAULT
-            = 600000;
-
-    private static final String CAF_WMP_CORRUPTED_SHOVEL_CHECK_INTERVAL_MILLISECONDS
-            = "CAF_WMP_CORRUPTED_SHOVEL_CHECK_INTERVAL_MILLISECONDS";
-    private static final long CAF_WMP_CORRUPTED_SHOVEL_CHECK_INTERVAL_MILLISECONDS_DEFAULT
-            = 120000;
-
     private static final String CAF_WMP_KUBERNETES_NAMESPACES = "CAF_WMP_KUBERNETES_NAMESPACES";
 
     private static final String CAF_WMP_KUBERNETES_LABEL_CACHE_EXPIRY_MINUTES = "CAF_WMP_KUBERNETES_LABEL_CACHE_EXPIRY_MINUTES";
@@ -117,13 +87,6 @@ public final class MessageDistributorConfig {
     private final int rabbitMQMaxNodeCount;
     private final long distributorRunIntervalMilliseconds;
     private final long consumerPublisherPairLastDoneWorkTimeoutMilliseconds;
-    private final long nonRunningShovelTimeoutMilliseconds;
-    private final long nonRunningShovelCheckIntervalMilliseconds;
-    private final long shovelRunningTooLongTimeoutMilliseconds;
-    private final long shovelRunningTooLongCheckIntervalMilliseconds;
-    private final long corruptedShovelTimeoutMilliseconds;
-    private final long corruptedShovelCheckIntervalMilliseconds;
-
     private final List<String> kubernetesNamespaces;
     private final int kubernetesLabelCacheExpiryMinutes;
     private final boolean noOpMode;
@@ -151,24 +114,6 @@ public final class MessageDistributorConfig {
         consumerPublisherPairLastDoneWorkTimeoutMilliseconds = getEnvOrDefault(
                 CAF_WMP_CONSUMER_PUBLISHER_PAIR_LAST_DONE_WORK_TIMEOUT_MILLISECONDS,
                 CAF_WMP_CONSUMER_PUBLISHER_PAIR_LAST_DONE_WORK_TIMEOUT_MILLISECONDS_DEFAULT);
-        nonRunningShovelTimeoutMilliseconds = getEnvOrDefault(
-            CAF_WMP_NON_RUNNING_SHOVEL_TIMEOUT_MILLISECONDS,
-            CAF_WMP_NON_RUNNING_SHOVEL_TIMEOUT_MILLISECONDS_DEFAULT);
-        nonRunningShovelCheckIntervalMilliseconds = getEnvOrDefault(
-            CAF_WMP_NON_RUNNING_SHOVEL_CHECK_INTERVAL_MILLISECONDS,
-            CAF_WMP_NON_RUNNING_SHOVEL_CHECK_INTERVAL_MILLISECONDS_DEFAULT);
-        shovelRunningTooLongTimeoutMilliseconds = getEnvOrDefault(
-                CAF_WMP_SHOVEL_RUNNING_TOO_LONG_TIMEOUT_MILLISECONDS,
-                CAF_WMP_SHOVEL_RUNNING_TOO_LONG_TIMEOUT_MILLISECONDS_DEFAULT);
-        shovelRunningTooLongCheckIntervalMilliseconds = getEnvOrDefault(
-                CAF_WMP_SHOVEL_RUNNING_TOO_LONG_CHECK_INTERVAL_MILLISECONDS,
-                CAF_WMP_SHOVEL_RUNNING_TOO_LONG_CHECK_INTERVAL_MILLISECONDS_DEFAULT);
-        corruptedShovelTimeoutMilliseconds = getEnvOrDefault(
-                CAF_WMP_CORRUPTED_SHOVEL_TIMEOUT_MILLISECONDS,
-                CAF_WMP_CORRUPTED_SHOVEL_TIMEOUT_MILLISECONDS_DEFAULT);
-        corruptedShovelCheckIntervalMilliseconds = getEnvOrDefault(
-                CAF_WMP_CORRUPTED_SHOVEL_CHECK_INTERVAL_MILLISECONDS,
-                CAF_WMP_CORRUPTED_SHOVEL_CHECK_INTERVAL_MILLISECONDS_DEFAULT);
         kubernetesNamespaces = getEnvOrThrow(CAF_WMP_KUBERNETES_NAMESPACES);
         kubernetesLabelCacheExpiryMinutes = getEnvOrDefault(
                 CAF_WMP_KUBERNETES_LABEL_CACHE_EXPIRY_MINUTES,
@@ -221,30 +166,6 @@ public final class MessageDistributorConfig {
         return rabbitMQMaxNodeCount;
     }
 
-    public long getNonRunningShovelTimeoutMilliseconds() {
-        return nonRunningShovelTimeoutMilliseconds;
-    }
-
-    public long getNonRunningShovelCheckIntervalMilliseconds() {
-        return nonRunningShovelCheckIntervalMilliseconds;
-    }
-
-    public long getShovelRunningTooLongTimeoutMilliseconds() {
-        return shovelRunningTooLongTimeoutMilliseconds;
-    }
-
-    public long getShovelRunningTooLongCheckIntervalMilliseconds() {
-        return shovelRunningTooLongCheckIntervalMilliseconds;
-    }
-
-    public long getCorruptedShovelTimeoutMilliseconds() {
-        return corruptedShovelTimeoutMilliseconds;
-    }
-
-    public long getCorruptedShovelCheckIntervalMilliseconds() {
-        return corruptedShovelCheckIntervalMilliseconds;
-    }
-
     public long getDistributorRunIntervalMilliseconds() {
         return distributorRunIntervalMilliseconds;
     }
@@ -283,12 +204,6 @@ public final class MessageDistributorConfig {
             .add(CAF_WMP_DISTRIBUTOR_RUN_INTERVAL_MILLISECONDS, distributorRunIntervalMilliseconds)
             .add(CAF_WMP_CONSUMER_PUBLISHER_PAIR_LAST_DONE_WORK_TIMEOUT_MILLISECONDS,
                     consumerPublisherPairLastDoneWorkTimeoutMilliseconds)
-            .add(CAF_WMP_NON_RUNNING_SHOVEL_TIMEOUT_MILLISECONDS, nonRunningShovelTimeoutMilliseconds)
-            .add(CAF_WMP_NON_RUNNING_SHOVEL_CHECK_INTERVAL_MILLISECONDS, nonRunningShovelCheckIntervalMilliseconds)
-            .add(CAF_WMP_SHOVEL_RUNNING_TOO_LONG_TIMEOUT_MILLISECONDS, shovelRunningTooLongTimeoutMilliseconds)
-            .add(CAF_WMP_SHOVEL_RUNNING_TOO_LONG_CHECK_INTERVAL_MILLISECONDS, shovelRunningTooLongCheckIntervalMilliseconds)
-            .add(CAF_WMP_CORRUPTED_SHOVEL_TIMEOUT_MILLISECONDS, corruptedShovelTimeoutMilliseconds)
-            .add(CAF_WMP_CORRUPTED_SHOVEL_CHECK_INTERVAL_MILLISECONDS, corruptedShovelCheckIntervalMilliseconds)
             .add(CAF_WMP_KUBERNETES_NAMESPACES, kubernetesNamespaces)
             .add(CAF_WMP_KUBERNETES_LABEL_CACHE_EXPIRY_MINUTES, kubernetesLabelCacheExpiryMinutes)
             .add(CAF_NOOP_MODE, noOpMode)

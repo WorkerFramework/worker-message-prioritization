@@ -40,10 +40,6 @@
             <artifactId>commons-io</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.google.code.findbugs</groupId>
-            <artifactId>jsr305</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
         </dependency>
@@ -71,18 +67,6 @@
         <dependency>
             <groupId>com.rabbitmq</groupId>
             <artifactId>amqp-client</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.squareup.okhttp</groupId>
-            <artifactId>okhttp</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.squareup.retrofit</groupId>
-            <artifactId>retrofit</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>net.jodah</groupId>
-            <artifactId>expiringmap</artifactId>
         </dependency>
         <dependency>
           <groupId>org.slf4j</groupId>
@@ -205,16 +189,10 @@
                     <containerNamePattern>%a-%t</containerNamePattern>
                     <verbose>true</verbose>
                     <images>
-                        <!-- Build a RabbitMQ image with the shovel plugins enabled for testing purposes -->
+                        <!-- Run the RabbitMQ image -->
                         <image>
                             <alias>rabbitmq</alias>
-                            <name>dev/rabbitmq-with-shovel-plugin</name>
-                            <build>
-                                <dockerFile>${project.basedir}/src/test/docker/Dockerfile</dockerFile>
-                                <args>
-                                    <RABBITMQ_IMAGE>${dockerHubPublic}/library/rabbitmq:3-management</RABBITMQ_IMAGE>
-                                </args>
-                            </build>
+                            <name>${dockerHubPublic}/library/rabbitmq:3-management</name>
                             <run>
                                 <ports>
                                     <port>${rabbitmq.ctrl.port}:15672</port>

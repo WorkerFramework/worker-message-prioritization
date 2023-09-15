@@ -20,7 +20,6 @@ import java.util.concurrent.Callable;
 import com.google.gson.Gson;
 import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApi;
 import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitManagementApi;
-import com.github.workerframework.workermessageprioritization.rabbitmq.ShovelsApi;
 import com.rabbitmq.client.ConnectionFactory;
 
 public class DistributorTestBase {
@@ -33,7 +32,6 @@ public class DistributorTestBase {
     protected ConnectionFactory connectionFactory;
     protected int managementPort;
     protected RabbitManagementApi<QueuesApi> queuesApi;
-    protected RabbitManagementApi<ShovelsApi> shovelsApi;
 
     public DistributorTestBase() {
         connectionFactory = new ConnectionFactory();
@@ -49,10 +47,6 @@ public class DistributorTestBase {
                 new RabbitManagementApi<>(QueuesApi.class,
                         "http://" + connectionFactory.getHost() + ":" + managementPort + "/",
                         connectionFactory.getUsername(), connectionFactory.getPassword());
-        
-        shovelsApi = new RabbitManagementApi<>(ShovelsApi.class, 
-                "http://" + connectionFactory.getHost() + ":" + managementPort + "/",
-                connectionFactory.getUsername(), connectionFactory.getPassword());
 
     }
 
