@@ -85,12 +85,12 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
 
         if (targetQueueSettings == null) {
             LOGGER.error("Cannot get settings for the {} queue. Using fallback settings: {}",
-                    targetQueue,
+                    targetQueue.getName(),
                     FALLBACK_TARGET_QUEUE_SETTINGS);
 
             return FALLBACK_TARGET_QUEUE_SETTINGS;
         } else {
-            LOGGER.debug("Got settings for the {} queue: {}", targetQueue, FALLBACK_TARGET_QUEUE_SETTINGS);
+            LOGGER.debug("Got settings for the {} queue: {}", targetQueue.getName(), targetQueueSettings);
 
             return targetQueueSettings;
         }
