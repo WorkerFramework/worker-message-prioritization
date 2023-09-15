@@ -141,7 +141,7 @@ public class K8sTargetQueueSettingsProviderTest
                     1000, appResourcesWorkerTargetQueueSettings.getCurrentMaxLength());
             assertEquals("Unexpected value for eligible for refill percentage",
                     10, appResourcesWorkerTargetQueueSettings.getEligibleForRefillPercentage());
-            assertEquals("Unexpected value for capacity"
+            assertEquals("Unexpected value for capacity",
                     1000, appResourcesWorkerTargetQueueSettings.getCapacity());
         }
     }
