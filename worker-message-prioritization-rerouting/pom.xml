@@ -61,6 +61,10 @@
             <artifactId>slf4j-api</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.squareup.okio</groupId>
+            <artifactId>okio-jvm</artifactId>
+        </dependency>
+        <dependency>
             <groupId> com.squareup.retrofit</groupId>
             <artifactId>retrofit</artifactId>
             <scope>test</scope>
