@@ -20,6 +20,7 @@ import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitMan
 import com.github.workerframework.workermessageprioritization.redistribution.config.MessageDistributorConfig;
 import com.github.workerframework.workermessageprioritization.redistribution.consumption.ConsumptionTargetCalculator;
 import com.github.workerframework.workermessageprioritization.redistribution.consumption.EqualConsumptionTargetCalculator;
+import com.github.workerframework.workermessageprioritization.redistribution.consumption.FastLaneConsumptionTargetCalculator;
 import com.github.workerframework.workermessageprioritization.redistribution.lowlevel.StagingTargetPairProvider;
 import com.github.workerframework.workermessageprioritization.targetqueue.K8sTargetQueueSettingsProvider;
 import com.github.workerframework.workermessageprioritization.targetqueue.TunedTargetQueueLengthProvider;
@@ -152,6 +153,17 @@ public class DistributorModule extends AbstractModule {
         return connectionFactory;
     }
 
+    @Provides
+    ConsumptionTargetCalculator provideConsumptionTargetCalculator(final MessageDistributorConfig messageDistributorConfig,
+                                                                   final TargetQueueSettingsProvider targetQueueSettingsProvider,
+                                                                   final CapacityCalculatorBase capacityCalculatorBase){
+        if(messageDistributorConfig.getFastLaneProcessingMode()){
+            return new FastLaneConsumptionTargetCalculator(targetQueueSettingsProvider,capacityCalculatorBase);
+        }else {
+            return new EqualConsumptionTargetCalculator(targetQueueSettingsProvider, capacityCalculatorBase);
+        }
+    }
+
     @Override
     protected void configure() {
         bind(MessageDistributorConfig.class).in(Scopes.SINGLETON);
@@ -161,8 +173,6 @@ public class DistributorModule extends AbstractModule {
         bind(QueueInformationProvider.class);
         bind(StagingTargetPairProvider.class);
         bind(TunedTargetQueueLengthProvider.class);
-        bind(ConsumptionTargetCalculator.class).to(EqualConsumptionTargetCalculator.class);
-
     }
 
 }

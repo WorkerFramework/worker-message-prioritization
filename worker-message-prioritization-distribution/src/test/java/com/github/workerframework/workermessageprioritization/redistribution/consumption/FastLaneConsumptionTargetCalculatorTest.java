@@ -17,6 +17,7 @@ package com.github.workerframework.workermessageprioritization.redistribution.co
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 import com.github.workerframework.workermessageprioritization.redistribution.DistributorWorkItem;
+import com.github.workerframework.workermessageprioritization.targetqueue.CapacityCalculatorBase;
 import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueSettings;
 import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueSettingsProvider;
 import org.junit.Rule;
@@ -30,6 +31,7 @@ import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -75,15 +77,19 @@ public final class FastLaneConsumptionTargetCalculatorTest {
         when(distributorWorkItem.getStagingQueues()).thenReturn(stagingQueues);
         when(distributorWorkItem.getTargetQueue()).thenReturn(targetQueue);
 
-        final TargetQueueSettings targetQueueSettings = new TargetQueueSettings(1000,10);
+        final TargetQueueSettings targetQueueSettings = new TargetQueueSettings(1000,10,
+                1, 1, 1000L);
 
         final TargetQueueSettingsProvider targetQueueSettingsProvider = mock(TargetQueueSettingsProvider.class);
         when(targetQueueSettingsProvider.get(targetQueue)).thenReturn(targetQueueSettings);
 
-        final long targetQueueCapacity = 1000L;
+        final long targetQueueCapacity = targetQueueSettings.getCapacity();
+
+        final CapacityCalculatorBase capacityCalculatorBase = mock(CapacityCalculatorBase.class);
+        when(capacityCalculatorBase.refine(any(), any())).thenReturn(targetQueueSettings);
 
         final FastLaneConsumptionTargetCalculator fastLaneConsumptionTargetCalculator =
-                new FastLaneConsumptionTargetCalculator(targetQueueSettingsProvider);
+                new FastLaneConsumptionTargetCalculator(targetQueueSettingsProvider, capacityCalculatorBase);
 
         final Map<Queue,Long> consumptionTargets = fastLaneConsumptionTargetCalculator.calculateConsumptionTargets(distributorWorkItem);
         final int queue1Result = Math.toIntExact(consumptionTargets.get(q1));
@@ -124,15 +130,19 @@ public final class FastLaneConsumptionTargetCalculatorTest {
         when(distributorWorkItem.getStagingQueues()).thenReturn(stagingQueues);
         when(distributorWorkItem.getTargetQueue()).thenReturn(targetQueue);
 
-        final TargetQueueSettings targetQueueSettings = new TargetQueueSettings(1000,10);
+        final TargetQueueSettings targetQueueSettings = new TargetQueueSettings(1000,10,
+                1, 1, 1000L);
 
         final TargetQueueSettingsProvider targetQueueSettingsProvider = mock(TargetQueueSettingsProvider.class);
         when(targetQueueSettingsProvider.get(targetQueue)).thenReturn(targetQueueSettings);
 
-        final long targetQueueCapacity = 1000L;
+        final long targetQueueCapacity = targetQueueSettings.getCapacity();
+
+        final CapacityCalculatorBase capacityCalculatorBase = mock(CapacityCalculatorBase.class);
+        when(capacityCalculatorBase.refine(any(), any())).thenReturn(targetQueueSettings);
 
         final FastLaneConsumptionTargetCalculator fastLaneConsumptionTargetCalculator =
-                new FastLaneConsumptionTargetCalculator(targetQueueSettingsProvider);
+                new FastLaneConsumptionTargetCalculator(targetQueueSettingsProvider, capacityCalculatorBase);
 
         final Map<Queue,Long> consumptionTargets = fastLaneConsumptionTargetCalculator.calculateConsumptionTargets(distributorWorkItem);
         final int queue1Result = Math.toIntExact(consumptionTargets.get(q1));
@@ -194,15 +204,19 @@ public final class FastLaneConsumptionTargetCalculatorTest {
         when(distributorWorkItem.getStagingQueues()).thenReturn(stagingQueues);
         when(distributorWorkItem.getTargetQueue()).thenReturn(targetQueue);
 
-        final TargetQueueSettings targetQueueSettings = new TargetQueueSettings(1000,10);
+        final TargetQueueSettings targetQueueSettings = new TargetQueueSettings(1000,10,
+                1, 1, 1000L);
 
         final TargetQueueSettingsProvider targetQueueSettingsProvider = mock(TargetQueueSettingsProvider.class);
         when(targetQueueSettingsProvider.get(targetQueue)).thenReturn(targetQueueSettings);
 
-        final long targetQueueCapacity = 1000L;
+        final long targetQueueCapacity = targetQueueSettings.getCapacity();
+
+        final CapacityCalculatorBase capacityCalculatorBase = mock(CapacityCalculatorBase.class);
+        when(capacityCalculatorBase.refine(any(), any())).thenReturn(targetQueueSettings);
 
         final FastLaneConsumptionTargetCalculator fastLaneConsumptionTargetCalculator =
-                new FastLaneConsumptionTargetCalculator(targetQueueSettingsProvider);
+                new FastLaneConsumptionTargetCalculator(targetQueueSettingsProvider, capacityCalculatorBase);
 
         final Map<Queue,Long> consumptionTargets = fastLaneConsumptionTargetCalculator.calculateConsumptionTargets(distributorWorkItem);
         final int queue1Result = Math.toIntExact(consumptionTargets.get(q1));
@@ -266,15 +280,19 @@ public final class FastLaneConsumptionTargetCalculatorTest {
         when(distributorWorkItem.getStagingQueues()).thenReturn(stagingQueues);
         when(distributorWorkItem.getTargetQueue()).thenReturn(targetQueue);
 
-        final TargetQueueSettings targetQueueSettings = new TargetQueueSettings(1000,10);
+        final TargetQueueSettings targetQueueSettings = new TargetQueueSettings(1000,10,
+                1, 1, 1000L);
 
         final TargetQueueSettingsProvider targetQueueSettingsProvider = mock(TargetQueueSettingsProvider.class);
         when(targetQueueSettingsProvider.get(targetQueue)).thenReturn(targetQueueSettings);
 
-        final long targetQueueCapacity = 1000L;
+        final long targetQueueCapacity = targetQueueSettings.getCapacity();
+
+        final CapacityCalculatorBase capacityCalculatorBase = mock(CapacityCalculatorBase.class);
+        when(capacityCalculatorBase.refine(any(), any())).thenReturn(targetQueueSettings);
 
         final FastLaneConsumptionTargetCalculator fastLaneConsumptionTargetCalculator =
-                new FastLaneConsumptionTargetCalculator(targetQueueSettingsProvider);
+                new FastLaneConsumptionTargetCalculator(targetQueueSettingsProvider,capacityCalculatorBase);
 
         final Map<Queue,Long> consumptionTargets = fastLaneConsumptionTargetCalculator.calculateConsumptionTargets(distributorWorkItem);
         final int queue1Result = Math.toIntExact(consumptionTargets.get(q1));
@@ -319,15 +337,19 @@ public final class FastLaneConsumptionTargetCalculatorTest {
         when(distributorWorkItem.getStagingQueues()).thenReturn(stagingQueues);
         when(distributorWorkItem.getTargetQueue()).thenReturn(targetQueue);
 
-        final TargetQueueSettings targetQueueSettings = new TargetQueueSettings(1500,10);
+        final TargetQueueSettings targetQueueSettings = new TargetQueueSettings(1500,10,
+                1, 1, 500L);
 
         final TargetQueueSettingsProvider targetQueueSettingsProvider = mock(TargetQueueSettingsProvider.class);
         when(targetQueueSettingsProvider.get(targetQueue)).thenReturn(targetQueueSettings);
 
-        final long targetQueueCapacity = 500L;
+        final long targetQueueCapacity = targetQueueSettings.getCapacity();
+
+        final CapacityCalculatorBase capacityCalculatorBase = mock(CapacityCalculatorBase.class);
+        when(capacityCalculatorBase.refine(any(), any())).thenReturn(targetQueueSettings);
 
         final FastLaneConsumptionTargetCalculator fastLaneConsumptionTargetCalculator =
-                new FastLaneConsumptionTargetCalculator(targetQueueSettingsProvider);
+                new FastLaneConsumptionTargetCalculator(targetQueueSettingsProvider, capacityCalculatorBase);
 
         final Map<Queue,Long> consumptionTargets = fastLaneConsumptionTargetCalculator.calculateConsumptionTargets(distributorWorkItem);
         final int queue1Result = Math.toIntExact(consumptionTargets.get(q1));

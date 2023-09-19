@@ -35,7 +35,7 @@ import static org.mockito.Mockito.when;
 // redistributed around the other larger staging queues.
 // If there is no unused weight a value of 0 will be returned. Equally, if there is unused weight for all the staging queues, a value
 // of 0 will be returned, as the unused weight is not needed for any other queues.
-public class CalculateStagingQueueUnusedMessageConsumptionTest {
+public class StagingQueueUnusedWeightCalculatorTest {
     @Rule
     public final ErrorCollector collector = new ErrorCollector();
 

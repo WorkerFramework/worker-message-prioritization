@@ -17,6 +17,7 @@ package com.github.workerframework.workermessageprioritization.redistribution.co
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 import com.github.workerframework.workermessageprioritization.redistribution.DistributorWorkItem;
+import com.github.workerframework.workermessageprioritization.targetqueue.CapacityCalculatorBase;
 import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueSettingsProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,11 +28,12 @@ import java.util.HashMap;
 
 import static java.util.stream.Collectors.toList;
 
-public class FastLaneConsumptionTargetCalculator extends MinimumConsumptionTargetCalculator {
+public class FastLaneConsumptionTargetCalculator extends ConsumptionTargetCalculatorBase {
     private static final Logger LOGGER = LoggerFactory.getLogger(EqualConsumptionTargetCalculator.class);
 
-    public FastLaneConsumptionTargetCalculator(final TargetQueueSettingsProvider targetQueueSettingsProvider) {
-        super(targetQueueSettingsProvider);
+    public FastLaneConsumptionTargetCalculator(final TargetQueueSettingsProvider targetQueueSettingsProvider,
+                                               final CapacityCalculatorBase capacityCalculatorBase) {
+        super(targetQueueSettingsProvider, capacityCalculatorBase);
     }
 
     @Override
