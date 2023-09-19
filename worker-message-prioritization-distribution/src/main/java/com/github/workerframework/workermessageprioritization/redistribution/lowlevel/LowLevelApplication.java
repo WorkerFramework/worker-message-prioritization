@@ -15,72 +15,20 @@
  */
 package com.github.workerframework.workermessageprioritization.redistribution.lowlevel;
 
-import com.github.workerframework.workermessageprioritization.redistribution.consumption.ConsumptionTargetCalculator;
-import com.github.workerframework.workermessageprioritization.redistribution.consumption.EqualConsumptionTargetCalculator;
-import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApi;
-import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitManagementApi;
-import com.github.workerframework.workermessageprioritization.redistribution.config.MessageDistributorConfig;
-import com.github.workerframework.workermessageprioritization.redistribution.consumption.FastLaneConsumptionTargetCalculator;
-import com.github.workerframework.workermessageprioritization.targetqueue.K8sTargetQueueSettingsProvider;
-import com.rabbitmq.client.ConnectionFactory;
+import com.github.workerframework.workermessageprioritization.redistribution.DistributorModule;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class LowLevelApplication {
     
-    private static final Logger LOGGER = LoggerFactory.getLogger(LowLevelApplication.class);
 
     public static void main(String[] args) throws IOException, TimeoutException, InterruptedException {
 
-        final ConnectionFactory connectionFactory = new ConnectionFactory();
-
-        final MessageDistributorConfig messageDistributorConfig = new MessageDistributorConfig();
-
-        LOGGER.info("Read the following configuration: {}", messageDistributorConfig);
-
-        connectionFactory.setHost(messageDistributorConfig.getRabbitMQHost());
-        connectionFactory.setUsername(messageDistributorConfig.getRabbitMQUsername());
-        connectionFactory.setPassword(messageDistributorConfig.getRabbitMQPassword());
-        connectionFactory.setPort(messageDistributorConfig.getRabbitMQPort());
-        connectionFactory.setVirtualHost(messageDistributorConfig.getRabbitMQVHost());
-
-        //https://www.rabbitmq.com/api-guide.html#java-nio
-        //connectionFactory.useNio();
-
-        final RabbitManagementApi<QueuesApi> queuesApi = new RabbitManagementApi<>(
-            QueuesApi.class,
-            messageDistributorConfig.getRabbitMQMgmtUrl(),
-            messageDistributorConfig.getRabbitMQMgmtUsername(),
-            messageDistributorConfig.getRabbitMQMgmtPassword());
-
-        final K8sTargetQueueSettingsProvider k8sTargetQueueSettingsProvider = new K8sTargetQueueSettingsProvider(
-                messageDistributorConfig.getKubernetesNamespaces(),
-                messageDistributorConfig.getKubernetesLabelCacheExpiryMinutes());
-
-        final ConsumptionTargetCalculator consumptionTargetCalculator;
-
-        // If the environment variable is set to true then fastLaneConsumptionTargetCalculator rather than
-        // EqualConsumptionTargetCalculator
-        if(Boolean.parseBoolean(System.getenv("CAF_FAST_LANE_PROCESSING_MODE"))){
-            consumptionTargetCalculator =
-                    new FastLaneConsumptionTargetCalculator(k8sTargetQueueSettingsProvider);
-        }else{
-            consumptionTargetCalculator =
-                    new EqualConsumptionTargetCalculator(k8sTargetQueueSettingsProvider);
-        }
-
-        final LowLevelDistributor lowLevelDistributor =
-                new LowLevelDistributor(
-                        queuesApi,
-                        connectionFactory,
-                        consumptionTargetCalculator,
-                        new StagingTargetPairProvider(),
-                        messageDistributorConfig.getDistributorRunIntervalMilliseconds(),
-                        messageDistributorConfig.getConsumerPublisherPairLastDoneWorkTimeoutMilliseconds());
-
-        lowLevelDistributor.run();
+      final Injector injector = Guice.createInjector(new DistributorModule());
+      final LowLevelDistributor lowLevelDistributor = injector.getInstance(LowLevelDistributor.class);
+      lowLevelDistributor.run();
     }
 }

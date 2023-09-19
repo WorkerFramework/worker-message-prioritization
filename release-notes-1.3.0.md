@@ -4,5 +4,11 @@
 ${version-number}
 
 #### New Features
+- US691069: Ability to auto-tune target queue lengths based on the consumption rates of the workers has been added.
+  - This feature is toggled on and off using environment variables. By default, this feature is off. 
+
+#### Bug Fixes
+- D728164: Reduced how often the Kubernetes API is called to fetch labels for a worker.
 
 #### Known Issues
+- None

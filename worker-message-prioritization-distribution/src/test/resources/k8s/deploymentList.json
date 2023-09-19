@@ -1,0 +1,22 @@
+{
+  "kind":"DeploymentList",
+  "apiVersion":"apps/v1",
+  "items":[
+    {
+      "metadata": {
+        "name": "elastic-query-worker",
+        "namespace": "private",
+        "labels": {
+          "autoscale.maxinstances": "4",
+          "autoscale.mininstances": "1",
+          "messageprioritization.targetqueueeligibleforrefillpercentage": "10",
+          "messageprioritization.targetqueuemaxlength": "1000",
+          "messageprioritization.targetqueuename": "elastic-query-worker"
+        }
+      },
+      "spec": {
+        "replicas": 2
+      }
+    }
+  ]
+}

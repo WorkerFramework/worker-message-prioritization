@@ -22,6 +22,8 @@ import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitMan
 import com.github.workerframework.workermessageprioritization.redistribution.DistributorWorkItem;
 import com.github.workerframework.workermessageprioritization.redistribution.MessageDistributor;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import org.slf4j.Logger;
@@ -46,12 +48,15 @@ public class LowLevelDistributor extends MessageDistributor {
     private final long distributorRunIntervalMilliseconds;
     private final long consumerPublisherPairLastDoneWorkTimeoutMilliseconds;
 
+    @Inject
     public LowLevelDistributor(final RabbitManagementApi<QueuesApi> queuesApi,
                                final ConnectionFactory connectionFactory,
                                final ConsumptionTargetCalculator consumptionTargetCalculator,
                                final StagingTargetPairProvider stagingTargetPairProvider,
-                               final long distributorRunIntervalMilliseconds,
-                               final long consumerPublisherPairLastDoneWorkTimeoutMilliseconds) {
+                               @Named("DistributorRunIntervalMilliseconds") final long distributorRunIntervalMilliseconds,
+                               @Named("ConsumerPublisherPairLastDoneWorkTimeoutMilliseconds") final long consumerPublisherPairLastDoneWorkTimeoutMilliseconds,
+                               @Named("MaxTargetQueueLength") final long minTargetQueueLength,
+                               @Named("MinTargetQueueLength") final long maxTargetQueueLength) {
         super(queuesApi);
         this.connectionFactory = connectionFactory;
         this.connectionDetails = String.format(

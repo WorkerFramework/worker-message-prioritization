@@ -21,14 +21,13 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.Nonnull;
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.NodesApi;
-import com.github.workerframework.workermessageprioritization.rabbitmq.ShovelState;
+import com.google.common.base.Strings;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.gson.Gson;
 import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApi;
 import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitManagementApi;
-import com.github.workerframework.workermessageprioritization.rabbitmq.ShovelsApi;
 import com.rabbitmq.client.ConnectionFactory;
 
 public class DistributorTestBase {
@@ -42,21 +41,24 @@ public class DistributorTestBase {
     protected ConnectionFactory connectionFactory;
     protected int managementPort;
     protected RabbitManagementApi<QueuesApi> queuesApi;
-    protected RabbitManagementApi<ShovelsApi> shovelsApi;
     protected RabbitManagementApi<NodesApi> nodesApi;
     private final String managementUrl;
+    private static final String CAF_RABBITMQ_HOST = "CAF_RABBITMQ_HOST";
+    private static final String CAF_RABBITMQ_PORT = "CAF_RABBITMQ_PORT";
+    private static final String CAF_RABBITMQ_USERNAME = "CAF_RABBITMQ_USERNAME";
+    private static final String CAF_RABBITMQ_PASSWORD = "CAF_RABBITMQ_PASSWORD";
+    private static final String CAF_RABBITMQ_CTRL_PORT = "CAF_RABBITMQ_CTRL_PORT";
 
     public DistributorTestBase() {
         connectionFactory = new ConnectionFactory();
-
-        connectionFactory.setHost(System.getProperty("rabbitmq.node.address", "localhost"));
-        connectionFactory.setUsername(System.getProperty("rabbitmq.username", "guest"));
-        connectionFactory.setPassword(System.getProperty("rabbitmq.password", "guest"));
-        connectionFactory.setPort(Integer.parseInt(System.getProperty("rabbitmq.node.port", "25672")));
+        connectionFactory.setHost(getEnvOrDefault(CAF_RABBITMQ_HOST, "localhost"));
+        connectionFactory.setPort(Integer.parseInt(getEnvOrDefault(CAF_RABBITMQ_PORT, "25672")));
+        connectionFactory.setUsername(getEnvOrDefault(CAF_RABBITMQ_USERNAME, "guest"));
+        connectionFactory.setPassword(getEnvOrDefault(CAF_RABBITMQ_PASSWORD, "guest"));
         connectionFactory.setVirtualHost("/");
         this.connectionFactory = connectionFactory;
 
-        managementPort = Integer.parseInt(System.getProperty("rabbitmq.ctrl.port", "25673"));
+        managementPort = Integer.parseInt(getEnvOrDefault(CAF_RABBITMQ_CTRL_PORT, "25673"));
 
         managementUrl = "http://" + connectionFactory.getHost() + ":" + managementPort + "/";
 
@@ -64,14 +66,16 @@ public class DistributorTestBase {
                 new RabbitManagementApi<>(QueuesApi.class,
                         managementUrl,
                         connectionFactory.getUsername(), connectionFactory.getPassword());
-        
-        shovelsApi = new RabbitManagementApi<>(ShovelsApi.class,
-                managementUrl,
-                connectionFactory.getUsername(), connectionFactory.getPassword());
 
         nodesApi = new RabbitManagementApi<>(NodesApi.class,
                 managementUrl,
                 connectionFactory.getUsername(), connectionFactory.getPassword());
+    }
+
+    private static String getEnvOrDefault(final String name, final String defaultValue) {
+        final String value = System.getenv(name);
+
+        return !Strings.isNullOrEmpty(value) ? value : defaultValue;
     }
     
     protected String getUniqueTargetQueueName(final String targetQueueName) {
@@ -82,72 +86,8 @@ public class DistributorTestBase {
         return targetQueueName + MessageDistributor.LOAD_BALANCED_INDICATOR + stagingQueueName;
     }
 
-    protected LoadingCache<String,RabbitManagementApi<ShovelsApi>> getNodeSpecificShovelsApiCache() {
-        return CacheBuilder
-                .newBuilder()
-                .expireAfterAccess(7, TimeUnit.DAYS)
-                .build(new CacheLoader<String,RabbitManagementApi<ShovelsApi>>()
-                {
-                    @Override
-                    public RabbitManagementApi<ShovelsApi> load(@Nonnull final String node)
-                    {
-                        // When running these integration tests, the 'node' value returned by the RabbitMQ Shovels API contains
-                        // an ID rather than a host, for example:
-                        //
-                        // node:            rabbit@5d73b9c7a198
-                        //
-                        // whereas the management URL contains localhost:
-                        //
-                        // managementUrl:   http://localhost:49165/
-                        //
-                        // As such, we are unable to use the node value to build a node-specific management URL, as
-                        // http://5d73b9c7a198:49165/ is not a valid host.
-                        //
-                        // So for the purposes of these tests, we will just use the standard Shovels API, rather than creating
-                        // node-specific Shovels APIs.
-
-                        return shovelsApi;
-                    }
-                });
-    }
-
     protected Callable<Boolean> queueContainsNumMessages(final String queueName, final int numMessages)
     {
         return () -> queuesApi.getApi().getQueue("/", queueName).getMessages() == numMessages;
-    }
-
-    protected Callable<Boolean> shovelIsDeleted(final String shovelName)
-    {
-        return () -> !shovelsApi
-                .getApi()
-                .getShovels(VHOST)
-                .stream()
-                .filter(s -> s.getName().equals(shovelName))
-                .findFirst()
-                .isPresent();
-    }
-
-    protected Callable<Boolean> shovelIsCreated(final String shovelName)
-    {
-        return () -> shovelsApi
-                .getApi()
-                .getShovels(VHOST)
-                .stream()
-                .filter(s -> s.getName().equals(shovelName))
-                .findFirst()
-                .isPresent();
-    }
-
-    protected Callable<Boolean> shovelIsInState(final String shovelName, final ShovelState shovelState)
-    {
-        return () -> shovelsApi
-                .getApi()
-                .getShovels(VHOST)
-                .stream()
-                .filter(s -> s.getName().equals(shovelName))
-                .findFirst()
-                .get()
-                .getState() == shovelState;
-
     }
 }

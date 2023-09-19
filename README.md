@@ -24,7 +24,5 @@ of the above staging queues. It obtains information about the target of these st
 size and what (if any) capacity it has for new messages. If a target queue has capacity it is divided by the number of 
 staging queues and that number of messages is attempted to be moved from the staging queue to the worker input queue.
 
-At present there are two implementations of a MessageDistributor, one is using the low-level RabbitMQ client to consume 
-messages from a staging queue and publish them to the worker input queue. The second implementation uses the RabbitMQ 
-shovel plugin to achieve the same goal. Due to an occasional problem where RabbitMQ shovels got stuck, which required a
-restart of the RabbitMQ nodes to resolve, the current active implementation is the low-level MessageDistributor. 
+At present there is one implementation of MessageDistributor, the low-level RabbitMQ client to consume 
+messages from a staging queue and publish them to the worker input queue. 

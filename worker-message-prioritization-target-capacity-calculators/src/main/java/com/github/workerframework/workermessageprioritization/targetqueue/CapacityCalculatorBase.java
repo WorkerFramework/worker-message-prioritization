@@ -16,22 +16,24 @@
 package com.github.workerframework.workermessageprioritization.targetqueue;
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
+import com.google.inject.Inject;
 
-/**
- * An example implementation to be used as a reference for further, real world, implementations
- */
-public final class FixedTargetQueueSettingsProvider implements TargetQueueSettingsProvider
-{
-    private static final long QUEUE_MAX_LENGTH = 1000;
-    private static final long QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE = 10;
-    private static final int MAX_INSTANCES = 1;
-    private static final int CURRENT_INSTANCES = 1;
-    private static final long CAPACITY = 1000;
+public abstract class CapacityCalculatorBase {
 
-    @Override
-    public TargetQueueSettings get(final Queue targetQueue)
-    {
-        return new TargetQueueSettings(QUEUE_MAX_LENGTH - targetQueue.getMessages(), QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE,
-                MAX_INSTANCES, CURRENT_INSTANCES, CAPACITY);
+    private final CapacityCalculatorBase next;
+
+    @Inject
+    public CapacityCalculatorBase(final CapacityCalculatorBase next) {
+        this.next = next;
     }
+
+    public TargetQueueSettings refine(final Queue targetQueue, final TargetQueueSettings targetQueueSettings) {
+        final TargetQueueSettings refinedTargetQueueSettings = refineInternal(targetQueue, targetQueueSettings);
+        if(next != null) {
+            return next.refine(targetQueue, refinedTargetQueueSettings);
+        }
+        return refinedTargetQueueSettings;
+    }
+
+    protected abstract TargetQueueSettings refineInternal(final Queue queue, final TargetQueueSettings targetQueueSettings);
 }

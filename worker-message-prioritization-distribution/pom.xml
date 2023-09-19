@@ -36,8 +36,8 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.google.code.findbugs</groupId>
-            <artifactId>jsr305</artifactId>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>
@@ -46,6 +46,10 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.inject</groupId>
+            <artifactId>guice</artifactId>
         </dependency>
         <dependency>
             <groupId>com.github.cafapi.logging</groupId>
@@ -65,20 +69,12 @@
             <artifactId>amqp-client</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.squareup.okhttp</groupId>
-            <artifactId>okhttp</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.squareup.retrofit</groupId>
-            <artifactId>retrofit</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>net.jodah</groupId>
-            <artifactId>expiringmap</artifactId>
-        </dependency>
-        <dependency>
           <groupId>org.slf4j</groupId>
           <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
         </dependency>
         <dependency>
             <groupId>org.hamcrest</groupId>
@@ -96,6 +92,16 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>mockwebserver3</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>mockwebserver3-junit5</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <scope>test</scope>
@@ -108,6 +114,11 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -127,15 +138,27 @@
                 </executions>
                 <configuration>
                     <systemPropertyVariables>
-                        <docker.host.address>${docker.host.address}</docker.host.address>
-                        <rabbitmq.node.address>${docker.host.address}</rabbitmq.node.address>
-                        <rabbitmq.node.port>${rabbitmq.node.port}</rabbitmq.node.port>
-                        <rabbitmq.ctrl.port>${rabbitmq.ctrl.port}</rabbitmq.ctrl.port>
-                        <rabbitmq.username>guest</rabbitmq.username>
-                        <rabbitmq.password>guest</rabbitmq.password>
                         <timeout.ms>120000</timeout.ms>
                     </systemPropertyVariables>
                     <environmentVariables>
+                        <CAF_RABBITMQ_CTRL_PORT>${rabbitmq.ctrl.port}</CAF_RABBITMQ_CTRL_PORT>
+                        <CAF_RABBITMQ_HOST>${docker.host.address}</CAF_RABBITMQ_HOST>
+                        <CAF_RABBITMQ_PORT>${rabbitmq.node.port}</CAF_RABBITMQ_PORT>
+                        <CAF_RABBITMQ_MGMT_USERNAME>guest</CAF_RABBITMQ_MGMT_USERNAME>
+                        <CAF_RABBITMQ_MGMT_PASSWORD>guest</CAF_RABBITMQ_MGMT_PASSWORD>
+                        <CAF_RABBITMQ_USERNAME>guest</CAF_RABBITMQ_USERNAME>
+                        <CAF_RABBITMQ_PASSWORD>guest</CAF_RABBITMQ_PASSWORD>
+                        <CAF_WMP_KUBERNETES_NAMESPACES>private</CAF_WMP_KUBERNETES_NAMESPACES>
+                        <CAF_LOG_LEVEL>INFO</CAF_LOG_LEVEL>
+                        <CAF_NOOP_MODE>true</CAF_NOOP_MODE>
+                        <CAF_MIN_TARGET_QUEUE_LENGTH>100</CAF_MIN_TARGET_QUEUE_LENGTH>
+                        <CAF_MAX_TARGET_QUEUE_LENGTH>10000000</CAF_MAX_TARGET_QUEUE_LENGTH>
+                        <CAF_ROUNDING_MULTIPLE>100</CAF_ROUNDING_MULTIPLE>
+                        <CAF_MAX_CONSUMPTION_RATE_HISTORY_SIZE>100</CAF_MAX_CONSUMPTION_RATE_HISTORY_SIZE>
+                        <CAF_MIN_CONSUMPTION_RATE_HISTORY_SIZE>10</CAF_MIN_CONSUMPTION_RATE_HISTORY_SIZE>
+                        <CAF_QUEUE_PROCESSING_TIME_GOAL_SECONDS>300</CAF_QUEUE_PROCESSING_TIME_GOAL_SECONDS>
+                        <TUNED_TARGET_LOG_LEVEL>DEBUG</TUNED_TARGET_LOG_LEVEL>
+                        <CAF_RABBITMQ_MGMT_URL>http://${docker.host.address}:${rabbitmq.ctrl.port}</CAF_RABBITMQ_MGMT_URL>
                     </environmentVariables>
                 </configuration>
             </plugin>
@@ -175,16 +198,10 @@
                     <containerNamePattern>%a-%t</containerNamePattern>
                     <verbose>true</verbose>
                     <images>
-                        <!-- Build a RabbitMQ image with the shovel plugins enabled for testing purposes -->
+                        <!-- Run the RabbitMQ image -->
                         <image>
                             <alias>rabbitmq</alias>
-                            <name>dev/rabbitmq-with-shovel-plugin</name>
-                            <build>
-                                <dockerFile>${project.basedir}/src/test/docker/Dockerfile</dockerFile>
-                                <args>
-                                    <RABBITMQ_IMAGE>${dockerHubPublic}/library/rabbitmq:3-management</RABBITMQ_IMAGE>
-                                </args>
-                            </build>
+                            <name>${dockerHubPublic}/library/rabbitmq:3-management</name>
                             <run>
                                 <ports>
                                     <port>${rabbitmq.ctrl.port}:15672</port>

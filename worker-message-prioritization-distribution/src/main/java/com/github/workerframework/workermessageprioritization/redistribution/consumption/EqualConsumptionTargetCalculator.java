@@ -17,7 +17,9 @@ package com.github.workerframework.workermessageprioritization.redistribution.co
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 import com.github.workerframework.workermessageprioritization.redistribution.DistributorWorkItem;
+import com.github.workerframework.workermessageprioritization.targetqueue.CapacityCalculatorBase;
 import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueSettingsProvider;
+import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,12 +41,14 @@ import java.util.Map;
  * Staging queue 2 contains 10 messages
  * Result: 50 messages will be sent from staging queue 1 and 10 messages will be sent from staging queue 2
  */
-public class EqualConsumptionTargetCalculator extends MinimumConsumptionTargetCalculator {
+public class EqualConsumptionTargetCalculator extends ConsumptionTargetCalculatorBase {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EqualConsumptionTargetCalculator.class);
 
-    public EqualConsumptionTargetCalculator(final TargetQueueSettingsProvider targetQueueSettingsProvider) {
-        super(targetQueueSettingsProvider);
+    @Inject
+    public EqualConsumptionTargetCalculator(final TargetQueueSettingsProvider targetQueueSettingsProvider,
+                                            final CapacityCalculatorBase capacityCalculatorBase) {
+        super(targetQueueSettingsProvider, capacityCalculatorBase);
     }
     
     @Override

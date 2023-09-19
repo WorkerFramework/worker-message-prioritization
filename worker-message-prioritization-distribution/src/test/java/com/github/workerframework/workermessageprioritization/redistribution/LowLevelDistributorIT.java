@@ -24,7 +24,10 @@ import com.github.workerframework.workermessageprioritization.redistribution.con
 import com.github.workerframework.workermessageprioritization.redistribution.lowlevel.LowLevelDistributor;
 import com.github.workerframework.workermessageprioritization.redistribution.lowlevel.StagingQueueTargetQueuePair;
 import com.github.workerframework.workermessageprioritization.redistribution.lowlevel.StagingTargetPairProvider;
+import com.github.workerframework.workermessageprioritization.targetqueue.CapacityCalculatorBase;
 import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueSettings;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
@@ -44,7 +47,7 @@ import java.util.concurrent.TimeoutException;
 public class LowLevelDistributorIT extends DistributorTestBase {
 
     @Test
-    public void twoStagingQueuesTest() throws TimeoutException, IOException, InterruptedException {
+    public void twoStagingQueuesTest() throws TimeoutException, IOException {
 
         final String targetQueueName = getUniqueTargetQueueName(TARGET_QUEUE_NAME);
         final String stagingQueue1Name = getStagingQueueName(targetQueueName, T1_STAGING_QUEUE_NAME);
@@ -82,12 +85,14 @@ public class LowLevelDistributorIT extends DistributorTestBase {
                     .pollInterval(Duration.ofSeconds(1))
                     .until(queueContainsNumMessages(stagingQueue2Name, 500));
 
-            // Target queue has a max length of 200 messages
+            final Injector injector = Guice.createInjector(new DistributorModule());
+            final CapacityCalculatorBase capacityCalculatorBase = injector.getInstance(CapacityCalculatorBase.class);
             final ConsumptionTargetCalculator consumptionTargetCalculator =
-                    new EqualConsumptionTargetCalculator(targetQueue -> new TargetQueueSettings(200, 0));
-            final StagingTargetPairProvider stagingTargetPairProvider = new StagingTargetPairProvider();
+                    new EqualConsumptionTargetCalculator(targetQueue -> new TargetQueueSettings(200, 0, 1, 1, 200),
+                            capacityCalculatorBase);
+            final StagingTargetPairProvider stagingTargetPairProvider = injector.getInstance(StagingTargetPairProvider.class);
             final LowLevelDistributor lowLevelDistributor = new LowLevelDistributor(queuesApi, connectionFactory,
-                    consumptionTargetCalculator, stagingTargetPairProvider, 10000, 600000);
+                    consumptionTargetCalculator, stagingTargetPairProvider, 10000, 600000, 100, 10000000);
 
             // Run the distributor (1st time).
             // stagingQueue1:            500 messages
@@ -249,8 +254,12 @@ public class LowLevelDistributorIT extends DistributorTestBase {
                     consumerPublisherPairLastDoneWorkTimeoutMilliseconds
             );
 
+            final Injector injector = Guice.createInjector(new DistributorModule());
+            final CapacityCalculatorBase capacityCalculatorBase = injector.getInstance(CapacityCalculatorBase.class);
+
             final ConsumptionTargetCalculator consumptionTargetCalculator =
-                    new EqualConsumptionTargetCalculator(tQ -> new TargetQueueSettings(2, 0));
+                    new EqualConsumptionTargetCalculator(tQ -> new TargetQueueSettings(2, 0,
+                            1, 1, 2), capacityCalculatorBase);
 
             final StagingTargetPairProvider stagingTargetPairProviderMock = Mockito.mock(StagingTargetPairProvider.class);
 
@@ -264,7 +273,7 @@ public class LowLevelDistributorIT extends DistributorTestBase {
 
             final LowLevelDistributor lowLevelDistributor = new LowLevelDistributor(queuesApi, connectionFactory,
                     consumptionTargetCalculator, stagingTargetPairProviderMock, 10000,
-                    consumerPublisherPairLastDoneWorkTimeoutMilliseconds);
+                    consumerPublisherPairLastDoneWorkTimeoutMilliseconds, 100, 10000000);
 
             // Run the distributor (1st time)
             Assert.assertEquals(
