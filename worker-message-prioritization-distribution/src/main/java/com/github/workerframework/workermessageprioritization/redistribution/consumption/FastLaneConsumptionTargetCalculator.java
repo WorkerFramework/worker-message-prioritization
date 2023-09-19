@@ -21,8 +21,11 @@ import com.github.workerframework.workermessageprioritization.targetqueue.Target
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
+import java.util.HashMap;
+
+import static java.util.stream.Collectors.toList;
 
 public class FastLaneConsumptionTargetCalculator extends MinimumConsumptionTargetCalculator {
     private static final Logger LOGGER = LoggerFactory.getLogger(EqualConsumptionTargetCalculator.class);
@@ -37,10 +40,13 @@ public class FastLaneConsumptionTargetCalculator extends MinimumConsumptionTarge
         // The number of messages the target queue has capacity for.
         final long targetQueueCapacity = getTargetQueueCapacity(distributorWorkItem.getTargetQueue());
 
-        final StagingQueueUnusedMessageConsumptionCalculator stagingQueueUnusedMessageConsumptionCalculator =
-                new StagingQueueUnusedMessageConsumptionCalculator(distributorWorkItem);
+        // Get a list of the staging queue names. This will be used to find the weight of the queue.
+        final List<String> stagingQueueNames = distributorWorkItem.getStagingQueues().stream().map(Queue::getName).collect(toList());
 
-        final StagingQueueWeightCalculator stagingQueueWeightCalculator = new StagingQueueWeightCalculator(distributorWorkItem);
+        final StagingQueueUnusedWeightCalculator stagingQueueUnusedWeightCalculator =
+                new StagingQueueUnusedWeightCalculator();
+
+        final StagingQueueWeightSettingsProvider stagingQueueWeightSettingsProvider = new StagingQueueWeightSettingsProvider();
 
         // The total number of messages in all the staging queues.
         final long numMessagesInStagingQueues =
@@ -48,7 +54,8 @@ public class FastLaneConsumptionTargetCalculator extends MinimumConsumptionTarge
                         .map(Queue::getMessages).mapToLong(Long::longValue).sum();
 
         // The total number of weights across all staging queues.
-        final double stagingQueueWeight = stagingQueueWeightCalculator.calculateTotalStagingQueueWeight();
+        // For now this is just setting all the weights to 1.
+        double stagingQueueWeight = stagingQueueNames.size();
 
         // Target Queue capacity available per weight.
         final double capacityPerWeight = targetQueueCapacity / stagingQueueWeight;
@@ -56,11 +63,12 @@ public class FastLaneConsumptionTargetCalculator extends MinimumConsumptionTarge
         // Calculates, in terms of weights, the unused messages caused by staging queues smaller than the available target queue
         // capacity per staging queue.
         final double unusedWeightToDistribute =
-                stagingQueueUnusedMessageConsumptionCalculator.calculateStagingQueueUnusedWeight(targetQueueCapacity, stagingQueueWeight);
+                stagingQueueUnusedWeightCalculator.calculateStagingQueueUnusedWeight(distributorWorkItem, targetQueueCapacity,
+                        stagingQueueWeight);
 
         // Map staging queue to corresponding weight.
         final Map<Queue, Long> stagingQueueToConsumptionTargetMap = new HashMap<>();
-        final Map<Queue, Double> stagingQueueWeightMap = stagingQueueWeightCalculator.getStagingQueueWeights();
+        final Map<String, Double> stagingQueueWeightMap = stagingQueueWeightSettingsProvider.getStagingQueueWeights(stagingQueueNames);
 
         for (final Queue stagingQueue : distributorWorkItem.getStagingQueues()) {
 
@@ -69,11 +77,11 @@ public class FastLaneConsumptionTargetCalculator extends MinimumConsumptionTarge
             // on.
             // For smaller staging queues the weight will still be increased, however the extra space will not be used.
             final double maxNumMessagesToConsumeFromStagingQueue =
-                    Math.ceil(capacityPerWeight * (stagingQueueWeightMap.get(stagingQueue) + unusedWeightToDistribute));
+                    Math.ceil(capacityPerWeight * (stagingQueueWeightMap.get(stagingQueue.getName()) + unusedWeightToDistribute));
 
             final long numMessagesInStagingQueue = stagingQueue.getMessages();
 
-            // Staging queues with less messages on the queue than the maxNumMessagesToConsumeFromStagingQueue, will be set to consume
+            // Staging queues with fewer messages on the queue than the maxNumMessagesToConsumeFromStagingQueue, will be set to consume
             // ONLY the messages on their queue. The unusedWeightToDistribute will increase the rest of the queues to pick up the rest
             // of the space left.
             final long actualNumberOfMessagesToConsumeFromStagingQueue =

@@ -29,6 +29,7 @@ import java.util.Set;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -38,7 +39,7 @@ public final class FastLaneConsumptionTargetCalculatorTest {
     public final ErrorCollector collector = new ErrorCollector();
 
     @Test
-    public void calculateConsumptionTargetFor1LargeAnd1SmallStagingQueueTest() {
+    public void calculateCapacityAvailableFor1LargeAnd1SmallStagingQueueTest() {
 
         // There 2 queues and a target queue capacity of 1000 messages available
         // Each queue is offered an equal split of 500 messages.
@@ -97,7 +98,10 @@ public final class FastLaneConsumptionTargetCalculatorTest {
     }
 
     @Test
-    public void calculateConsumptionTargetFor2LargeStagingQueuesTest() {
+    public void calculateCapacityAvailableFor2LargeStagingQueuesTest() {
+
+        // Capacity of 1000 means 500 for each queue. These queues both have adequate capacity to fill the 500 therefore there is no
+        // redistribution required.
 
         final int targetQueueMessages = 1000;
         final String targetQueueName = "tq";
@@ -114,7 +118,7 @@ public final class FastLaneConsumptionTargetCalculatorTest {
         q1.setMessages(q1Messages);
         q2.setMessages(q2Messages);
         q1.setName(q1Name);
-        q1.setName(q2Name);
+        q2.setName(q2Name);
         final Set<Queue> stagingQueues = new HashSet<>(Arrays.asList(q1, q2));
         final DistributorWorkItem distributorWorkItem = mock(DistributorWorkItem.class);
         when(distributorWorkItem.getStagingQueues()).thenReturn(stagingQueues);
@@ -138,12 +142,16 @@ public final class FastLaneConsumptionTargetCalculatorTest {
         assertEquals("Queue 1 gets capacity to fill half of the available targetQueueCapacity",
                 500, queue2Result);
         assertEquals("Both queues are larger than half of the target queue capacity therefore each are given half of the available " +
-                        "targetqueue capacity, regardless of the fact that staging queue 2 is much larger than staging queue 1.",
+                        "target queue capacity, regardless of the fact that staging queue 2 is much larger than staging queue 1.",
                 targetQueueCapacity, queue1Result+queue2Result);
     }
 
     @Test
-    public void calculateConsumptionTargetForMultipleStagingQueueTest() {
+    public void calculateCapacityAvailableForMultipleStagingQueueTest() {
+
+        // Capacity of 1000 is available. This means 100 messages per queue. q2, q3, q5, q6, q9 do not all need this. This will be
+        // redistributed to the larger queues which all have enough messages to use that extra capacity. this means there is no
+        // re-calculation required.
 
         final int targetQueueMessages = 1000;
         final String targetQueueName = "tq";
@@ -215,8 +223,120 @@ public final class FastLaneConsumptionTargetCalculatorTest {
 
         assertEquals("Sum of each staging queue consumption target is the total capacity available on the target queue", targetQueueCapacity,
                 queueConsumptionTargetSum);
-        assertEquals("Consumption rate of queue 1 should be greater than the original equal consumption, as multiple queues are smaller" +
-                        " than the targetQueueCapacity / num of staging queues.", true, q1ConsumptionRateIncrease);
+        assertTrue("Consumption rate of queue 1 should be greater than the original equal consumption, as multiple queues are smaller" +
+                " than the targetQueueCapacity / num of staging queues.", q1ConsumptionRateIncrease);
+    }
+
+    @Test
+    public void calculateCapacityAvailableForMultipleStagingQueueNeedingRecalculatedAfterFirstWeightingTest() {
+
+        // The sum of capacity taken by each staging queue should equal the capacity of 1000. In this case initially the q2 and q3 will
+        // be given a share of the 50 messages left over from q4. However, this will be re-calculated as this capacity is not all
+        // needed by q2 and none of this extra capacity is needed by q3. The leftover capacity from q2 and q3 will be distributed to q1.
+        // This will mean the total capacity used by the 4 queues is the full available capacity of 1000.
+
+        final int targetQueueMessages = 1000;
+        final String targetQueueName = "tq";
+        final String sq1Name = "sq1";
+        final String sq2Name = "sq2";
+        final String sq3Name = "sq3";
+        final String sq4Name = "sq4";
+        final int q1Messages = 1000;
+        final int q2Messages = 250;
+        final int q3Messages = 260;
+        final int q4Messages = 200;
+
+        final Queue targetQueue = mock(Queue.class);
+        targetQueue.setMessages(targetQueueMessages);
+        targetQueue.setName(targetQueueName);
+        final Queue q1 = new Queue();
+        final Queue q2 = new Queue();
+        final Queue q3 = new Queue();
+        final Queue q4 = new Queue();
+        q1.setMessages(q1Messages);
+        q2.setMessages(q2Messages);
+        q3.setMessages(q3Messages);
+        q4.setMessages(q4Messages);
+        q1.setName(sq1Name);
+        q2.setName(sq2Name);
+        q3.setName(sq3Name);
+        q4.setName(sq4Name);
+        final Set<Queue> stagingQueues = new HashSet<>(Arrays.asList(q1, q2, q3, q4));
+        final DistributorWorkItem distributorWorkItem = mock(DistributorWorkItem.class);
+        when(distributorWorkItem.getStagingQueues()).thenReturn(stagingQueues);
+        when(distributorWorkItem.getTargetQueue()).thenReturn(targetQueue);
+
+        final TargetQueueSettings targetQueueSettings = new TargetQueueSettings(1000,10);
+
+        final TargetQueueSettingsProvider targetQueueSettingsProvider = mock(TargetQueueSettingsProvider.class);
+        when(targetQueueSettingsProvider.get(targetQueue)).thenReturn(targetQueueSettings);
+
+        final long targetQueueCapacity = 1000L;
+
+        final FastLaneConsumptionTargetCalculator fastLaneConsumptionTargetCalculator =
+                new FastLaneConsumptionTargetCalculator(targetQueueSettingsProvider);
+
+        final Map<Queue,Long> consumptionTargets = fastLaneConsumptionTargetCalculator.calculateConsumptionTargets(distributorWorkItem);
+        final int queue1Result = Math.toIntExact(consumptionTargets.get(q1));
+        final int queue2Result = Math.toIntExact(consumptionTargets.get(q2));
+        final int queue3Result = Math.toIntExact(consumptionTargets.get(q3));
+        final int queue4Result = Math.toIntExact(consumptionTargets.get(q4));
+
+        final int queueConsumptionTargetSum =
+                queue1Result + queue2Result + queue3Result + queue4Result;
+
+        final boolean q1ConsumptionRateIncrease = queue1Result > (targetQueueCapacity / stagingQueues.size());
+
+        assertEquals("Sum of each staging queue consumption target is the total capacity available on the target queue", targetQueueCapacity,
+                queueConsumptionTargetSum, 1.0);
+        assertTrue("Consumption rate of queue 1 should be greater than the original equal consumption, as multiple queues are smaller" +
+                " than the targetQueueCapacity / num of staging queues.", q1ConsumptionRateIncrease);
+    }
+
+    @Test
+    public void calculateCapacityAvailableForMultipleQueuesWhichAreSmallerThanAvailableCapacityTest() {
+
+        // 500 capacity available however the staging queues have fewer messages combined than that.
+
+        final int targetQueueMessages = 1000;
+        final String targetQueueName = "tq";
+        final String sq1Name = "sq1";
+        final String sq2Name = "sq2";
+        final int q1Messages = 30;
+        final int q2Messages = 120;
+
+        final Queue targetQueue = mock(Queue.class);
+        targetQueue.setMessages(targetQueueMessages);
+        targetQueue.setName(targetQueueName);
+        final Queue q1 = new Queue();
+        final Queue q2 = new Queue();
+        q1.setMessages(q1Messages);
+        q2.setMessages(q2Messages);
+        q1.setName(sq1Name);
+        q2.setName(sq2Name);
+        final Set<Queue> stagingQueues = new HashSet<>(Arrays.asList(q1, q2));
+        final DistributorWorkItem distributorWorkItem = mock(DistributorWorkItem.class);
+        when(distributorWorkItem.getStagingQueues()).thenReturn(stagingQueues);
+        when(distributorWorkItem.getTargetQueue()).thenReturn(targetQueue);
+
+        final TargetQueueSettings targetQueueSettings = new TargetQueueSettings(1500,10);
+
+        final TargetQueueSettingsProvider targetQueueSettingsProvider = mock(TargetQueueSettingsProvider.class);
+        when(targetQueueSettingsProvider.get(targetQueue)).thenReturn(targetQueueSettings);
+
+        final long targetQueueCapacity = 500L;
+
+        final FastLaneConsumptionTargetCalculator fastLaneConsumptionTargetCalculator =
+                new FastLaneConsumptionTargetCalculator(targetQueueSettingsProvider);
+
+        final Map<Queue,Long> consumptionTargets = fastLaneConsumptionTargetCalculator.calculateConsumptionTargets(distributorWorkItem);
+        final int queue1Result = Math.toIntExact(consumptionTargets.get(q1));
+        final int queue2Result = Math.toIntExact(consumptionTargets.get(q2));
+
+        final int queueConsumptionTargetSum = queue1Result + queue2Result;
+
+        assertTrue("Sum of each staging queue consumption target is less than the capacity available therefore" +
+                " should only make up that number of messages.", queueConsumptionTargetSum < targetQueueCapacity);
     }
 
 }

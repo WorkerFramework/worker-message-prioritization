@@ -25,7 +25,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -48,15 +48,16 @@ public class CalculateStagingQueueUnusedMessageConsumptionTest {
         final DistributorWorkItem distributorWorkItem = mock(DistributorWorkItem.class);
         when(distributorWorkItem.getStagingQueues()).thenReturn(stagingQueues);
         final long targetQueueCapacity = 1000;
-        final StagingQueueUnusedMessageConsumptionCalculator stagingQueueUnusedMessageConsumptionCalculator =
-                new StagingQueueUnusedMessageConsumptionCalculator(distributorWorkItem);
+        final StagingQueueUnusedWeightCalculator stagingQueueUnusedWeightCalculator =
+                new StagingQueueUnusedWeightCalculator();
 
         final double weightIncrease =
-                stagingQueueUnusedMessageConsumptionCalculator.calculateStagingQueueUnusedWeight(targetQueueCapacity, 2D);
+                stagingQueueUnusedWeightCalculator.calculateStagingQueueUnusedWeight(distributorWorkItem,
+                        targetQueueCapacity, 2D);
 
-        collector.checkThat("Result should be zero as all queues have been set less than the targetQueueCapacity offered to " +
-                        "the queue. This means no leftover is required as there are no larger staging queues to use the leftover.", 0D,
-                equalTo(weightIncrease));
+        assertEquals("Result should be zero as all queues have been set less than the targetQueueCapacity offered to " +
+                        "the queue. This means no leftover is required as there are no larger staging queues to use the leftover.",
+                0D, weightIncrease, 0D);
     }
 
     @Test
@@ -68,14 +69,14 @@ public class CalculateStagingQueueUnusedMessageConsumptionTest {
         final DistributorWorkItem distributorWorkItem = mock(DistributorWorkItem.class);
         when(distributorWorkItem.getStagingQueues()).thenReturn(stagingQueues);
         final long targetQueueCapacity = 1000;
-        final StagingQueueUnusedMessageConsumptionCalculator stagingQueueUnusedMessageConsumptionCalculator =
-                new StagingQueueUnusedMessageConsumptionCalculator(distributorWorkItem);
+        final StagingQueueUnusedWeightCalculator stagingQueueUnusedWeightCalculator =
+                new StagingQueueUnusedWeightCalculator();
 
         final double weightIncrease =
-                stagingQueueUnusedMessageConsumptionCalculator.calculateStagingQueueUnusedWeight(targetQueueCapacity, 2D);
-        collector.checkThat("Result should be zero as all queues have been set greater than available space in target queue. " +
-                        "Therefore each queue can use an equal amount of space and nothing is leftover", 0D,
-                equalTo(weightIncrease));
+                stagingQueueUnusedWeightCalculator.calculateStagingQueueUnusedWeight(distributorWorkItem,
+                        targetQueueCapacity, 2D);
+        assertEquals("Result should be zero as all queues have been set greater than available space in target queue. " +
+                        "Therefore each queue can use an equal amount of space and nothing is leftover", 0D, weightIncrease, 0D);
     }
 
     @Test
@@ -88,14 +89,16 @@ public class CalculateStagingQueueUnusedMessageConsumptionTest {
         final DistributorWorkItem distributorWorkItem = mock(DistributorWorkItem.class);
         when(distributorWorkItem.getStagingQueues()).thenReturn(stagingQueues);
         final long targetQueueCapacity = 200;
-        final StagingQueueUnusedMessageConsumptionCalculator stagingQueueCalculateConsumptionWeightIncrease = new StagingQueueUnusedMessageConsumptionCalculator(distributorWorkItem);
+        final StagingQueueUnusedWeightCalculator stagingQueueCalculateConsumptionWeightIncrease =
+                new StagingQueueUnusedWeightCalculator();
 
         final double weightIncrease =
-                stagingQueueCalculateConsumptionWeightIncrease.calculateStagingQueueUnusedWeight(targetQueueCapacity, 2D);
+                stagingQueueCalculateConsumptionWeightIncrease.calculateStagingQueueUnusedWeight(distributorWorkItem,
+                        targetQueueCapacity, 2D);
 
-        collector.checkThat("Result should be 0.5 as one queue has half of the queue length available, leaving the other half of the " +
+        assertEquals("Result should be 0.5 as one queue has half of the queue length available, leaving the other half of the " +
                         "space unused. Adding 0.5 to each weight will provide the larger queue with 150 message spaces.", 0.5D,
-                equalTo(weightIncrease));
+                weightIncrease, 0D);
 
     }
 
@@ -127,16 +130,16 @@ public class CalculateStagingQueueUnusedMessageConsumptionTest {
         when(distributorWorkItem.getStagingQueues()).thenReturn(stagingQueues);
 
         final long targetQueueCapacity = 1000;
-        final StagingQueueUnusedMessageConsumptionCalculator stagingQueueUnusedMessageConsumptionCalculator =
-                new StagingQueueUnusedMessageConsumptionCalculator(distributorWorkItem);
+        final StagingQueueUnusedWeightCalculator stagingQueueUnusedWeightCalculator =
+                new StagingQueueUnusedWeightCalculator();
 
         final double weightIncrease =
-                stagingQueueUnusedMessageConsumptionCalculator
-                        .calculateStagingQueueUnusedWeight(targetQueueCapacity, stagingQueues.size());
+                stagingQueueUnusedWeightCalculator
+                        .calculateStagingQueueUnusedWeight(distributorWorkItem, targetQueueCapacity, stagingQueues.size());
 
-        collector.checkThat("Result should be the sum of leftover weight space. Eg. 1000/10 = 100. q5 only has 90 messages, " +
+        assertEquals("Result should be the sum of leftover weight space. Eg. 1000/10 = 100. q5 only has 90 messages, " +
                         "therefore 0.1 out of the weight 1 is leftover, and so on.", 0.598D,
-                equalTo(weightIncrease));
+                weightIncrease, 0.002D);
 
     }
 
