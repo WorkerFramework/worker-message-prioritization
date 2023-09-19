@@ -61,7 +61,7 @@
             <artifactId>slf4j-api</artifactId>
         </dependency>
         <dependency>
-            <groupId> com.squareup.retrofit</groupId>
+            <groupId>com.squareup.retrofit</groupId>
             <artifactId>retrofit</artifactId>
             <scope>test</scope>
         </dependency>
