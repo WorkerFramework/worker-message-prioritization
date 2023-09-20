@@ -92,7 +92,7 @@ public class LowLevelDistributorIT extends DistributorTestBase {
                             capacityCalculatorBase);
             final StagingTargetPairProvider stagingTargetPairProvider = injector.getInstance(StagingTargetPairProvider.class);
             final LowLevelDistributor lowLevelDistributor = new LowLevelDistributor(queuesApi, connectionFactory,
-                    consumptionTargetCalculator, stagingTargetPairProvider, 10000, 600000, 100, 10000000);
+                    consumptionTargetCalculator, stagingTargetPairProvider, 10000, 600000);
 
             // Run the distributor (1st time).
             // stagingQueue1:            500 messages
@@ -273,7 +273,7 @@ public class LowLevelDistributorIT extends DistributorTestBase {
 
             final LowLevelDistributor lowLevelDistributor = new LowLevelDistributor(queuesApi, connectionFactory,
                     consumptionTargetCalculator, stagingTargetPairProviderMock, 10000,
-                    consumerPublisherPairLastDoneWorkTimeoutMilliseconds, 100, 10000000);
+                    consumerPublisherPairLastDoneWorkTimeoutMilliseconds);
 
             // Run the distributor (1st time)
             Assert.assertEquals(

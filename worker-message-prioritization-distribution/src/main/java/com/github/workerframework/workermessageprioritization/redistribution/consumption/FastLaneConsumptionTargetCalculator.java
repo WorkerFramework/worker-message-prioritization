@@ -43,12 +43,8 @@ public class FastLaneConsumptionTargetCalculator extends ConsumptionTargetCalcul
         final long targetQueueCapacity = getTargetQueueCapacity(distributorWorkItem.getTargetQueue());
 
         // Get a list of the staging queue names. This will be used to find the weight of the queue.
-        final List<String> stagingQueueNames = distributorWorkItem.getStagingQueues().stream().map(Queue::getName).collect(toList());
-
-        final StagingQueueUnusedWeightCalculator stagingQueueUnusedWeightCalculator =
-                new StagingQueueUnusedWeightCalculator();
-
-        final StagingQueueWeightSettingsProvider stagingQueueWeightSettingsProvider = new StagingQueueWeightSettingsProvider();
+        final List<String> stagingQueueNames =
+                distributorWorkItem.getStagingQueues().stream().map(Queue::getName).collect(toList());
 
         // The total number of messages in all the staging queues.
         final long numMessagesInStagingQueues =
@@ -57,26 +53,33 @@ public class FastLaneConsumptionTargetCalculator extends ConsumptionTargetCalcul
 
         // The total number of weights across all staging queues.
         // For now this is just setting all the weights to 1.
-        double stagingQueueWeight = stagingQueueNames.size();
+        double totalStagingQueueWeight = stagingQueueNames.size();
 
         // Target Queue capacity available per weight.
-        final double capacityPerWeight = targetQueueCapacity / stagingQueueWeight;
+        final double capacityPerWeight = targetQueueCapacity / totalStagingQueueWeight;
 
-        // Calculates, in terms of weights, the unused messages caused by staging queues smaller than the available target queue
-        // capacity per staging queue.
-        final double unusedWeightToDistribute =
-                stagingQueueUnusedWeightCalculator.calculateStagingQueueUnusedWeight(distributorWorkItem, targetQueueCapacity,
-                        stagingQueueWeight);
+        final StagingQueueUnusedWeightCalculator stagingQueueUnusedWeightCalculator =
+                new StagingQueueUnusedWeightCalculator();
+
+        final StagingQueueWeightSettingsProvider stagingQueueWeightSettingsProvider =
+                new StagingQueueWeightSettingsProvider();
 
         // Map staging queue to corresponding weight.
         final Map<Queue, Long> stagingQueueToConsumptionTargetMap = new HashMap<>();
-        final Map<String, Double> stagingQueueWeightMap = stagingQueueWeightSettingsProvider.getStagingQueueWeights(stagingQueueNames);
+        final Map<String, Double> stagingQueueWeightMap =
+                stagingQueueWeightSettingsProvider.getStagingQueueWeights(stagingQueueNames);
+
+        // Calculates, in terms of weights, the unused messages caused by staging queues
+        // smaller than the available target queue capacity per staging queue.
+        final double unusedWeightToDistribute =
+                stagingQueueUnusedWeightCalculator.calculateStagingQueueUnusedWeight(distributorWorkItem,
+                        targetQueueCapacity, totalStagingQueueWeight, stagingQueueWeightMap);
 
         for (final Queue stagingQueue : distributorWorkItem.getStagingQueues()) {
 
             // The maximum number of messages that can be consumed from each staging queue
-            // This is calculated by multiplying the capacity available per weight, by the original weight with any unused weight added
-            // on.
+            // This is calculated by multiplying the capacity available per weight, by the
+            // original weight with any unused weight added on.
             // For smaller staging queues the weight will still be increased, however the extra space will not be used.
             final double maxNumMessagesToConsumeFromStagingQueue =
                     Math.ceil(capacityPerWeight * (stagingQueueWeightMap.get(stagingQueue.getName()) + unusedWeightToDistribute));

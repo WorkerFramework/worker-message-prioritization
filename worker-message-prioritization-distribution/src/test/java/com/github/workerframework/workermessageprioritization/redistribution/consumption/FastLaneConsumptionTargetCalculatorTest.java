@@ -91,16 +91,19 @@ public final class FastLaneConsumptionTargetCalculatorTest {
         final FastLaneConsumptionTargetCalculator fastLaneConsumptionTargetCalculator =
                 new FastLaneConsumptionTargetCalculator(targetQueueSettingsProvider, capacityCalculatorBase);
 
-        final Map<Queue,Long> consumptionTargets = fastLaneConsumptionTargetCalculator.calculateConsumptionTargets(distributorWorkItem);
+        final Map<Queue,Long> consumptionTargets =
+                fastLaneConsumptionTargetCalculator.calculateConsumptionTargets(distributorWorkItem);
         final int queue1Result = Math.toIntExact(consumptionTargets.get(q1));
         final int queue2Result = Math.toIntExact(consumptionTargets.get(q2));
 
-        assertEquals("Queue 1 has more than 500 messages, therefore it should be offered the rest of the capacity that queue 2 does not" +
-                " need", 950, queue1Result);
-        assertEquals("Queue 2 only has less than 500 messages therefore the capacity of the target queue it will fill is the size of " +
-                        "it's staging queue.",
+        assertEquals("Queue 1 has more than 500 messages, therefore it should be offered " +
+                "the rest of the capacity that queue 2 does not need",
+                950, queue1Result);
+        assertEquals("Queue 2 only has less than 500 messages therefore the capacity of the " +
+                "target queue it will fill is the size of it's staging queue.",
                 50, queue2Result);
-        assertEquals("Confirm the total target queue capacity has been used", targetQueueCapacity, queue1Result+queue2Result);
+        assertEquals("Confirm the total target queue capacity has been used",
+                targetQueueCapacity, queue1Result+queue2Result);
     }
 
     @Test
@@ -144,15 +147,18 @@ public final class FastLaneConsumptionTargetCalculatorTest {
         final FastLaneConsumptionTargetCalculator fastLaneConsumptionTargetCalculator =
                 new FastLaneConsumptionTargetCalculator(targetQueueSettingsProvider, capacityCalculatorBase);
 
-        final Map<Queue,Long> consumptionTargets = fastLaneConsumptionTargetCalculator.calculateConsumptionTargets(distributorWorkItem);
+        final Map<Queue,Long> consumptionTargets =
+                fastLaneConsumptionTargetCalculator.calculateConsumptionTargets(distributorWorkItem);
         final int queue1Result = Math.toIntExact(consumptionTargets.get(q1));
         final int queue2Result = Math.toIntExact(consumptionTargets.get(q2));
 
-        assertEquals("Queue 1 gets capacity to fill half of the available targetQueueCapacity", 500, queue1Result);
+        assertEquals("Queue 1 gets capacity to fill half of the available targetQueueCapacity",
+                500, queue1Result);
         assertEquals("Queue 1 gets capacity to fill half of the available targetQueueCapacity",
                 500, queue2Result);
-        assertEquals("Both queues are larger than half of the target queue capacity therefore each are given half of the available " +
-                        "target queue capacity, regardless of the fact that staging queue 2 is much larger than staging queue 1.",
+        assertEquals("Both queues are larger than half of the target queue capacity therefore " +
+                "each are given half of the available target queue capacity, regardless of the fact that " +
+                "staging queue 2 is much larger than staging queue 1.",
                 targetQueueCapacity, queue1Result+queue2Result);
     }
 
@@ -218,7 +224,8 @@ public final class FastLaneConsumptionTargetCalculatorTest {
         final FastLaneConsumptionTargetCalculator fastLaneConsumptionTargetCalculator =
                 new FastLaneConsumptionTargetCalculator(targetQueueSettingsProvider, capacityCalculatorBase);
 
-        final Map<Queue,Long> consumptionTargets = fastLaneConsumptionTargetCalculator.calculateConsumptionTargets(distributorWorkItem);
+        final Map<Queue,Long> consumptionTargets =
+                fastLaneConsumptionTargetCalculator.calculateConsumptionTargets(distributorWorkItem);
         final int queue1Result = Math.toIntExact(consumptionTargets.get(q1));
         final int queue2Result = Math.toIntExact(consumptionTargets.get(q2));
         final int queue3Result = Math.toIntExact(consumptionTargets.get(q3));
@@ -231,14 +238,17 @@ public final class FastLaneConsumptionTargetCalculatorTest {
         final int queue10Result = Math.toIntExact(consumptionTargets.get(q10));
 
         final int queueConsumptionTargetSum =
-                queue1Result + queue2Result + queue3Result + queue4Result + queue5Result + queue6Result + queue7Result + queue8Result + queue9Result + queue10Result;
+                queue1Result + queue2Result + queue3Result + queue4Result + queue5Result +
+                queue6Result + queue7Result + queue8Result + queue9Result + queue10Result;
 
         final boolean q1ConsumptionRateIncrease = queue1Result > (targetQueueCapacity / stagingQueues.size());
 
-        assertEquals("Sum of each staging queue consumption target is the total capacity available on the target queue", targetQueueCapacity,
-                queueConsumptionTargetSum);
-        assertTrue("Consumption rate of queue 1 should be greater than the original equal consumption, as multiple queues are smaller" +
-                " than the targetQueueCapacity / num of staging queues.", q1ConsumptionRateIncrease);
+        assertEquals("Sum of each staging queue consumption target is the total capacity " +
+                "available on the target queue",
+                targetQueueCapacity, queueConsumptionTargetSum);
+        assertTrue("Consumption rate of queue 1 should be greater than the original equal " +
+                "consumption, as multiple queues are smaller than the targetQueueCapacity / num of staging queues.",
+                q1ConsumptionRateIncrease);
     }
 
     @Test
@@ -294,7 +304,8 @@ public final class FastLaneConsumptionTargetCalculatorTest {
         final FastLaneConsumptionTargetCalculator fastLaneConsumptionTargetCalculator =
                 new FastLaneConsumptionTargetCalculator(targetQueueSettingsProvider,capacityCalculatorBase);
 
-        final Map<Queue,Long> consumptionTargets = fastLaneConsumptionTargetCalculator.calculateConsumptionTargets(distributorWorkItem);
+        final Map<Queue,Long> consumptionTargets = fastLaneConsumptionTargetCalculator
+                .calculateConsumptionTargets(distributorWorkItem);
         final int queue1Result = Math.toIntExact(consumptionTargets.get(q1));
         final int queue2Result = Math.toIntExact(consumptionTargets.get(q2));
         final int queue3Result = Math.toIntExact(consumptionTargets.get(q3));
@@ -305,10 +316,12 @@ public final class FastLaneConsumptionTargetCalculatorTest {
 
         final boolean q1ConsumptionRateIncrease = queue1Result > (targetQueueCapacity / stagingQueues.size());
 
-        assertEquals("Sum of each staging queue consumption target is the total capacity available on the target queue", targetQueueCapacity,
-                queueConsumptionTargetSum, 1.0);
-        assertTrue("Consumption rate of queue 1 should be greater than the original equal consumption, as multiple queues are smaller" +
-                " than the targetQueueCapacity / num of staging queues.", q1ConsumptionRateIncrease);
+        assertEquals("Sum of each staging queue consumption target is the total capacity " +
+                "available on the target queue",
+                targetQueueCapacity, queueConsumptionTargetSum, 1.0);
+        assertTrue("Consumption rate of queue 1 should be greater than the original equal " +
+                "consumption, as multiple queues are smaller than the targetQueueCapacity / num of staging queues.",
+                q1ConsumptionRateIncrease);
     }
 
     @Test
@@ -337,8 +350,8 @@ public final class FastLaneConsumptionTargetCalculatorTest {
         when(distributorWorkItem.getStagingQueues()).thenReturn(stagingQueues);
         when(distributorWorkItem.getTargetQueue()).thenReturn(targetQueue);
 
-        final TargetQueueSettings targetQueueSettings = new TargetQueueSettings(1500,10,
-                1, 1, 500L);
+        final TargetQueueSettings targetQueueSettings =
+                new TargetQueueSettings(1500,10, 1, 1, 500L);
 
         final TargetQueueSettingsProvider targetQueueSettingsProvider = mock(TargetQueueSettingsProvider.class);
         when(targetQueueSettingsProvider.get(targetQueue)).thenReturn(targetQueueSettings);
@@ -351,7 +364,8 @@ public final class FastLaneConsumptionTargetCalculatorTest {
         final FastLaneConsumptionTargetCalculator fastLaneConsumptionTargetCalculator =
                 new FastLaneConsumptionTargetCalculator(targetQueueSettingsProvider, capacityCalculatorBase);
 
-        final Map<Queue,Long> consumptionTargets = fastLaneConsumptionTargetCalculator.calculateConsumptionTargets(distributorWorkItem);
+        final Map<Queue,Long> consumptionTargets = fastLaneConsumptionTargetCalculator
+                .calculateConsumptionTargets(distributorWorkItem);
         final int queue1Result = Math.toIntExact(consumptionTargets.get(q1));
         final int queue2Result = Math.toIntExact(consumptionTargets.get(q2));
 

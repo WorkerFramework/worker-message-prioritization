@@ -21,9 +21,11 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ErrorCollector;
 
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Set;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -41,9 +43,15 @@ public class StagingQueueUnusedWeightCalculatorTest {
 
     @Test
     public void calculateStagingQueueUnusedConsumptionWithSmallEqualQueuesTest() {
+        final String q1Name = "q1";
+        final String q2Name = "q2";
         final Queue q1 = new Queue();
         final Queue q2 = new Queue();
+        q1.setName(q1Name);
+        q1.setName(q2Name);
         final Set<Queue> stagingQueues = new HashSet<>(Arrays.asList(q1, q2));
+        final Map<String, Double> stagingQueueWeights = new HashMap<>();
+        stagingQueues.forEach(queue -> stagingQueueWeights.put(queue.getName(), 1D));
         stagingQueues.forEach((queue -> queue.setMessages(10)));
         final DistributorWorkItem distributorWorkItem = mock(DistributorWorkItem.class);
         when(distributorWorkItem.getStagingQueues()).thenReturn(stagingQueues);
@@ -53,19 +61,26 @@ public class StagingQueueUnusedWeightCalculatorTest {
 
         final double weightIncrease =
                 stagingQueueUnusedWeightCalculator.calculateStagingQueueUnusedWeight(distributorWorkItem,
-                        targetQueueCapacity, 2D);
+                        targetQueueCapacity, 2D, stagingQueueWeights);
 
-        assertEquals("Result should be zero as all queues have been set less than the targetQueueCapacity offered to " +
-                        "the queue. This means no leftover is required as there are no larger staging queues to use the leftover.",
+        assertEquals("Result should be zero as all queues have been set less than the targetQueueCapacity" +
+                " offered to the queue. This means no leftover is required as there are no larger staging " +
+                "queues to use the leftover.",
                 0D, weightIncrease, 0D);
     }
 
     @Test
     public void calculateStagingQueueUnusedConsumptionWithLargeEqualQueuesTest() {
+        final String q1Name = "q1";
+        final String q2Name = "q2";
         final Queue q1 = new Queue();
         final Queue q2 = new Queue();
+        q1.setName(q1Name);
+        q1.setName(q2Name);
         final Set<Queue> stagingQueues = new HashSet<>(Arrays.asList(q1, q2));
         stagingQueues.forEach((queue -> queue.setMessages(1000)));
+        final Map<String, Double> stagingQueueWeights = new HashMap<>();
+        stagingQueues.forEach(queue -> stagingQueueWeights.put(queue.getName(), 1D));
         final DistributorWorkItem distributorWorkItem = mock(DistributorWorkItem.class);
         when(distributorWorkItem.getStagingQueues()).thenReturn(stagingQueues);
         final long targetQueueCapacity = 1000;
@@ -73,19 +88,26 @@ public class StagingQueueUnusedWeightCalculatorTest {
                 new StagingQueueUnusedWeightCalculator();
 
         final double weightIncrease =
-                stagingQueueUnusedWeightCalculator.calculateStagingQueueUnusedWeight(distributorWorkItem,
-                        targetQueueCapacity, 2D);
-        assertEquals("Result should be zero as all queues have been set greater than available space in target queue. " +
-                        "Therefore each queue can use an equal amount of space and nothing is leftover", 0D, weightIncrease, 0D);
+                stagingQueueUnusedWeightCalculator.calculateStagingQueueUnusedWeight
+                        (distributorWorkItem, targetQueueCapacity, 2D,stagingQueueWeights);
+        assertEquals("Result should be zero as all queues have been set greater than available " +
+                "space in target queue. Therefore each queue can use an equal amount of space and nothing is leftover",
+                0D, weightIncrease, 0D);
     }
 
     @Test
     public void calculateStagingQueueWeightIncreaseWith2UnequalQueuesTest() {
+        final String q1Name = "q1";
+        final String q2Name = "q2";
         final Queue q1 = new Queue();
         q1.setMessages(200);
         final Queue q2 = new Queue();
         q2.setMessages(50);
+        q1.setName(q1Name);
+        q1.setName(q2Name);
         final Set<Queue> stagingQueues = new HashSet<>(Arrays.asList(q1, q2));
+        final Map<String, Double> stagingQueueWeights = new HashMap<>();
+        stagingQueues.forEach(queue -> stagingQueueWeights.put(queue.getName(), 1D));
         final DistributorWorkItem distributorWorkItem = mock(DistributorWorkItem.class);
         when(distributorWorkItem.getStagingQueues()).thenReturn(stagingQueues);
         final long targetQueueCapacity = 200;
@@ -94,11 +116,12 @@ public class StagingQueueUnusedWeightCalculatorTest {
 
         final double weightIncrease =
                 stagingQueueCalculateConsumptionWeightIncrease.calculateStagingQueueUnusedWeight(distributorWorkItem,
-                        targetQueueCapacity, 2D);
+                        targetQueueCapacity, 2D,stagingQueueWeights);
 
-        assertEquals("Result should be 0.5 as one queue has half of the queue length available, leaving the other half of the " +
-                        "space unused. Adding 0.5 to each weight will provide the larger queue with 150 message spaces.", 0.5D,
-                weightIncrease, 0D);
+        assertEquals("Result should be 0.5 as one queue has half of the queue length available," +
+                " leaving the other half of the space unused. Adding 0.5 to each weight will provide the " +
+                "larger queue with 150 message spaces.",
+                0.5D, weightIncrease, 0D);
 
     }
 
@@ -126,6 +149,10 @@ public class StagingQueueUnusedWeightCalculatorTest {
         q10.setMessages(50);
 
         final Set<Queue> stagingQueues = new HashSet<>(Arrays.asList(q1, q2, q3, q4, q5, q6, q7, q8, q9, q10));
+
+        final Map<String, Double> stagingQueueWeights = new HashMap<>();
+        stagingQueues.forEach(queue -> stagingQueueWeights.put(queue.getName(), 1D));
+
         final DistributorWorkItem distributorWorkItem = mock(DistributorWorkItem.class);
         when(distributorWorkItem.getStagingQueues()).thenReturn(stagingQueues);
 
@@ -134,12 +161,12 @@ public class StagingQueueUnusedWeightCalculatorTest {
                 new StagingQueueUnusedWeightCalculator();
 
         final double weightIncrease =
-                stagingQueueUnusedWeightCalculator
-                        .calculateStagingQueueUnusedWeight(distributorWorkItem, targetQueueCapacity, stagingQueues.size());
+                stagingQueueUnusedWeightCalculator.calculateStagingQueueUnusedWeight
+                        (distributorWorkItem, targetQueueCapacity, stagingQueues.size(),stagingQueueWeights);
 
-        assertEquals("Result should be the sum of leftover weight space. Eg. 1000/10 = 100. q5 only has 90 messages, " +
-                        "therefore 0.1 out of the weight 1 is leftover, and so on.", 0.598D,
-                weightIncrease, 0.002D);
+        assertEquals("Result should be the sum of leftover weight space. " +
+                "Eg. 1000/10 = 100. q5 only has 90 messages, therefore 0.1 out of the weight 1 is leftover, and so on.",
+                0.598D, weightIncrease, 0.002D);
 
     }
 
