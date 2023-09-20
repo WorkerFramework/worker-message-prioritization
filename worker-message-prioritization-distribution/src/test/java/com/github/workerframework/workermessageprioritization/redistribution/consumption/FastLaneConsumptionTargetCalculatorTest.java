@@ -82,8 +82,8 @@ public final class FastLaneConsumptionTargetCalculatorTest {
 
         final Map<Queue,Long> consumptionTargets =
                 fastLaneConsumptionTargetCalculator.calculateConsumptionTargets(distributorWorkItem);
-        final int queue1Result = Math.toIntExact(consumptionTargets.get(q1));
-        final int queue2Result = Math.toIntExact(consumptionTargets.get(q2));
+        final long queue1Result = consumptionTargets.get(q1);
+        final long queue2Result = consumptionTargets.get(q2);
 
         assertEquals("Queue 1 has more than 500 messages, therefore it should be offered " +
                 "the rest of the capacity that queue 2 does not need",
@@ -127,8 +127,8 @@ public final class FastLaneConsumptionTargetCalculatorTest {
 
         final Map<Queue,Long> consumptionTargets =
                 fastLaneConsumptionTargetCalculator.calculateConsumptionTargets(distributorWorkItem);
-        final int queue1Result = Math.toIntExact(consumptionTargets.get(q1));
-        final int queue2Result = Math.toIntExact(consumptionTargets.get(q2));
+        final long queue1Result = consumptionTargets.get(q1);
+        final long queue2Result = consumptionTargets.get(q2);
 
         assertEquals("Queue 1 gets capacity to fill half of the available targetQueueCapacity",
                 500, queue1Result);
@@ -181,18 +181,18 @@ public final class FastLaneConsumptionTargetCalculatorTest {
 
         final Map<Queue,Long> consumptionTargets =
                 fastLaneConsumptionTargetCalculator.calculateConsumptionTargets(distributorWorkItem);
-        final int queue1Result = Math.toIntExact(consumptionTargets.get(q1));
-        final int queue2Result = Math.toIntExact(consumptionTargets.get(q2));
-        final int queue3Result = Math.toIntExact(consumptionTargets.get(q3));
-        final int queue4Result = Math.toIntExact(consumptionTargets.get(q4));
-        final int queue5Result = Math.toIntExact(consumptionTargets.get(q5));
-        final int queue6Result = Math.toIntExact(consumptionTargets.get(q6));
-        final int queue7Result = Math.toIntExact(consumptionTargets.get(q7));
-        final int queue8Result = Math.toIntExact(consumptionTargets.get(q8));
-        final int queue9Result = Math.toIntExact(consumptionTargets.get(q9));
-        final int queue10Result = Math.toIntExact(consumptionTargets.get(q10));
+        final long queue1Result = consumptionTargets.get(q1);
+        final long queue2Result = consumptionTargets.get(q2);
+        final long queue3Result = consumptionTargets.get(q3);
+        final long queue4Result = consumptionTargets.get(q4);
+        final long queue5Result = consumptionTargets.get(q5);
+        final long queue6Result = consumptionTargets.get(q6);
+        final long queue7Result = consumptionTargets.get(q7);
+        final long queue8Result = consumptionTargets.get(q8);
+        final long queue9Result = consumptionTargets.get(q9);
+        final long queue10Result = consumptionTargets.get(q10);
 
-        final int queueConsumptionTargetSum =
+        final long queueConsumptionTargetSum =
                 queue1Result + queue2Result + queue3Result + queue4Result + queue5Result +
                 queue6Result + queue7Result + queue8Result + queue9Result + queue10Result;
 
@@ -242,12 +242,12 @@ public final class FastLaneConsumptionTargetCalculatorTest {
 
         final Map<Queue,Long> consumptionTargets = fastLaneConsumptionTargetCalculator
                 .calculateConsumptionTargets(distributorWorkItem);
-        final int queue1Result = Math.toIntExact(consumptionTargets.get(q1));
-        final int queue2Result = Math.toIntExact(consumptionTargets.get(q2));
-        final int queue3Result = Math.toIntExact(consumptionTargets.get(q3));
-        final int queue4Result = Math.toIntExact(consumptionTargets.get(q4));
+        final long queue1Result = consumptionTargets.get(q1);
+        final long queue2Result = consumptionTargets.get(q2);
+        final long queue3Result = consumptionTargets.get(q3);
+        final long queue4Result = consumptionTargets.get(q4);
 
-        final int queueConsumptionTargetSum =
+        final long queueConsumptionTargetSum =
                 queue1Result + queue2Result + queue3Result + queue4Result;
 
         final boolean q1ConsumptionRateIncrease = queue1Result > (targetQueueCapacity / stagingQueues.size());
@@ -291,11 +291,11 @@ public final class FastLaneConsumptionTargetCalculatorTest {
 
         final Map<Queue,Long> consumptionTargets = fastLaneConsumptionTargetCalculator
                 .calculateConsumptionTargets(distributorWorkItem);
-        final int queue1Result = Math.toIntExact(consumptionTargets.get(q1));
-        final int queue2Result = Math.toIntExact(consumptionTargets.get(q2));
-        final int queue3Result = Math.toIntExact(consumptionTargets.get(q3));
+        final long queue1Result = consumptionTargets.get(q1);
+        final long queue2Result = consumptionTargets.get(q2);
+        final long queue3Result = consumptionTargets.get(q3);
 
-        final int queueConsumptionTargetSum =
+        final long queueConsumptionTargetSum =
                 queue1Result + queue2Result + queue3Result;
 
         final long totalQueueMessages =
