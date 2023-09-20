@@ -52,8 +52,8 @@ public class StagingQueueUnusedWeightCalculator {
             previousUnusedWeight = totalUnusedWeight;
 
             final double unusedStagingQueueWeight = weightValues.get("UnusedStagingQueueWeight");
+            final double usedStagingQueueWeight = weightValues.get("UsedStagingQueueWeight");
             final double stagingQueueWeightReduced = weightValues.get("StagingQueueWeightTotalReduced");
-
 
             // If all staging queues are smaller than the capacity available to them, return zero as unused weight is useless regardless.
             // Also, if all staging queues are larger than the capacity available to them (in other words there is no unused staging queue
@@ -69,7 +69,7 @@ public class StagingQueueUnusedWeightCalculator {
             } else {
                 // If the first scan of the staging queues has already happened then we need to remove the weight used by queues that
                 // could not use all the additional weight given.
-                totalUnusedWeight -= unusedStagingQueueWeight;
+                totalUnusedWeight -= usedStagingQueueWeight;
             }
 
             // Calculates the total weight of staging queues that left behind unused weight.
@@ -105,6 +105,7 @@ public class StagingQueueUnusedWeightCalculator {
 
         double stagingQueueWeightTotalReduced = 0;
         double unusedStagingQueueWeight = 0;
+        double usedStagingQueueWeight = 0;
 
         for (final Queue stagingQueue : distributorWorkItem.getStagingQueues()) {
             final double numMessagesInStagingQueue = stagingQueue.getMessages();
@@ -122,10 +123,9 @@ public class StagingQueueUnusedWeightCalculator {
             // however less than the capacity provided with the extra weight added.
             if(firstScanComplete){
                 if (numMessagesInStagingQueue < capacityPerQueue && numMessagesInStagingQueue >= previousCapacityPerQueue) {
-                    double usedWeight = round(stagingQueueWeightMap.get(stagingQueue.getName()) -
-                            (numMessagesInStagingQueue / capacityPerQueue), 4);
-                    double leftoverUnusedWeight = round((weightAdditionPerQueue - usedWeight),4);
-                    unusedStagingQueueWeight += leftoverUnusedWeight;
+                    double usedWeight = round((numMessagesInStagingQueue / previousCapacityPerQueue)
+                                    - stagingQueueWeightMap.get(stagingQueue.getName()), 4);
+                    usedStagingQueueWeight += usedWeight;
                     // Keep track of the total weights that are not used to their potential.
                     // In this case weight of 2 is added, as that full potential was not used.
                     stagingQueueWeightTotalReduced += stagingQueueWeightMap.get(stagingQueue.getName());
@@ -152,6 +152,7 @@ public class StagingQueueUnusedWeightCalculator {
         }
         Map<String, Double> weightValues = new HashMap<>();
         weightValues.put("UnusedStagingQueueWeight", unusedStagingQueueWeight);
+        weightValues.put("UsedStagingQueueWeight", usedStagingQueueWeight);
         weightValues.put("StagingQueueWeightTotalReduced", stagingQueueWeightTotalReduced);
         return weightValues;
     }
