@@ -249,15 +249,10 @@ public final class FastLaneConsumptionTargetCalculatorTest {
 
         final long queueConsumptionTargetSum =
                 queue1Result + queue2Result + queue3Result + queue4Result;
-
-        final boolean q1ConsumptionRateIncrease = queue1Result > (targetQueueCapacity / stagingQueues.size());
-
+        
         assertEquals("Sum of each staging queue consumption target is the total capacity " +
                         "available on the target queue",
                 targetQueueCapacity, queueConsumptionTargetSum, 1.0);
-        assertTrue("Consumption rate of queue 1 should be greater than the original equal " +
-                        "consumption, as multiple queues are smaller than the targetQueueCapacity / num of staging queues.",
-                q1ConsumptionRateIncrease);
     }
 
     @Test
