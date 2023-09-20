@@ -75,8 +75,8 @@ public final class MessageDistributorConfig {
     private static final int CAF_MIN_CONSUMPTION_RATE_HISTORY_SIZE_DEFAULT = 10;
     private static final String CAF_QUEUE_PROCESSING_TIME_GOAL_SECONDS = "CAF_QUEUE_PROCESSING_TIME_GOAL_SECONDS";
     private static final int CAF_QUEUE_PROCESSING_TIME_GOAL_SECONDS_DEFAULT = 300;
-    private static final String CAF_FAST_LANE_PROCESSING_MODE = "CAF_FAST_LANE_PROCESSING_MODE";
-    private static final boolean CAF_FAST_LANE_PROCESSING_MODE_DEFAULT = false;
+    private static final String CAF_CONSUMPTION_TARGET_CALCULATOR_MODE = "CAF_CONSUMPTION_TARGET_CALCULATOR_MODE";
+    private static final String CAF_CONSUMPTION_TARGET_CALCULATOR_MODE_DEFAULT = "EqualConsumptionTargetCalculator";
     private final String rabbitMQVHost;
     private final String rabbitMQHost;
     private final int rabbitMQPort;
@@ -97,7 +97,7 @@ public final class MessageDistributorConfig {
     private final int maxConsumptionRateHistorySize;
     private final int minConsumptionRateHistorySize;
     private final int queueProcessingTimeGoalSeconds;
-    private final boolean fastLaneProcessingMode;
+    private final String consumptionTargetCalculatorMode;
 
     @Inject
     public MessageDistributorConfig() {
@@ -130,7 +130,8 @@ public final class MessageDistributorConfig {
                 CAF_MIN_CONSUMPTION_RATE_HISTORY_SIZE_DEFAULT);
         queueProcessingTimeGoalSeconds = getEnvOrDefault(CAF_QUEUE_PROCESSING_TIME_GOAL_SECONDS,
                 CAF_QUEUE_PROCESSING_TIME_GOAL_SECONDS_DEFAULT);
-        fastLaneProcessingMode = getEnvOrDefault(CAF_FAST_LANE_PROCESSING_MODE, CAF_FAST_LANE_PROCESSING_MODE_DEFAULT);
+        consumptionTargetCalculatorMode = getEnvOrDefault(CAF_CONSUMPTION_TARGET_CALCULATOR_MODE,
+                CAF_CONSUMPTION_TARGET_CALCULATOR_MODE_DEFAULT);
     }
 
     public String getRabbitMQVHost() {
@@ -191,7 +192,7 @@ public final class MessageDistributorConfig {
     public int getMaxConsumptionRateHistorySize(){return maxConsumptionRateHistorySize;}
     public int getMinConsumptionRateHistorySize(){return minConsumptionRateHistorySize;}
     public int getQueueProcessingTimeGoalSeconds(){return queueProcessingTimeGoalSeconds;}
-    public boolean getFastLaneProcessingMode(){return fastLaneProcessingMode;}
+    public String getConsumptionTargetCalculatorMode(){return consumptionTargetCalculatorMode;}
 
     @Override
     public String toString() {

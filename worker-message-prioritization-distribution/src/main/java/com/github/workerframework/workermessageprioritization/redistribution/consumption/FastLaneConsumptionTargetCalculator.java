@@ -19,6 +19,7 @@ import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 import com.github.workerframework.workermessageprioritization.redistribution.DistributorWorkItem;
 import com.github.workerframework.workermessageprioritization.targetqueue.CapacityCalculatorBase;
 import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueSettingsProvider;
+import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,10 +28,10 @@ import java.util.List;
 import java.util.HashMap;
 
 import static java.util.stream.Collectors.toList;
-
 public class FastLaneConsumptionTargetCalculator extends ConsumptionTargetCalculatorBase {
     private static final Logger LOGGER = LoggerFactory.getLogger(EqualConsumptionTargetCalculator.class);
-
+    
+    @Inject
     public FastLaneConsumptionTargetCalculator(final TargetQueueSettingsProvider targetQueueSettingsProvider,
                                                final CapacityCalculatorBase capacityCalculatorBase) {
         super(targetQueueSettingsProvider, capacityCalculatorBase);

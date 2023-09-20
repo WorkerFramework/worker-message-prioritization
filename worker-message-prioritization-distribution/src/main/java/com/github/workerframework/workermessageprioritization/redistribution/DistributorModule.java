@@ -34,7 +34,10 @@ import com.github.workerframework.workermessageprioritization.targetqueue.TunedC
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
+import com.google.inject.Injector;
+import com.google.inject.Key;
 import com.google.inject.name.Named;
+import com.google.inject.name.Names;
 import com.rabbitmq.client.ConnectionFactory;
 
 import java.util.List;
@@ -91,7 +94,8 @@ public class DistributorModule extends AbstractModule {
 
     @Provides
     RabbitManagementApi<QueuesApi> provideQueuesApi(@Named("RabbitMQMgmtUrl") final String endpoint,
-                                                    @Named("RabbitMQUsername") final String user, @Named("RabbitMQPassword") final String password) {
+                                                    @Named("RabbitMQUsername") final String user,
+                                                    @Named("RabbitMQPassword") final String password) {
 
         return new RabbitManagementApi<>(QueuesApi.class, endpoint, user, password);
     }
@@ -155,13 +159,10 @@ public class DistributorModule extends AbstractModule {
 
     @Provides
     ConsumptionTargetCalculator provideConsumptionTargetCalculator(final MessageDistributorConfig messageDistributorConfig,
-                                                                   final TargetQueueSettingsProvider targetQueueSettingsProvider,
-                                                                   final CapacityCalculatorBase capacityCalculatorBase){
-        if(messageDistributorConfig.getFastLaneProcessingMode()){
-            return new FastLaneConsumptionTargetCalculator(targetQueueSettingsProvider,capacityCalculatorBase);
-        }else {
-            return new EqualConsumptionTargetCalculator(targetQueueSettingsProvider, capacityCalculatorBase);
-        }
+                                                                   final Injector injector){
+
+        return injector.getInstance(Key.get(ConsumptionTargetCalculator.class,
+                Names.named(messageDistributorConfig.getConsumptionTargetCalculatorMode())));
     }
 
     @Override
@@ -173,6 +174,12 @@ public class DistributorModule extends AbstractModule {
         bind(QueueInformationProvider.class);
         bind(StagingTargetPairProvider.class);
         bind(TunedTargetQueueLengthProvider.class);
+        bind(ConsumptionTargetCalculator.class)
+                .annotatedWith(Names.named("EqualConsumptionTargetCalculator"))
+                .to(EqualConsumptionTargetCalculator.class);
+        bind(ConsumptionTargetCalculator.class)
+                .annotatedWith(Names.named("FastLaneConsumptionTargetCalculator"))
+                .to(FastLaneConsumptionTargetCalculator.class);
     }
 
 }

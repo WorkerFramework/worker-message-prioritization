@@ -45,7 +45,7 @@ public class StagingQueueUnusedWeightCalculator {
         // Will continue in this loop until there is no unused weight potential found.
         while (unusedWeightAvailable) {
 
-            final Map<String, Double> weightValues = getTotalUnusedStagingQueueWeight(distributorWorkItem, targetQueueCapacityPerWeight,
+            final Map<String, Double> weightValues = getStagingQueueStats(distributorWorkItem, targetQueueCapacityPerWeight,
                     weightAdditionPerQueue, previousUnusedWeight, firstScanComplete, stagingQueueWeightMap);
 
             // Update the previous unused weight to store the old value in order to calculate the weight unused.
@@ -82,8 +82,17 @@ public class StagingQueueUnusedWeightCalculator {
 
         }
 
-        if(totalUnusedWeight == 0 || totalStagingQueueWeight == totalStagingQueueWeightReduced){
+        if(totalUnusedWeight == 0){
             return 0;
+        }
+        // If the totalStagingQueueWeight == totalStagingQueueWeightReduced, this means that the max of each queue is still
+        // not enough to fill the capacity of the target queue. This means we just want to set each queue to have a
+        // capacity of their length. Because in the FastLaneConsumptionTargetCalculator we set
+        // actualNumberOfMessagesToConsumeFromStagingQueue to the minimum. This means returning the totalStagingQueueWeight
+        // at this point will return the minimum of the staging queue or the staging queue * totalStagingQueueWeight.
+        // This means that in this scenario the full length of the
+        if(totalStagingQueueWeight == totalStagingQueueWeightReduced){
+            return totalStagingQueueWeight;
         }
         else{
             // Unused weight returned will be the total unused weight, divided by the difference between the total staging
@@ -96,12 +105,12 @@ public class StagingQueueUnusedWeightCalculator {
         }
     }
 
-    private Map<String, Double> getTotalUnusedStagingQueueWeight(final DistributorWorkItem distributorWorkItem,
-                                                                 double targetQueueCapacityPerWeight,
-                                                                 double weightAdditionPerQueue,
-                                                                 double previousWeightAddition,
-                                                                 boolean firstScanComplete,
-                                                                 Map<String, Double> stagingQueueWeightMap){
+    private Map<String, Double> getStagingQueueStats(final DistributorWorkItem distributorWorkItem,
+                                                     double targetQueueCapacityPerWeight,
+                                                     double weightAdditionPerQueue,
+                                                     double previousWeightAddition,
+                                                     boolean firstScanComplete,
+                                                     Map<String, Double> stagingQueueWeightMap){
 
         double stagingQueueWeightTotalReduced = 0;
         double unusedStagingQueueWeight = 0;
@@ -110,7 +119,7 @@ public class StagingQueueUnusedWeightCalculator {
         for (final Queue stagingQueue : distributorWorkItem.getStagingQueues()) {
             final double numMessagesInStagingQueue = stagingQueue.getMessages();
 
-            // Calculate the capacity provided to each queue based on it's weight
+            // Calculate the capacity provided to each queue based on its weight
             final double capacityPerQueue =
                     targetQueueCapacityPerWeight * (stagingQueueWeightMap.get(stagingQueue.getName()) + weightAdditionPerQueue);
 
