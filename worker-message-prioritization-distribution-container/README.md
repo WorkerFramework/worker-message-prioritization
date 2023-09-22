@@ -60,7 +60,7 @@ This repository consists of the source to build a container that includes the
     should be removed. Set this to 0 to disable caching.
 
 * `CAF_ENABLE_TARGET_QUEUE_LENGTH_TUNING`  
-  **Default**: `true`  
+  **Default**: `false`  
   **Description**: Used to toggle the TunedTargetQueueLength functionality on and off. While this variable is set to is true, 
   any recommended tuning of the target queue length will be implemented when there is sufficient consumption rate history to do so. 
   Target queue length tuning will be turned off if this value is set to false, and the default target queue lengths used.

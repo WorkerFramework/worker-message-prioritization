@@ -62,7 +62,7 @@ public final class MessageDistributorConfig {
     private static final int CAF_WMP_KUBERNETES_LABEL_CACHE_EXPIRY_MINUTES_DEFAULT = 60;
 
     private static final String CAF_ENABLE_TARGET_QUEUE_LENGTH_TUNING = "CAF_ENABLE_TARGET_QUEUE_LENGTH_TUNING";
-    private static final boolean CAF_ENABLE_TARGET_QUEUE_LENGTH_TUNING_DEFAULT = true;
+    private static final boolean CAF_ENABLE_TARGET_QUEUE_LENGTH_TUNING_DEFAULT = false;
     private static final String CAF_MIN_TARGET_QUEUE_LENGTH = "CAF_MIN_TARGET_QUEUE_LENGTH";
     private static final int CAF_MIN_TARGET_QUEUE_LENGTH_DEFAULT = 100;
     private static final String CAF_MAX_TARGET_QUEUE_LENGTH = "CAF_MAX_TARGET_QUEUE_LENGTH";
