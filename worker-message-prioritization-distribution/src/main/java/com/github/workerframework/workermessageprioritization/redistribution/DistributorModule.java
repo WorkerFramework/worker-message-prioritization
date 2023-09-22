@@ -96,9 +96,9 @@ public class DistributorModule extends AbstractModule {
     }
 
     @Provides
-    @Named("NoOpMode")
-    boolean provideNoOpMode(final MessageDistributorConfig messageDistributorConfig){
-        return messageDistributorConfig.getNoOpMode();
+    @Named("EnableTargetQueueLengthTuning")
+    boolean provideEnableTargetQueueLengthTuning(final MessageDistributorConfig messageDistributorConfig){
+        return messageDistributorConfig.getEnableTargetQueueLengthTuning();
     }
 
     @Provides

@@ -44,7 +44,7 @@ public class TunedTargetQueueLengthProviderTest {
     private final int eligableForRefillPercentage = 10;
 
     @Test
-    public void getTunedTargetQueueNoOpTest(){
+    public void getTunedTargetQueueTuningDisabledTest(){
 
         final double consumptionRate = 0.5;
 
@@ -68,17 +68,17 @@ public class TunedTargetQueueLengthProviderTest {
                 .thenReturn(1D);
 
         final TunedTargetQueueLengthProvider targetQueue = new TunedTargetQueueLengthProvider(queueInformationProvider,
-                historicalConsumptionRateManager, targetQueueLengthRounder, minTargetQueueLength, maxTargetQueueLength, true,
-                queueProcessingTimeGoalSeconds);
+                historicalConsumptionRateManager, targetQueueLengthRounder, minTargetQueueLength, maxTargetQueueLength,
+                false, queueProcessingTimeGoalSeconds);
 
         final long tunedTargetQueueLength = getTunedTargetQueueLength(targetQueue1, targetQueue, targetQueueSettings);
 
-        assertEquals("NoOpMode is on: Target queue length should not have changed. Suggested adjustment for the target queue length " +
-                "should still be logged.", targetQueueLength, tunedTargetQueueLength);
+        assertEquals("Tuning is disabled: Target queue length should not have changed. Suggested adjustment for the target queue length" +
+                " should still be logged.", targetQueueLength, tunedTargetQueueLength);
     }
 
     @Test
-    public void getTunedTargetQueueForQueueWithInadequateHistoryAndNoOpModeOffTest(){
+    public void getTunedTargetQueueForQueueWithInadequateHistoryAndTuningEnabledTest(){
 
         final double consumptionRate = 0.5;
 
@@ -102,7 +102,8 @@ public class TunedTargetQueueLengthProviderTest {
                 .thenReturn(1D);
 
         final TunedTargetQueueLengthProvider targetQueue = new TunedTargetQueueLengthProvider(queueInformationProvider,
-                historicalConsumptionRateManager, targetQueueLengthRounder, minTargetQueueLength, maxTargetQueueLength, false, queueProcessingTimeGoalSeconds);
+                historicalConsumptionRateManager, targetQueueLengthRounder, minTargetQueueLength, maxTargetQueueLength,
+                true, queueProcessingTimeGoalSeconds);
 
         final long tunedTargetQueueLength = getTunedTargetQueueLength(targetQueue1, targetQueue, targetQueueSettings);
 
@@ -112,7 +113,7 @@ public class TunedTargetQueueLengthProviderTest {
 
 
     @Test
-    public void getDifferentTunedTargetQueueLengthsForQueuesWithAdequateHistoryAndNoOpModeOffTest(){
+    public void getDifferentTunedTargetQueueLengthsForQueuesWithAdequateHistoryAndTuningEnabledTest(){
 
         final double consumptionRate1 = 0.5;
         final double consumptionRate2 = 5;
@@ -147,8 +148,8 @@ public class TunedTargetQueueLengthProviderTest {
                 .thenReturn(1D);
 
         final TunedTargetQueueLengthProvider targetQueue = new TunedTargetQueueLengthProvider(queueInformationProvider,
-                historicalConsumptionRateManager, targetQueueLengthRounder, minTargetQueueLength, maxTargetQueueLength, false,
-                queueProcessingTimeGoalSeconds);
+                historicalConsumptionRateManager, targetQueueLengthRounder, minTargetQueueLength, maxTargetQueueLength,
+                true, queueProcessingTimeGoalSeconds);
 
         final long tunedTargetQueueLength1 = getTunedTargetQueueLength(targetQueue1, targetQueue, targetQueueSettings);
         targetQueueSettings.setCurrentMaxLength(tunedTargetQueueLength1);
@@ -165,7 +166,7 @@ public class TunedTargetQueueLengthProviderTest {
     }
 
     @Test
-    public void getMinAndMaxTunedTargetQueueForQueueWithAdequateHistoryAndNoOpModeOffTest(){
+    public void getMinAndMaxTunedTargetQueueForQueueWithAdequateHistoryAndTuningEnabledTest(){
 
         final double consumptionRate1 = 0.00005;
         final double consumptionRate2 = 5000;
@@ -200,7 +201,8 @@ public class TunedTargetQueueLengthProviderTest {
                 .thenReturn(1D);
 
         final TunedTargetQueueLengthProvider targetQueue = new TunedTargetQueueLengthProvider(queueInformationProvider,
-                historicalConsumptionRateManager, targetQueueLengthRounder, minTargetQueueLength, maxTargetQueueLength, false, queueProcessingTimeGoalSeconds);
+                historicalConsumptionRateManager, targetQueueLengthRounder, minTargetQueueLength, maxTargetQueueLength,
+                true, queueProcessingTimeGoalSeconds);
 
         final long tunedTargetQueueLength1 = getTunedTargetQueueLength(targetQueue1, targetQueue, targetQueueSettings);
         final long tunedTargetQueueLength2 = getTunedTargetQueueLength(targetQueue2, targetQueue, targetQueueSettings);
