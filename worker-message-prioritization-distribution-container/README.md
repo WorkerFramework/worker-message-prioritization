@@ -63,7 +63,7 @@ This repository consists of the source to build a container that includes the
   **Default**: `true`  
   **Description**: Used to toggle the TunedTargetQueueLength functionality on and off. While this variable is set to is true, 
   any recommended tuning of the target queue length will be implemented when there is sufficient consumption rate history to do so. 
-  Target queue length tuning will be turned off it this value is set to false, and the default target queue lengths used.
+  Target queue length tuning will be turned off if this value is set to false, and the default target queue lengths used.
 
 * `CAF_MIN_TARGET_QUEUE_LENGTH`  
   **Default**: `100`  
@@ -86,8 +86,8 @@ This repository consists of the source to build a container that includes the
 * `CAF_MIN_CONSUMPTION_RATE_HISTORY_SIZE`  
   **Default**: `10`  
   **Description**: Used to set the minimum tuned target queue length history that is required before an actual change to the target 
-  queue length can be made. When tuning is enabled using the enableTargetQueueLenghtTuning environment variable, and the history rate 
-  size is above the minimum set value, then the target queue length will be altered. 
+  queue length can be made. When tuning is enabled and the history rate size is above the minimum set value, then the target queue
+  length will be altered. 
 
 * `CAF_QUEUE_PROCESSING_TIME_GOAL_SECONDS`  
   **Default**: `300`  
