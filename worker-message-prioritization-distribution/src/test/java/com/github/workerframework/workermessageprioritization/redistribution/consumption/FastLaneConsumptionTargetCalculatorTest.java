@@ -303,6 +303,57 @@ public final class FastLaneConsumptionTargetCalculatorTest {
                 totalQueueMessages, queueConsumptionTargetSum, 0.0);
     }
 
+    @Test
+    public void calculateCapacityAvailableForMultipleQueuesWithWeightedRegexTest() {
+
+        // 10000 capacity available however the staging queues have fewer messages combined than that.
+        // Ensure that in this case each staging queue is given capacity for its entire queue
+
+        final Queue targetQueue = getQueue("tq", 1000);
+
+        final Queue q1 = getQueue("bulk-indexer-in»/clynch/enrichment-workflow", 3500);
+        final Queue q2 = getQueue("dataprocessing-classification-in»/clynch/update-entities-workflow", 2500);
+        final Queue q3 = getQueue("sq3", 4000);
+
+        final Set<Queue> stagingQueues = new HashSet<>(Arrays.asList(q1, q2, q3));
+        final DistributorWorkItem distributorWorkItem = mock(DistributorWorkItem.class);
+        when(distributorWorkItem.getStagingQueues()).thenReturn(stagingQueues);
+        when(distributorWorkItem.getTargetQueue()).thenReturn(targetQueue);
+
+        final TargetQueueSettings targetQueueSettings = new TargetQueueSettings(1000,10,
+                1, 1, 140L);
+
+        final TargetQueueSettingsProvider targetQueueSettingsProvider = mock(TargetQueueSettingsProvider.class);
+        when(targetQueueSettingsProvider.get(targetQueue)).thenReturn(targetQueueSettings);
+
+        final CapacityCalculatorBase capacityCalculatorBase = mock(CapacityCalculatorBase.class);
+        when(capacityCalculatorBase.refine(any(), any())).thenReturn(targetQueueSettings);
+
+        final long targetQueueCapacity = targetQueueSettings.getCapacity();
+
+        final FastLaneConsumptionTargetCalculator fastLaneConsumptionTargetCalculator =
+                new FastLaneConsumptionTargetCalculator(targetQueueSettingsProvider, capacityCalculatorBase,
+                        new StagingQueueWeightSettingsProvider());
+
+        final Map<Queue,Long> consumptionTargets = fastLaneConsumptionTargetCalculator
+                .calculateConsumptionTargets(distributorWorkItem);
+        final long queue1Result = consumptionTargets.get(q1);
+        final long queue2Result = consumptionTargets.get(q2);
+        final long queue3Result = consumptionTargets.get(q3);
+
+        final long queueConsumptionTargetSum =
+                queue1Result + queue2Result + queue3Result;
+
+        final long weightedValueExpected = queue3Result * 10;
+
+        assertEquals("The total consumption of each queue should add up to the total target queue capacity available.",
+                targetQueueCapacity, queueConsumptionTargetSum, 2.0);
+
+        assertEquals("Enrichment-Workflow queues have been weighted 10. This means enrichment-workflow queues should be give 10 times " +
+                        "the amount of target queue space available compared to other queues.",
+                weightedValueExpected, queue1Result, 2.0);
+    }
+
     Queue getQueue(final String name, final long messages) {
         final Queue queue = new Queue();
         queue.setName(name);

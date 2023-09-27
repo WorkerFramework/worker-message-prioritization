@@ -15,19 +15,81 @@
  */
 package com.github.workerframework.workermessageprioritization.redistribution.consumption;
 
-import java.util.HashMap;
-import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
 import java.util.Map;
+import java.util.List;
+import java.util.HashMap;
+import java.util.Collections;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class StagingQueueWeightSettingsProvider {
+    private static final Logger TUNED_TARGET_LOGGER = LoggerFactory.getLogger("TUNED_TARGET");
+    ArrayList<String> regexWeightStrings = new ArrayList<>();
 
     public Map<String, Double> getStagingQueueWeights(List<String> stagingQueueNames){
 
         final Map<String, Double> stagingQueueWeights = new HashMap<>();
 
+        for (final Map.Entry<String, String> entry: System.getenv().entrySet()){
+
+            // This matches strings with regex followed by comma and number. This is dependent on no whitespace
+            final String regexEnvMatcher = "[^.]*,(?!.*,)[0-9?]+$";
+
+            Pattern pattern = Pattern.compile(regexEnvMatcher);
+
+            Matcher matcher = pattern.matcher(entry.getValue());
+
+            if(matcher.matches()){
+                TUNED_TARGET_LOGGER.debug("Env variable {} matches the format to alter weight of worker", entry.getValue() );
+                regexWeightStrings.add(entry.getValue());
+            }
+        }
+
+        final Map<Pattern, Double> regexToWeightMap = new HashMap<>();
+
+        // Loop over the environment variable strings added to get regex and weight
+        for (final String regexWeightString: regexWeightStrings){
+            try {
+                final String[] regexPattern = regexWeightString.split(",(?!.*,)");
+                regexToWeightMap.put(Pattern.compile(regexPattern[0]), Double.parseDouble(regexPattern[1]));
+            }catch (ArrayIndexOutOfBoundsException e){
+                TUNED_TARGET_LOGGER.error("Invalid Regex string, ensure the format is regex pattern followed by a comma, followed by the " +
+                        "weight to be added to the string matching the regex.");
+                throw e;
+            }
+        }
+
         for (final String stagingQueue : stagingQueueNames) {
-            //call to the settings service to get the weight of a queue
-            stagingQueueWeights.put(stagingQueue, 1D);
+
+            //length of string is key
+            final Map<Integer, Double> matchLengthToWeight = new HashMap<>();
+
+            // Find the regex strings that match the staging queue
+            for (final Map.Entry<Pattern, Double> entry: regexToWeightMap.entrySet()){
+                Matcher matcher = entry.getKey().matcher(stagingQueue);
+
+                while (matcher.find()) {
+                    int matcherGroupCount = matcher.groupCount();
+                    for(int groupCount=0; groupCount<=matcherGroupCount; groupCount ++){
+                        matchLengthToWeight.put(matcher.group(0).length(), entry.getValue());
+                    }
+                }
+            }
+
+            // if there are no regex patterns that match the staging queue, set to the default weight of 1.
+            if(matchLengthToWeight.isEmpty()){
+                stagingQueueWeights.put(stagingQueue, 1D);
+            }else{
+                // Set the weight of the worker based off regex that matches more of the staging queue string.
+                int maxKey = Collections.max(matchLengthToWeight.entrySet(), Map.Entry.comparingByValue()).getKey();
+                double weight = matchLengthToWeight.get(maxKey);
+                TUNED_TARGET_LOGGER.debug("{}: weight has been adjusted to: {}", stagingQueue, weight);
+                stagingQueueWeights.put(stagingQueue, weight);
+            }
         }
 
         return stagingQueueWeights;

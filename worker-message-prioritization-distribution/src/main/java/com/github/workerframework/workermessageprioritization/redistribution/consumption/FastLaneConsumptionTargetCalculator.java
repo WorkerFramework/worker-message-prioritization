@@ -94,11 +94,23 @@ public class FastLaneConsumptionTargetCalculator extends ConsumptionTargetCalcul
             // Initially this will loop over each staging queue
             // Once this has been completed once it will only go back over if there are still staging queues with spare messages
             // In other words staging queues which had more messages in their staging queue than the portion of target queue provided.
+            if(targetQueueCapacity < stagingQueueWeightMap.size()){
+                targetQueueCapacity = 0;
+            }
             for(final Queue stagingQueue: stagingQueuesWithSpareMessages) {
 
+                double stagingQueueConsumption = 0;
+
                 // Multiply the messages available to the staging queue by its weight to get the full staging queue consumption.
-                double stagingQueueConsumption =
-                        Math.floor(messagesPerWeight * stagingQueueWeightMap.get(stagingQueue.getName()));
+                // When the target queue capacity is smaller than the number of staging queues the value per queue will be less than 0.
+                // Therefore, we need to round up rather than down at this point.
+                if(targetQueueCapacity < stagingQueueWeightMap.size()) {
+                    stagingQueueConsumption =
+                            Math.ceil(messagesPerWeight * stagingQueueWeightMap.get(stagingQueue.getName()));
+                }else{
+                    stagingQueueConsumption =
+                            Math.floor(messagesPerWeight * stagingQueueWeightMap.get(stagingQueue.getName()));
+                }
 
                 // The difference in total messages on the staging queue and number of messages already being consumed by this staging
                 // queue.
