@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
 public class FastLaneConsumptionTargetCalculator extends ConsumptionTargetCalculatorBase {
-    private static final Logger LOGGER = LoggerFactory.getLogger(EqualConsumptionTargetCalculator.class);
+    private static final Logger TUNED_TARGET_LOGGER = LoggerFactory.getLogger("TUNED_TARGET");
     private final StagingQueueWeightSettingsProvider stagingQueueWeightSettingsProvider;
 
     @Inject
@@ -45,6 +45,8 @@ public class FastLaneConsumptionTargetCalculator extends ConsumptionTargetCalcul
 
     @Override
     public Map<Queue, Long> calculateConsumptionTargets(final DistributorWorkItem distributorWorkItem) {
+
+        TUNED_TARGET_LOGGER.debug("Using Fast lane consumption target calculator");
 
         // The number of messages the target queue has capacity for.
         double targetQueueCapacity = getTargetQueueCapacity(distributorWorkItem.getTargetQueue());
@@ -151,7 +153,7 @@ public class FastLaneConsumptionTargetCalculator extends ConsumptionTargetCalcul
 
         final Queue targetQueue = distributorWorkItem.getTargetQueue();
 
-        LOGGER.debug("Number of messages in target queue {}: {}, " +
+        TUNED_TARGET_LOGGER.debug("Number of messages in target queue {}: {}, " +
                         "Target queue capacity is: {}, " +
                         "Number of staging queues: {}, " +
                         "Total number of messages in all staging queues: {}, " +
