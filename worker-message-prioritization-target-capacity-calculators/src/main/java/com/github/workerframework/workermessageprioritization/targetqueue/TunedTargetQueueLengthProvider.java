@@ -24,7 +24,7 @@ public class TunedTargetQueueLengthProvider {
 
     private static final Logger TUNED_TARGET_LOGGER = LoggerFactory.getLogger("TUNED_TARGET");
     private final QueueInformationProvider queueInformationProvider;
-    private final boolean noOpMode;
+    private final boolean enableTargetQueueLengthTuning;
     private final double queueProcessingTimeGoalSeconds;
     private final HistoricalConsumptionRateManager historicalConsumptionRateManager;
     private final TargetQueueLengthRounder targetQueueLengthRounder;
@@ -37,7 +37,7 @@ public class TunedTargetQueueLengthProvider {
                                            final TargetQueueLengthRounder targetQueueLengthRounder,
                                            @Named("MinTargetQueueLength") final long minTargetQueueLength,
                                            @Named("MaxTargetQueueLength") final long maxTargetQueueLength,
-                                           @Named("NoOpMode") final boolean noOpMode,
+                                           @Named("EnableTargetQueueLengthTuning") final boolean enableTargetQueueLengthTuning,
                                            @Named("QueueProcessingTimeGoalSeconds") 
                                                final double queueProcessingTimeGoalSeconds) {
         this.queueInformationProvider = queueInformationProvider;
@@ -45,7 +45,7 @@ public class TunedTargetQueueLengthProvider {
         this.targetQueueLengthRounder = targetQueueLengthRounder;
         this.minTargetQueueLength = minTargetQueueLength;
         this.maxTargetQueueLength = maxTargetQueueLength;
-        this.noOpMode = noOpMode;
+        this.enableTargetQueueLengthTuning = enableTargetQueueLengthTuning;
         this.queueProcessingTimeGoalSeconds = queueProcessingTimeGoalSeconds;
     }
 
@@ -115,8 +115,8 @@ public class TunedTargetQueueLengthProvider {
         TUNED_TARGET_LOGGER.info("Recommended tuned target queue length of {} is: {}", targetQueueName, 
                 tunedTargetQueueLength);
 
-        if(noOpMode) {
-            TUNED_TARGET_LOGGER.info("NoOpMode True - Target queue length of {} has not been adjusted.", 
+        if(!enableTargetQueueLengthTuning) {
+            TUNED_TARGET_LOGGER.info("Tuning is disabled - Target queue length of {} has not been adjusted.",
                     targetQueueName);
             return targetQueueLength;
         }

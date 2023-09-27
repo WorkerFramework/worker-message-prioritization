@@ -72,7 +72,7 @@ public class TunedTargetQueueIT extends DistributorTestBase {
     // This test is to observe the consumption rate altering the recommended target queue length.
     // Console outputs and debugger should be used to see these dynamic changes.
 //    @Test
-    public void tunedTargetQueueNoOpModeTest() throws TimeoutException, IOException {
+    public void tunedTargetQueueTuningDisabledTest() throws TimeoutException, IOException {
 
         final Logger LOGGER = LoggerFactory.getLogger(TunedTargetQueueIT.class);
 
