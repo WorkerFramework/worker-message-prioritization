@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
 public class FastLaneConsumptionTargetCalculator extends ConsumptionTargetCalculatorBase {
-    private static final Logger TUNED_TARGET_LOGGER = LoggerFactory.getLogger("TUNED_TARGET");
+    private static final Logger FAST_LANE_LOGGER = LoggerFactory.getLogger("FAST_LANE");
     private final StagingQueueWeightSettingsProvider stagingQueueWeightSettingsProvider;
 
     @Inject
@@ -46,7 +46,7 @@ public class FastLaneConsumptionTargetCalculator extends ConsumptionTargetCalcul
     @Override
     public Map<Queue, Long> calculateConsumptionTargets(final DistributorWorkItem distributorWorkItem) {
 
-        TUNED_TARGET_LOGGER.debug("Using Fast lane consumption target calculator");
+        FAST_LANE_LOGGER.debug("Using Fast lane consumption target calculator");
 
         // The number of messages the target queue has capacity for.
         double targetQueueCapacity = getTargetQueueCapacity(distributorWorkItem.getTargetQueue());
@@ -153,17 +153,12 @@ public class FastLaneConsumptionTargetCalculator extends ConsumptionTargetCalcul
 
         final Queue targetQueue = distributorWorkItem.getTargetQueue();
 
-        TUNED_TARGET_LOGGER.debug("Number of messages in target queue {}: {}, " +
-                        "Target queue capacity is: {}, " +
-                        "Number of staging queues: {}, " +
-                        "Total number of messages in all staging queues: {}, " +
-                        "Staging queue consumption targets: {}",
-                targetQueue.getName(),
-                targetQueue.getMessages(),
-                targetQueueCapacity,
-                (long) distributorWorkItem.getStagingQueues().size(),
-                availableMessages,
-                stagingQueueToConsumptionTargetMap);
+        for (final Queue stagingQueue : distributorWorkItem.getStagingQueues()) {
+            FAST_LANE_LOGGER.debug("{}, number of messages: {}", stagingQueue.getName(),
+                    stagingQueueToConsumptionTargetMap.get(stagingQueue));
+        }
+
+        FAST_LANE_LOGGER.debug("Available messages total: {}", availableMessages);
 
         // Return the mapped staging queue to the number of messages it will consume from the target queue
         return stagingQueueToConsumptionTargetMap.entrySet().stream().collect(Collectors.toMap(

@@ -27,9 +27,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class StagingQueueWeightSettingsProvider {
-    private static final Logger TUNED_TARGET_LOGGER = LoggerFactory.getLogger("TUNED_TARGET");
+    private static final Logger FAST_LANE_LOGGER = LoggerFactory.getLogger("FAST_LANE");
     ArrayList<String> regexWeightStrings = new ArrayList<>();
-
     public Map<String, Double> getStagingQueueWeights(List<String> stagingQueueNames){
 
         final Map<String, Double> stagingQueueWeights = new HashMap<>();
@@ -44,7 +43,7 @@ public class StagingQueueWeightSettingsProvider {
             Matcher matcher = pattern.matcher(entry.getValue());
 
             if(matcher.matches()){
-                TUNED_TARGET_LOGGER.debug("Env variable {} matches the format to alter weight of worker", entry.getValue() );
+                FAST_LANE_LOGGER.debug("Env variable {} matches the format to alter weight of worker", entry.getValue() );
                 regexWeightStrings.add(entry.getValue());
             }
         }
@@ -57,7 +56,7 @@ public class StagingQueueWeightSettingsProvider {
                 final String[] regexPattern = regexWeightString.split(",(?!.*,)");
                 regexToWeightMap.put(Pattern.compile(regexPattern[0]), Double.parseDouble(regexPattern[1]));
             }catch (ArrayIndexOutOfBoundsException e){
-                TUNED_TARGET_LOGGER.error("Invalid Regex string, ensure the format is regex pattern followed by a comma, followed by the " +
+                FAST_LANE_LOGGER.error("Invalid Regex string, ensure the format is regex pattern followed by a comma, followed by the " +
                         "weight to be added to the string matching the regex.");
                 throw e;
             }
@@ -87,7 +86,7 @@ public class StagingQueueWeightSettingsProvider {
                 // Set the weight of the worker based off regex that matches more of the staging queue string.
                 int maxKey = Collections.max(matchLengthToWeight.entrySet(), Map.Entry.comparingByValue()).getKey();
                 double weight = matchLengthToWeight.get(maxKey);
-                TUNED_TARGET_LOGGER.debug("{}: weight has been adjusted to: {}", stagingQueue, weight);
+                FAST_LANE_LOGGER.debug("{}: weight has been adjusted to: {}", stagingQueue, weight);
                 stagingQueueWeights.put(stagingQueue, weight);
             }
         }
