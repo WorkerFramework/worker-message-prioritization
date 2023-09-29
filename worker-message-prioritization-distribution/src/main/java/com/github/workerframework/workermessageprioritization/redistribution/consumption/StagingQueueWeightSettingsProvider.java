@@ -65,7 +65,8 @@ public class StagingQueueWeightSettingsProvider {
         for (final String stagingQueue : stagingQueueNames) {
 
             //length of string is key
-            final Map<Integer, Double> matchLengthToWeight = new HashMap<>();
+            final Map<String, Double> matchRegexToWeight = new HashMap<>();
+            final Map<String,Integer> regexMatcherLength = new HashMap<>();
 
             // Find the regex strings that match the staging queue
             for (final Map.Entry<Pattern, Double> entry: regexToWeightMap.entrySet()){
@@ -74,18 +75,19 @@ public class StagingQueueWeightSettingsProvider {
                 while (matcher.find()) {
                     int matcherGroupCount = matcher.groupCount();
                     for(int groupCount=0; groupCount<=matcherGroupCount; groupCount ++){
-                        matchLengthToWeight.put(matcher.group(0).length(), entry.getValue());
+                        matchRegexToWeight.put(matcher.group(), entry.getValue());
+                        regexMatcherLength.put(matcher.group(), matcher.group(groupCount).length());
                     }
                 }
             }
 
             // if there are no regex patterns that match the staging queue, set to the default weight of 1.
-            if(matchLengthToWeight.isEmpty()){
+            if(matchRegexToWeight.isEmpty()){
                 stagingQueueWeights.put(stagingQueue, 1D);
             }else{
                 // Set the weight of the worker based off regex that matches more of the staging queue string.
-                int maxKey = Collections.max(matchLengthToWeight.entrySet(), Map.Entry.comparingByValue()).getKey();
-                double weight = matchLengthToWeight.get(maxKey);
+                String maxKey = Collections.max(regexMatcherLength.entrySet(), Map.Entry.comparingByValue()).getKey();
+                double weight = matchRegexToWeight.get(maxKey);
                 FAST_LANE_LOGGER.debug("{}: weight has been adjusted to: {}", stagingQueue, weight);
                 stagingQueueWeights.put(stagingQueue, weight);
             }
