@@ -200,7 +200,7 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
         final long defaultValue)
     {
         if (!labels.containsKey(labelName)) {
-            LOGGER.warn(
+            LOGGER.debug(
                 "Cannot get {} for the {} queue. The {} worker is missing the label. " +
                         "Falling back to using default value of {}",
                 labelName, targetQueueName, workerName, defaultValue);
@@ -212,7 +212,7 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
         try {
             return Long.parseLong(labelValue);
         } catch (final NumberFormatException ex) {
-            LOGGER.warn(
+            LOGGER.error(
                     "Cannot get {} for the {} queue. " +
                     "The {} worker provided an invalid (not parsable to long) label value: {}. " +
                     "Falling back to using default value of {}",
