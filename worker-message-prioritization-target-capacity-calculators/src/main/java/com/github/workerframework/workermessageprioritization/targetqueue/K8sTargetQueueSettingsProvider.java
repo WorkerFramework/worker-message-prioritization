@@ -84,7 +84,7 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
         final TargetQueueSettings targetQueueSettings = memoizedTargetQueueSettingsSupplier.get().get(targetQueue.getName());
 
         if (targetQueueSettings == null) {
-            LOGGER.error("Cannot get settings for the {} queue. Using fallback settings: {}",
+            LOGGER.warn("Cannot get settings for the {} queue. Using fallback settings: {}",
                     targetQueue.getName(),
                     FALLBACK_TARGET_QUEUE_SETTINGS);
 
@@ -167,7 +167,7 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
 
                 if (targetQueueEligibleForRefillPercentage < 0 || targetQueueEligibleForRefillPercentage > 100) {
                     // Invalid eligible for refill percentage provided, set to fall back value
-                    LOGGER.error(String.format("Cannot get eligible for refill percentage for the %s queue. "
+                    LOGGER.warn(String.format("Cannot get eligible for refill percentage for the %s queue. "
                                     + "An invalid %s label was provided for the %s worker. "
                                     + "Falling back to using eligible for refill percentage of %s",
                             targetQueueName,
@@ -200,7 +200,7 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
         final long defaultValue)
     {
         if (!labels.containsKey(labelName)) {
-            LOGGER.error(
+            LOGGER.warn(
                 "Cannot get {} for the {} queue. The {} worker is missing the label. " +
                         "Falling back to using default value of {}",
                 labelName, targetQueueName, workerName, defaultValue);
@@ -212,7 +212,7 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
         try {
             return Long.parseLong(labelValue);
         } catch (final NumberFormatException ex) {
-            LOGGER.error(
+            LOGGER.warn(
                     "Cannot get {} for the {} queue. " +
                     "The {} worker provided an invalid (not parsable to long) label value: {}. " +
                     "Falling back to using default value of {}",
