@@ -15,6 +15,7 @@
  */
 package com.github.workerframework.workermessageprioritization.redistribution.consumption;
 
+import com.github.workerframework.workermessageprioritization.redistribution.EnvVariableCollector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.List;
 import java.util.HashMap;
+import java.util.Set;
 import java.util.Collections;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -33,7 +35,9 @@ public class StagingQueueWeightSettingsProvider {
 
         final Map<String, Double> stagingQueueWeights = new HashMap<>();
 
-        for (final Map.Entry<String, String> entry: System.getenv().entrySet()){
+        final Set<Map.Entry<String, String>> envVariables = EnvVariableCollector.getEnvVariables();
+
+        for (final Map.Entry<String, String> entry: envVariables){
 
             // This matches strings with regex followed by comma and number. This is dependent on no whitespace
             final String regexEnvMatcher = "[^.]*,(?!.*,)[0-9?]+$";
@@ -64,9 +68,7 @@ public class StagingQueueWeightSettingsProvider {
 
         for (final String stagingQueue : stagingQueueNames) {
 
-            //length of string is key
-            final Map<String, Double> matchRegexToWeight = new HashMap<>();
-            final Map<String,Integer> regexMatcherLength = new HashMap<>();
+            final Map<Integer, Double> matchLengthToWeight = new HashMap<>();
 
             // Find the regex strings that match the staging queue
             for (final Map.Entry<Pattern, Double> entry: regexToWeightMap.entrySet()){
@@ -75,19 +77,19 @@ public class StagingQueueWeightSettingsProvider {
                 while (matcher.find()) {
                     int matcherGroupCount = matcher.groupCount();
                     for(int groupCount=0; groupCount<=matcherGroupCount; groupCount ++){
-                        matchRegexToWeight.put(matcher.group(), entry.getValue());
-                        regexMatcherLength.put(matcher.group(), matcher.group(groupCount).length());
+                        // Map the length of the string match to the weight that has been matched
+                        matchLengthToWeight.put(matcher.group(groupCount).length(), entry.getValue());
                     }
                 }
             }
 
             // if there are no regex patterns that match the staging queue, set to the default weight of 1.
-            if(matchRegexToWeight.isEmpty()){
+            if(matchLengthToWeight.isEmpty()){
                 stagingQueueWeights.put(stagingQueue, 1D);
             }else{
-                // Set the weight of the worker based off regex that matches more of the staging queue string.
-                String maxKey = Collections.max(regexMatcherLength.entrySet(), Map.Entry.comparingByValue()).getKey();
-                double weight = matchRegexToWeight.get(maxKey);
+                // Find the longest matching string, and apply that weight
+                int maxKey = Collections.max(matchLengthToWeight.keySet());
+                double weight = matchLengthToWeight.get(maxKey);
                 FAST_LANE_LOGGER.debug("{}: weight has been adjusted to: {}", stagingQueue, weight);
                 stagingQueueWeights.put(stagingQueue, weight);
             }

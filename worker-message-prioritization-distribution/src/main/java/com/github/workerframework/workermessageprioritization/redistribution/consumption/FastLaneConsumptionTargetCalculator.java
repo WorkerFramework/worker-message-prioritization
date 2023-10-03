@@ -151,8 +151,6 @@ public class FastLaneConsumptionTargetCalculator extends ConsumptionTargetCalcul
             stagingQueuesWithSpareMessages.removeAll(completedStagingQueues);
         }
 
-        final Queue targetQueue = distributorWorkItem.getTargetQueue();
-
         for (final Queue stagingQueue : distributorWorkItem.getStagingQueues()) {
             FAST_LANE_LOGGER.debug("{}, number of messages: {}", stagingQueue.getName(),
                     stagingQueueToConsumptionTargetMap.get(stagingQueue));

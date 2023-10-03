@@ -22,14 +22,16 @@ import com.github.workerframework.workermessageprioritization.targetqueue.Target
 import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueSettingsProvider;
 import org.junit.Test;
 
-import java.util.HashSet;
-import java.util.Arrays;
 import java.util.Set;
+import java.util.HashSet;
+import java.util.HashMap;
+import java.util.Arrays;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -94,8 +96,8 @@ public final class FastLaneConsumptionTargetCalculatorTest {
     @Test
     public void calculateCapacityAvailableFor2LargeStagingQueuesTest() {
 
-        // Capacity of 1000 means 500 for each queue. These queues both have adequate capacity to fill the 500 therefore there is no
-        // redistribution required.
+        // Capacity of 1000 means 500 for each queue. These queues both have adequate capacity to
+        // fill the 500 therefore there is no redistribution required.
 
         final Queue targetQueue = getQueue("tq", 1000);
 
@@ -107,8 +109,8 @@ public final class FastLaneConsumptionTargetCalculatorTest {
         when(distributorWorkItem.getStagingQueues()).thenReturn(stagingQueues);
         when(distributorWorkItem.getTargetQueue()).thenReturn(targetQueue);
 
-        final TargetQueueSettings targetQueueSettings = new TargetQueueSettings(1000,10,
-                1, 1, 1000L);
+        final TargetQueueSettings targetQueueSettings =
+                new TargetQueueSettings(1000,10, 1, 1, 1000L);
 
         final TargetQueueSettingsProvider targetQueueSettingsProvider = mock(TargetQueueSettingsProvider.class);
         when(targetQueueSettingsProvider.get(targetQueue)).thenReturn(targetQueueSettings);
@@ -140,9 +142,10 @@ public final class FastLaneConsumptionTargetCalculatorTest {
     @Test
     public void calculateCapacityAvailableForMultipleStagingQueueTest() {
 
-        // Capacity of 1000 is available. This means 100 messages per queue. q2, q3, q5, q6, q9 do not all need this. This will be
-        // redistributed to the larger queues which all have enough messages to use that extra capacity. this means there is no
-        // re-calculation required.
+        // Capacity of 1000 is available. This means 100 messages per queue.
+        // q2, q3, q5, q6, q9 do not all need this.
+        // This will be redistributed to the larger queues which all have enough
+        // messages to use that extra capacity. this means there is no re-calculation required.
 
         final Queue targetQueue = getQueue("tq", 1000);
 
@@ -157,13 +160,14 @@ public final class FastLaneConsumptionTargetCalculatorTest {
         final Queue q9 = getQueue("sq9", 10);
         final Queue q10 = getQueue("sq10", 500);
 
-        final Set<Queue> stagingQueues = new HashSet<>(Arrays.asList(q1, q2, q3, q4, q5, q6, q7, q8, q9, q10));
+        final Set<Queue> stagingQueues =
+                new HashSet<>(Arrays.asList(q1, q2, q3, q4, q5, q6, q7, q8, q9, q10));
         final DistributorWorkItem distributorWorkItem = mock(DistributorWorkItem.class);
         when(distributorWorkItem.getStagingQueues()).thenReturn(stagingQueues);
         when(distributorWorkItem.getTargetQueue()).thenReturn(targetQueue);
 
-        final TargetQueueSettings targetQueueSettings = new TargetQueueSettings(1000,10,
-                1, 1, 1000L);
+        final TargetQueueSettings targetQueueSettings =
+                new TargetQueueSettings(1000,10, 1, 1, 1000L);
 
         final TargetQueueSettingsProvider targetQueueSettingsProvider = mock(TargetQueueSettingsProvider.class);
         when(targetQueueSettingsProvider.get(targetQueue)).thenReturn(targetQueueSettings);
@@ -207,9 +211,11 @@ public final class FastLaneConsumptionTargetCalculatorTest {
     @Test
     public void calculateCapacityAvailableForMultipleStagingQueueNeedingRecalculatedAfterFirstWeightingTest() {
 
-        // The sum of capacity taken by each staging queue should equal the capacity of 1000. In this case initially the q2 and q3 will
-        // be given a share of the 50 messages left over from q4. However, this will be re-calculated as this capacity is not all
-        // needed by q2 and none of this extra capacity is needed by q3. The leftover capacity from q2 and q3 will be distributed to q1.
+        // The sum of capacity taken by each staging queue should equal the capacity of 1000.
+        // In this case initially the q2 and q3 will be given a share of the 50 messages left over from q4.
+        // However, this will be re-calculated as this capacity is not all needed by q2,
+        // and none of this extra capacity is needed by q3.
+        // The leftover capacity from q2 and q3 will be distributed to q1.
         // This will mean the total capacity used by the 4 queues is the full available capacity of 1000.
 
         final Queue targetQueue = getQueue("tq", 1000);
@@ -224,8 +230,8 @@ public final class FastLaneConsumptionTargetCalculatorTest {
         when(distributorWorkItem.getStagingQueues()).thenReturn(stagingQueues);
         when(distributorWorkItem.getTargetQueue()).thenReturn(targetQueue);
 
-        final TargetQueueSettings targetQueueSettings = new TargetQueueSettings(1000,10,
-                1, 1, 1000L);
+        final TargetQueueSettings targetQueueSettings =
+                new TargetQueueSettings(1000,10, 1, 1, 1000L);
 
         final TargetQueueSettingsProvider targetQueueSettingsProvider = mock(TargetQueueSettingsProvider.class);
         when(targetQueueSettingsProvider.get(targetQueue)).thenReturn(targetQueueSettings);
@@ -271,8 +277,8 @@ public final class FastLaneConsumptionTargetCalculatorTest {
         when(distributorWorkItem.getStagingQueues()).thenReturn(stagingQueues);
         when(distributorWorkItem.getTargetQueue()).thenReturn(targetQueue);
 
-        final TargetQueueSettings targetQueueSettings = new TargetQueueSettings(1000,10,
-                1, 1, 10000L);
+        final TargetQueueSettings targetQueueSettings =
+                new TargetQueueSettings(1000,10, 1, 1, 10000L);
 
         final TargetQueueSettingsProvider targetQueueSettingsProvider = mock(TargetQueueSettingsProvider.class);
         when(targetQueueSettingsProvider.get(targetQueue)).thenReturn(targetQueueSettings);
@@ -303,11 +309,10 @@ public final class FastLaneConsumptionTargetCalculatorTest {
                 totalQueueMessages, queueConsumptionTargetSum, 0.0);
     }
 
-//    @Test
+    @Test
     public void calculateCapacityAvailableForMultipleQueuesWithWeightedRegexTest() {
 
-        // 10000 capacity available however the staging queues have fewer messages combined than that.
-        // Ensure that in this case each staging queue is given capacity for its entire queue
+        // Ensure the message capacity given to each queue correlates to the given weight
 
         final Queue targetQueue = getQueue("tq", 1000);
 
@@ -320,8 +325,8 @@ public final class FastLaneConsumptionTargetCalculatorTest {
         when(distributorWorkItem.getStagingQueues()).thenReturn(stagingQueues);
         when(distributorWorkItem.getTargetQueue()).thenReturn(targetQueue);
 
-        final TargetQueueSettings targetQueueSettings = new TargetQueueSettings(1000,10,
-                1, 1, 140L);
+        final TargetQueueSettings targetQueueSettings =
+                new TargetQueueSettings(1000,10, 1, 1, 140L);
 
         final TargetQueueSettingsProvider targetQueueSettingsProvider = mock(TargetQueueSettingsProvider.class);
         when(targetQueueSettingsProvider.get(targetQueue)).thenReturn(targetQueueSettings);
@@ -331,9 +336,20 @@ public final class FastLaneConsumptionTargetCalculatorTest {
 
         final long targetQueueCapacity = targetQueueSettings.getCapacity();
 
+        // This map represents 2 regex added to environment variables giving enrichment-workflow matches a weight of 10, and clynch
+        // tenant matches a weight of 0. Enrichment-workflow is a larger regex match, so it will override the clynch regex.
+        final Map<String, Double> stagingQueueWeightMap = new HashMap<>();
+        stagingQueueWeightMap.put("bulk-indexer-in»/clynch/enrichment-workflow", 10D);
+        stagingQueueWeightMap.put("dataprocessing-classification-in»/clynch/update-entities-workflow", 0D);
+        stagingQueueWeightMap.put("sq3", 1D);
+
+        final StagingQueueWeightSettingsProvider stagingQueueWeightSettingsProvider =
+                mock(StagingQueueWeightSettingsProvider.class);
+        when(stagingQueueWeightSettingsProvider.getStagingQueueWeights(anyList())).thenReturn(stagingQueueWeightMap);
+
         final FastLaneConsumptionTargetCalculator fastLaneConsumptionTargetCalculator =
-                new FastLaneConsumptionTargetCalculator(targetQueueSettingsProvider, capacityCalculatorBase,
-                        new StagingQueueWeightSettingsProvider());
+                new FastLaneConsumptionTargetCalculator
+                        (targetQueueSettingsProvider, capacityCalculatorBase, stagingQueueWeightSettingsProvider);
 
         final Map<Queue,Long> consumptionTargets = fastLaneConsumptionTargetCalculator
                 .calculateConsumptionTargets(distributorWorkItem);
@@ -349,9 +365,12 @@ public final class FastLaneConsumptionTargetCalculatorTest {
         assertEquals("The total consumption of each queue should add up to the total target queue capacity available.",
                 targetQueueCapacity, queueConsumptionTargetSum, 2.0);
 
-        assertEquals("Enrichment-Workflow queues have been weighted 10. This means enrichment-workflow queues should be give 10 times " +
-                        "the amount of target queue space available compared to other queues.",
+        assertEquals("Queue 1 has been weighted 10 and sq3 weighted 1. " +
+                        "This means queue 1 should be given 10 times the message capacity of queue 3.",
                 weightedValueExpected, queue1Result, 2.0);
+
+        assertEquals("Queue 2 has been weighted 0. This means it should be given no target queue capacity",
+                0, queue2Result, 0.0);
     }
 
     Queue getQueue(final String name, final long messages) {
