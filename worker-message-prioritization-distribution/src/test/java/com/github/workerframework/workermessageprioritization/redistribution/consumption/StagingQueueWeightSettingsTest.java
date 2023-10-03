@@ -47,8 +47,9 @@ public class StagingQueueWeightSettingsTest {
         final Queue q4 = getQueue("dataprocessing-classification-in»/a77777/update-entities-workflow", 1000);
         final Queue q5 = getQueue("dataprocessing-classification-in»/rory3/update-entities-workflow", 1000);
         final Queue q6 = getQueue("bulk-indexer-in»/clynch/a77777", 1000);
+        final Queue q7 = getQueue("dataprocessing-langdetect-in»/mahesh/ingestion-workflow", 1000);
 
-        final Set<Queue> stagingQueues = new HashSet<>(Arrays.asList(q1, q2, q3, q4, q5, q6));
+        final Set<Queue> stagingQueues = new HashSet<>(Arrays.asList(q1, q2, q3, q4, q5, q6,q7));
         final DistributorWorkItem distributorWorkItem = mock(DistributorWorkItem.class);
         when(distributorWorkItem.getStagingQueues()).thenReturn(stagingQueues);
         when(distributorWorkItem.getTargetQueue()).thenReturn(targetQueue);
@@ -58,12 +59,15 @@ public class StagingQueueWeightSettingsTest {
         final Map.Entry<String, String> env1 = new AbstractMap.SimpleEntry<>("CAF_ADJUST_WORKER_WEIGHT", "enrichment\\-workflow$,10");
         final Map.Entry<String, String> env2 = new AbstractMap.SimpleEntry<>("CAF_ADJUST_WORKER_WEIGHT_1", "clynch,0");
         final Map.Entry<String, String> env3 = new AbstractMap.SimpleEntry<>("CAF_ADJUST_WORKER_WEIGHT_2", "a77777,3");
-        final Map.Entry<String, String> env4 = new AbstractMap.SimpleEntry<>("FAST_LANE_LOG_LEVEL", "DEBUG");
+        final Map.Entry<String, String> env4 =
+                new AbstractMap.SimpleEntry<>("CAF_ADJUST_WORKER_WEIGHT_3", "dataprocessing\\-langdetect\\-in,7");
+        final Map.Entry<String, String> env5 = new AbstractMap.SimpleEntry<>("FAST_LANE_LOG_LEVEL", "DEBUG");
 
         envVariables.add(env1);
         envVariables.add(env2);
         envVariables.add(env3);
         envVariables.add(env4);
+        envVariables.add(env5);
 
         MockedStatic<EnvVariableCollector> envVariableCollectorMock = Mockito.mockStatic(EnvVariableCollector.class);
 
@@ -90,8 +94,10 @@ public class StagingQueueWeightSettingsTest {
                 1, stagingQueueWeightMap.get("dataprocessing-classification-in»/rory3/update-entities-workflow"), 0.0);
         assertEquals("Two strings matched with different weights should set to larger weight.",
                 3, stagingQueueWeightMap.get("bulk-indexer-in»/clynch/a77777"), 0.0);
+        assertEquals("Two strings matched with different weights should set to larger weight.",
+                7, stagingQueueWeightMap.get("dataprocessing-langdetect-in»/mahesh/ingestion-workflow"), 0.0);
     }
-    
+
     Queue getQueue(final String name, final long messages) {
         final Queue queue = new Queue();
         queue.setName(name);
