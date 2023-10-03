@@ -69,35 +69,36 @@ public class StagingQueueWeightSettingsTest {
         envVariables.add(env4);
         envVariables.add(env5);
 
-        MockedStatic<EnvVariableCollector> envVariableCollectorMock = Mockito.mockStatic(EnvVariableCollector.class);
+        try(MockedStatic<EnvVariableCollector> envVariableCollectorMock = Mockito.mockStatic(EnvVariableCollector.class)) {
 
-        envVariableCollectorMock.when(EnvVariableCollector::getEnvVariables).thenReturn(envVariables);
+            envVariableCollectorMock.when(EnvVariableCollector::getEnvVariables).thenReturn(envVariables);
 
-        final StagingQueueWeightSettingsProvider stagingQueueWeightSettingsProvider =
-                new StagingQueueWeightSettingsProvider();
+            final StagingQueueWeightSettingsProvider stagingQueueWeightSettingsProvider =
+                    new StagingQueueWeightSettingsProvider();
 
-        final List<String> stagingQueueNames =
-                distributorWorkItem.getStagingQueues().stream().map(Queue::getName).collect(toList());
+            final List<String> stagingQueueNames =
+                    distributorWorkItem.getStagingQueues().stream().map(Queue::getName).collect(toList());
 
-        final Map<String, Double> stagingQueueWeightMap =
-                stagingQueueWeightSettingsProvider.getStagingQueueWeights(stagingQueueNames);
+            final Map<String, Double> stagingQueueWeightMap =
+                    stagingQueueWeightSettingsProvider.getStagingQueueWeights(stagingQueueNames);
 
-        assertEquals("Weight of queue should be set by environment variable.",
-                10, stagingQueueWeightMap.get("bulk-indexer-in»/clynch/enrichment-workflow"), 0.0);
-        assertEquals("Weight of queue should be set by environment variable which matches the longest length of string.",
-                10, stagingQueueWeightMap.get("bulk-indexer-in»/rory3/enrichment-workflow"), 0.0);
-        assertEquals("Weight of queue should be set by environment variable.",
-                0, stagingQueueWeightMap.get("dataprocessing-classification-in»/clynch/update-entities-workflow"), 0.0);
-        assertEquals("Weight of queue should be set by environment variable.",
-                3, stagingQueueWeightMap.get("dataprocessing-classification-in»/a77777/update-entities-workflow"), 0.0);
-        assertEquals("No weight set to match this string therefore should default to 1.",
-                1, stagingQueueWeightMap.get("dataprocessing-classification-in»/rory3/update-entities-workflow"), 0.0);
-        assertEquals("Two strings matched with different weights should set to larger weight.",
-                3, stagingQueueWeightMap.get("bulk-indexer-in»/clynch/a77777"), 0.0);
-        assertEquals("Two strings matched with different weights should set to larger weight.",
-                7, stagingQueueWeightMap.get("dataprocessing-langdetect-in»/mahesh/ingestion-workflow"), 0.0);
+            assertEquals("Weight of queue should be set by environment variable.",
+                    10, stagingQueueWeightMap.get("bulk-indexer-in»/clynch/enrichment-workflow"), 0.0);
+            assertEquals("Weight of queue should be set by environment variable which matches the longest length of string.",
+                    10, stagingQueueWeightMap.get("bulk-indexer-in»/rory3/enrichment-workflow"), 0.0);
+            assertEquals("Weight of queue should be set by environment variable.",
+                    0, stagingQueueWeightMap.get("dataprocessing-classification-in»/clynch/update-entities-workflow"), 0.0);
+            assertEquals("Weight of queue should be set by environment variable.",
+                    3, stagingQueueWeightMap.get("dataprocessing-classification-in»/a77777/update-entities-workflow"), 0.0);
+            assertEquals("No weight set to match this string therefore should default to 1.",
+                    1, stagingQueueWeightMap.get("dataprocessing-classification-in»/rory3/update-entities-workflow"), 0.0);
+            assertEquals("Two strings matched with different weights should set to larger weight.",
+                    3, stagingQueueWeightMap.get("bulk-indexer-in»/clynch/a77777"), 0.0);
+            assertEquals("Two strings matched with different weights should set to larger weight.",
+                    7, stagingQueueWeightMap.get("dataprocessing-langdetect-in»/mahesh/ingestion-workflow"), 0.0);
+        }
     }
-
+    
     Queue getQueue(final String name, final long messages) {
         final Queue queue = new Queue();
         queue.setName(name);
