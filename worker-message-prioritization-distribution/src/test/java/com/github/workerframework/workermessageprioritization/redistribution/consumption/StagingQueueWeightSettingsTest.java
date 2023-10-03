@@ -37,17 +37,18 @@ import static org.mockito.Mockito.when;
 public class StagingQueueWeightSettingsTest {
 
     @Test
-    public void calculateQueueWeight() {
+    public void getQueueWeightTest() {
 
         final Queue targetQueue = getQueue("tq", 1000);
 
         final Queue q1 = getQueue("bulk-indexer-in»/clynch/enrichment-workflow", 1000);
         final Queue q2 = getQueue("bulk-indexer-in»/rory3/enrichment-workflow", 1000);
         final Queue q3 = getQueue("dataprocessing-classification-in»/clynch/update-entities-workflow", 1000);
-        final Queue q4 = getQueue("dataprocessing-classification-in»/a7777/update-entities-workflow", 1000);
+        final Queue q4 = getQueue("dataprocessing-classification-in»/a77777/update-entities-workflow", 1000);
         final Queue q5 = getQueue("dataprocessing-classification-in»/rory3/update-entities-workflow", 1000);
+        final Queue q6 = getQueue("bulk-indexer-in»/clynch/a77777", 1000);
 
-        final Set<Queue> stagingQueues = new HashSet<>(Arrays.asList(q1, q2, q3, q4, q5));
+        final Set<Queue> stagingQueues = new HashSet<>(Arrays.asList(q1, q2, q3, q4, q5, q6));
         final DistributorWorkItem distributorWorkItem = mock(DistributorWorkItem.class);
         when(distributorWorkItem.getStagingQueues()).thenReturn(stagingQueues);
         when(distributorWorkItem.getTargetQueue()).thenReturn(targetQueue);
@@ -56,7 +57,7 @@ public class StagingQueueWeightSettingsTest {
         final Set<Map.Entry<String, String>> envVariables = new HashSet<>();
         final Map.Entry<String, String> env1 = new AbstractMap.SimpleEntry<>("CAF_ADJUST_WORKER_WEIGHT", "enrichment\\-workflow$,10");
         final Map.Entry<String, String> env2 = new AbstractMap.SimpleEntry<>("CAF_ADJUST_WORKER_WEIGHT_1", "clynch,0");
-        final Map.Entry<String, String> env3 = new AbstractMap.SimpleEntry<>("CAF_ADJUST_WORKER_WEIGHT_1", "a7777,3");
+        final Map.Entry<String, String> env3 = new AbstractMap.SimpleEntry<>("CAF_ADJUST_WORKER_WEIGHT_2", "a77777,3");
         final Map.Entry<String, String> env4 = new AbstractMap.SimpleEntry<>("FAST_LANE_LOG_LEVEL", "DEBUG");
 
         envVariables.add(env1);
@@ -79,16 +80,18 @@ public class StagingQueueWeightSettingsTest {
 
         assertEquals("Weight of queue should be set by environment variable.",
                 10, stagingQueueWeightMap.get("bulk-indexer-in»/clynch/enrichment-workflow"), 0.0);
-        assertEquals("Weight of queue should be set by environment variable.",
+        assertEquals("Weight of queue should be set by environment variable which matches the longest length of string.",
                 10, stagingQueueWeightMap.get("bulk-indexer-in»/rory3/enrichment-workflow"), 0.0);
         assertEquals("Weight of queue should be set by environment variable.",
                 0, stagingQueueWeightMap.get("dataprocessing-classification-in»/clynch/update-entities-workflow"), 0.0);
         assertEquals("Weight of queue should be set by environment variable.",
-                3, stagingQueueWeightMap.get("dataprocessing-classification-in»/a7777/update-entities-workflow"), 0.0);
-        assertEquals("Weight of queue should be set by environment variable.",
+                3, stagingQueueWeightMap.get("dataprocessing-classification-in»/a77777/update-entities-workflow"), 0.0);
+        assertEquals("No weight set to match this string therefore should default to 1.",
                 1, stagingQueueWeightMap.get("dataprocessing-classification-in»/rory3/update-entities-workflow"), 0.0);
+        assertEquals("Two strings matched with different weights should set to larger weight.",
+                3, stagingQueueWeightMap.get("bulk-indexer-in»/clynch/a77777"), 0.0);
     }
-
+    
     Queue getQueue(final String name, final long messages) {
         final Queue queue = new Queue();
         queue.setName(name);
