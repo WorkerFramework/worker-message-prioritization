@@ -41,7 +41,7 @@ public class StagingQueueWeightSettingsProvider {
         for (final Map.Entry<String, String> entry : envVariables) {
 
             // This matches strings with regex followed by comma and number. This is dependent on no whitespace
-            final String regexEnvMatcher = "[^.]*,(?!.*,)[0-9?]+$";
+            final String regexEnvMatcher = "[^.]*,(?!.*,)(0|[1-9]\\d*)?(\\.\\d+)?(?<=\\d)$";
 
             Pattern pattern = Pattern.compile(regexEnvMatcher);
 
