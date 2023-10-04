@@ -108,5 +108,5 @@ This repository consists of the source to build a container that includes the
   The regex will match the worker, and the number will indicate the weighting to be added to the worker. For example to allow 
   enrichment-workflow to get processed at 10 times the rate of other workers this variable should be set to "enrichment\-workflow$,10".
   Multiple of these can be added at any one time, just add an incrementing value to the variable name, eg: CAF_ADJUST_WORKER_WEIGHT_1. 
-  Do decrease weighting the integer should be less than one. Note it is possible to set the weight to 0 in order to stop processing of 
+  To decrease weighting the integer should be less than one. Note it is possible to set the weight to 0 in order to stop processing of 
   the worker entirely. 
