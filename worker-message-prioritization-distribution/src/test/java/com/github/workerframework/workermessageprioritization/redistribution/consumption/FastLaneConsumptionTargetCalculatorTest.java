@@ -74,9 +74,17 @@ public final class FastLaneConsumptionTargetCalculatorTest {
         final CapacityCalculatorBase capacityCalculatorBase = mock(CapacityCalculatorBase.class);
         when(capacityCalculatorBase.refine(any(), any())).thenReturn(targetQueueSettings);
 
+        final Map<String, Double> stagingQueueWeightMap = new HashMap<>();
+        stagingQueueWeightMap.put("sq1", 1D);
+        stagingQueueWeightMap.put("sq2", 1D);
+
+        final StagingQueueWeightSettingsProvider stagingQueueWeightSettingsProvider =
+                mock(StagingQueueWeightSettingsProvider.class);
+        when(stagingQueueWeightSettingsProvider.getStagingQueueWeights(anyList())).thenReturn(stagingQueueWeightMap);
+
         final FastLaneConsumptionTargetCalculator fastLaneConsumptionTargetCalculator =
                 new FastLaneConsumptionTargetCalculator(targetQueueSettingsProvider, capacityCalculatorBase,
-                        new StagingQueueWeightSettingsProvider());
+                        stagingQueueWeightSettingsProvider);
 
         final Map<Queue,Long> consumptionTargets =
                 fastLaneConsumptionTargetCalculator.calculateConsumptionTargets(distributorWorkItem);
@@ -120,9 +128,17 @@ public final class FastLaneConsumptionTargetCalculatorTest {
         final CapacityCalculatorBase capacityCalculatorBase = mock(CapacityCalculatorBase.class);
         when(capacityCalculatorBase.refine(any(), any())).thenReturn(targetQueueSettings);
 
+        final Map<String, Double> stagingQueueWeightMap = new HashMap<>();
+        stagingQueueWeightMap.put("sq1", 1D);
+        stagingQueueWeightMap.put("sq2", 1D);
+
+        final StagingQueueWeightSettingsProvider stagingQueueWeightSettingsProvider =
+                mock(StagingQueueWeightSettingsProvider.class);
+        when(stagingQueueWeightSettingsProvider.getStagingQueueWeights(anyList())).thenReturn(stagingQueueWeightMap);
+
         final FastLaneConsumptionTargetCalculator fastLaneConsumptionTargetCalculator =
                 new FastLaneConsumptionTargetCalculator(targetQueueSettingsProvider, capacityCalculatorBase,
-                        new StagingQueueWeightSettingsProvider());
+                        stagingQueueWeightSettingsProvider);
 
         final Map<Queue,Long> consumptionTargets =
                 fastLaneConsumptionTargetCalculator.calculateConsumptionTargets(distributorWorkItem);
@@ -177,9 +193,25 @@ public final class FastLaneConsumptionTargetCalculatorTest {
         final CapacityCalculatorBase capacityCalculatorBase = mock(CapacityCalculatorBase.class);
         when(capacityCalculatorBase.refine(any(), any())).thenReturn(targetQueueSettings);
 
+        final Map<String, Double> stagingQueueWeightMap = new HashMap<>();
+        stagingQueueWeightMap.put("sq1", 1D);
+        stagingQueueWeightMap.put("sq2", 1D);
+        stagingQueueWeightMap.put("sq3", 1D);
+        stagingQueueWeightMap.put("sq4", 1D);
+        stagingQueueWeightMap.put("sq5", 1D);
+        stagingQueueWeightMap.put("sq6", 1D);
+        stagingQueueWeightMap.put("sq7", 1D);
+        stagingQueueWeightMap.put("sq8", 1D);
+        stagingQueueWeightMap.put("sq9", 1D);
+        stagingQueueWeightMap.put("sq10", 1D);
+
+        final StagingQueueWeightSettingsProvider stagingQueueWeightSettingsProvider =
+                mock(StagingQueueWeightSettingsProvider.class);
+        when(stagingQueueWeightSettingsProvider.getStagingQueueWeights(anyList())).thenReturn(stagingQueueWeightMap);
+
         final FastLaneConsumptionTargetCalculator fastLaneConsumptionTargetCalculator =
                 new FastLaneConsumptionTargetCalculator(targetQueueSettingsProvider, capacityCalculatorBase,
-                        new StagingQueueWeightSettingsProvider());
+                        stagingQueueWeightSettingsProvider);
 
         final Map<Queue,Long> consumptionTargets =
                 fastLaneConsumptionTargetCalculator.calculateConsumptionTargets(distributorWorkItem);
@@ -241,9 +273,19 @@ public final class FastLaneConsumptionTargetCalculatorTest {
         final CapacityCalculatorBase capacityCalculatorBase = mock(CapacityCalculatorBase.class);
         when(capacityCalculatorBase.refine(any(), any())).thenReturn(targetQueueSettings);
 
+        final Map<String, Double> stagingQueueWeightMap = new HashMap<>();
+        stagingQueueWeightMap.put("sq1", 1D);
+        stagingQueueWeightMap.put("sq2", 1D);
+        stagingQueueWeightMap.put("sq3", 1D);
+        stagingQueueWeightMap.put("sq4", 1D);
+
+        final StagingQueueWeightSettingsProvider stagingQueueWeightSettingsProvider =
+                mock(StagingQueueWeightSettingsProvider.class);
+        when(stagingQueueWeightSettingsProvider.getStagingQueueWeights(anyList())).thenReturn(stagingQueueWeightMap);
+
         final FastLaneConsumptionTargetCalculator fastLaneConsumptionTargetCalculator =
                 new FastLaneConsumptionTargetCalculator(targetQueueSettingsProvider,capacityCalculatorBase,
-                        new StagingQueueWeightSettingsProvider());
+                        stagingQueueWeightSettingsProvider);
 
         final Map<Queue,Long> consumptionTargets = fastLaneConsumptionTargetCalculator
                 .calculateConsumptionTargets(distributorWorkItem);
@@ -286,9 +328,18 @@ public final class FastLaneConsumptionTargetCalculatorTest {
         final CapacityCalculatorBase capacityCalculatorBase = mock(CapacityCalculatorBase.class);
         when(capacityCalculatorBase.refine(any(), any())).thenReturn(targetQueueSettings);
 
+        final Map<String, Double> stagingQueueWeightMap = new HashMap<>();
+        stagingQueueWeightMap.put("sq1", 1D);
+        stagingQueueWeightMap.put("sq2", 1D);
+        stagingQueueWeightMap.put("sq3", 1D);
+
+        final StagingQueueWeightSettingsProvider stagingQueueWeightSettingsProvider =
+                mock(StagingQueueWeightSettingsProvider.class);
+        when(stagingQueueWeightSettingsProvider.getStagingQueueWeights(anyList())).thenReturn(stagingQueueWeightMap);
+
         final FastLaneConsumptionTargetCalculator fastLaneConsumptionTargetCalculator =
                 new FastLaneConsumptionTargetCalculator(targetQueueSettingsProvider, capacityCalculatorBase,
-                        new StagingQueueWeightSettingsProvider());
+                        stagingQueueWeightSettingsProvider);
 
         final Map<Queue,Long> consumptionTargets = fastLaneConsumptionTargetCalculator
                 .calculateConsumptionTargets(distributorWorkItem);
