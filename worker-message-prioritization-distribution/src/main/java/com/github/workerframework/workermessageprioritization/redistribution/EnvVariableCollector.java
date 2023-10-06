@@ -15,12 +15,33 @@
  */
 package com.github.workerframework.workermessageprioritization.redistribution;
 
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class EnvVariableCollector {
+    private static final String regexEnvMatcher = "^CAF_ADJUST_QUEUE_WEIGHT.*";
+    private static final Pattern pattern = Pattern.compile(regexEnvMatcher);
 
-    public static Set<Map.Entry<String, String>> getEnvVariables(){
-        return System.getenv().entrySet();
+    public static Map<String, String> getEnvVariables() {
+
+        return System.getenv();
+
+    }
+
+    public static Map<String, String> getQueueWeightEnvVariables(Map<String, String> envVariables) {
+
+        final Map<String, String> queueWeightEnvVariablesToFind = new HashMap<>();
+
+        for (final Map.Entry<String, String> entry : envVariables.entrySet()) {
+            final Matcher matcher = pattern.matcher(entry.getKey());
+
+            if (matcher.matches()) {
+                queueWeightEnvVariablesToFind.put(entry.getKey(), entry.getValue());
+            }
+        }
+
+        return queueWeightEnvVariablesToFind;
     }
 }

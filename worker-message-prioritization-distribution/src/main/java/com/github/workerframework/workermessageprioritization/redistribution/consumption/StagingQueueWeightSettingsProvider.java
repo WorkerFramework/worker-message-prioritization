@@ -19,52 +19,38 @@ import com.github.workerframework.workermessageprioritization.redistribution.Env
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.List;
 import java.util.HashMap;
-import java.util.Set;
 import java.util.Collections;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class StagingQueueWeightSettingsProvider {
     private static final Logger FAST_LANE_LOGGER = LoggerFactory.getLogger("FAST_LANE");
-    ArrayList<String> regexWeightStrings = new ArrayList<>();
+    // This matches env variable strings with regex followed by comma and number.
+    private static final String regexEnvMatcher = "[^.]*,(?!.*,)(0|[1-9]\\d*)?(\\.\\d+)?(?<=\\d)$";
+    private static final Pattern pattern = Pattern.compile(regexEnvMatcher);
 
     public Map<String, Double> getStagingQueueWeights(List<String> stagingQueueNames) {
 
         final Map<String, Double> stagingQueueWeights = new HashMap<>();
 
-        final Set<Map.Entry<String, String>> envVariables = EnvVariableCollector.getEnvVariables();
-
-        for (final Map.Entry<String, String> entry : envVariables) {
-
-            // This matches strings with regex followed by comma and number. This is dependent on no whitespace
-            final String regexEnvMatcher = "[^.]*,(?!.*,)(0|[1-9]\\d*)?(\\.\\d+)?(?<=\\d)$";
-
-            Pattern pattern = Pattern.compile(regexEnvMatcher);
-
-            Matcher matcher = pattern.matcher(entry.getValue());
-
-            if (matcher.matches()) {
-                FAST_LANE_LOGGER.debug("Env variable {} matches the format to alter weight of worker", entry.getValue());
-                regexWeightStrings.add(entry.getValue());
-            }
-        }
+        final Map<String, String> envVariables =
+                EnvVariableCollector.getQueueWeightEnvVariables(EnvVariableCollector.getEnvVariables());
 
         final Map<Pattern, Double> regexToWeightMap = new HashMap<>();
 
         // Loop over the environment variable strings added to get regex and weight
-        for (final String regexWeightString : regexWeightStrings) {
-            try {
-                final String[] regexPattern = regexWeightString.split(",(?!.*,)");
-                regexToWeightMap.put(Pattern.compile(regexPattern[0]), Double.parseDouble(regexPattern[1]));
-            } catch (ArrayIndexOutOfBoundsException e) {
-                FAST_LANE_LOGGER.error("Invalid Regex string, ensure the format is regex pattern followed by a comma, followed by the " +
-                        "weight to be added to the string matching the regex.");
-                throw e;
+        for (final Map.Entry<String, String> regexWeightString : envVariables.entrySet()) {
+            final Matcher matcher = pattern.matcher(regexWeightString.getValue());
+
+            // Confirm all strings passed through match the required format.
+            if (!matcher.matches()) {
+                throw new IllegalArgumentException("Illegal format for CAF_ADJUST_QUEUE_WEIGHT string.");
             }
+            final String[] regexPattern = regexWeightString.getValue().split(",(?!.*,)");
+            regexToWeightMap.put(Pattern.compile(regexPattern[0]), Double.parseDouble(regexPattern[1]));
         }
 
         for (final String stagingQueue : stagingQueueNames) {
@@ -72,23 +58,17 @@ public class StagingQueueWeightSettingsProvider {
             final Map<Integer, Double> matchLengthToWeight = new HashMap<>();
 
             // Find the regex strings that match the staging queue
-            for (final Map.Entry<Pattern, Double> entry : regexToWeightMap.entrySet()) {
-                Matcher matcher = entry.getKey().matcher(stagingQueue);
+            for (final Map.Entry<Pattern, Double> regexAndWeight : regexToWeightMap.entrySet()) {
+                final Matcher matcher = regexAndWeight.getKey().matcher(stagingQueue);
 
                 while (matcher.find()) {
-                    int matcherGroupCount = matcher.groupCount();
-                    for (int groupCount = 0; groupCount <= matcherGroupCount; groupCount++) {
-                        // Map the length of the string match to the weight that has been matched
+                    // Map the length of the string match to the weight that has been matched
 
-                        // If there are 2 regex patterns that match the same length of string but provide different weights,
-                        // then choose weight that is larger.
-                        if (matchLengthToWeight.containsKey(matcher.group(groupCount).length())){
-                            matchLengthToWeight.put(matcher.group(groupCount).length(),Math.max(entry.getValue(),
-                                    matchLengthToWeight.get(matcher.group(groupCount).length())));
-                        }else {
-                            matchLengthToWeight.put(matcher.group(groupCount).length(), entry.getValue());
-                        }
-                    }
+                    // If there are 2 regex patterns that match the same length of string but provide different weights,
+                    // then choose weight that is larger.
+                    matchLengthToWeight.compute(matcher.group().length(),
+                            (key, val) -> (val == null ? regexAndWeight.getValue() : Math.max(regexAndWeight.getValue(), val)));
+
                 }
             }
 
@@ -97,8 +77,8 @@ public class StagingQueueWeightSettingsProvider {
                 stagingQueueWeights.put(stagingQueue, 1D);
             } else {
                 // Find the longest matching string, and apply that weight
-                int maxKey = Collections.max(matchLengthToWeight.keySet());
-                double weight = matchLengthToWeight.get(maxKey);
+                final int maxKey = Collections.max(matchLengthToWeight.keySet());
+                final double weight = matchLengthToWeight.get(maxKey);
                 FAST_LANE_LOGGER.debug("{}: weight has been adjusted to: {}", stagingQueue, weight);
                 stagingQueueWeights.put(stagingQueue, weight);
             }

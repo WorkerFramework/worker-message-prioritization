@@ -127,7 +127,7 @@
     
     <build>
         <plugins>
-<!--      The below plugin can be used for testing instead of mocked environment variables in StagingQueueWeightCalculatorTest.java  -->
+<!--      The below plugin can be used for testing instead of mocked environment variables in StagingQueueWeightCalculatorTest.java-->
 <!--            <plugin>-->
 <!--                <artifactId>maven-surefire-plugin</artifactId>-->
 <!--                <version>2.22.1</version>-->
@@ -147,9 +147,11 @@
 <!--                </executions>-->
 <!--                <configuration>-->
 <!--                    <environmentVariables>-->
-<!--                        <CAF_ADJUST_WORKER_WEIGHT>enrichment\-workflow$,10</CAF_ADJUST_WORKER_WEIGHT>-->
-<!--                        <CAF_ADJUST_WORKER_WEIGHT_1>clynch,0</CAF_ADJUST_WORKER_WEIGHT_1>-->
-<!--                        <CAF_ADJUST_WORKER_WEIGHT_2>a7777,3</CAF_ADJUST_WORKER_WEIGHT_2>-->
+<!--                        <CAF_ADJUST_QUEUE_WEIGHT>enrichment\-workflow$,10</CAF_ADJUST_QUEUE_WEIGHT>-->
+<!--                        <CAF_ADJUST_QUEUE_WEIGHT_1>clynch,0</CAF_ADJUST_QUEUE_WEIGHT_1>-->
+<!--                        <CAF_ADJUST_QUEUE_WEIGHT_2>a77777,3</CAF_ADJUST_QUEUE_WEIGHT_2>-->
+<!--                        <CAF_ADJUST_QUEUE_WEIGHT_3>dataprocessing-langdetect-in,7</CAF_ADJUST_QUEUE_WEIGHT_3>-->
+<!--                        <CAF_ADJUST_QUEUE_WEIGHT_4>repository-initialization-workflow$,0.5</CAF_ADJUST_QUEUE_WEIGHT_4>-->
 <!--                    </environmentVariables>-->
 <!--                </configuration>-->
 <!--            </plugin>-->

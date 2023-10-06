@@ -175,10 +175,10 @@ public class DistributorModule extends AbstractModule {
         bind(StagingTargetPairProvider.class);
         bind(TunedTargetQueueLengthProvider.class);
         bind(ConsumptionTargetCalculator.class)
-                .annotatedWith(Names.named("EqualConsumptionTargetCalculator"))
+                .annotatedWith(Names.named("EqualConsumption"))
                 .to(EqualConsumptionTargetCalculator.class);
         bind(ConsumptionTargetCalculator.class)
-                .annotatedWith(Names.named("FastLaneConsumptionTargetCalculator"))
+                .annotatedWith(Names.named("FastLane"))
                 .to(FastLaneConsumptionTargetCalculator.class);
     }
 

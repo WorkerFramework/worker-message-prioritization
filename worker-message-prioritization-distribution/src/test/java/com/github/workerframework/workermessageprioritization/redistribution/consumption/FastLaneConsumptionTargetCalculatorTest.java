@@ -40,18 +40,8 @@ public final class FastLaneConsumptionTargetCalculatorTest {
     @Test
     public void calculateCapacityAvailableFor1LargeAnd1SmallStagingQueueTest() {
 
-        // There 2 queues and a target queue capacity of 1000 messages available
-        // Each queue is offered an equal split of 500 messages.
-        // The calculateConsumptionTargets method will use the calculateStagingQueueUnusedWeight method to find the staging queue
-        // unused weight (this is explained in CalculateStagingQueueUnusedMessageConsumptionTest)
-        // The weight returned from calculateStagingQueueUnusedWeight, will be added to each staging queue weight
-        // The staging queues that are smaller will be still weighted higher and therefore offered the extra space however will only take
-        // the amount they have.
-        // The larger queues will then also be offered extra space and will take that.
-        // Hence, in this test calculateStagingQueueUnusedWeight found that queue2 was only using 0.1 weight (50 out of the 500 messages
-        // provided). This meant 0.9 was available. As queue1 was the only other queue, its weight was increased to 1.9 and queue 1
-        // was offered a capacity of 950 messages. Queue 2 weight will also have been increased to 1.9 however because it only has 50
-        // messages it will only take 50.
+        // In the case that a queue does not use all its target queue capacity
+        // Ensure this capacity is redistributed
 
         final Queue targetQueue = getQueue("tq", 1000);
 
@@ -161,7 +151,7 @@ public final class FastLaneConsumptionTargetCalculatorTest {
         // Capacity of 1000 is available. This means 100 messages per queue.
         // q2, q3, q5, q6, q9 do not all need this.
         // This will be redistributed to the larger queues which all have enough
-        // messages to use that extra capacity. this means there is no re-calculation required.
+        // messages to use that extra capacity.
 
         final Queue targetQueue = getQueue("tq", 1000);
 
@@ -353,17 +343,17 @@ public final class FastLaneConsumptionTargetCalculatorTest {
         final long totalQueueMessages =
                 q1.getMessages() + q2.getMessages() + q3.getMessages();
 
-        assertEquals("In the case that the sum of the staging queues does not fill the capacity of target" +
-                    "queue available. The staging queue should be given capacity equal to its length. In other " +
-                    "words the queueConsumptionTargetSum should be equal to the total of all messages on the staging " +
-                    "queues regardless of queue size.",
+        assertEquals("In the case that the sum of the staging queues does not fill " +
+                    "the capacity of target queue available. The staging queue should be given capacity" +
+                    " equal to its length. In other words the queueConsumptionTargetSum should be equal " +
+                    "to the total of all messages on the staging queues regardless of queue size.",
                 totalQueueMessages, queueConsumptionTargetSum, 0.0);
     }
 
     @Test
     public void calculateCapacityAvailableForMultipleQueuesWithWeightedRegexTest() {
 
-        // Ensure the message capacity given to each queue correlates to the given weight
+        // Ensure the message capacity given to each queue correlates to the given weight.
 
         final Queue targetQueue = getQueue("tq", 1000);
 
@@ -387,8 +377,9 @@ public final class FastLaneConsumptionTargetCalculatorTest {
 
         final long targetQueueCapacity = targetQueueSettings.getCapacity();
 
-        // This map represents 2 regex added to environment variables giving enrichment-workflow matches a weight of 10, and clynch
-        // tenant matches a weight of 0. Enrichment-workflow is a larger regex match, so it will override the clynch regex.
+        // This map represents 2 regex added to environment variables giving enrichment-workflow
+        // matches a weight of 10, and clynch tenant matches a weight of 0. Enrichment-workflow
+        // is a larger regex match, so it will override the clynch regex.
         final Map<String, Double> stagingQueueWeightMap = new HashMap<>();
         stagingQueueWeightMap.put("bulk-indexer-in»/clynch/enrichment-workflow", 10D);
         stagingQueueWeightMap.put("dataprocessing-classification-in»/clynch/update-entities-workflow", 0D);
@@ -413,14 +404,16 @@ public final class FastLaneConsumptionTargetCalculatorTest {
 
         final long weightedValueExpected = queue3Result * 10;
 
-        assertEquals("The total consumption of each queue should add up to the total target queue capacity available.",
+        assertEquals("The total consumption of each queue should add up to the total " +
+                        "target queue capacity available.",
                 targetQueueCapacity, queueConsumptionTargetSum, 2.0);
 
         assertEquals("Queue 1 has been weighted 10 and sq3 weighted 1. " +
                         "This means queue 1 should be given 10 times the message capacity of queue 3.",
                 weightedValueExpected, queue1Result, 2.0);
 
-        assertEquals("Queue 2 has been weighted 0. This means it should be given no target queue capacity",
+        assertEquals("Queue 2 has been weighted 0. This means it should be given no " +
+                        "target queue capacity",
                 0, queue2Result, 0.0);
     }
 

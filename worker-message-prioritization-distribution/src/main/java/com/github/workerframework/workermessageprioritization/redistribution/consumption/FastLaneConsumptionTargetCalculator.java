@@ -82,7 +82,6 @@ public class FastLaneConsumptionTargetCalculator extends ConsumptionTargetCalcul
         while(availableMessages > 0 && targetQueueCapacity > 0) {
 
             // The total number of weights across all staging queues.
-            // For now this is just setting all the weights to 1.
             final double totalStagingQueueWeight = stagingQueueWeightMap.values().stream().mapToDouble(Double::doubleValue).sum();
 
             // Target Queue capacity available per weight.
