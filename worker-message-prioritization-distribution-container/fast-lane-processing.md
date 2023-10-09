@@ -19,7 +19,7 @@ $$ Target \ queue \ capacity \ given \ to \ staging \ queue  = {{Total \ target 
 ### Format to follow when setting staging queue weights: 
 
 * The environment variable name **must** begin with CAF_ADJUST_QUEUE_WEIGHT. If there is more than one staging queue regular expression and weight to be set, 
-the tag can be preceded with incrementing numbers 
+the environment variable name can be appended with _ and incrementing numbers 
 eg: CAF_ADJUST_QUEUE_WEIGHT, CAF_ADJUST_QUEUE_WEIGHT_1, CAF_ADJUST_QUEUE_WEIGHT_2 and so on. 
 * Inside this tag must contain a string of the regex to match the staging queue, followed by a comma, followed
 by an integer that is 0 or larger. Note:
