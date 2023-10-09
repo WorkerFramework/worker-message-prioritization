@@ -21,7 +21,7 @@ $$ Target \ queue \ capacity \ given \ to \ staging \ queue  = {{Total \ target 
 * The environment variable name **must** begin with CAF_ADJUST_QUEUE_WEIGHT. If there is more than one staging queue regular expression and weight to be set, 
 the environment variable name can be appended with _ and incrementing numbers 
 eg: CAF_ADJUST_QUEUE_WEIGHT, CAF_ADJUST_QUEUE_WEIGHT_1, CAF_ADJUST_QUEUE_WEIGHT_2 and so on. 
-* Inside this tag must contain a string of the regex to match the staging queue, followed by a comma, followed
+* The value of this environment variable must contain a string of the regex to match the staging queue, followed by a comma, followed
 by an integer that is 0 or larger. Note:
   * There **cannot be any spaces** in the entire string 
   * The number following the comma (aka the weight) **cannot be negative**
