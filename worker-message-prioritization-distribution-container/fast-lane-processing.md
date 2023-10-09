@@ -27,7 +27,7 @@ by an integer that is 0 or larger. Note:
   * The number following the comma (aka the weight) **cannot be negative**
   * **Decimal numbers are allowed** in the form of 0.5 or .5
   * There cannot be a zero preceding non-decimal weight values eg: 04, or 020
-* If there are multiple matches on a staging queues, the weight will be set to the longest matching string. 
+* If multiple regular expressions match a single staging queue name, the pattern that matches the most text from the staging queue name will have it's associated weight assigned to the staging queue. 
 For example if `"tenant1"` is set to a weight of 3, and `"enrichment-workflow"` is set to a weight of 10. 
 Then the staging queue `"dataprocessing-classification-in»/tenant1/enrichment-workflow"` will be given a weight
 of 10. 
