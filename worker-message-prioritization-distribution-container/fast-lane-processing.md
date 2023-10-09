@@ -13,7 +13,8 @@ get processed quicker or slower than the other staging queues.
 
 How the staging queue capacity is calculated: 
 
-$$ Target \ queue \ capacity \ given \ to \ staging \ queue  = {{Total \ target \ queue \ capacity \over Sum \ of \ weights \ of \ all \ queues} * Weight \ of \ queue.} $$
+$$ Target \ queue \ capacity \ given \ to \ staging \ queue  = {{Total \ target \ queue \ capacity \over Sum \ of \ weights \ of \ all 
+\ staging \ queues} * Weight \ of \ staging \ queue.} $$
 
 ### Format to follow when setting staging queue weights: 
 
@@ -53,4 +54,4 @@ An additional feature when fast lane processing is turned on, is the ability to 
 if the demand is there. 
 The increase of target queue capacity for certain queues, opens the possibility of those queues not having 
 any messages but still taking up that space. When CAF_CONSUMPTION_TARGET_CALCULATOR_MODE is set to 'FastLane' any messages
-not used by queues will be redistributed to queues with more messages available.
+not used by queues will be redistributed to queues with more messages to be processed, ensuring no wasted capacity.
