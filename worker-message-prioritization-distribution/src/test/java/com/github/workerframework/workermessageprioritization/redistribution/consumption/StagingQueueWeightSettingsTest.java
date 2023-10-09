@@ -24,10 +24,11 @@ import org.mockito.Mockito;
 
 import java.util.Set;
 import java.util.HashSet;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Collections;
 
 import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertEquals;
@@ -66,9 +67,8 @@ public class StagingQueueWeightSettingsTest {
         envVariables.put("CAF_ADJUST_QUEUE_WEIGHT_4", "dataprocessing\\-langdetect\\-in,7");
         envVariables.put("CAF_ADJUST_QUEUE_WEIGHT_5", "repository\\-initialization\\-workflow$,0.5");
 
-        try(MockedStatic<EnvVariableCollector> envVariableCollectorMock = Mockito.mockStatic(EnvVariableCollector.class)) {
+        try (final MockedStatic<EnvVariableCollector> envVariableCollectorMock = Mockito.mockStatic(EnvVariableCollector.class)) {
 
-            envVariableCollectorMock.when(EnvVariableCollector::getEnvVariables).thenReturn(envVariables);
             envVariableCollectorMock.when(() -> EnvVariableCollector.getQueueWeightEnvVariables(anyMap())).thenReturn(envVariables);
 
             final StagingQueueWeightSettingsProvider stagingQueueWeightSettingsProvider =
@@ -81,21 +81,21 @@ public class StagingQueueWeightSettingsTest {
                     stagingQueueWeightSettingsProvider.getStagingQueueWeights(stagingQueueNames);
 
             assertEquals("Weight of queue should be set by environment variable.",
-                    10, stagingQueueWeightMap.get("bulk-indexer-in»/clynch/enrichment-workflow"), 0.0);
+                    (Double)10D, stagingQueueWeightMap.get("bulk-indexer-in»/clynch/enrichment-workflow"));
             assertEquals("Weight of queue should be set by environment variable which matches the longest length of string.",
-                    10, stagingQueueWeightMap.get("bulk-indexer-in»/rory3/enrichment-workflow"), 0.0);
+                    (Double)10D, stagingQueueWeightMap.get("bulk-indexer-in»/rory3/enrichment-workflow"));
             assertEquals("Weight of queue should be set by environment variable.",
-                    0, stagingQueueWeightMap.get("dataprocessing-classification-in»/clynch/update-entities-workflow"), 0.0);
+                    (Double)0D, stagingQueueWeightMap.get("dataprocessing-classification-in»/clynch/update-entities-workflow"));
             assertEquals("Weight of queue should be set by environment variable.",
-                    3, stagingQueueWeightMap.get("dataprocessing-classification-in»/a77777/update-entities-workflow"), 0.0);
+                    (Double)3D, stagingQueueWeightMap.get("dataprocessing-classification-in»/a77777/update-entities-workflow"));
             assertEquals("No weight set to match this string therefore should default to 1.",
-                    1, stagingQueueWeightMap.get("dataprocessing-classification-in»/rory3/update-entities-workflow"), 0.0);
+                    (Double)1D, stagingQueueWeightMap.get("dataprocessing-classification-in»/rory3/update-entities-workflow"));
             assertEquals("Two strings matched of same length with different weights should set to larger weight.",
-                    3, stagingQueueWeightMap.get("bulk-indexer-in»/clynch/a77777"), 0.0);
+                    (Double)3D, stagingQueueWeightMap.get("bulk-indexer-in»/clynch/a77777"));
             assertEquals("Weight of queue should be set by environment variable.",
-                    7, stagingQueueWeightMap.get("dataprocessing-langdetect-in»/mahesh/ingestion-workflow"), 0.0);
+                    (Double)7D, stagingQueueWeightMap.get("dataprocessing-langdetect-in»/mahesh/ingestion-workflow"));
             assertEquals("Weights can be set below 1 to reduce the processing of the queue.",
-                    0.5, stagingQueueWeightMap.get("bulk-indexer-in»/jmcc02/repository-initialization-workflow"), 0.0);
+                    (Double)0.5D, stagingQueueWeightMap.get("bulk-indexer-in»/jmcc02/repository-initialization-workflow"));
         }
     }
 
@@ -106,7 +106,7 @@ public class StagingQueueWeightSettingsTest {
 
         final Queue q1 = getQueue("bulk-indexer-in»/clynch/enrichment-workflow", 1000);
 
-        final Set<Queue> stagingQueues = new HashSet<>(Arrays.asList(q1));
+        final Set<Queue> stagingQueues = new HashSet<>(Collections.singletonList(q1));
         final DistributorWorkItem distributorWorkItem = mock(DistributorWorkItem.class);
         when(distributorWorkItem.getStagingQueues()).thenReturn(stagingQueues);
         when(distributorWorkItem.getTargetQueue()).thenReturn(targetQueue);
@@ -117,9 +117,8 @@ public class StagingQueueWeightSettingsTest {
         // String cannot have space before weight
         envVariables.put("CAF_ADJUST_QUEUE_WEIGHT", "enrichment\\-workflow$, 10");
 
-        try(MockedStatic<EnvVariableCollector> envVariableCollectorMock = Mockito.mockStatic(EnvVariableCollector.class)) {
+        try (final MockedStatic<EnvVariableCollector> envVariableCollectorMock = Mockito.mockStatic(EnvVariableCollector.class)) {
 
-            envVariableCollectorMock.when(EnvVariableCollector::getEnvVariables).thenReturn(envVariables);
             envVariableCollectorMock.when(() -> EnvVariableCollector.getQueueWeightEnvVariables(anyMap())).thenReturn(envVariables);
 
             final StagingQueueWeightSettingsProvider stagingQueueWeightSettingsProvider =
@@ -152,9 +151,8 @@ public class StagingQueueWeightSettingsTest {
         // Weight cannot be preceeded by a 0
         envVariables.put("CAF_ADJUST_QUEUE_WEIGHT_1", "enrichment\\-workflow$,010");
 
-        try(MockedStatic<EnvVariableCollector> envVariableCollectorMock = Mockito.mockStatic(EnvVariableCollector.class)) {
+        try (final MockedStatic<EnvVariableCollector> envVariableCollectorMock = Mockito.mockStatic(EnvVariableCollector.class)) {
 
-            envVariableCollectorMock.when(EnvVariableCollector::getEnvVariables).thenReturn(envVariables);
             envVariableCollectorMock.when(() -> EnvVariableCollector.getQueueWeightEnvVariables(anyMap())).thenReturn(envVariables);
 
             final StagingQueueWeightSettingsProvider stagingQueueWeightSettingsProvider =
@@ -187,9 +185,8 @@ public class StagingQueueWeightSettingsTest {
         // String cannot be negative
         envVariables.put("CAF_ADJUST_QUEUE_WEIGHT", "enrichment\\-workflow$,-10");
 
-        try(MockedStatic<EnvVariableCollector> envVariableCollectorMock = Mockito.mockStatic(EnvVariableCollector.class)) {
+        try (final MockedStatic<EnvVariableCollector> envVariableCollectorMock = Mockito.mockStatic(EnvVariableCollector.class)) {
 
-            envVariableCollectorMock.when(EnvVariableCollector::getEnvVariables).thenReturn(envVariables);
             envVariableCollectorMock.when(() -> EnvVariableCollector.getQueueWeightEnvVariables(anyMap())).thenReturn(envVariables);
 
             final StagingQueueWeightSettingsProvider stagingQueueWeightSettingsProvider =
@@ -204,7 +201,7 @@ public class StagingQueueWeightSettingsTest {
         }
     }
 
-    Queue getQueue(final String name, final long messages) {
+    private static Queue getQueue(final String name, final long messages) {
         final Queue queue = new Queue();
         queue.setName(name);
         queue.setMessages(messages);

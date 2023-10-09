@@ -21,8 +21,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class EnvVariableCollector {
-    private static final String regexEnvMatcher = "^CAF_ADJUST_QUEUE_WEIGHT.*";
-    private static final Pattern pattern = Pattern.compile(regexEnvMatcher);
+    private static final String ADJUST_QUEUE_WEIGHT_REGEX_MATCHER = "^CAF_ADJUST_QUEUE_WEIGHT.*";
+    private static final Pattern ADJUST_QUEUE_WEIGHT_REGEX_PATTERN = Pattern.compile(ADJUST_QUEUE_WEIGHT_REGEX_MATCHER);
 
     public static Map<String, String> getEnvVariables() {
 
@@ -35,7 +35,7 @@ public class EnvVariableCollector {
         final Map<String, String> queueWeightEnvVariablesToFind = new HashMap<>();
 
         for (final Map.Entry<String, String> entry : envVariables.entrySet()) {
-            final Matcher matcher = pattern.matcher(entry.getKey());
+            final Matcher matcher = ADJUST_QUEUE_WEIGHT_REGEX_PATTERN.matcher(entry.getKey());
 
             if (matcher.matches()) {
                 queueWeightEnvVariablesToFind.put(entry.getKey(), entry.getValue());

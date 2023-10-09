@@ -88,7 +88,7 @@ public final class FastLaneConsumptionTargetCalculatorTest {
                 "target queue it will fill is the size of its staging queue.",
                 50, queue2Result);
         assertEquals("Confirm the total target queue capacity has been used",
-                targetQueueCapacity, queue1Result+queue2Result);
+                targetQueueCapacity, queue1Result + queue2Result);
     }
 
     @Test
@@ -142,7 +142,7 @@ public final class FastLaneConsumptionTargetCalculatorTest {
         assertEquals("Both queues are larger than half of the target queue capacity therefore " +
                 "each are given half of the available target queue capacity, regardless of the fact that " +
                 "staging queue 2 is much larger than staging queue 1.",
-                targetQueueCapacity, queue1Result+queue2Result);
+                targetQueueCapacity, queue1Result + queue2Result);
     }
 
     @Test
@@ -417,7 +417,7 @@ public final class FastLaneConsumptionTargetCalculatorTest {
                 0, queue2Result, 0.0);
     }
 
-    Queue getQueue(final String name, final long messages) {
+    private static Queue getQueue(final String name, final long messages) {
         final Queue queue = new Queue();
         queue.setName(name);
         queue.setMessages(messages);

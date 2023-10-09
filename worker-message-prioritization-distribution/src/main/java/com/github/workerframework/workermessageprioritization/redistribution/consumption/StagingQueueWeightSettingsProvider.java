@@ -29,10 +29,10 @@ import java.util.regex.Pattern;
 public class StagingQueueWeightSettingsProvider {
     private static final Logger FAST_LANE_LOGGER = LoggerFactory.getLogger("FAST_LANE");
     // This matches env variable strings with regex followed by comma and number.
-    private static final String regexEnvMatcher = "[^.]*,(?!.*,)(0|[1-9]\\d*)?(\\.\\d+)?(?<=\\d)$";
-    private static final Pattern pattern = Pattern.compile(regexEnvMatcher);
+    private static final String ADJUST_QUEUE_WEIGHT_STRING_MATCHER = "[^.]*,(?!.*,)(0|[1-9]\\d*)?(\\.\\d+)?(?<=\\d)$";
+    private static final Pattern ADJUST_QUEUE_WEIGHT_STRING_PATTERN = Pattern.compile(ADJUST_QUEUE_WEIGHT_STRING_MATCHER);
 
-    public Map<String, Double> getStagingQueueWeights(List<String> stagingQueueNames) {
+    public final Map<String, Double> getStagingQueueWeights(List<String> stagingQueueNames) {
 
         final Map<String, Double> stagingQueueWeights = new HashMap<>();
 
@@ -43,11 +43,12 @@ public class StagingQueueWeightSettingsProvider {
 
         // Loop over the environment variable strings added to get regex and weight
         for (final Map.Entry<String, String> regexWeightString : envVariables.entrySet()) {
-            final Matcher matcher = pattern.matcher(regexWeightString.getValue());
+            final Matcher matcher = ADJUST_QUEUE_WEIGHT_STRING_PATTERN.matcher(regexWeightString.getValue());
 
             // Confirm all strings passed through match the required format.
             if (!matcher.matches()) {
-                throw new IllegalArgumentException("Illegal format for CAF_ADJUST_QUEUE_WEIGHT string.");
+                throw new IllegalArgumentException("Illegal format for CAF_ADJUST_QUEUE_WEIGHT string. Please ensure there are no " +
+                        "spaces in the string, negative numbers or unnecessary zeros preceding the weight integer.");
             }
             final String[] regexPattern = regexWeightString.getValue().split(",(?!.*,)");
             regexToWeightMap.put(Pattern.compile(regexPattern[0]), Double.parseDouble(regexPattern[1]));

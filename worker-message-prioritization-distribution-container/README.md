@@ -95,18 +95,17 @@ This repository consists of the source to build a container that includes the
   compute how long the tuned target queue length should be to process the queue in this set amount of time. 
 
 * `CAF_CONSUMPTION_TARGET_CALCULATOR_MODE`  
-  **Default**: `EqualConsumptionTargetCalculator`  
-  **Description**: Used to set the method of moving messages from their staging queues on to their target queues. The default is 
-  EqualConsumptionTargetCalculator meaning that messages will be moved equally and fairly on to the target queue. Currently, the other 
-  option is FastLaneConsumptionTargetCalculator. When this is set, the ability exists to alter weighting for different workers to get 
-  messages processed faster or slower than other workers.
+  **Default**: `EqualConsumption`  
+  **Description**: Used to determine if messages will be moved in an equal manner from staging queue to target queue, 
+  or if certain staging queues will be allowed faster consumption. The default is EqualConsumption meaning that messages will be 
+  moved equally and fairly on to the target queue. Currently, the other option is FastLane. When this is set, the ability exists
+  to alter the weight of staging queues to allow them more available capacity than others. This is described in more detail
+  [here]
+  (https://github.com/WorkerFramework/worker-message-prioritization/tree/main/worker-message-prioritization-distribution-container/fast-lane-processing.md).
 
-* `CAF_ADJUST_WORKER_WEIGHT`  
+* `CAF_ADJUST_QUEUE_WEIGHT`  
   **Default**: None.   
-  **Description**: Used when CAF_CONSUMPTION_TARGET_CALCULATOR_MODE is set to FastLaneConsumptionTargetCalculator. This controls the 
-  workers that are to be weighted to increase or decrease processing. This should be set using a string of a regex followed by a number. 
-  The regex will match the worker, and the number will indicate the weighting to be added to the worker. For example to allow 
-  enrichment-workflow to get processed at 10 times the rate of other workers this variable should be set to "enrichment\-workflow$,10".
-  Multiple of these can be added at any one time, just add an incrementing value to the variable name, eg: CAF_ADJUST_WORKER_WEIGHT_1. 
-  To decrease weighting the integer should be less than one. Note it is possible to set the weight to 0 in order to stop processing of 
-  the worker entirely. 
+  **Description**: Used when CAF_CONSUMPTION_TARGET_CALCULATOR_MODE is set to FastLane. This controls the 
+  staging queues that are to be weighted to increase or decrease processing. This should be set using a string of a regex followed by a 
+  number. See more information on the required formatting [here]
+  (https://github.com/WorkerFramework/worker-message-prioritization/tree/main/worker-message-prioritization-distribution -container/fast-lane-processing.md)
