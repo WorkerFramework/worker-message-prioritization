@@ -46,28 +46,28 @@ by a double that is 0 or larger. Note:
 
 ### Examples of suitable tags 
 * Regex to match enrichment-workflow at the end of a staging queue string, followed by weight of 10 with no spaces. 
-  * <CAF_ADJUST_QUEUE_WEIGHT>enrichment\-workflow$,10</CAF_ADJUST_QUEUE_WEIGHT> 
+  * `<CAF_ADJUST_QUEUE_WEIGHT>enrichment\-workflow$,10</CAF_ADJUST_QUEUE_WEIGHT>`
 * Regex to match tenant1 staging queues for dataprocessing-classification-in, followed by weight of 0 with no spaces.
-  * <CAF_ADJUST_QUEUE_WEIGHT_1>dataprocessing-classification-in»/tenant1,0</CAF_ADJUST_QUEUE_WEIGHT_1>
+  * `<CAF_ADJUST_QUEUE_WEIGHT_1>dataprocessing-classification-in»/tenant1,0</CAF_ADJUST_QUEUE_WEIGHT_1>`
 * Regex to match tenant2 staging queues for bulk-indexer-in, followed by weight of 3 with no spaces.
-  * <CAF_ADJUST_QUEUE_WEIGHT_2>bulk-indexer-in»/tenant2,3</CAF_ADJUST_QUEUE_WEIGHT_2>
+  * `<CAF_ADJUST_QUEUE_WEIGHT_2>bulk-indexer-in»/tenant2,3</CAF_ADJUST_QUEUE_WEIGHT_2>`
 * Regex to match tenant3 staging queues for dataprocessing-langdetect-in, followed by weight of 7 with no spaces.
-  * <CAF_ADJUST_QUEUE_WEIGHT_3>dataprocessing-langdetect-in»/tenant2,7</CAF_ADJUST_QUEUE_WEIGHT_3>
+  * `<CAF_ADJUST_QUEUE_WEIGHT_3>dataprocessing-langdetect-in»/tenant2,7</CAF_ADJUST_QUEUE_WEIGHT_3>`
 * Regex to match repository-initialization-workflow$ at the end of a staging queue string, followed by weight of 0.5 with no spaces.
-  * <CAF_ADJUST_QUEUE_WEIGHT_4>repository-initialization-workflow$,0.5</CAF_ADJUST_QUEUE_WEIGHT_4>
-* Regex to match tenant3 anywhere in staging queue string, followed by weight of .5 with no spaces.
-  * <CAF_ADJUST_QUEUE_WEIGHT_5>tenant3,.5</CAF_ADJUST_QUEUE_WEIGHT_5>
+  * `<CAF_ADJUST_QUEUE_WEIGHT_4>repository-initialization-workflow$,0.5</CAF_ADJUST_QUEUE_WEIGHT_4>`
+* Regex to match tenant3 staging queues for bulk-indexer-in, followed by weight of .5 with no spaces.
+  * `<CAF_ADJUST_QUEUE_WEIGHT_5>bulk-indexer-in»/tenant3,.5</CAF_ADJUST_QUEUE_WEIGHT_5>`
 
 ### Examples of tags that will throw an error
 * Regex to match enrichment-workflow at the end of a staging queue string, followed by a **space** before weight 10. The space will 
   throw an error.
-  * <CAF_ADJUST_QUEUE_WEIGHT>enrichment\-workflow$, 10</CAF_ADJUST_QUEUE_WEIGHT> 
+  * `<CAF_ADJUST_QUEUE_WEIGHT>enrichment\-workflow$, 10</CAF_ADJUST_QUEUE_WEIGHT>`
 * Regex to match tenant1 staging queues for dataprocessing-classification-in, followed by a **zero** before weight 3. 
   The zero will throw an error.
-  * <CAF_ADJUST_QUEUE_WEIGHT_1>dataprocessing-classification-in»/tenant1,03</CAF_ADJUST_QUEUE_WEIGHT_1>
+  * `<CAF_ADJUST_QUEUE_WEIGHT_1>dataprocessing-classification-in»/tenant1,03</CAF_ADJUST_QUEUE_WEIGHT_1>`
 * Regex to match tenant3 staging queues for dataprocessing-langdetect-in, followed by a **negative** weight. 
   The negative weight will throw an error.
-  * <CAF_ADJUST_QUEUE_WEIGHT_3>dataprocessing-langdetect-in»/tenant3,-7</CAF_ADJUST_QUEUE_WEIGHT_3>
+  * `<CAF_ADJUST_QUEUE_WEIGHT_3>dataprocessing-langdetect-in»/tenant3,-7</CAF_ADJUST_QUEUE_WEIGHT_3>`
 
 ## Distribution of unused target queue capacity
 An additional feature when fast lane processing is turned on, is the ability to use the entire target queue capacity
