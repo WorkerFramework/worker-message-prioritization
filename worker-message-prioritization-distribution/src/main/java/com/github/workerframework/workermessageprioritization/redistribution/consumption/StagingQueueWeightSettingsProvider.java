@@ -47,8 +47,10 @@ public class StagingQueueWeightSettingsProvider {
 
             // Confirm all strings passed through match the required format.
             if (!matcher.matches()) {
-                throw new IllegalArgumentException("Illegal format for CAF_ADJUST_QUEUE_WEIGHT string. Please ensure there are no " +
-                        "spaces in the string, negative numbers or unnecessary zeros preceding the weight integer.");
+                throw new IllegalArgumentException(String.format("Illegal format for CAF_ADJUST_QUEUE_WEIGHT string: '%s'. " +
+                        "Please ensure there are no spaces in the string, negative numbers or unnecessary zeros preceding " +
+                        "the weight value.",
+                        regexWeightString.getValue()));
             }
             final String[] regexPattern = regexWeightString.getValue().split(",(?!.*,)");
             regexToWeightMap.put(Pattern.compile(regexPattern[0]), Double.parseDouble(regexPattern[1]));

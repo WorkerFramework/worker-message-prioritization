@@ -64,7 +64,7 @@ public class StagingQueueWeightSettingsTest {
         envVariables.put("CAF_ADJUST_QUEUE_WEIGHT", "enrichment\\-workflow$,10");
         envVariables.put("CAF_ADJUST_QUEUE_WEIGHT_1", "clynch,0");
         envVariables.put("CAF_ADJUST_QUEUE_WEIGHT_3", "a77777,3");
-        envVariables.put("CAF_ADJUST_QUEUE_WEIGHT_4", "dataprocessing\\-langdetect\\-in,7");
+        envVariables.put("CAF_ADJUST_QUEUE_WEIGHT_4", "dataprocessing\\-langdetect\\-in»/mahesh,7");
         envVariables.put("CAF_ADJUST_QUEUE_WEIGHT_5", "repository\\-initialization\\-workflow$,0.5");
 
         try (final MockedStatic<EnvVariableCollector> envVariableCollectorMock = Mockito.mockStatic(EnvVariableCollector.class)) {
