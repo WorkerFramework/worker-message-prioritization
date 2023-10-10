@@ -26,7 +26,7 @@ by a double that is 0 or larger. Note:
   * There **cannot be any spaces** in the entire string 
   * The number following the comma (aka the weight) **cannot be negative**
   * **Decimal numbers are allowed** in the form of 0.5 or .5
-  * There cannot be a zero preceding non-decimal weight values eg: 04, or 020
+  * There **cannot be a zero preceding** non-decimal weight values eg: 04, or 020
 * If there are multiple matches on a staging queues, the weight will be set to the longest matching string. 
   For example if `"dataprocessing-classification-in»/tenant1"` is set to a weight of 20, and `"enrichment-workflow"` 
   is set to a weight of 3. Then the staging queue `"dataprocessing-classification-in»/tenant1/enrichment-workflow"` 
