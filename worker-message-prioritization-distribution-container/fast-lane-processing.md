@@ -44,7 +44,7 @@ by a double that is 0 or larger. Note:
   The messages will not get lost, but will be held on the staging queues until that weight changes back to a positive double, at which 
   point the messages will begin to move again and get processed as normal. 
 
-### Examples of suitable tags 
+### CAF_ADJUST_QUEUE_WEIGHT Examples
 * Regex to match enrichment-workflow at the end of a staging queue string, followed by weight of 10 with no spaces. 
   * `<CAF_ADJUST_QUEUE_WEIGHT>enrichment\-workflow$,10</CAF_ADJUST_QUEUE_WEIGHT>`
 * Regex to match tenant1 staging queues for dataprocessing-classification-in, followed by weight of 0 with no spaces.
