@@ -29,7 +29,7 @@ import java.util.regex.Pattern;
 public class StagingQueueWeightSettingsProvider {
     private static final Logger FAST_LANE_LOGGER = LoggerFactory.getLogger("FAST_LANE");
     // This matches env variable strings with regex followed by comma and number.
-    private static final String ADJUST_QUEUE_WEIGHT_STRING_MATCHER = "[^.]*,(?!.*,)(0|[1-9]\\d*)?(\\.\\d+)?(?<=\\d)$";
+    private static final String ADJUST_QUEUE_WEIGHT_STRING_MATCHER = "[^\\s]*,(?!.*,)(0|[1-9]\\d*)?(\\.\\d+)?(?<=\\d)$";
     private static final Pattern ADJUST_QUEUE_WEIGHT_STRING_PATTERN = Pattern.compile(ADJUST_QUEUE_WEIGHT_STRING_MATCHER);
 
     public final Map<String, Double> getStagingQueueWeights(List<String> stagingQueueNames) {
@@ -47,9 +47,10 @@ public class StagingQueueWeightSettingsProvider {
 
             // Confirm all strings passed through match the required format.
             if (!matcher.matches()) {
-                throw new IllegalArgumentException(String.format("Illegal format for CAF_ADJUST_QUEUE_WEIGHT string: '%s'. " +
+                throw new IllegalArgumentException(String.format("Illegal format for %s string: '%s'. " +
                         "Please ensure there are no spaces in the string, negative numbers or unnecessary zeros preceding " +
                         "the weight value.",
+                        regexWeightString.getKey(),
                         regexWeightString.getValue()));
             }
             final String[] regexPattern = regexWeightString.getValue().split(",(?!.*,)");

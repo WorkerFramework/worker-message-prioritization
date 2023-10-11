@@ -47,13 +47,11 @@ public class StagingQueueWeightSettingsTest {
         final Queue q1 = getQueue("bulk-indexer-in»/clynch/enrichment-workflow", 1000);
         final Queue q2 = getQueue("bulk-indexer-in»/rory3/enrichment-workflow", 1000);
         final Queue q3 = getQueue("dataprocessing-classification-in»/clynch/update-entities-workflow", 1000);
-        final Queue q4 = getQueue("dataprocessing-classification-in»/a77777/update-entities-workflow", 1000);
-        final Queue q5 = getQueue("dataprocessing-classification-in»/rory3/update-entities-workflow", 1000);
-        final Queue q6 = getQueue("bulk-indexer-in»/clynch/a77777", 1000);
-        final Queue q7 = getQueue("dataprocessing-langdetect-in»/mahesh/ingestion-workflow", 1000);
-        final Queue q8 = getQueue("bulk-indexer-in»/jmcc02/repository-initialization-workflow", 1000);
+        final Queue q4 = getQueue("dataprocessing-classification-in»/rory3/update-entities-workflow", 1000);
+        final Queue q5 = getQueue("bulk-indexer-in»/rtorney/maheshh", 1000);
+        final Queue q6 = getQueue("bulk-indexer-in»/jmcc02/repository-initialization-workflow", 1000);
 
-        final Set<Queue> stagingQueues = new HashSet<>(Arrays.asList(q1, q2, q3, q4, q5, q6, q7, q8));
+        final Set<Queue> stagingQueues = new HashSet<>(Arrays.asList(q1, q2, q3, q4, q5, q6));
         final DistributorWorkItem distributorWorkItem = mock(DistributorWorkItem.class);
         when(distributorWorkItem.getStagingQueues()).thenReturn(stagingQueues);
         when(distributorWorkItem.getTargetQueue()).thenReturn(targetQueue);
@@ -61,11 +59,11 @@ public class StagingQueueWeightSettingsTest {
         // Mock environment variables to set weights using regex pattern followed by weight.
         final Map<String, String> envVariables = new HashMap<>();
 
-        envVariables.put("CAF_ADJUST_QUEUE_WEIGHT", "enrichment\\-workflow$,10");
-        envVariables.put("CAF_ADJUST_QUEUE_WEIGHT_1", "clynch,0");
-        envVariables.put("CAF_ADJUST_QUEUE_WEIGHT_3", "a77777,3");
-        envVariables.put("CAF_ADJUST_QUEUE_WEIGHT_4", "dataprocessing\\-langdetect\\-in»/mahesh,7");
-        envVariables.put("CAF_ADJUST_QUEUE_WEIGHT_5", "repository\\-initialization\\-workflow$,0.5");
+        envVariables.put("CAF_ADJUST_QUEUE_WEIGHT", "/enrichment\\-workflow$,10");
+        envVariables.put("CAF_ADJUST_QUEUE_WEIGHT_1", ".*/clynch/.*,0");
+        envVariables.put("CAF_ADJUST_QUEUE_WEIGHT_2", "rtorney,5");
+        envVariables.put("CAF_ADJUST_QUEUE_WEIGHT_3", "maheshh,6");
+        envVariables.put("CAF_ADJUST_QUEUE_WEIGHT_6", "repository\\-initialization\\-workflow$,0.5");
 
         try (final MockedStatic<EnvVariableCollector> envVariableCollectorMock = Mockito.mockStatic(EnvVariableCollector.class)) {
 
@@ -80,21 +78,17 @@ public class StagingQueueWeightSettingsTest {
             final Map<String, Double> stagingQueueWeightMap =
                     stagingQueueWeightSettingsProvider.getStagingQueueWeights(stagingQueueNames);
 
-            assertEquals("Weight of queue should be set by environment variable.",
-                    (Double)10D, stagingQueueWeightMap.get("bulk-indexer-in»/clynch/enrichment-workflow"));
-            assertEquals("Weight of queue should be set by environment variable which matches the longest length of string.",
+            assertEquals("Weight of queue should be set by environment variable matching more of string." +
+                            "Which in this case is the tenant regex which matches the whole string.",
+                    (Double)0D, stagingQueueWeightMap.get("bulk-indexer-in»/clynch/enrichment-workflow"));
+            assertEquals("Weight of queue should be set by environment variable matching the longest length of string." +
+                            "Which in this case is the workflow at the end of the string",
                     (Double)10D, stagingQueueWeightMap.get("bulk-indexer-in»/rory3/enrichment-workflow"));
-            assertEquals("Weight of queue should be set by environment variable.",
-                    (Double)0D, stagingQueueWeightMap.get("dataprocessing-classification-in»/clynch/update-entities-workflow"));
-            assertEquals("Weight of queue should be set by environment variable.",
-                    (Double)3D, stagingQueueWeightMap.get("dataprocessing-classification-in»/a77777/update-entities-workflow"));
             assertEquals("No weight set to match this string therefore should default to 1.",
                     (Double)1D, stagingQueueWeightMap.get("dataprocessing-classification-in»/rory3/update-entities-workflow"));
             assertEquals("Two strings matched of same length with different weights should set to larger weight.",
-                    (Double)3D, stagingQueueWeightMap.get("bulk-indexer-in»/clynch/a77777"));
-            assertEquals("Weight of queue should be set by environment variable.",
-                    (Double)7D, stagingQueueWeightMap.get("dataprocessing-langdetect-in»/mahesh/ingestion-workflow"));
-            assertEquals("Weights can be set below 1 to reduce the processing of the queue.",
+                    (Double)6D, stagingQueueWeightMap.get("bulk-indexer-in»/rtorney/maheshh"));
+            assertEquals("Weight should be a decimal value below 1.",
                     (Double)0.5D, stagingQueueWeightMap.get("bulk-indexer-in»/jmcc02/repository-initialization-workflow"));
         }
     }

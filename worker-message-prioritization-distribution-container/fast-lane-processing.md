@@ -27,13 +27,15 @@ by a double that is 0 or larger. Note:
   * The number following the comma (aka the weight) **cannot be negative**
   * **Decimal numbers are allowed** in the form of 0.5 or .5
   * There **cannot be a zero preceding** non-decimal weight values eg: 04, or 020
-* If there are multiple matches on a staging queues, the weight will be set to the longest matching string. 
-  For example if `"dataprocessing-classification-in»/tenant1"` is set to a weight of 20, and `"enrichment-workflow"` 
-  is set to a weight of 3. Then the staging queue `"dataprocessing-classification-in»/tenant1/enrichment-workflow"` 
-  will be given a weight of 20. This ensures all of tenant1's messages on dataprocessing-classification-in will be 
-  weighted at the higher value of 20. This has been implemented to allow altering of tenants' weight to take
-  precedence over altering of workflow weight. This allows certain tenants to be given more or less target queue capacity for quicker 
-  or slower processing when required. Hence, why these strings should be more specific. 
+* If there are multiple matches on a staging queues, the weight will be set to the **longest** matching string. This allows 
+  certain tenant weights to be given precedence over any other set weights. This allows faster or slower processing 
+  to be given to certain tenants when required. 
+  For example: tenant1 weight is set with the regex: `".*/tenant1/.*"` to a weight of 20. This regex indicates we 
+  want to match everything that comes before and after "/tenant1/" using expression `.*`. This will match the entire length 
+  of **any** tenant1 staging queue. 
+  If at the same time `"enrichment-workflow"` is set to a weight of 3, then the staging queue 
+  `"dataprocessing-classification-in»/tenant1/enrichment-workflow"` will be set to a weight of 20 because tenant1 regex 
+  matches the whole string, whereas the workflow only matches for the end of the string.
 * The more of the staging queue string matched by the regex pattern, the more specific the weight adjustment will be. 
 * In the case of 2 matches on a staging queue with equal length string matches, the weight will be set to the 
   higher weight value.
@@ -45,20 +47,19 @@ by a double that is 0 or larger. Note:
   point the messages will begin to move again and get processed as normal. 
 
 ### CAF_ADJUST_QUEUE_WEIGHT Examples
-* Regex to match enrichment-workflow at the end of a staging queue string, followed by weight of 10 with no spaces. 
+* Regex to match enrichment-workflow at the end of a staging queue string, followed by weight of 10 with no spaces. If there are no 
+  longer matches on an enrichment-workflow staging queue, weight will be set to 10.
   * `<CAF_ADJUST_QUEUE_WEIGHT>enrichment\-workflow$,10</CAF_ADJUST_QUEUE_WEIGHT>`
-* Regex to match tenant1 staging queues for dataprocessing-classification-in, followed by weight of 0 with no spaces.
-  * `<CAF_ADJUST_QUEUE_WEIGHT_1>dataprocessing-classification-in»/tenant1,0</CAF_ADJUST_QUEUE_WEIGHT_1>`
-* Regex to match tenant2 staging queues for bulk-indexer-in, followed by weight of 3 with no spaces.
-  * `<CAF_ADJUST_QUEUE_WEIGHT_2>bulk-indexer-in»/tenant2,3</CAF_ADJUST_QUEUE_WEIGHT_2>`
-* Regex to match tenant3 staging queues for dataprocessing-langdetect-in, followed by weight of 7 with no spaces.
-  * `<CAF_ADJUST_QUEUE_WEIGHT_3>dataprocessing-langdetect-in»/tenant2,7</CAF_ADJUST_QUEUE_WEIGHT_3>`
-* Regex to match repository-initialization-workflow$ at the end of a staging queue string, followed by weight of 0.5 with no spaces.
+* Regex to match whole string for tenant1 staging queues, followed by weight of 0 with no spaces. Matching the whole string will 
+  allow the tenant weight to take precedence over other weight adjustments. 
+  * `<CAF_ADJUST_QUEUE_WEIGHT_1>.*/tenant1/.*,0</CAF_ADJUST_QUEUE_WEIGHT_1>`
+* Regex to match repository-initialization-workflow$ at the end of a staging queue string, followed by a decimal weight of 0.5 with no 
+  spaces.
   * `<CAF_ADJUST_QUEUE_WEIGHT_4>repository-initialization-workflow$,0.5</CAF_ADJUST_QUEUE_WEIGHT_4>`
-* Regex to match tenant3 staging queues for bulk-indexer-in, followed by weight of .5 with no spaces.
+* Regex to match tenant3 staging queues for bulk-indexer-in, followed by a decimal weight of .5 with no spaces.
   * `<CAF_ADJUST_QUEUE_WEIGHT_5>bulk-indexer-in»/tenant3,.5</CAF_ADJUST_QUEUE_WEIGHT_5>`
 
-### Examples of tags that will throw an error
+### Invalid CAF_ADJUST_QUEUE_WEIGHT Examples
 * Regex to match enrichment-workflow at the end of a staging queue string, followed by a **space** before weight 10. The space will 
   throw an error.
   * `<CAF_ADJUST_QUEUE_WEIGHT>enrichment\-workflow$, 10</CAF_ADJUST_QUEUE_WEIGHT>`
