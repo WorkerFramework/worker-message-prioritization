@@ -121,9 +121,14 @@ public class StagingQueueWeightSettingsTest {
             final List<String> stagingQueueNames =
                     distributorWorkItem.getStagingQueues().stream().map(Queue::getName).collect(toList());
 
-            assertThrows(IllegalArgumentException.class, () -> {
-                stagingQueueWeightSettingsProvider.getStagingQueueWeights(stagingQueueNames);
-            });
+            final IllegalArgumentException illegalArgumentException =  assertThrows(IllegalArgumentException.class, 
+                    () -> stagingQueueWeightSettingsProvider.getStagingQueueWeights(stagingQueueNames));
+            
+            assertEquals(
+                    "Illegal format for CAF_ADJUST_QUEUE_WEIGHT string: 'enrichment\\-workflow$, 10'. " +
+                            "Please ensure there are no spaces in the string, negative numbers or unnecessary zeros " +
+                            "preceding the weight value.", 
+                    illegalArgumentException.getMessage());
         }
     }
 
@@ -134,7 +139,7 @@ public class StagingQueueWeightSettingsTest {
 
         final Queue q1 = getQueue("bulk-indexer-in»/clynch/enrichment-workflow", 1000);
 
-        final Set<Queue> stagingQueues = new HashSet<>(Arrays.asList(q1));
+        final Set<Queue> stagingQueues = new HashSet<>(Collections.singletonList(q1));
         final DistributorWorkItem distributorWorkItem = mock(DistributorWorkItem.class);
         when(distributorWorkItem.getStagingQueues()).thenReturn(stagingQueues);
         when(distributorWorkItem.getTargetQueue()).thenReturn(targetQueue);
@@ -155,9 +160,14 @@ public class StagingQueueWeightSettingsTest {
             final List<String> stagingQueueNames =
                     distributorWorkItem.getStagingQueues().stream().map(Queue::getName).collect(toList());
 
-            assertThrows(IllegalArgumentException.class, () -> {
-                stagingQueueWeightSettingsProvider.getStagingQueueWeights(stagingQueueNames);
-            });
+            final IllegalArgumentException illegalArgumentException = assertThrows(IllegalArgumentException.class, 
+                    () -> stagingQueueWeightSettingsProvider.getStagingQueueWeights(stagingQueueNames));
+            
+            assertEquals(
+                    "Illegal format for CAF_ADJUST_QUEUE_WEIGHT_1 string: 'enrichment\\-workflow$,010'. " +
+                            "Please ensure there are no spaces in the string, negative numbers or unnecessary zeros" +
+                            " preceding the weight value.", 
+                    illegalArgumentException.getMessage());
         }
     }
 
@@ -168,7 +178,7 @@ public class StagingQueueWeightSettingsTest {
 
         final Queue q1 = getQueue("bulk-indexer-in»/clynch/enrichment-workflow", 1000);
 
-        final Set<Queue> stagingQueues = new HashSet<>(Arrays.asList(q1));
+        final Set<Queue> stagingQueues = new HashSet<>(Collections.singletonList(q1));
         final DistributorWorkItem distributorWorkItem = mock(DistributorWorkItem.class);
         when(distributorWorkItem.getStagingQueues()).thenReturn(stagingQueues);
         when(distributorWorkItem.getTargetQueue()).thenReturn(targetQueue);
@@ -189,9 +199,13 @@ public class StagingQueueWeightSettingsTest {
             final List<String> stagingQueueNames =
                     distributorWorkItem.getStagingQueues().stream().map(Queue::getName).collect(toList());
 
-            assertThrows(IllegalArgumentException.class, () -> {
-                stagingQueueWeightSettingsProvider.getStagingQueueWeights(stagingQueueNames);
-            });
+            final IllegalArgumentException illegalArgumentException = assertThrows(IllegalArgumentException.class, 
+                    () -> stagingQueueWeightSettingsProvider.getStagingQueueWeights(stagingQueueNames));
+            
+            assertEquals("Illegal format for CAF_ADJUST_QUEUE_WEIGHT string: 'enrichment\\-workflow$,-10'. " +
+                            "Please ensure there are no spaces in the string, negative numbers or unnecessary zeros " +
+                            "preceding the weight value.", 
+                    illegalArgumentException.getMessage());
         }
     }
 
