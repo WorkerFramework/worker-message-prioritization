@@ -73,8 +73,13 @@
           <artifactId>slf4j-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-engine</artifactId>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest-core</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -107,6 +112,12 @@
             <artifactId>mockito-core</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- mockito-inline is used to mock static methods -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-inline</artifactId>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
@@ -116,6 +127,34 @@
     
     <build>
         <plugins>
+<!--      The below plugin can be used for testing instead of mocked environment variables in StagingQueueWeightCalculatorTest.java-->
+<!--            <plugin>-->
+<!--                <artifactId>maven-surefire-plugin</artifactId>-->
+<!--                <version>2.22.1</version>-->
+<!--                <executions>-->
+<!--                    <execution>-->
+<!--                        <id>fastLaneTesting</id>-->
+<!--                        <phase>test</phase>-->
+<!--                        <goals>-->
+<!--                            <goal>test</goal>-->
+<!--                        </goals>-->
+<!--                        <configuration>-->
+<!--                            <includes>-->
+<!--                                <include>**/*StagingQueueWeightCalculatorTest*.java</include>-->
+<!--                            </includes>-->
+<!--                        </configuration>-->
+<!--                    </execution>-->
+<!--                </executions>-->
+<!--                <configuration>-->
+<!--                    <environmentVariables>-->
+<!--                        <CAF_ADJUST_QUEUE_WEIGHT>enrichment\-workflow$,10</CAF_ADJUST_QUEUE_WEIGHT>-->
+<!--                        <CAF_ADJUST_QUEUE_WEIGHT_1>clynch,0</CAF_ADJUST_QUEUE_WEIGHT_1>-->
+<!--                        <CAF_ADJUST_QUEUE_WEIGHT_2>a77777,3</CAF_ADJUST_QUEUE_WEIGHT_2>-->
+<!--                        <CAF_ADJUST_QUEUE_WEIGHT_3>dataprocessing-langdetect-in,7</CAF_ADJUST_QUEUE_WEIGHT_3>-->
+<!--                        <CAF_ADJUST_QUEUE_WEIGHT_4>repository-initialization-workflow$,0.5</CAF_ADJUST_QUEUE_WEIGHT_4>-->
+<!--                    </environmentVariables>-->
+<!--                </configuration>-->
+<!--            </plugin>-->
             <plugin>
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <version>2.19.1</version>

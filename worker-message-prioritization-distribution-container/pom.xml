@@ -224,6 +224,8 @@
                                     <CAF_MOCK_SERVER_PORT>63669</CAF_MOCK_SERVER_PORT>
                                     <KUBECONFIG>${project.basedir}/src/test/resources/k8s/kube-config-test.yaml</KUBECONFIG>
                                     <TUNED_TARGET_LOG_LEVEL>INFO</TUNED_TARGET_LOG_LEVEL>
+                                    <CAF_CONSUMPTION_TARGET_CALCULATOR_MODE>EqualConsumption</CAF_CONSUMPTION_TARGET_CALCULATOR_MODE>
+                                    <FAST_LANE_LOG_LEVEL>WARN</FAST_LANE_LOG_LEVEL>
                                 </env>
                                 <dependsOn>
                                     <container>rabbitmq</container>

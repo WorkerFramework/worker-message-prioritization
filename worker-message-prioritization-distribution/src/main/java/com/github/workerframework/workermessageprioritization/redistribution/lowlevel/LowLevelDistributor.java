@@ -54,9 +54,7 @@ public class LowLevelDistributor extends MessageDistributor {
                                final ConsumptionTargetCalculator consumptionTargetCalculator,
                                final StagingTargetPairProvider stagingTargetPairProvider,
                                @Named("DistributorRunIntervalMilliseconds") final long distributorRunIntervalMilliseconds,
-                               @Named("ConsumerPublisherPairLastDoneWorkTimeoutMilliseconds") final long consumerPublisherPairLastDoneWorkTimeoutMilliseconds,
-                               @Named("MaxTargetQueueLength") final long minTargetQueueLength,
-                               @Named("MinTargetQueueLength") final long maxTargetQueueLength) {
+                               @Named("ConsumerPublisherPairLastDoneWorkTimeoutMilliseconds") final long consumerPublisherPairLastDoneWorkTimeoutMilliseconds) {
         super(queuesApi);
         this.connectionFactory = connectionFactory;
         this.connectionDetails = String.format(

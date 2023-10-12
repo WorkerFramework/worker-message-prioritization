@@ -20,6 +20,7 @@ import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitMan
 import com.github.workerframework.workermessageprioritization.redistribution.config.MessageDistributorConfig;
 import com.github.workerframework.workermessageprioritization.redistribution.consumption.ConsumptionTargetCalculator;
 import com.github.workerframework.workermessageprioritization.redistribution.consumption.EqualConsumptionTargetCalculator;
+import com.github.workerframework.workermessageprioritization.redistribution.consumption.FastLaneConsumptionTargetCalculator;
 import com.github.workerframework.workermessageprioritization.redistribution.lowlevel.StagingTargetPairProvider;
 import com.github.workerframework.workermessageprioritization.targetqueue.K8sTargetQueueSettingsProvider;
 import com.github.workerframework.workermessageprioritization.targetqueue.TunedTargetQueueLengthProvider;
@@ -33,7 +34,10 @@ import com.github.workerframework.workermessageprioritization.targetqueue.TunedC
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
+import com.google.inject.Injector;
+import com.google.inject.Key;
 import com.google.inject.name.Named;
+import com.google.inject.name.Names;
 import com.rabbitmq.client.ConnectionFactory;
 
 import java.util.List;
@@ -90,7 +94,8 @@ public class DistributorModule extends AbstractModule {
 
     @Provides
     RabbitManagementApi<QueuesApi> provideQueuesApi(@Named("RabbitMQMgmtUrl") final String endpoint,
-                                                    @Named("RabbitMQUsername") final String user, @Named("RabbitMQPassword") final String password) {
+                                                    @Named("RabbitMQUsername") final String user,
+                                                    @Named("RabbitMQPassword") final String password) {
 
         return new RabbitManagementApi<>(QueuesApi.class, endpoint, user, password);
     }
@@ -152,6 +157,14 @@ public class DistributorModule extends AbstractModule {
         return connectionFactory;
     }
 
+    @Provides
+    ConsumptionTargetCalculator provideConsumptionTargetCalculator(final MessageDistributorConfig messageDistributorConfig,
+                                                                   final Injector injector){
+
+        return injector.getInstance(Key.get(ConsumptionTargetCalculator.class,
+                Names.named(messageDistributorConfig.getConsumptionTargetCalculatorMode())));
+    }
+
     @Override
     protected void configure() {
         bind(MessageDistributorConfig.class).in(Scopes.SINGLETON);
@@ -161,8 +174,12 @@ public class DistributorModule extends AbstractModule {
         bind(QueueInformationProvider.class);
         bind(StagingTargetPairProvider.class);
         bind(TunedTargetQueueLengthProvider.class);
-        bind(ConsumptionTargetCalculator.class).to(EqualConsumptionTargetCalculator.class);
-
+        bind(ConsumptionTargetCalculator.class)
+                .annotatedWith(Names.named("EqualConsumption"))
+                .to(EqualConsumptionTargetCalculator.class);
+        bind(ConsumptionTargetCalculator.class)
+                .annotatedWith(Names.named("FastLane"))
+                .to(FastLaneConsumptionTargetCalculator.class);
     }
 
 }

@@ -93,3 +93,18 @@ This repository consists of the source to build a container that includes the
   **Default**: `300`  
   **Description**: Used to set the amount of time in which we want a target queue length to be processed. This time will be used to 
   compute how long the tuned target queue length should be to process the queue in this set amount of time. 
+
+* `CAF_CONSUMPTION_TARGET_CALCULATOR_MODE`  
+  **Default**: `EqualConsumption`  
+  **Description**: Used to determine if messages will be moved in an equal manner from staging queue to target queue, 
+  or if certain staging queues will be allowed faster consumption. The default is EqualConsumption meaning that messages will be 
+  moved equally and fairly on to the target queue. Currently, the other option is FastLane. When this is set, the ability exists
+  to alter the weight of staging queues to allow them more available capacity than others. This is described in more detail
+  [here](https://github.com/WorkerFramework/worker-message-prioritization/blob/US693084/worker-message-prioritization-distribution-container/fast-lane-processing.md#method-of-weighting).
+
+* `CAF_ADJUST_QUEUE_WEIGHT`  
+  **Default**: None.   
+  **Description**: Used when CAF_CONSUMPTION_TARGET_CALCULATOR_MODE is set to FastLane. This controls the 
+  staging queues that are to be weighted to increase or decrease processing. This should be set using a string of regex followed by a 
+  number. See more information on the required formatting 
+  [here](https://github.com/WorkerFramework/worker-message-prioritization/blob/US693084/worker-message-prioritization-distribution-container/fast-lane-processing.md#format-to-follow-when-setting-staging-queue-weights).
