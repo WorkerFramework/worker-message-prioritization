@@ -80,8 +80,8 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
-                <version>2.19.1</version>
                 <executions>
                     <execution>
                         <goals>
@@ -100,8 +100,6 @@
                         <rabbitmq.password>guest</rabbitmq.password>
                         <timeout.ms>120000</timeout.ms>
                     </systemPropertyVariables>
-                    <environmentVariables>
-                    </environmentVariables>
                 </configuration>
             </plugin>
             <plugin>
