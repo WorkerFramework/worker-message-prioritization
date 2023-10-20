@@ -29,7 +29,7 @@
   <parent>
     <groupId>com.github.cafapi</groupId>
     <artifactId>caf-common-parent</artifactId>
-    <version>2.3.0-212</version>
+    <version>5.0.0-SNAPSHOT</version>
   </parent>
   
   <groupId>com.github.workerframework</groupId>
@@ -44,8 +44,6 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <copyrightYear>2023</copyrightYear>
-    <copyrightNotice>Copyright ${project.inceptionYear}-${copyrightYear} Open Text.</copyrightNotice>
-    <enforceCorrectDependencies>true</enforceCorrectDependencies>
       <maven.compiler.source>8</maven.compiler.source>
       <maven.compiler.target>8</maven.compiler.target>
   </properties>
