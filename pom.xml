@@ -42,15 +42,9 @@
   <inceptionYear>2022</inceptionYear>
   
   <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <copyrightYear>2023</copyrightYear>
-      <maven.compiler.source>8</maven.compiler.source>
-      <maven.compiler.target>8</maven.compiler.target>
   </properties>
 
-  <dependencies>
-  </dependencies>
-  
   <dependencyManagement>
     <dependencies>
       <dependency>
