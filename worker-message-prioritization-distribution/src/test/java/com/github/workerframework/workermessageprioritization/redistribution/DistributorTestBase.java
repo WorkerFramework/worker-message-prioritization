@@ -18,7 +18,7 @@ package com.github.workerframework.workermessageprioritization.redistribution;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.NodesApi;
 import com.google.common.base.Strings;
