@@ -16,6 +16,7 @@
 package com.github.workerframework.workermessageprioritization.rerouting;
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
+import com.google.common.base.Strings;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import org.junit.Assert;
@@ -23,12 +24,18 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
 import retrofit.RetrofitError;
 
 public final class StagingQueueCreatorIT extends RerouterTestBase {
+
+    private static final String RABBIT_PROP_QUEUE_TYPE = "x-queue-type";
+    private static final String RABBIT_PROP_QUEUE_TYPE_QUORUM = "quorum";
+    private static final String RABBIT_PROP_QUEUE_TYPE_NAME = !Strings.isNullOrEmpty(System.getenv("RABBIT_PROP_QUEUE_TYPE_NAME"))?
+            System.getenv("RABBIT_PROP_QUEUE_TYPE_NAME") : RABBIT_PROP_QUEUE_TYPE_QUORUM;
 
     @Test
     public void createStagingQueueTest() throws TimeoutException, IOException {
@@ -44,7 +51,8 @@ public final class StagingQueueCreatorIT extends RerouterTestBase {
                 final boolean targetQueueDurable = true;
                 final boolean targetQueueExclusive = false;
                 final boolean targetQueueAutoDelete = false;
-                final Map<String, Object> targetQueueArguments = Collections.singletonMap("x-max-priority", 5L);
+                final Map<String, Object> targetQueueArguments = new HashMap<>();
+                targetQueueArguments.put(RABBIT_PROP_QUEUE_TYPE, RABBIT_PROP_QUEUE_TYPE_NAME);
                 channel.queueDeclare(
                     targetQueueName, targetQueueDurable, targetQueueExclusive, targetQueueAutoDelete, targetQueueArguments);
 
@@ -87,7 +95,8 @@ public final class StagingQueueCreatorIT extends RerouterTestBase {
                 final boolean targetQueueDurable = true;
                 final boolean targetQueueExclusive = false;
                 final boolean targetQueueAutoDelete = false;
-                final Map<String, Object> targetQueueArguments = Collections.singletonMap("x-max-priority", 5L);
+                final Map<String, Object> targetQueueArguments = new HashMap<>();
+                targetQueueArguments.put(RABBIT_PROP_QUEUE_TYPE, RABBIT_PROP_QUEUE_TYPE_NAME);
                 channel.queueDeclare(
                         targetQueueName, targetQueueDurable, targetQueueExclusive, targetQueueAutoDelete, targetQueueArguments);
 

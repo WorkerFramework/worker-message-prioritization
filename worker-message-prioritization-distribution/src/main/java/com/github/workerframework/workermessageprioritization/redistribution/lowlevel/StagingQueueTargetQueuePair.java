@@ -153,7 +153,6 @@ public class StagingQueueTargetQueuePair {
         AMQP.BasicProperties basicProperties = new AMQP.BasicProperties.Builder()
                 .contentType(properties.getContentType())
                 .deliveryMode(properties.getDeliveryMode())
-                .priority(properties.getPriority())
                 .build();
 
         // If targetQueueChannel.basicPublish encounters an error, the targetQueueChannel will be closed. Then, the next time the

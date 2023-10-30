@@ -24,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
+import com.google.common.base.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,6 +41,10 @@ import com.rabbitmq.client.ShutdownSignalException;
 public class StagingQueueCreator {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(StagingQueueCreator.class);
+    private static final String RABBIT_PROP_QUEUE_TYPE = "x-queue-type";
+    private static final String RABBIT_PROP_QUEUE_TYPE_QUORUM = "quorum";
+    private static final String RABBIT_PROP_QUEUE_TYPE_NAME = !Strings.isNullOrEmpty(System.getenv("RABBIT_PROP_QUEUE_TYPE_NAME"))?
+            System.getenv("RABBIT_PROP_QUEUE_TYPE_NAME") : RABBIT_PROP_QUEUE_TYPE_QUORUM;
 
     private final ConnectionFactory connectionFactory;
     private final RabbitManagementApi<QueuesApi> queuesApi;
@@ -106,6 +111,7 @@ public class StagingQueueCreator {
         final boolean exclusive = targetQueue.isExclusive();
         final boolean autoDelete = targetQueue.isAuto_delete();
         final Map<String, Object> arguments = targetQueue.getArguments();
+        arguments.put(RABBIT_PROP_QUEUE_TYPE, RABBIT_PROP_QUEUE_TYPE_NAME);
 
         LOGGER.info("A staging queue named {} does NOT exist in the staging queue cache, " +
                         "so creating or checking staging queue by calling channel.queueDeclare({}, {}, {}, {}, {})",

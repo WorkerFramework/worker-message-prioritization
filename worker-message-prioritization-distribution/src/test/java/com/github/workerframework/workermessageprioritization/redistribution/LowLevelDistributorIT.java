@@ -26,6 +26,7 @@ import com.github.workerframework.workermessageprioritization.redistribution.low
 import com.github.workerframework.workermessageprioritization.redistribution.lowlevel.StagingTargetPairProvider;
 import com.github.workerframework.workermessageprioritization.targetqueue.CapacityCalculatorBase;
 import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueSettings;
+import com.google.common.base.Strings;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.rabbitmq.client.AMQP;
@@ -41,10 +42,16 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
 public class LowLevelDistributorIT extends DistributorTestBase {
+
+    private static final String RABBIT_PROP_QUEUE_TYPE = "x-queue-type";
+    private static final String RABBIT_PROP_QUEUE_TYPE_QUORUM = "quorum";
+    private static final String RABBIT_PROP_QUEUE_TYPE_NAME = !Strings.isNullOrEmpty(System.getenv("RABBIT_PROP_QUEUE_TYPE_NAME"))?
+            System.getenv("RABBIT_PROP_QUEUE_TYPE_NAME") : RABBIT_PROP_QUEUE_TYPE_QUORUM;
 
     @Test
     public void twoStagingQueuesTest() throws TimeoutException, IOException {
@@ -56,14 +63,16 @@ public class LowLevelDistributorIT extends DistributorTestBase {
         try(final Connection connection = connectionFactory.newConnection()) {
             final Channel channel = connection.createChannel();
 
-            channel.queueDeclare(stagingQueue1Name, true, false, false, Collections.emptyMap());
-            channel.queueDeclare(stagingQueue2Name, true, false, false, Collections.emptyMap());
-            channel.queueDeclare(targetQueueName, true, false, false, Collections.emptyMap());
+            final Map<String, Object> args = new HashMap<>();
+            args.put(RABBIT_PROP_QUEUE_TYPE, RABBIT_PROP_QUEUE_TYPE_NAME);
+
+            channel.queueDeclare(stagingQueue1Name, true, false, false, args);
+            channel.queueDeclare(stagingQueue2Name, true, false, false, args);
+            channel.queueDeclare(targetQueueName, true, false, false, args);
 
             final AMQP.BasicProperties properties = new AMQP.BasicProperties.Builder()
                     .contentType("application/json")
                     .deliveryMode(2)
-                    .priority(1)
                     .build();
 
             final String body = gson.toJson(new Object());
@@ -205,13 +214,15 @@ public class LowLevelDistributorIT extends DistributorTestBase {
         try(final Connection connection = connectionFactory.newConnection()) {
             final Channel channel = connection.createChannel();
 
-            channel.queueDeclare(stagingQueueName, true, false, false, Collections.emptyMap());
-            channel.queueDeclare(targetQueueName, true, false, false, Collections.emptyMap());
+            final Map<String, Object> args = new HashMap<>();
+            args.put(RABBIT_PROP_QUEUE_TYPE, RABBIT_PROP_QUEUE_TYPE_NAME);
+
+            channel.queueDeclare(stagingQueueName, true, false, false, args);
+            channel.queueDeclare(targetQueueName, true, false, false, args);
 
             final AMQP.BasicProperties properties = new AMQP.BasicProperties.Builder()
                     .contentType("application/json")
                     .deliveryMode(2)
-                    .priority(1)
                     .build();
 
             final String body = gson.toJson(new Object());
