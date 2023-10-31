@@ -33,9 +33,9 @@ import retrofit.RetrofitError;
 public final class StagingQueueCreatorIT extends RerouterTestBase {
 
     private static final String RABBIT_PROP_QUEUE_TYPE = "x-queue-type";
-    private static final String RABBIT_PROP_QUEUE_TYPE_QUORUM = "quorum";
+    private static final String RABBIT_PROP_QUEUE_TYPE_CLASSIC = "classic";
     private static final String RABBIT_PROP_QUEUE_TYPE_NAME = !Strings.isNullOrEmpty(System.getenv("RABBIT_PROP_QUEUE_TYPE_NAME"))?
-            System.getenv("RABBIT_PROP_QUEUE_TYPE_NAME") : RABBIT_PROP_QUEUE_TYPE_QUORUM;
+            System.getenv("RABBIT_PROP_QUEUE_TYPE_NAME") : RABBIT_PROP_QUEUE_TYPE_CLASSIC;
 
     @Test
     public void createStagingQueueTest() throws TimeoutException, IOException {

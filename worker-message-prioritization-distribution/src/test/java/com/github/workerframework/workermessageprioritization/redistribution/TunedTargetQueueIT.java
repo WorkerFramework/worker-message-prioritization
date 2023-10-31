@@ -66,9 +66,9 @@ import java.util.stream.IntStream;
 @ExtendWith(MockWebServerExtension.class)
 public class TunedTargetQueueIT extends DistributorTestBase {
     private static final String RABBIT_PROP_QUEUE_TYPE = "x-queue-type";
-    private static final String RABBIT_PROP_QUEUE_TYPE_QUORUM = "quorum";
+    private static final String RABBIT_PROP_QUEUE_TYPE_CLASSIC = "classic";
     private static final String RABBIT_PROP_QUEUE_TYPE_NAME = !Strings.isNullOrEmpty(System.getenv("RABBIT_PROP_QUEUE_TYPE_NAME"))?
-            System.getenv("RABBIT_PROP_QUEUE_TYPE_NAME") : RABBIT_PROP_QUEUE_TYPE_QUORUM;
+            System.getenv("RABBIT_PROP_QUEUE_TYPE_NAME") : RABBIT_PROP_QUEUE_TYPE_CLASSIC;
     public static final String MOCK_SERVER_PORT = "CAF_MOCK_SERVER_PORT";
     public static final String QUEUE_NAME = "elastic-query-worker";
     final String stagingQueue1Name = getStagingQueueName(QUEUE_NAME, T1_STAGING_QUEUE_NAME);

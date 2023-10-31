@@ -42,9 +42,9 @@ public class StagingQueueCreator {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(StagingQueueCreator.class);
     private static final String RABBIT_PROP_QUEUE_TYPE = "x-queue-type";
-    private static final String RABBIT_PROP_QUEUE_TYPE_QUORUM = "quorum";
+    private static final String RABBIT_PROP_QUEUE_TYPE_CLASSIC = "classic";
     private static final String RABBIT_PROP_QUEUE_TYPE_NAME = !Strings.isNullOrEmpty(System.getenv("RABBIT_PROP_QUEUE_TYPE_NAME"))?
-            System.getenv("RABBIT_PROP_QUEUE_TYPE_NAME") : RABBIT_PROP_QUEUE_TYPE_QUORUM;
+            System.getenv("RABBIT_PROP_QUEUE_TYPE_NAME") : RABBIT_PROP_QUEUE_TYPE_CLASSIC;
 
     private final ConnectionFactory connectionFactory;
     private final RabbitManagementApi<QueuesApi> queuesApi;
