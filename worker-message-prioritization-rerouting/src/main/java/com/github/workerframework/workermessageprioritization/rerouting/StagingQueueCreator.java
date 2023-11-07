@@ -18,8 +18,10 @@ package com.github.workerframework.workermessageprioritization.rerouting;
 import static com.github.workerframework.workermessageprioritization.rerouting.MessageRouter.LOAD_BALANCED_INDICATOR;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
@@ -110,8 +112,13 @@ public class StagingQueueCreator {
         final boolean durable = targetQueue.isDurable();
         final boolean exclusive = targetQueue.isExclusive();
         final boolean autoDelete = targetQueue.isAuto_delete();
-        final Map<String, Object> arguments = targetQueue.getArguments();
-        arguments.put(RABBIT_PROP_QUEUE_TYPE, RABBIT_PROP_QUEUE_TYPE_NAME);
+        Map<String, Object> arguments = new HashMap<>();
+        LOGGER.warn("Current Queue Type {}", RABBIT_PROP_QUEUE_TYPE_NAME);
+        if (Objects.equals(RABBIT_PROP_QUEUE_TYPE_NAME, "quorum")) {
+            arguments.put(RABBIT_PROP_QUEUE_TYPE, RABBIT_PROP_QUEUE_TYPE_NAME);
+        } else {
+            arguments = targetQueue.getArguments();
+        }
 
         LOGGER.info("A staging queue named {} does NOT exist in the staging queue cache, " +
                         "so creating or checking staging queue by calling channel.queueDeclare({}, {}, {}, {}, {})",
