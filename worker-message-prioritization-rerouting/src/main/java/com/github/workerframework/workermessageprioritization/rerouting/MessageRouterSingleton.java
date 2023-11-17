@@ -57,8 +57,14 @@ public class MessageRouterSingleton {
             final ConnectionFactory connectionFactory = new ConnectionFactory();
             connectionFactory.setUsername(System.getenv("CAF_RABBITMQ_USERNAME"));
             connectionFactory.setPassword(System.getenv("CAF_RABBITMQ_PASSWORD"));
-            connectionFactory.setHost(System.getenv("CAF_RABBITMQ_HOST"));
-            connectionFactory.setPort(Integer.parseInt(System.getenv("CAF_RABBITMQ_PORT")));
+
+            if(System.getenv("CAF_RABBITMQ_URL") != null) {
+                connectionFactory.setUri(System.getenv("CAF_RABBITMQ_URL"));
+                LOGGER.warn("RabbitMQ Host and Port are being ignored as RabbitMQ URL is present");
+            } else {
+                connectionFactory.setHost(System.getenv("CAF_RABBITMQ_HOST"));
+                connectionFactory.setPort(Integer.parseInt(System.getenv("CAF_RABBITMQ_PORT")));
+            }
             connectionFactory.setVirtualHost("/");
 
             connection = connectionFactory.newConnection();

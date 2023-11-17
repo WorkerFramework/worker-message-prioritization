@@ -40,6 +40,9 @@ import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import com.rabbitmq.client.ConnectionFactory;
 
+import java.net.URISyntaxException;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 public class DistributorModule extends AbstractModule {
@@ -149,10 +152,20 @@ public class DistributorModule extends AbstractModule {
     @Provides
     ConnectionFactory provideConnectionFactory(final MessageDistributorConfig messageDistributorConfig) {
         ConnectionFactory connectionFactory = new ConnectionFactory();
-        connectionFactory.setHost(messageDistributorConfig.getRabbitMQHost());
+
+        if(messageDistributorConfig.getRabbitMQUrl() != null) {
+            try {
+                connectionFactory.setUri(messageDistributorConfig.getRabbitMQUrl());
+            } catch (URISyntaxException | NoSuchAlgorithmException | KeyManagementException e) {
+                throw new RuntimeException("Failed to set Rabbit Connection Factory URL: " + e);
+            }
+        } else {
+            connectionFactory.setHost(messageDistributorConfig.getRabbitMQHost());
+            connectionFactory.setPort(messageDistributorConfig.getRabbitMQPort());
+        }
+
         connectionFactory.setUsername(messageDistributorConfig.getRabbitMQUsername());
         connectionFactory.setPassword(messageDistributorConfig.getRabbitMQPassword());
-        connectionFactory.setPort(messageDistributorConfig.getRabbitMQPort());
         connectionFactory.setVirtualHost(messageDistributorConfig.getRabbitMQVHost());
         return connectionFactory;
     }

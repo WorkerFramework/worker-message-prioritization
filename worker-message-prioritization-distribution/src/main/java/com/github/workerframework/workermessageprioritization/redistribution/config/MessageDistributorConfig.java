@@ -30,7 +30,6 @@ public final class MessageDistributorConfig {
     private static final String CAF_RABBITMQ_VHOST_DEFAULT = "/";
 
     private static final String CAF_RABBITMQ_URL = "CAF_RABBITMQ_URL";
-
     private static final String CAF_RABBITMQ_URL_DEFAULT = null;
 
     private static final String CAF_RABBITMQ_HOST = "CAF_RABBITMQ_HOST";
@@ -143,6 +142,10 @@ public final class MessageDistributorConfig {
 
     public String getRabbitMQVHost() {
         return rabbitMQVHost;
+    }
+
+    public String getRabbitMQUrl() {
+        return rabbitMQUrl;
     }
 
     public String getRabbitMQHost() {
