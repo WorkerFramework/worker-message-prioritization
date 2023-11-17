@@ -45,6 +45,7 @@ public class StagingQueueCreator {
     private static final Logger LOGGER = LoggerFactory.getLogger(StagingQueueCreator.class);
     private static final String RABBIT_PROP_QUEUE_TYPE = "x-queue-type";
     private static final String RABBIT_PROP_QUEUE_TYPE_CLASSIC = "classic";
+    private static final String RABBIT_PROP_QUEUE_TYPE_QUORUM = "quorum";
     private static final String RABBIT_PROP_QUEUE_TYPE_NAME = !Strings.isNullOrEmpty(System.getenv("RABBIT_PROP_QUEUE_TYPE_NAME"))?
             System.getenv("RABBIT_PROP_QUEUE_TYPE_NAME") : RABBIT_PROP_QUEUE_TYPE_CLASSIC;
 
@@ -114,7 +115,7 @@ public class StagingQueueCreator {
         final boolean autoDelete = targetQueue.isAuto_delete();
         Map<String, Object> arguments = new HashMap<>();
         LOGGER.warn("Current Queue Type {}", RABBIT_PROP_QUEUE_TYPE_NAME);
-        if (Objects.equals(RABBIT_PROP_QUEUE_TYPE_NAME, "quorum")) {
+        if (Objects.equals(RABBIT_PROP_QUEUE_TYPE_NAME, RABBIT_PROP_QUEUE_TYPE_QUORUM)) {
             arguments.put(RABBIT_PROP_QUEUE_TYPE, RABBIT_PROP_QUEUE_TYPE_NAME);
         } else {
             arguments = targetQueue.getArguments();
