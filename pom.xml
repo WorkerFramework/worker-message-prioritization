@@ -61,11 +61,6 @@
         <version>2.6</version>
       </dependency>
       <dependency>
-        <groupId>com.github.cafdataprocessing</groupId>
-        <artifactId>worker-document-interface</artifactId>
-        <version>5.3.0-US749035-SNAPSHOT</version>
-      </dependency>
-      <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
         <version>32.1.2-jre</version>
