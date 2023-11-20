@@ -26,7 +26,6 @@ import com.github.workerframework.workermessageprioritization.redistribution.low
 import com.github.workerframework.workermessageprioritization.redistribution.lowlevel.StagingTargetPairProvider;
 import com.github.workerframework.workermessageprioritization.targetqueue.CapacityCalculatorBase;
 import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueSettings;
-import com.google.common.base.Strings;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.rabbitmq.client.AMQP;
@@ -47,11 +46,6 @@ import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
 public class LowLevelDistributorIT extends DistributorTestBase {
-
-    private static final String RABBIT_PROP_QUEUE_TYPE = "x-queue-type";
-    private static final String RABBIT_PROP_QUEUE_TYPE_CLASSIC = "classic";
-    private static final String RABBIT_PROP_QUEUE_TYPE_NAME = !Strings.isNullOrEmpty(System.getenv("RABBIT_PROP_QUEUE_TYPE_NAME"))?
-            System.getenv("RABBIT_PROP_QUEUE_TYPE_NAME") : RABBIT_PROP_QUEUE_TYPE_CLASSIC;
 
     @Test
     public void twoStagingQueuesTest() throws TimeoutException, IOException {

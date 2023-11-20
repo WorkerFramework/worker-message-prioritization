@@ -27,7 +27,6 @@ import org.junit.Test;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
@@ -38,6 +37,7 @@ public final class DistributorIT extends DistributorTestBase {
 
     private static final String RABBIT_PROP_QUEUE_TYPE = "x-queue-type";
     private static final String RABBIT_PROP_QUEUE_TYPE_CLASSIC = "classic";
+    private static final String RABBIT_PROP_QUEUE_TYPE_QUORUM = "quorum";
     private static final String RABBIT_PROP_QUEUE_TYPE_NAME = !Strings.isNullOrEmpty(System.getenv("RABBIT_PROP_QUEUE_TYPE_NAME"))?
             System.getenv("RABBIT_PROP_QUEUE_TYPE_NAME") : RABBIT_PROP_QUEUE_TYPE_CLASSIC;
 

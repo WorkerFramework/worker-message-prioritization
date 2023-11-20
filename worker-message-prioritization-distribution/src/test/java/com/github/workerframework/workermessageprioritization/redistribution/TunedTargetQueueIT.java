@@ -37,7 +37,7 @@ import com.github.workerframework.workermessageprioritization.redistribution.low
 import com.github.workerframework.workermessageprioritization.redistribution.lowlevel.StagingTargetPairProvider;
 import com.github.workerframework.workermessageprioritization.targetqueue.CapacityCalculatorBase;
 import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueSettingsProvider;
-import com.google.common.base.Strings;
+
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.rabbitmq.client.AMQP;
@@ -57,7 +57,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
@@ -65,10 +64,6 @@ import java.util.stream.IntStream;
 
 @ExtendWith(MockWebServerExtension.class)
 public class TunedTargetQueueIT extends DistributorTestBase {
-    private static final String RABBIT_PROP_QUEUE_TYPE = "x-queue-type";
-    private static final String RABBIT_PROP_QUEUE_TYPE_CLASSIC = "classic";
-    private static final String RABBIT_PROP_QUEUE_TYPE_NAME = !Strings.isNullOrEmpty(System.getenv("RABBIT_PROP_QUEUE_TYPE_NAME"))?
-            System.getenv("RABBIT_PROP_QUEUE_TYPE_NAME") : RABBIT_PROP_QUEUE_TYPE_CLASSIC;
     public static final String MOCK_SERVER_PORT = "CAF_MOCK_SERVER_PORT";
     public static final String QUEUE_NAME = "elastic-query-worker";
     final String stagingQueue1Name = getStagingQueueName(QUEUE_NAME, T1_STAGING_QUEUE_NAME);

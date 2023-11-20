@@ -16,15 +16,9 @@
 package com.github.workerframework.workermessageprioritization.redistribution;
 
 import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
-
-import javax.annotation.Nonnull;
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.NodesApi;
 import com.google.common.base.Strings;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.google.gson.Gson;
 import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApi;
 import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitManagementApi;
@@ -32,6 +26,11 @@ import com.rabbitmq.client.ConnectionFactory;
 
 public class DistributorTestBase {
 
+    public static final String RABBIT_PROP_QUEUE_TYPE = "x-queue-type";
+    public static final String RABBIT_PROP_QUEUE_TYPE_CLASSIC = "classic";
+    public static final String RABBIT_PROP_QUEUE_TYPE_QUORUM = "quorum";
+    public static final String RABBIT_PROP_QUEUE_TYPE_NAME = !Strings.isNullOrEmpty(System.getenv("RABBIT_PROP_QUEUE_TYPE_NAME"))?
+            System.getenv("RABBIT_PROP_QUEUE_TYPE_NAME") : RABBIT_PROP_QUEUE_TYPE_CLASSIC;
     protected static final String T1_STAGING_QUEUE_NAME = "tenant1";
     protected static final String T2_STAGING_QUEUE_NAME = "tenant2";
     protected static final String TARGET_QUEUE_NAME = "target";

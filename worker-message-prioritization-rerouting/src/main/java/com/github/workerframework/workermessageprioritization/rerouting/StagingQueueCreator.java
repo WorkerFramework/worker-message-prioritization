@@ -48,7 +48,6 @@ public class StagingQueueCreator {
     private static final String RABBIT_PROP_QUEUE_TYPE_QUORUM = "quorum";
     private static final String RABBIT_PROP_QUEUE_TYPE_NAME = !Strings.isNullOrEmpty(System.getenv("RABBIT_PROP_QUEUE_TYPE_NAME"))?
             System.getenv("RABBIT_PROP_QUEUE_TYPE_NAME") : RABBIT_PROP_QUEUE_TYPE_CLASSIC;
-
     private final ConnectionFactory connectionFactory;
     private final RabbitManagementApi<QueuesApi> queuesApi;
     private final Supplier<List<String>> memoizedStagingQueueNamesSupplier;
@@ -114,7 +113,6 @@ public class StagingQueueCreator {
         final boolean exclusive = targetQueue.isExclusive();
         final boolean autoDelete = targetQueue.isAuto_delete();
         Map<String, Object> arguments = new HashMap<>();
-        LOGGER.warn("Current Queue Type {}", RABBIT_PROP_QUEUE_TYPE_NAME);
         if (Objects.equals(RABBIT_PROP_QUEUE_TYPE_NAME, RABBIT_PROP_QUEUE_TYPE_QUORUM)) {
             arguments.put(RABBIT_PROP_QUEUE_TYPE, RABBIT_PROP_QUEUE_TYPE_NAME);
         } else {
