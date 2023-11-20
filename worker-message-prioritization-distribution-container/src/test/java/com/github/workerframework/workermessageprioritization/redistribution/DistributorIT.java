@@ -18,7 +18,7 @@ package com.github.workerframework.workermessageprioritization.redistribution;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 
-import com.google.common.base.Strings;
+import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitQueueConstants;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
@@ -35,12 +35,6 @@ import java.util.concurrent.TimeoutException;
 // worker-message-prioritization-distribution/pom.xml.
 public final class DistributorIT extends DistributorTestBase {
 
-    private static final String RABBIT_PROP_QUEUE_TYPE = "x-queue-type";
-    private static final String RABBIT_PROP_QUEUE_TYPE_CLASSIC = "classic";
-    private static final String RABBIT_PROP_QUEUE_TYPE_QUORUM = "quorum";
-    private static final String RABBIT_PROP_QUEUE_TYPE_NAME = !Strings.isNullOrEmpty(System.getenv("RABBIT_PROP_QUEUE_TYPE_NAME"))?
-            System.getenv("RABBIT_PROP_QUEUE_TYPE_NAME") : RABBIT_PROP_QUEUE_TYPE_CLASSIC;
-
     @Test
     public void twoStagingQueuesTest() throws TimeoutException, IOException, InterruptedException {
 
@@ -52,7 +46,7 @@ public final class DistributorIT extends DistributorTestBase {
             final Channel channel = connection.createChannel();
 
             final Map<String, Object> args = new HashMap<>();
-            args.put(RABBIT_PROP_QUEUE_TYPE, RABBIT_PROP_QUEUE_TYPE_NAME);
+            args.put(RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE, RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE_NAME);
 
             channel.queueDeclare(stagingQueue1Name, true, false, false, args);
             channel.queueDeclare(stagingQueue2Name, true, false, false, args);

@@ -26,11 +26,6 @@ import com.rabbitmq.client.ConnectionFactory;
 
 public class DistributorTestBase {
 
-    public static final String RABBIT_PROP_QUEUE_TYPE = "x-queue-type";
-    public static final String RABBIT_PROP_QUEUE_TYPE_CLASSIC = "classic";
-    public static final String RABBIT_PROP_QUEUE_TYPE_QUORUM = "quorum";
-    public static final String RABBIT_PROP_QUEUE_TYPE_NAME = !Strings.isNullOrEmpty(System.getenv("RABBIT_PROP_QUEUE_TYPE_NAME"))?
-            System.getenv("RABBIT_PROP_QUEUE_TYPE_NAME") : RABBIT_PROP_QUEUE_TYPE_CLASSIC;
     protected static final String T1_STAGING_QUEUE_NAME = "tenant1";
     protected static final String T2_STAGING_QUEUE_NAME = "tenant2";
     protected static final String TARGET_QUEUE_NAME = "target";

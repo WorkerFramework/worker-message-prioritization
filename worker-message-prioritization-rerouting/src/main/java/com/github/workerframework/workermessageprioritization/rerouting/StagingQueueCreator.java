@@ -26,13 +26,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-import com.google.common.base.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApi;
 import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitManagementApi;
+import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitQueueConstants;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.rabbitmq.client.Channel;
@@ -43,11 +43,6 @@ import com.rabbitmq.client.ShutdownSignalException;
 public class StagingQueueCreator {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(StagingQueueCreator.class);
-    private static final String RABBIT_PROP_QUEUE_TYPE = "x-queue-type";
-    private static final String RABBIT_PROP_QUEUE_TYPE_CLASSIC = "classic";
-    private static final String RABBIT_PROP_QUEUE_TYPE_QUORUM = "quorum";
-    private static final String RABBIT_PROP_QUEUE_TYPE_NAME = !Strings.isNullOrEmpty(System.getenv("RABBIT_PROP_QUEUE_TYPE_NAME"))?
-            System.getenv("RABBIT_PROP_QUEUE_TYPE_NAME") : RABBIT_PROP_QUEUE_TYPE_CLASSIC;
     private final ConnectionFactory connectionFactory;
     private final RabbitManagementApi<QueuesApi> queuesApi;
     private final Supplier<List<String>> memoizedStagingQueueNamesSupplier;
@@ -113,8 +108,8 @@ public class StagingQueueCreator {
         final boolean exclusive = targetQueue.isExclusive();
         final boolean autoDelete = targetQueue.isAuto_delete();
         Map<String, Object> arguments = new HashMap<>();
-        if (Objects.equals(RABBIT_PROP_QUEUE_TYPE_NAME, RABBIT_PROP_QUEUE_TYPE_QUORUM)) {
-            arguments.put(RABBIT_PROP_QUEUE_TYPE, RABBIT_PROP_QUEUE_TYPE_NAME);
+        if (Objects.equals(RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE_NAME, RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE_QUORUM)) {
+            arguments.put(RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE, RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE_NAME);
         } else {
             arguments = targetQueue.getArguments();
         }

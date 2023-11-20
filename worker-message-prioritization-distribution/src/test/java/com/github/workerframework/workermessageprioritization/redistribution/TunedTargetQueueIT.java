@@ -31,6 +31,7 @@
 package com.github.workerframework.workermessageprioritization.redistribution;
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
+import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitQueueConstants;
 import com.github.workerframework.workermessageprioritization.redistribution.consumption.ConsumptionTargetCalculator;
 import com.github.workerframework.workermessageprioritization.redistribution.consumption.EqualConsumptionTargetCalculator;
 import com.github.workerframework.workermessageprioritization.redistribution.lowlevel.LowLevelDistributor;
@@ -86,7 +87,7 @@ public class TunedTargetQueueIT extends DistributorTestBase {
                 Channel channel = connection.createChannel();
 
                 final Map<String, Object> args = new HashMap<>();
-                args.put(RABBIT_PROP_QUEUE_TYPE, RABBIT_PROP_QUEUE_TYPE_NAME);
+                args.put(RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE, RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE_NAME);
 
                 channel.queueDeclare(QUEUE_NAME, true, false, false, args);
                 channel.queueDeclare(stagingQueue1Name, true, false, false, args);
