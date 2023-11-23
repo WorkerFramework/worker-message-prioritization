@@ -1,5 +1,3 @@
-!not-ready-for-release!
-
 #### Version Number
 ${version-number}
 
@@ -9,7 +7,7 @@ ${version-number}
 - US693084: Fast lane consumption: Ability has been added to increase or decrease processing of staging queues 
   for certain tenants or workflows. 
   - Fast lane feature can be toggled on and off, and staging queues weighted using environment variables. This feature
-    is off by default, and equal consumption implemented.
+    is on by default.
 
 #### Bug Fixes
 - D728164: Reduced how often the Kubernetes API is called to fetch labels for a worker.
