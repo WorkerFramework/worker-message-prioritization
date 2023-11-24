@@ -39,6 +39,8 @@ import com.google.inject.Key;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import com.rabbitmq.client.ConnectionFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URISyntaxException;
 import java.security.KeyManagementException;
@@ -46,6 +48,8 @@ import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 public class DistributorModule extends AbstractModule {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DistributorModule.class);
 
     @Provides
     @Named("KubernetesNamespaces")
@@ -153,7 +157,7 @@ public class DistributorModule extends AbstractModule {
     ConnectionFactory provideConnectionFactory(final MessageDistributorConfig messageDistributorConfig) {
         ConnectionFactory connectionFactory = new ConnectionFactory();
 
-        if(messageDistributorConfig.getRabbitMQUrl() != null) {
+        if (messageDistributorConfig.getRabbitMQHost() == null && messageDistributorConfig.getRabbitMQPort() == null) {
             try {
                 connectionFactory.setUri(messageDistributorConfig.getRabbitMQUrl());
             } catch (URISyntaxException | NoSuchAlgorithmException | KeyManagementException e) {
@@ -162,6 +166,10 @@ public class DistributorModule extends AbstractModule {
         } else {
             connectionFactory.setHost(messageDistributorConfig.getRabbitMQHost());
             connectionFactory.setPort(messageDistributorConfig.getRabbitMQPort());
+            LOGGER.warn(String.format(
+                    "'CAF_RABBITMQ_URL' value '%s' is being ignored as 'CAF_RABBITMQ_HOST' and 'CAF_RABBITMQ_PORT' are present",
+                    messageDistributorConfig.getRabbitMQUrl())
+            );
         }
 
         connectionFactory.setUsername(messageDistributorConfig.getRabbitMQUsername());
