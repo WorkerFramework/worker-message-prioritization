@@ -66,9 +66,9 @@ import java.util.stream.IntStream;
 @ExtendWith(MockWebServerExtension.class)
 public class TunedTargetQueueIT extends DistributorTestBase {
     public static final String MOCK_SERVER_PORT = "CAF_MOCK_SERVER_PORT";
-    public static final String QUEUE_NAME = "elastic-query-worker";
-    final String stagingQueue1Name = getStagingQueueName(QUEUE_NAME, T1_STAGING_QUEUE_NAME);
-    final String stagingQueue2Name = getStagingQueueName(QUEUE_NAME, T2_STAGING_QUEUE_NAME);
+    final String queueName = "elastic-query-worker";
+    final String stagingQueue1Name = getStagingQueueName(queueName, T1_STAGING_QUEUE_NAME);
+    final String stagingQueue2Name = getStagingQueueName(queueName, T2_STAGING_QUEUE_NAME);
 
     // This test is for development purposes only
     // This test is to observe the consumption rate altering the recommended target queue length.
@@ -89,11 +89,11 @@ public class TunedTargetQueueIT extends DistributorTestBase {
                 final Map<String, Object> args = new HashMap<>();
                 args.put(RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE, RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE_NAME);
 
-                channel.queueDeclare(QUEUE_NAME, true, false, false, args);
+                channel.queueDeclare(queueName, true, false, false, args);
                 channel.queueDeclare(stagingQueue1Name, true, false, false, args);
                 channel.queueDeclare(stagingQueue2Name, true, false, false, args);
 
-                Assertions.assertNotNull(queuesApi.getApi().getQueue("/", QUEUE_NAME), "Queue was not found via REST API");
+                Assertions.assertNotNull(queuesApi.getApi().getQueue("/", queueName), "Queue was not found via REST API");
                 Assertions.assertNotNull(queuesApi.getApi().getQueue("/", stagingQueue1Name), "Staging queue was not found via REST API");
                 Assertions.assertNotNull(queuesApi.getApi().getQueue("/", stagingQueue2Name), "Staging queue was not found via REST API");
 
@@ -108,13 +108,13 @@ public class TunedTargetQueueIT extends DistributorTestBase {
                 channel.basicPublish("", stagingQueue2Name, properties, body.getBytes(StandardCharsets.UTF_8));
 
                 // Verify the target queue was created successfully
-                final Queue targetQueue = queuesApi.getApi().getQueue("/", QUEUE_NAME);
+                final Queue targetQueue = queuesApi.getApi().getQueue("/", queueName);
                 Assertions.assertNotNull(targetQueue, "Target queue was not found via REST API");
 
                 String message = "Hello World!";
                 IntStream.range(1, queueSize).forEach(i -> {
                     try {
-                        channel.basicPublish("", QUEUE_NAME, null, message.getBytes());
+                        channel.basicPublish("", queueName, null, message.getBytes());
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
@@ -130,7 +130,7 @@ public class TunedTargetQueueIT extends DistributorTestBase {
                     final String messageBody = new String(delivery.getBody(), StandardCharsets.UTF_8);
                     LOGGER.debug("Message body: " + messageBody);
                 };
-                channel.basicConsume(QUEUE_NAME, false, deliverCallback, consumerTag -> {
+                channel.basicConsume(queueName, false, deliverCallback, consumerTag -> {
                     LOGGER.debug("Consumer cancelled");
                 });
 
