@@ -36,7 +36,7 @@ public final class MessageDistributorConfig {
     private static final String CAF_RABBITMQ_HOST_DEFAULT = null;
 
     private static final String CAF_RABBITMQ_PORT = "CAF_RABBITMQ_PORT";
-    private static final Integer CAF_RABBITMQ_PORT_DEFAULT = null;
+    private static final int CAF_RABBITMQ_PORT_DEFAULT = 0;
 
     private static final String CAF_RABBITMQ_USERNAME_ENVVAR = "CAF_RABBITMQ_USERNAME";
     private static final String CAF_RABBITMQ_PASSWORD_ENVVAR = "CAF_RABBITMQ_PASSWORD";
@@ -152,7 +152,7 @@ public final class MessageDistributorConfig {
         return rabbitMQHost;
     }
 
-    public Integer getRabbitMQPort() {
+    public int getRabbitMQPort() {
         return rabbitMQPort;
     }
 
