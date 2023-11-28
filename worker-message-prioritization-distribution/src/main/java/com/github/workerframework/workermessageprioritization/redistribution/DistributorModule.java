@@ -39,7 +39,9 @@ import com.google.inject.Key;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import com.rabbitmq.client.ConnectionFactory;
+import org.apache.http.client.utils.URIBuilder;
 
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
@@ -154,15 +156,15 @@ public class DistributorModule extends AbstractModule {
     {
         ConnectionFactory connectionFactory = new ConnectionFactory();
 
-        if (messageDistributorConfig.getRabbitMQUrl() != null) {
-            try {
-                connectionFactory.setUri(messageDistributorConfig.getRabbitMQUrl());
-            } catch (final URISyntaxException | NoSuchAlgorithmException | KeyManagementException e) {
-                throw new RuntimeException("Failed to set Rabbit Connection Factory URL: " + e);
-            }
-        } else {
-            connectionFactory.setHost(messageDistributorConfig.getRabbitMQHost());
-            connectionFactory.setPort(messageDistributorConfig.getRabbitMQPort());
+        try {
+            final URI rabbitUri = new URIBuilder()
+                    .setScheme(messageDistributorConfig.getRabbitmqProtocol())
+                    .setHost(messageDistributorConfig.getRabbitMQHost())
+                    .setPort(messageDistributorConfig.getRabbitMQPort())
+                    .build();
+            connectionFactory.setUri(rabbitUri);
+        } catch (final URISyntaxException | NoSuchAlgorithmException | KeyManagementException e) {
+            throw new RuntimeException("Failed to set Rabbit Connection Factory URL: " + e);
         }
 
         connectionFactory.setUsername(messageDistributorConfig.getRabbitMQUsername());
