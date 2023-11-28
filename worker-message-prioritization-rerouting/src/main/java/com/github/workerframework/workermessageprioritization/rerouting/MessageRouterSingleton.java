@@ -58,15 +58,12 @@ public class MessageRouterSingleton {
             connectionFactory.setUsername(System.getenv("CAF_RABBITMQ_USERNAME"));
             connectionFactory.setPassword(System.getenv("CAF_RABBITMQ_PASSWORD"));
 
-            if (System.getenv("CAF_RABBITMQ_HOST") == null && System.getenv("CAF_RABBITMQ_PORT") == null) {
+            if(System.getenv("CAF_RABBITMQ_URL") != null) {
                 connectionFactory.setUri(System.getenv("CAF_RABBITMQ_URL"));
+                LOGGER.warn("RabbitMQ Host and Port are being ignored as RabbitMQ URL is present");
             } else {
                 connectionFactory.setHost(System.getenv("CAF_RABBITMQ_HOST"));
                 connectionFactory.setPort(Integer.parseInt(System.getenv("CAF_RABBITMQ_PORT")));
-                LOGGER.warn(String.format(
-                        "'CAF_RABBITMQ_URL' value '%s' is being ignored as 'CAF_RABBITMQ_HOST' and 'CAF_RABBITMQ_PORT' are present",
-                        System.getenv("CAF_RABBITMQ_URL"))
-                );
             }
             connectionFactory.setVirtualHost("/");
 
