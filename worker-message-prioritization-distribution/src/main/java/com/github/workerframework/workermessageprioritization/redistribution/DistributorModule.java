@@ -150,13 +150,14 @@ public class DistributorModule extends AbstractModule {
     }
 
     @Provides
-    ConnectionFactory provideConnectionFactory(final MessageDistributorConfig messageDistributorConfig) {
+    ConnectionFactory provideConnectionFactory(final MessageDistributorConfig messageDistributorConfig)
+    {
         ConnectionFactory connectionFactory = new ConnectionFactory();
 
-        if(messageDistributorConfig.getRabbitMQUrl() != null) {
+        if (messageDistributorConfig.getRabbitMQUrl() != null) {
             try {
                 connectionFactory.setUri(messageDistributorConfig.getRabbitMQUrl());
-            } catch (URISyntaxException | NoSuchAlgorithmException | KeyManagementException e) {
+            } catch (final URISyntaxException | NoSuchAlgorithmException | KeyManagementException e) {
                 throw new RuntimeException("Failed to set Rabbit Connection Factory URL: " + e);
             }
         } else {
