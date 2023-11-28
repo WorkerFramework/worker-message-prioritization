@@ -157,7 +157,7 @@ public class DistributorModule extends AbstractModule {
     ConnectionFactory provideConnectionFactory(final MessageDistributorConfig messageDistributorConfig) {
         ConnectionFactory connectionFactory = new ConnectionFactory();
 
-        if (messageDistributorConfig.getRabbitMQHost() == null && messageDistributorConfig.getRabbitMQPort() == 0) {
+        if (messageDistributorConfig.getRabbitMQHost() == null && messageDistributorConfig.getRabbitMQPort() == null) {
             try {
                 connectionFactory.setUri(messageDistributorConfig.getRabbitMQUrl());
             } catch (URISyntaxException | NoSuchAlgorithmException | KeyManagementException e) {
