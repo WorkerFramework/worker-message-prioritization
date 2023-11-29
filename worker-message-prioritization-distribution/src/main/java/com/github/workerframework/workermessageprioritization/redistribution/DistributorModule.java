@@ -40,7 +40,6 @@ import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import com.rabbitmq.client.ConnectionFactory;
 
-import javax.ws.rs.core.UriBuilder;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.KeyManagementException;
@@ -157,12 +156,12 @@ public class DistributorModule extends AbstractModule {
         ConnectionFactory connectionFactory = new ConnectionFactory();
 
         try {
-            final URI rabbitUri = UriBuilder.fromUri("{protocol}://{host}:{port}")
-                    .build(messageDistributorConfig.getRabbitmqProtocol(),
-                            messageDistributorConfig.getRabbitMQHost(),
-                            messageDistributorConfig.getRabbitMQPort());
-
-            connectionFactory.setUri(rabbitUri);
+            final URI rabbitUrl = new URI(String.format("%s://%s:%s",
+                    messageDistributorConfig.getRabbitmqProtocol(),
+                    messageDistributorConfig.getRabbitMQHost(),
+                    messageDistributorConfig.getRabbitMQPort()
+            ));
+            connectionFactory.setUri(rabbitUrl);
         } catch (final URISyntaxException | NoSuchAlgorithmException | KeyManagementException e) {
             throw new RuntimeException("Failed to set Rabbit Connection Factory URL: " + e);
         }

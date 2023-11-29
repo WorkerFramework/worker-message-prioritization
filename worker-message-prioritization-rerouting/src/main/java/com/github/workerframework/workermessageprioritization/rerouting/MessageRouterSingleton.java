@@ -32,8 +32,6 @@ import com.hpe.caf.worker.document.model.HealthMonitor;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 
-import javax.ws.rs.core.UriBuilder;
-
 public class MessageRouterSingleton {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageRouterSingleton.class);
@@ -62,12 +60,12 @@ public class MessageRouterSingleton {
             connectionFactory.setPassword(System.getenv("CAF_RABBITMQ_PASSWORD"));
 
             final String rabbitProtocol = System.getenv("CAF_RABBITMQ_PROTOCOL");
-            final URI rabbitUri = UriBuilder.fromUri("{protocol}://{host}:{port}")
-                    .build(!Strings.isNullOrEmpty(rabbitProtocol) ? rabbitProtocol : "amqp",
-                            System.getenv("CAF_RABBITMQ_HOST"),
-                            Integer.parseInt(System.getenv("CAF_RABBITMQ_PORT")));
-
-            connectionFactory.setUri(rabbitUri);
+            final URI rabbitUrl = new URI(String.format("%s://%s:%s",
+                    !Strings.isNullOrEmpty(rabbitProtocol) ? rabbitProtocol : "amqp",
+                    System.getenv("CAF_RABBITMQ_HOST"),
+                    System.getenv("CAF_RABBITMQ_PORT")
+            ));
+            connectionFactory.setUri(rabbitUrl);
 
             connectionFactory.setVirtualHost("/");
 
