@@ -87,7 +87,7 @@ public class TunedTargetQueueIT extends DistributorTestBase {
                 Channel channel = connection.createChannel();
 
                 final Map<String, Object> args = new HashMap<>();
-                args.put(RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE, RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE_NAME);
+                args.put(RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE, RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE_QUORUM);
 
                 channel.queueDeclare(queueName, true, false, false, args);
                 channel.queueDeclare(stagingQueue1Name, true, false, false, args);

@@ -46,7 +46,7 @@ public final class DistributorIT extends DistributorTestBase {
             final Channel channel = connection.createChannel();
 
             final Map<String, Object> args = new HashMap<>();
-            args.put(RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE, RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE_NAME);
+            args.put(RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE, RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE_QUORUM);
 
             channel.queueDeclare(stagingQueue1Name, true, false, false, args);
             channel.queueDeclare(stagingQueue2Name, true, false, false, args);

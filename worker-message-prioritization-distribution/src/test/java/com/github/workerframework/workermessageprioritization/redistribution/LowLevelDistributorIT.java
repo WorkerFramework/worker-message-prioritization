@@ -59,7 +59,7 @@ public class LowLevelDistributorIT extends DistributorTestBase {
             final Channel channel = connection.createChannel();
 
             final Map<String, Object> args = new HashMap<>();
-            args.put(RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE, RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE_NAME);
+            args.put(RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE, RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE_QUORUM);
 
             channel.queueDeclare(stagingQueue1Name, true, false, false, args);
             channel.queueDeclare(stagingQueue2Name, true, false, false, args);
@@ -210,7 +210,7 @@ public class LowLevelDistributorIT extends DistributorTestBase {
             final Channel channel = connection.createChannel();
 
             final Map<String, Object> args = new HashMap<>();
-            args.put(RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE, RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE_NAME);
+            args.put(RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE, RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE_QUORUM);
 
             channel.queueDeclare(stagingQueueName, true, false, false, args);
             channel.queueDeclare(targetQueueName, true, false, false, args);

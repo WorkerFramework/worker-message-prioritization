@@ -189,7 +189,6 @@
                         <CAF_QUEUE_PROCESSING_TIME_GOAL_SECONDS>300</CAF_QUEUE_PROCESSING_TIME_GOAL_SECONDS>
                         <TUNED_TARGET_LOG_LEVEL>DEBUG</TUNED_TARGET_LOG_LEVEL>
                         <CAF_RABBITMQ_MGMT_URL>http://${docker.host.address}:${rabbitmq.ctrl.port}</CAF_RABBITMQ_MGMT_URL>
-                        <RABBIT_PROP_QUEUE_TYPE_NAME>quorum</RABBIT_PROP_QUEUE_TYPE_NAME>
                     </environmentVariables>
                 </configuration>
             </plugin>

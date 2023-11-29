@@ -18,10 +18,8 @@ package com.github.workerframework.workermessageprioritization.rerouting;
 import static com.github.workerframework.workermessageprioritization.rerouting.MessageRouter.LOAD_BALANCED_INDICATOR;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
@@ -32,7 +30,6 @@ import org.slf4j.LoggerFactory;
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApi;
 import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitManagementApi;
-import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitQueueConstants;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.rabbitmq.client.Channel;
@@ -43,6 +40,7 @@ import com.rabbitmq.client.ShutdownSignalException;
 public class StagingQueueCreator {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(StagingQueueCreator.class);
+
     private final ConnectionFactory connectionFactory;
     private final RabbitManagementApi<QueuesApi> queuesApi;
     private final Supplier<List<String>> memoizedStagingQueueNamesSupplier;
@@ -107,12 +105,7 @@ public class StagingQueueCreator {
         final boolean durable = targetQueue.isDurable();
         final boolean exclusive = targetQueue.isExclusive();
         final boolean autoDelete = targetQueue.isAuto_delete();
-        Map<String, Object> arguments = new HashMap<>();
-        if (Objects.equals(RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE_NAME, RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE_QUORUM)) {
-            arguments.put(RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE, RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE_NAME);
-        } else {
-            arguments = targetQueue.getArguments();
-        }
+        final Map<String, Object> arguments = targetQueue.getArguments();
 
         LOGGER.info("A staging queue named {} does NOT exist in the staging queue cache, " +
                         "so creating or checking staging queue by calling channel.queueDeclare({}, {}, {}, {}, {})",

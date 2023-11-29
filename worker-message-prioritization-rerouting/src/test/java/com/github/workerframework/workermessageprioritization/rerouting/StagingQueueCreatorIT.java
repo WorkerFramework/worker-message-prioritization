@@ -47,7 +47,7 @@ public final class StagingQueueCreatorIT extends RerouterTestBase {
                 final boolean targetQueueAutoDelete = false;
                 final Map<String, Object> targetQueueArguments = new HashMap<>();
                 targetQueueArguments.put(RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE,
-                        RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE_NAME);
+                        RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE_QUORUM);
                 channel.queueDeclare(
                     targetQueueName, targetQueueDurable, targetQueueExclusive, targetQueueAutoDelete, targetQueueArguments);
 
@@ -92,7 +92,7 @@ public final class StagingQueueCreatorIT extends RerouterTestBase {
                 final boolean targetQueueAutoDelete = false;
                 final Map<String, Object> targetQueueArguments = new HashMap<>();
                 targetQueueArguments.put(RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE,
-                        RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE_NAME);
+                        RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE_QUORUM);
                 channel.queueDeclare(
                         targetQueueName, targetQueueDurable, targetQueueExclusive, targetQueueAutoDelete, targetQueueArguments);
 
