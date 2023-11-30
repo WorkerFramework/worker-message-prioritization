@@ -75,7 +75,11 @@ public class TunedTargetQueueLengthProvider {
     private double calculateCurrentTheoreticalConsumptionRate(final double currentConsumptionRate, 
                                                               final double currentInstances,
                                                               final double maxInstances){
-        return (currentConsumptionRate / currentInstances) * maxInstances;
+        if(currentInstances == 0D){
+            return currentConsumptionRate * maxInstances;
+        }else {
+            return (currentConsumptionRate / currentInstances) * maxInstances;
+        }
     }
 
     private long calculateTunedTargetQueue(final double averageTheoreticalConsumptionRate){
