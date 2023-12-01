@@ -150,6 +150,7 @@ public class StagingQueueTargetQueuePair {
                 envelope.getDeliveryTag(), stagingQueue.getName(),
                 targetQueue.getName(), nextPublishSeqNo);
 
+
         AMQP.BasicProperties basicProperties = new AMQP.BasicProperties.Builder()
                 .contentType(properties.getContentType())
                 .deliveryMode(properties.getDeliveryMode())

@@ -38,7 +38,6 @@ import com.github.workerframework.workermessageprioritization.redistribution.low
 import com.github.workerframework.workermessageprioritization.redistribution.lowlevel.StagingTargetPairProvider;
 import com.github.workerframework.workermessageprioritization.targetqueue.CapacityCalculatorBase;
 import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueSettingsProvider;
-
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.rabbitmq.client.AMQP;
@@ -50,7 +49,6 @@ import mockwebserver3.MockWebServer;
 import mockwebserver3.junit5.internal.MockWebServerExtension;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
