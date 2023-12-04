@@ -31,6 +31,7 @@
 package com.github.workerframework.workermessageprioritization.redistribution;
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
+import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitQueueConstants;
 import com.github.workerframework.workermessageprioritization.redistribution.consumption.ConsumptionTargetCalculator;
 import com.github.workerframework.workermessageprioritization.redistribution.consumption.EqualConsumptionTargetCalculator;
 import com.github.workerframework.workermessageprioritization.redistribution.lowlevel.LowLevelDistributor;
@@ -48,7 +49,6 @@ import mockwebserver3.MockWebServer;
 import mockwebserver3.junit5.internal.MockWebServerExtension;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,17 +56,17 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.IntStream;
 
 @ExtendWith(MockWebServerExtension.class)
 public class TunedTargetQueueIT extends DistributorTestBase {
-
+    public static final String MOCK_SERVER_PORT = "CAF_MOCK_SERVER_PORT";
     final String queueName = "elastic-query-worker";
     final String stagingQueue1Name = getStagingQueueName(queueName, T1_STAGING_QUEUE_NAME);
     final String stagingQueue2Name = getStagingQueueName(queueName, T2_STAGING_QUEUE_NAME);
-    public static final String MOCK_SERVER_PORT = "CAF_MOCK_SERVER_PORT";
 
     // This test is for development purposes only
     // This test is to observe the consumption rate altering the recommended target queue length.
@@ -84,9 +84,12 @@ public class TunedTargetQueueIT extends DistributorTestBase {
 
                 Channel channel = connection.createChannel();
 
-                channel.queueDeclare(queueName, false, false, false, null);
-                channel.queueDeclare(stagingQueue1Name, true, false, false, Collections.emptyMap());
-                channel.queueDeclare(stagingQueue2Name, true, false, false, Collections.emptyMap());
+                final Map<String, Object> args = new HashMap<>();
+                args.put(RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE, RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE_QUORUM);
+
+                channel.queueDeclare(queueName, true, false, false, args);
+                channel.queueDeclare(stagingQueue1Name, true, false, false, args);
+                channel.queueDeclare(stagingQueue2Name, true, false, false, args);
 
                 Assertions.assertNotNull(queuesApi.getApi().getQueue("/", queueName), "Queue was not found via REST API");
                 Assertions.assertNotNull(queuesApi.getApi().getQueue("/", stagingQueue1Name), "Staging queue was not found via REST API");
@@ -95,7 +98,6 @@ public class TunedTargetQueueIT extends DistributorTestBase {
                 final AMQP.BasicProperties properties = new AMQP.BasicProperties.Builder()
                         .contentType("application/json")
                         .deliveryMode(2)
-                        .priority(1)
                         .build();
 
                 final String body = gson.toJson(new Object());

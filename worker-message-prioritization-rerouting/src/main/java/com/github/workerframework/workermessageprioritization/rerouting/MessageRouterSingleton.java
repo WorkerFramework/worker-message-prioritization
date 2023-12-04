@@ -16,6 +16,7 @@
 package com.github.workerframework.workermessageprioritization.rerouting;
 
 import java.io.IOException;
+import java.net.URI;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,8 +58,15 @@ public class MessageRouterSingleton {
             final ConnectionFactory connectionFactory = new ConnectionFactory();
             connectionFactory.setUsername(System.getenv("CAF_RABBITMQ_USERNAME"));
             connectionFactory.setPassword(System.getenv("CAF_RABBITMQ_PASSWORD"));
-            connectionFactory.setHost(System.getenv("CAF_RABBITMQ_HOST"));
-            connectionFactory.setPort(Integer.parseInt(System.getenv("CAF_RABBITMQ_PORT")));
+
+            final String rabbitProtocol = System.getenv("CAF_RABBITMQ_PROTOCOL");
+            final URI rabbitUrl = new URI(String.format("%s://%s:%s",
+                    !Strings.isNullOrEmpty(rabbitProtocol) ? rabbitProtocol : "amqp",
+                    System.getenv("CAF_RABBITMQ_HOST"),
+                    System.getenv("CAF_RABBITMQ_PORT")
+            ));
+            connectionFactory.setUri(rabbitUrl);
+
             connectionFactory.setVirtualHost("/");
 
             connection = connectionFactory.newConnection();

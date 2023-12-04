@@ -18,6 +18,7 @@ package com.github.workerframework.workermessageprioritization.redistribution;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 
+import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitQueueConstants;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
@@ -26,7 +27,8 @@ import org.junit.Test;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
 // This test will use whatever distributor implementation (low level) has been set as the mainClass in the maven-jar-plugin in
@@ -43,14 +45,16 @@ public final class DistributorIT extends DistributorTestBase {
         try(final Connection connection = connectionFactory.newConnection()) {
             final Channel channel = connection.createChannel();
 
-            channel.queueDeclare(stagingQueue1Name, true, false, false, Collections.emptyMap());
-            channel.queueDeclare(stagingQueue2Name, true, false, false, Collections.emptyMap());
-            channel.queueDeclare(targetQueueName, true, false, false, Collections.emptyMap());
+            final Map<String, Object> args = new HashMap<>();
+            args.put(RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE, RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE_QUORUM);
+
+            channel.queueDeclare(stagingQueue1Name, true, false, false, args);
+            channel.queueDeclare(stagingQueue2Name, true, false, false, args);
+            channel.queueDeclare(targetQueueName, true, false, false, args);
 
             final AMQP.BasicProperties properties = new AMQP.BasicProperties.Builder()
                     .contentType("application/json")
                     .deliveryMode(2)
-                    .priority(1)
                     .build();
 
             final String body = gson.toJson(new Object());
