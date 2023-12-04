@@ -16,13 +16,14 @@
 package com.github.workerframework.workermessageprioritization.rerouting;
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
+import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitQueueConstants;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
@@ -44,7 +45,9 @@ public final class StagingQueueCreatorIT extends RerouterTestBase {
                 final boolean targetQueueDurable = true;
                 final boolean targetQueueExclusive = false;
                 final boolean targetQueueAutoDelete = false;
-                final Map<String, Object> targetQueueArguments = Collections.singletonMap("x-max-priority", 5L);
+                final Map<String, Object> targetQueueArguments = new HashMap<>();
+                targetQueueArguments.put(RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE,
+                        RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE_QUORUM);
                 channel.queueDeclare(
                     targetQueueName, targetQueueDurable, targetQueueExclusive, targetQueueAutoDelete, targetQueueArguments);
 
@@ -87,7 +90,9 @@ public final class StagingQueueCreatorIT extends RerouterTestBase {
                 final boolean targetQueueDurable = true;
                 final boolean targetQueueExclusive = false;
                 final boolean targetQueueAutoDelete = false;
-                final Map<String, Object> targetQueueArguments = Collections.singletonMap("x-max-priority", 5L);
+                final Map<String, Object> targetQueueArguments = new HashMap<>();
+                targetQueueArguments.put(RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE,
+                        RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE_QUORUM);
                 channel.queueDeclare(
                         targetQueueName, targetQueueDurable, targetQueueExclusive, targetQueueAutoDelete, targetQueueArguments);
 
