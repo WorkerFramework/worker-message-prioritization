@@ -17,11 +17,7 @@ package com.github.workerframework.workermessageprioritization.rabbitmq;
 
 import java.util.List;
 
-import retrofit.http.GET;
-import retrofit.http.Query;
-
 public interface NodesApi
 {
-    @GET("/api/nodes/")
-    List<Node> getNodes(@Query(value = "columns", encodeValue = true) final String columnsCsvString);
+    List<Node> getNodes(final String columnsCsvString);
 }

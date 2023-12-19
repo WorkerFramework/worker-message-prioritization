@@ -17,11 +17,7 @@ package com.github.workerframework.workermessageprioritization.rabbitmq;
 
 import com.google.gson.JsonElement;
 
-import retrofit.http.GET;
-
 public interface HealthCheckApi
 {
-    // Responds with a 200 OK if all virtual hosts and running on the target node, otherwise responds with a 503 Service Unavailable.
-    @GET("/api/health/checks/virtual-hosts")
     JsonElement checkHealth();
 }

@@ -16,6 +16,7 @@
 package com.github.workerframework.workermessageprioritization.rerouting;
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
+import com.github.workerframework.workermessageprioritization.rabbitmq.QueueNotFoundException;
 import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitQueueConstants;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
@@ -27,12 +28,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
-import retrofit.RetrofitError;
-
 public final class StagingQueueCreatorIT extends RerouterTestBase {
 
     @Test
-    public void createStagingQueueTest() throws TimeoutException, IOException {
+    public void createStagingQueueTest() throws TimeoutException, IOException, QueueNotFoundException {
 
         final String targetQueueName = getUniqueTargetQueueName(TARGET_QUEUE_NAME);
         final String stagingQueueName = getStagingQueueName(targetQueueName, T1_STAGING_QUEUE_NAME);
@@ -52,7 +51,7 @@ public final class StagingQueueCreatorIT extends RerouterTestBase {
                     targetQueueName, targetQueueDurable, targetQueueExclusive, targetQueueAutoDelete, targetQueueArguments);
 
                 // Verify the target queue was created successfully
-                final Queue targetQueue = queuesApi.getApi().getQueue("/", targetQueueName);
+                final Queue targetQueue = queuesApi.getQueue("/", targetQueueName);
                 Assert.assertNotNull("Target queue was not found via REST API", targetQueue);
 
                 // Create a staging queue using the target queue as a template
@@ -60,7 +59,7 @@ public final class StagingQueueCreatorIT extends RerouterTestBase {
                 stagingQueueCreator.createStagingQueue(targetQueue, stagingQueueName);
 
                 // Verify the staging queue was created successfully
-                final Queue stagingQueue = queuesApi.getApi().getQueue("/", stagingQueueName);
+                final Queue stagingQueue = queuesApi.getQueue("/", stagingQueueName);
                 Assert.assertNotNull("Staging queue was not found via REST API", stagingQueue);
                 Assert.assertEquals("Staging queue should have been created with the supplied name",
                                     stagingQueueName, stagingQueue.getName());
@@ -77,7 +76,8 @@ public final class StagingQueueCreatorIT extends RerouterTestBase {
     }
 
     @Test
-    public void stagingQueueShouldNotBeCreatedIfPresentInCacheTest() throws TimeoutException, IOException, InterruptedException {
+    public void stagingQueueShouldNotBeCreatedIfPresentInCacheTest()
+            throws TimeoutException, IOException, InterruptedException, QueueNotFoundException {
 
         final String targetQueueName = getUniqueTargetQueueName(TARGET_QUEUE_NAME);
         final String stagingQueueName = getStagingQueueName(targetQueueName, T1_STAGING_QUEUE_NAME);
@@ -97,7 +97,7 @@ public final class StagingQueueCreatorIT extends RerouterTestBase {
                         targetQueueName, targetQueueDurable, targetQueueExclusive, targetQueueAutoDelete, targetQueueArguments);
 
                 // Verify the target queue was created successfully
-                final Queue targetQueue = queuesApi.getApi().getQueue("/", targetQueueName);
+                final Queue targetQueue = queuesApi.getQueue("/", targetQueueName);
                 Assert.assertNotNull("Target queue was not found via REST API", targetQueue);
 
                 // Create a staging queue
@@ -105,7 +105,7 @@ public final class StagingQueueCreatorIT extends RerouterTestBase {
                         stagingQueueName, targetQueueDurable, targetQueueExclusive, targetQueueAutoDelete, targetQueueArguments);
 
                 // Verify the staging queue was created successfully
-                Assert.assertNotNull("Staging queue was not found via REST API", queuesApi.getApi().getQueue("/", stagingQueueName));
+                Assert.assertNotNull("Staging queue was not found via REST API", queuesApi.getQueue("/", stagingQueueName));
 
                 // Call createStagingQueue to populate the StagingQueueCreator's cache. As the staging queue has already been
                 // created, this won't do anything else apart from populating the cache.
@@ -117,12 +117,11 @@ public final class StagingQueueCreatorIT extends RerouterTestBase {
 
                 // Verify the staging queue was deleted successfully
                 try {
-                    queuesApi.getApi().getQueue("/", stagingQueueName);
+                    queuesApi.getQueue("/", stagingQueueName);
                     Assert.fail("Expected a 404 when trying to get a queue that has been deleted");
                 } catch (final Exception e) {
-                    Assert.assertTrue("Expected exception to be an instance of RetrofitError", e.getCause() instanceof RetrofitError);
-                    Assert.assertEquals("Staging queue should have been deleted but wasn't",
-                            404, ((RetrofitError)e.getCause()).getResponse().getStatus());
+                    Assert.assertTrue("Staging queue should have been deleted but wasn't",
+                            e instanceof QueueNotFoundException);
                 }
 
                 // Call createStagingQueue again. Although the staging queue has been deleted, the StagingQueueCreator does not know
@@ -132,13 +131,11 @@ public final class StagingQueueCreatorIT extends RerouterTestBase {
 
                 // Verify the staging queue was not created
                 try {
-                    queuesApi.getApi().getQueue("/", stagingQueueName);
+                    queuesApi.getQueue("/", stagingQueueName);
                     Assert.fail("Expected a 404 when trying to get a queue that has been deleted");
                 } catch (final Exception e) {
-                    Assert.assertTrue("Expected exception to be an instance of RetrofitError", e.getCause() instanceof RetrofitError);
-                    Assert.assertEquals("Staging queue should not have been created because it should still be present inside the " +
-                                    "StagingQueueCreator's cache",
-                            404, ((RetrofitError)e.getCause()).getResponse().getStatus());
+                    Assert.assertTrue("Staging queue should have been deleted but wasn't",
+                            e instanceof QueueNotFoundException);
                 }
 
                 // Wait a bit longer then the cache expiry, then call createStagingQueue again. This time, the staging queue
@@ -148,7 +145,7 @@ public final class StagingQueueCreatorIT extends RerouterTestBase {
                 // Verify the staging queue was created
                 stagingQueueCreator.createStagingQueue(targetQueue, stagingQueueName);
                 Assert.assertNotNull("Staging queue should have been created because it should no longer be present inside the " +
-                        "StagingQueueCreator's cache", queuesApi.getApi().getQueue("/", stagingQueueName));
+                        "StagingQueueCreator's cache", queuesApi.getQueue("/", stagingQueueName));
             }
         }
     }
