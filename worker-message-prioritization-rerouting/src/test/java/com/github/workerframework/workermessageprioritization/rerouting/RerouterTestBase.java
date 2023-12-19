@@ -39,9 +39,8 @@ public class RerouterTestBase {
         final int managementPort = Integer.parseInt(System.getProperty("rabbitmq.ctrl.port", "25673"));
 
         queuesApi
-            = new QueuesApiImpl(
-                                        "http://" + connectionFactory.getHost() + ":" + managementPort + "/",
-                                        connectionFactory.getUsername(), connectionFactory.getPassword());
+        queuesApi = new QueuesApiImpl("http://" + connectionFactory.getHost() + ":" + managementPort + "/",
+                                      connectionFactory.getUsername(), connectionFactory.getPassword());
     }
 
     protected String getUniqueTargetQueueName(final String targetQueueName) {

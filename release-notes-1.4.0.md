@@ -8,7 +8,7 @@ ${version-number}
         This allows for TLS-enabled connections to be made to RabbitMQ if desired.
         By default, this variable is set to "amqp" so there is no change in behaviour unless specified.
 
-#### bug Fixes
+#### Bug Fixes
 - **US870109:** Replaced okhttp with jersey to make RabbitMQ Management API calls.
 
 #### Known Issues

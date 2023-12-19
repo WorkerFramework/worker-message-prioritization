@@ -98,8 +98,8 @@ public class DistributorModule extends AbstractModule {
 
     @Provides
     QueuesApi provideQueuesApi(@Named("RabbitMQMgmtUrl") final String endpoint,
-                                                    @Named("RabbitMQUsername") final String user,
-                                                    @Named("RabbitMQPassword") final String password) {
+                               @Named("RabbitMQUsername") final String user,
+                               @Named("RabbitMQPassword") final String password) {
 
         return new QueuesApiImpl(endpoint, user, password);
     }
