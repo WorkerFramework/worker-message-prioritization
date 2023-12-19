@@ -15,152 +15,52 @@
  */
 package com.github.workerframework.workermessageprioritization.rabbitmq;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
-import java.util.concurrent.TimeUnit;
 
-import com.google.common.io.ByteStreams;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
-import com.google.gson.ToNumberPolicy;
-import com.squareup.okhttp.OkHttpClient;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.core.Response;
 
-import retrofit.ErrorHandler;
-import retrofit.RestAdapter;
-import retrofit.RetrofitError;
-import retrofit.client.OkClient;
-import retrofit.client.Response;
-import retrofit.converter.GsonConverter;
-import retrofit.mime.TypedInput;
+import org.glassfish.jersey.client.ClientProperties;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-public class RabbitManagementApi <T> {
+public abstract class RabbitManagementApi {
 
     private static final int READ_TIMEOUT_SECONDS = 20;
     private static final int CONNECT_TIMEOUT_SECONDS = 20;
-    
-    private T api;
 
-    public RabbitManagementApi(final Class<T> apiType, final String endpoint, final String user, 
-                               final String password) {
+    protected final Client client;
+    protected final String endpoint;
+    protected final String authorizationHeaderValue;
 
-        final OkHttpClient okHttpClient = new OkHttpClient();
-        okHttpClient.setReadTimeout(READ_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-        okHttpClient.setConnectTimeout(CONNECT_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-        final RestAdapter.Builder restAdapterBuilder
-                = new RestAdapter.Builder().setEndpoint(endpoint).setClient(new OkClient(okHttpClient))
-                .setConverter(new GsonConverter(createGson()));
-        restAdapterBuilder.setRequestInterceptor(requestFacade -> {
-            final String credentials = user + ":" + password;
-            final String authorizationHeaderValue
-                    = "Basic " + Base64.getEncoder().encodeToString(credentials.getBytes(StandardCharsets.UTF_8));
-            requestFacade.addHeader("Accept", "application/json");
-            requestFacade.addHeader("Authorization", authorizationHeaderValue);
-        });
-        restAdapterBuilder.setErrorHandler(new RabbitManagementApi.RabbitApiErrorHandler());
-        final RestAdapter restAdapter = restAdapterBuilder.build();
-        api = restAdapter.create(apiType);
-    }
-    
-    public T getApi() {
-        return api;
+    public RabbitManagementApi(final String endpoint, final String user, final String password) {
+        this.client = ClientBuilder.newClient();
+        this.client.register(GsonConfigurator.class);
+        client.property(ClientProperties.CONNECT_TIMEOUT, CONNECT_TIMEOUT_SECONDS);
+        client.property(ClientProperties.READ_TIMEOUT, READ_TIMEOUT_SECONDS);
+
+        this.endpoint = endpoint.endsWith("/") ? endpoint.substring(0, endpoint.length() -1) : endpoint;
+
+        final String credentials = user + ":" + password;
+        this.authorizationHeaderValue = "Basic " + Base64.getEncoder().encodeToString(credentials.getBytes(StandardCharsets.UTF_8));
+
     }
 
-    private static Gson createGson() {
-
-        // By default, GSON will read all numbers as Float/Double, so a response from RabbitMQ containing a property like this:
-        //
-        // "x-max-priority": 5
-        //
-        // will be read as:
-        //
-        // "x-max-priority": 5.0
-        //
-        // This is not acceptable, as RabbitMQ has defined this particular property as an integer, and will not accept a double if we
-        // then try to create a staging queue with this property.
-        //
-        // As such, we are customizing GSON to use the LONG_OR_DOUBLE number policy, which ensures numbers will be read as Long or Double
-        // values depending on how JSON numbers are represented.
-
-        return new GsonBuilder()
-            .setObjectToNumberStrategy(ToNumberPolicy.LONG_OR_DOUBLE)
-            .create();
-    }
-
-    private static class RabbitApiErrorHandler implements ErrorHandler
+    protected static String prepareErrorMessage(final String url, final Response response, final Exception error)
     {
-        private static final Logger LOGGER = LoggerFactory.getLogger(RabbitApiErrorHandler.class);
+        final StringBuffer errorMessage = new StringBuffer("RabbitMQ management API error: ");
+        errorMessage.append("requestUrl=").append(url);
 
-        private static Gson gson = new Gson();
-
-        @Override
-        public Throwable handleError(final RetrofitError retrofitError)
-        {
-            final Response response = retrofitError.getResponse();
-            final String responseStatus = response != null ? String.valueOf(response.getStatus()) : null;
-            final String responseReason = response != null ? response.getReason() : null;
-            final String responseBody = convertResponseBodyToJsonString(response);
-
-            final String errorMessage = String.format(
-                    "RabbitMQ management API error: " +
-                            "requestUrl=%s, " +
-                            "responseStatus=%s, " +
-                            "responseReason=%s, " +
-                            "responseBody=%s, " +
-                            "kind=%s, " +
-                            "successType=%s, " +
-                            "cause=%s",
-                    retrofitError.getUrl(),
-                    responseStatus,
-                    responseReason,
-                    responseBody,
-                    retrofitError.getKind(),
-                    retrofitError.getSuccessType(),
-                    retrofitError.getCause());
-
-            return new RuntimeException(errorMessage, retrofitError);
+        if(response != null) {
+            errorMessage
+                .append("responseStatus=").append(String.valueOf(response.getStatus()))
+                .append("responseBody=").append(response.readEntity(String.class));
         }
 
-        private static String convertResponseBodyToJsonString(final Response response)
-        {
-            if (response == null) {
-                return null;
-            }
-
-            final TypedInput responseBody = response.getBody();
-            if (responseBody == null) {
-                return null;
-            }
-
-            final String responseBodyMimeType = responseBody.mimeType();
-            if (responseBodyMimeType == null) {
-                LOGGER.error("Response body MIME type is null. Unable to convert response body to JSON for output: {}", responseBody);
-
-                return responseBody.toString();
-            }
-
-            if (!responseBodyMimeType.equals("application/json")) {
-                LOGGER.error("Response body MIME type is unexpected (expected application/json): {}. " +
-                                "Unable to convert response body to JSON for output: {}",
-                        responseBodyMimeType, responseBody);
-
-                return responseBody.toString();
-            }
-
-            try {
-                final InputStream inputStream = responseBody.in();
-                final String json = new String(ByteStreams.toByteArray(inputStream), StandardCharsets.UTF_8);
-                return gson.fromJson(json, JsonElement.class).toString();
-            } catch (final IOException e) {
-                LOGGER.error("Exception thrown trying to convert response body to JSON for output: {}", responseBody, e);
-
-                return responseBody.toString();
-            }
+        if(error != null) {
+            errorMessage.append("cause=").append(error.getCause());
         }
+
+        return errorMessage.toString();
     }
 }
