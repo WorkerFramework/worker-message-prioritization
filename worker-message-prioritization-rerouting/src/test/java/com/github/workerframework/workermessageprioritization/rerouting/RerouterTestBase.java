@@ -16,7 +16,7 @@
 package com.github.workerframework.workermessageprioritization.rerouting;
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApi;
-import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitManagementApi;
+import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApiImpl;
 import com.rabbitmq.client.ConnectionFactory;
 
 public class RerouterTestBase {
@@ -25,7 +25,7 @@ public class RerouterTestBase {
     protected static final String T1_STAGING_QUEUE_NAME = "tenant1";
 
     protected ConnectionFactory connectionFactory;
-    protected RabbitManagementApi<QueuesApi> queuesApi;
+    protected QueuesApi queuesApi;
 
     public RerouterTestBase() {
 
@@ -39,9 +39,8 @@ public class RerouterTestBase {
         final int managementPort = Integer.parseInt(System.getProperty("rabbitmq.ctrl.port", "25673"));
 
         queuesApi
-            = new RabbitManagementApi<>(QueuesApi.class,
-                                        "http://" + connectionFactory.getHost() + ":" + managementPort + "/",
-                                        connectionFactory.getUsername(), connectionFactory.getPassword());
+        queuesApi = new QueuesApiImpl("http://" + connectionFactory.getHost() + ":" + managementPort + "/",
+                                      connectionFactory.getUsername(), connectionFactory.getPassword());
     }
 
     protected String getUniqueTargetQueueName(final String targetQueueName) {

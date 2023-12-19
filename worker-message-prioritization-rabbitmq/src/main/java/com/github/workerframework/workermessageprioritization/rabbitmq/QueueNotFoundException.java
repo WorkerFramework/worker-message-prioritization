@@ -15,12 +15,15 @@
  */
 package com.github.workerframework.workermessageprioritization.rabbitmq;
 
-import java.util.List;
+/**
+ * Thrown by the application when a Queue is not found.
+ */
+public final class QueueNotFoundException extends RuntimeException
+{
+    private static final long serialVersionUID = -7786064590135801835L;
 
-public interface QueuesApi {
-    List<Queue> getQueues();
-
-    List<Queue> getQueues(final String columnsCsvString);
-
-    Queue getQueue(final String vhost,final String queueName);
+    public QueueNotFoundException(final String url)
+    {
+        super("Queue not found: " + url);
+    }
 }

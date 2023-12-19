@@ -22,7 +22,6 @@ import com.hpe.caf.worker.document.model.ResponseQueue;
 import com.hpe.caf.worker.document.model.Task;
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApi;
-import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitManagementApi;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -37,16 +36,14 @@ public class MessageRouterTests {
     public void processDocumentMessageRouter() {
         
         @SuppressWarnings("unchecked")
-        final RabbitManagementApi<QueuesApi> queuesApiWrapper = (RabbitManagementApi<QueuesApi>)mock(RabbitManagementApi.class);
         final QueuesApi queuesApi = mock(QueuesApi.class);
         final Queue mockQueue = mock(Queue.class);
         when(queuesApi.getQueue(anyString(), anyString())).thenReturn(mockQueue);
-        when(queuesApiWrapper.getApi()).thenReturn(queuesApi);
 
         final RerouteDecider rerouteDecider = mock(RerouteDecider.class);
         when(rerouteDecider.shouldReroute(mockQueue)).thenReturn(true);
         final StagingQueueCreator stagingQueueCreator = mock(StagingQueueCreator.class);
-        final MessageRouter messageRouter = new MessageRouter(queuesApiWrapper,  "/", stagingQueueCreator, rerouteDecider);
+        final MessageRouter messageRouter = new MessageRouter(queuesApi,  "/", stagingQueueCreator, rerouteDecider);
 
         final Document document = mock(Document.class);
         when(document.getCustomData("tenantId")).thenReturn("poc-tenant");

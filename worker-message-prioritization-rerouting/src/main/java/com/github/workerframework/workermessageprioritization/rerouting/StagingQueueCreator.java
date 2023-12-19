@@ -29,7 +29,6 @@ import org.slf4j.LoggerFactory;
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApi;
-import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitManagementApi;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.rabbitmq.client.Channel;
@@ -42,14 +41,14 @@ public class StagingQueueCreator {
     private static final Logger LOGGER = LoggerFactory.getLogger(StagingQueueCreator.class);
 
     private final ConnectionFactory connectionFactory;
-    private final RabbitManagementApi<QueuesApi> queuesApi;
+    private final QueuesApi queuesApi;
     private final Supplier<List<String>> memoizedStagingQueueNamesSupplier;
     private Connection connection;
     private Channel channel;
 
     public StagingQueueCreator(
             final ConnectionFactory connectionFactory,
-            final RabbitManagementApi<QueuesApi> queuesApi,
+            final QueuesApi queuesApi,
             final long stagingQueueCacheExpiryMilliseconds)
             throws IOException, TimeoutException {
         this.connectionFactory = connectionFactory;
@@ -130,7 +129,7 @@ public class StagingQueueCreator {
     }
 
     private List<String> getStagingQueueNames() {
-        return queuesApi.getApi()
+        return queuesApi
                 .getQueues("name")
                 .stream()
                 .map(Queue::getName)
