@@ -26,8 +26,8 @@ import org.glassfish.jersey.client.ClientProperties;
 
 public abstract class RabbitManagementApi {
 
-    private static final int READ_TIMEOUT_SECONDS = 20;
-    private static final int CONNECT_TIMEOUT_SECONDS = 20;
+    private static final int READ_TIMEOUT_MILLISECONDS = 20000;
+    private static final int CONNECT_TIMEOUT_MILLISECONDS = 20000;
 
     protected final Client client;
     protected final String endpoint;
@@ -36,8 +36,8 @@ public abstract class RabbitManagementApi {
     public RabbitManagementApi(final String endpoint, final String user, final String password) {
         this.client = ClientBuilder.newClient();
         this.client.register(GsonConfigurator.class);
-        client.property(ClientProperties.CONNECT_TIMEOUT, CONNECT_TIMEOUT_SECONDS);
-        client.property(ClientProperties.READ_TIMEOUT, READ_TIMEOUT_SECONDS);
+        client.property(ClientProperties.CONNECT_TIMEOUT, CONNECT_TIMEOUT_MILLISECONDS);
+        client.property(ClientProperties.READ_TIMEOUT, READ_TIMEOUT_MILLISECONDS);
 
         this.endpoint = endpoint.endsWith("/") ? endpoint.substring(0, endpoint.length() -1) : endpoint;
 
