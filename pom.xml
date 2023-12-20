@@ -1,6 +1,6 @@
 <!--
 
-    Copyright 2022-2023 Open Text.
+    Copyright 2022-2024 Open Text.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -43,7 +43,7 @@
   
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <copyrightYear>2023</copyrightYear>
+    <copyrightYear>2024</copyrightYear>
     <copyrightNotice>Copyright ${project.inceptionYear}-${copyrightYear} Open Text.</copyrightNotice>
     <enforceCorrectDependencies>true</enforceCorrectDependencies>
       <maven.compiler.source>8</maven.compiler.source>
