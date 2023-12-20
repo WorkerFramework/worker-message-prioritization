@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 Open Text.
+ * Copyright 2022-2024 Open Text.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,24 +17,23 @@ package com.github.workerframework.workermessageprioritization.targetqueue;
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApi;
-import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitManagementApi;
 import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class QueueInformationProvider {
 
-    protected RabbitManagementApi<QueuesApi> queuesApi;
+    protected QueuesApi queuesApi;
     private static final Logger TUNED_TARGET_LOGGER = LoggerFactory.getLogger("TUNED_TARGET");
 
     @Inject
-    public QueueInformationProvider(final RabbitManagementApi<QueuesApi> queuesApi){
+    public QueueInformationProvider(final QueuesApi queuesApi){
         this.queuesApi = queuesApi;
     }
 
     public double getConsumptionRate(final String targetQueueName) {
 
-        final Queue.MessageStats message_stats = queuesApi.getApi().getQueue("/", targetQueueName).getMessage_stats();
+        final Queue.MessageStats message_stats = queuesApi.getQueue("/", targetQueueName).getMessage_stats();
         final double consumptionRate;
 
         if (message_stats != null) {
@@ -52,7 +51,7 @@ public class QueueInformationProvider {
 
     public double getMessageBytesReady(final String targetQueueName){
 
-        final double message_bytes_ready = queuesApi.getApi().getQueue("/", targetQueueName).getMessageBytesReady();
+        final double message_bytes_ready = queuesApi.getQueue("/", targetQueueName).getMessageBytesReady();
 
         TUNED_TARGET_LOGGER.debug("Current no of message bytes ready of {} is: {}", targetQueueName, message_bytes_ready);
 

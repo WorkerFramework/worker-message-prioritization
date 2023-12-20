@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 Open Text.
+ * Copyright 2022-2024 Open Text.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,8 +22,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.HealthCheckApi;
+import com.github.workerframework.workermessageprioritization.rabbitmq.HealthCheckApiImpl;
 import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApi;
-import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitManagementApi;
+import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApiImpl;
 import com.github.workerframework.workermessageprioritization.rerouting.reroutedeciders.AlwaysRerouteDecider;
 import com.github.workerframework.workermessageprioritization.rerouting.reroutedeciders.RerouteDecider;
 import com.google.common.base.Strings;
@@ -71,8 +72,8 @@ public class MessageRouterSingleton {
 
             connection = connectionFactory.newConnection();
 
-            final RabbitManagementApi<QueuesApi> queuesApi = new RabbitManagementApi<>(
-                    QueuesApi.class, CAF_RABBITMQ_MGMT_URL, CAF_RABBITMQ_MGMT_USERNAME, CAF_RABBITMQ_MGMT_PASSWORD);
+            final QueuesApi queuesApi
+                = new QueuesApiImpl(CAF_RABBITMQ_MGMT_URL, CAF_RABBITMQ_MGMT_USERNAME, CAF_RABBITMQ_MGMT_PASSWORD);
 
             final String stagingQueueCacheExpiryMillisecondsString =
                     System.getenv("CAF_WMP_STAGING_QUEUE_CACHE_EXPIRY_MILLISECONDS");
@@ -114,10 +115,10 @@ public class MessageRouterSingleton {
     public static void checkHealth(final HealthMonitor healthMonitor) {
         if (CAF_WMP_ENABLED) {
             try {
-                final RabbitManagementApi<HealthCheckApi> healthCheckApi = new RabbitManagementApi<>(
-                        HealthCheckApi.class, CAF_RABBITMQ_MGMT_URL, CAF_RABBITMQ_MGMT_USERNAME, CAF_RABBITMQ_MGMT_PASSWORD);
+                final HealthCheckApi healthCheckApi
+                    = new HealthCheckApiImpl(CAF_RABBITMQ_MGMT_URL, CAF_RABBITMQ_MGMT_USERNAME, CAF_RABBITMQ_MGMT_PASSWORD);
 
-                healthCheckApi.getApi().checkHealth();
+                healthCheckApi.checkHealth();
             } catch (final Throwable t) {
                 final String errorMessage = String.format(
                         "RabbitMQ Management API healthcheck failed. Exception message: %s", t.getMessage());

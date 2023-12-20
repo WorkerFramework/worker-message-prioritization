@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 Open Text.
+ * Copyright 2022-2024 Open Text.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package com.github.workerframework.workermessageprioritization.redistribution.lo
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 import com.github.workerframework.workermessageprioritization.redistribution.consumption.ConsumptionTargetCalculator;
 import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApi;
-import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitManagementApi;
 import com.github.workerframework.workermessageprioritization.redistribution.DistributorWorkItem;
 import com.github.workerframework.workermessageprioritization.redistribution.MessageDistributor;
 import com.google.common.annotations.VisibleForTesting;
@@ -49,7 +48,7 @@ public class LowLevelDistributor extends MessageDistributor {
     private final long consumerPublisherPairLastDoneWorkTimeoutMilliseconds;
 
     @Inject
-    public LowLevelDistributor(final RabbitManagementApi<QueuesApi> queuesApi,
+    public LowLevelDistributor(final QueuesApi queuesApi,
                                final ConnectionFactory connectionFactory,
                                final ConsumptionTargetCalculator consumptionTargetCalculator,
                                final StagingTargetPairProvider stagingTargetPairProvider,

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 Open Text.
+ * Copyright 2022-2024 Open Text.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,10 +22,8 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.hpe.caf.worker.document.model.Document;
 import com.hpe.caf.worker.document.model.Response;
-import com.hpe.caf.worker.document.model.ResponseQueue;
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApi;
-import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitManagementApi;
 import com.github.workerframework.workermessageprioritization.rerouting.mutators.TenantQueueNameMutator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +49,7 @@ public class MessageRouter {
     private final StagingQueueCreator stagingQueueCreator;
     private final RerouteDecider rerouteDecider;
 
-    public MessageRouter(final RabbitManagementApi<QueuesApi> queuesApi,
+    public MessageRouter(final QueuesApi queuesApi,
                          final String vhost,
                          final StagingQueueCreator stagingQueueCreator,
                          final RerouteDecider rerouteDecider) {
@@ -65,7 +63,7 @@ public class MessageRouter {
                 .build(new CacheLoader<String, Queue>() {
                     @Override
                     public Queue load(@Nonnull final String queueName) {
-                        return queuesApi.getApi().getQueue(vhost, queueName);
+                        return queuesApi.getQueue(vhost, queueName);
                     }
                 });
     }

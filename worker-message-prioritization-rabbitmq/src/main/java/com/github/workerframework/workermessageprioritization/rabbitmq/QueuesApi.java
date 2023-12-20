@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 Open Text.
+ * Copyright 2022-2024 Open Text.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,19 +15,12 @@
  */
 package com.github.workerframework.workermessageprioritization.rabbitmq;
 
-import retrofit.http.GET;
-import retrofit.http.Path;
-import retrofit.http.Query;
-
 import java.util.List;
 
 public interface QueuesApi {
-    @GET("/api/queues/")
     List<Queue> getQueues();
 
-    @GET("/api/queues/")
-    List<Queue> getQueues(@Query(value = "columns", encodeValue = true) final String columnsCsvString);
+    List<Queue> getQueues(final String columnsCsvString);
 
-    @GET("/api/queues/{vhost}/{queue}")
-    Queue getQueue(@Path("vhost") final String vhost, @Path("queue") final String queueName);
+    Queue getQueue(final String vhost,final String queueName);
 }

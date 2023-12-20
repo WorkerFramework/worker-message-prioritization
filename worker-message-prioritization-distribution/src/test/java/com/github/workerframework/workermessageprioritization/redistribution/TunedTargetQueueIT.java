@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 Open Text.
+ * Copyright 2022-2024 Open Text.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -91,9 +91,9 @@ public class TunedTargetQueueIT extends DistributorTestBase {
                 channel.queueDeclare(stagingQueue1Name, true, false, false, args);
                 channel.queueDeclare(stagingQueue2Name, true, false, false, args);
 
-                Assertions.assertNotNull(queuesApi.getApi().getQueue("/", queueName), "Queue was not found via REST API");
-                Assertions.assertNotNull(queuesApi.getApi().getQueue("/", stagingQueue1Name), "Staging queue was not found via REST API");
-                Assertions.assertNotNull(queuesApi.getApi().getQueue("/", stagingQueue2Name), "Staging queue was not found via REST API");
+                Assertions.assertNotNull(queuesApi.getQueue("/", queueName), "Queue was not found via REST API");
+                Assertions.assertNotNull(queuesApi.getQueue("/", stagingQueue1Name), "Staging queue was not found via REST API");
+                Assertions.assertNotNull(queuesApi.getQueue("/", stagingQueue2Name), "Staging queue was not found via REST API");
 
                 final AMQP.BasicProperties properties = new AMQP.BasicProperties.Builder()
                         .contentType("application/json")
@@ -106,7 +106,7 @@ public class TunedTargetQueueIT extends DistributorTestBase {
                 channel.basicPublish("", stagingQueue2Name, properties, body.getBytes(StandardCharsets.UTF_8));
 
                 // Verify the target queue was created successfully
-                final Queue targetQueue = queuesApi.getApi().getQueue("/", queueName);
+                final Queue targetQueue = queuesApi.getQueue("/", queueName);
                 Assertions.assertNotNull(targetQueue, "Target queue was not found via REST API");
 
                 String message = "Hello World!";

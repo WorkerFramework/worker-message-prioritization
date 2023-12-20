@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 Open Text.
+ * Copyright 2022-2024 Open Text.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@ package com.github.workerframework.workermessageprioritization.redistribution;
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApi;
-import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitManagementApi;
 
 import java.util.HashSet;
 import java.util.List;
@@ -32,14 +31,14 @@ public abstract class MessageDistributor {
 
     public static final String LOAD_BALANCED_INDICATOR = "»";
 
-    private final RabbitManagementApi<QueuesApi> queuesApi;
+    private final QueuesApi queuesApi;
 
-    public MessageDistributor(final RabbitManagementApi<QueuesApi> queuesApi) {
+    public MessageDistributor(final QueuesApi queuesApi) {
         this.queuesApi = queuesApi;
     }
     
     protected Set<DistributorWorkItem> getDistributorWorkItems() {
-        final List<Queue> queues = queuesApi.getApi().getQueues();
+        final List<Queue> queues = queuesApi.getQueues();
 
         LOGGER.debug("Read the following list of queues from the RabbitMQ API: {}", queues);
 

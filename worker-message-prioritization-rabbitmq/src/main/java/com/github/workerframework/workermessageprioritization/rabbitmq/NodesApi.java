@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 Open Text.
+ * Copyright 2022-2024 Open Text.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,11 +17,7 @@ package com.github.workerframework.workermessageprioritization.rabbitmq;
 
 import java.util.List;
 
-import retrofit.http.GET;
-import retrofit.http.Query;
-
 public interface NodesApi
 {
-    @GET("/api/nodes/")
-    List<Node> getNodes(@Query(value = "columns", encodeValue = true) final String columnsCsvString);
+    List<Node> getNodes(final String columnsCsvString);
 }

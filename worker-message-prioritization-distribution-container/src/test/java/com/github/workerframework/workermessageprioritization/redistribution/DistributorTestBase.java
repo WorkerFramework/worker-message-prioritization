@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 Open Text.
+ * Copyright 2022-2024 Open Text.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,7 @@ package com.github.workerframework.workermessageprioritization.redistribution;
 import java.util.concurrent.Callable;
 
 import com.google.gson.Gson;
-import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApi;
-import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitManagementApi;
+import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApiImpl;
 import com.rabbitmq.client.ConnectionFactory;
 
 public class DistributorTestBase {
@@ -31,7 +30,7 @@ public class DistributorTestBase {
     protected final Gson gson = new Gson();
     protected ConnectionFactory connectionFactory;
     protected int managementPort;
-    protected RabbitManagementApi<QueuesApi> queuesApi;
+    protected QueuesApiImpl queuesApi;
 
     public DistributorTestBase() {
         connectionFactory = new ConnectionFactory();
@@ -44,7 +43,7 @@ public class DistributorTestBase {
         managementPort = Integer.parseInt(System.getProperty("rabbitmq.ctrl.port", "25673"));
 
         queuesApi =
-                new RabbitManagementApi<>(QueuesApi.class,
+                new QueuesApiImpl(
                         "http://" + connectionFactory.getHost() + ":" + managementPort + "/",
                         connectionFactory.getUsername(), connectionFactory.getPassword());
 
@@ -59,6 +58,6 @@ public class DistributorTestBase {
     }
 
     protected Callable<Boolean> queueContainsNumMessages(final String queueName, final int numMessages) {
-        return () -> queuesApi.getApi().getQueue("/", queueName).getMessages() == numMessages;
+        return () -> queuesApi.getQueue("/", queueName).getMessages() == numMessages;
     }
 }

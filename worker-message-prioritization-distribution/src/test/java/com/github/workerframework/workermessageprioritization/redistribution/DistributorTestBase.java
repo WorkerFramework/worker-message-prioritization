@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 Open Text.
+ * Copyright 2022-2024 Open Text.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,18 +16,13 @@
 package com.github.workerframework.workermessageprioritization.redistribution;
 
 import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
-
-import jakarta.annotation.Nonnull;
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.NodesApi;
+import com.github.workerframework.workermessageprioritization.rabbitmq.NodesApiImpl;
 import com.google.common.base.Strings;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.google.gson.Gson;
 import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApi;
-import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitManagementApi;
+import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApiImpl;
 import com.rabbitmq.client.ConnectionFactory;
 
 public class DistributorTestBase {
@@ -40,8 +35,8 @@ public class DistributorTestBase {
     protected final Gson gson = new Gson();
     protected ConnectionFactory connectionFactory;
     protected int managementPort;
-    protected RabbitManagementApi<QueuesApi> queuesApi;
-    protected RabbitManagementApi<NodesApi> nodesApi;
+    protected QueuesApi queuesApi;
+    protected NodesApi nodesApi;
     private final String managementUrl;
     private static final String CAF_RABBITMQ_HOST = "CAF_RABBITMQ_HOST";
     private static final String CAF_RABBITMQ_PORT = "CAF_RABBITMQ_PORT";
@@ -63,11 +58,11 @@ public class DistributorTestBase {
         managementUrl = "http://" + connectionFactory.getHost() + ":" + managementPort + "/";
 
         queuesApi =
-                new RabbitManagementApi<>(QueuesApi.class,
+                new QueuesApiImpl(
                         managementUrl,
                         connectionFactory.getUsername(), connectionFactory.getPassword());
 
-        nodesApi = new RabbitManagementApi<>(NodesApi.class,
+        nodesApi = new NodesApiImpl(
                 managementUrl,
                 connectionFactory.getUsername(), connectionFactory.getPassword());
     }
@@ -88,6 +83,6 @@ public class DistributorTestBase {
 
     protected Callable<Boolean> queueContainsNumMessages(final String queueName, final int numMessages)
     {
-        return () -> queuesApi.getApi().getQueue("/", queueName).getMessages() == numMessages;
+        return () -> queuesApi.getQueue("/", queueName).getMessages() == numMessages;
     }
 }

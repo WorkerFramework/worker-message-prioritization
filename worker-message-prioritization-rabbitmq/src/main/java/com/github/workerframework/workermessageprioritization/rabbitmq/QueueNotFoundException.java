@@ -13,18 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.workerframework.workermessageprioritization.rerouting.reroutedeciders;
-
-import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
+package com.github.workerframework.workermessageprioritization.rabbitmq;
 
 /**
- * A {@link RerouteDecider} that always reroutes a message to a staging queue.
+ * Thrown by the application when a Queue is not found.
  */
-public class AlwaysRerouteDecider implements RerouteDecider
+public final class QueueNotFoundException extends RuntimeException
 {
-    @Override
-    public boolean shouldReroute(final Queue targetQueue)
+    private static final long serialVersionUID = -7786064590135801835L;
+
+    public QueueNotFoundException(final String url)
     {
-        return true;
+        super("Queue not found: " + url);
     }
 }

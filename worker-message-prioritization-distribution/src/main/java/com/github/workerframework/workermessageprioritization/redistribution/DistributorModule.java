@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 Open Text.
+ * Copyright 2022-2024 Open Text.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 package com.github.workerframework.workermessageprioritization.redistribution;
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApi;
-import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitManagementApi;
+import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApiImpl;
 import com.github.workerframework.workermessageprioritization.redistribution.config.MessageDistributorConfig;
 import com.github.workerframework.workermessageprioritization.redistribution.consumption.ConsumptionTargetCalculator;
 import com.github.workerframework.workermessageprioritization.redistribution.consumption.EqualConsumptionTargetCalculator;
@@ -97,11 +97,11 @@ public class DistributorModule extends AbstractModule {
     }
 
     @Provides
-    RabbitManagementApi<QueuesApi> provideQueuesApi(@Named("RabbitMQMgmtUrl") final String endpoint,
-                                                    @Named("RabbitMQUsername") final String user,
-                                                    @Named("RabbitMQPassword") final String password) {
+    QueuesApi provideQueuesApi(@Named("RabbitMQMgmtUrl") final String endpoint,
+                               @Named("RabbitMQUsername") final String user,
+                               @Named("RabbitMQPassword") final String password) {
 
-        return new RabbitManagementApi<>(QueuesApi.class, endpoint, user, password);
+        return new QueuesApiImpl(endpoint, user, password);
     }
 
     @Provides
