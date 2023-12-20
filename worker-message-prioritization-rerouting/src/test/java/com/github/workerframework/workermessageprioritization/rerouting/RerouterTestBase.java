@@ -38,7 +38,6 @@ public class RerouterTestBase {
 
         final int managementPort = Integer.parseInt(System.getProperty("rabbitmq.ctrl.port", "25673"));
 
-        queuesApi
         queuesApi = new QueuesApiImpl("http://" + connectionFactory.getHost() + ":" + managementPort + "/",
                                       connectionFactory.getUsername(), connectionFactory.getPassword());
     }
