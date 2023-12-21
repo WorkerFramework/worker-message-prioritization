@@ -41,18 +41,22 @@
         <dependency>
             <groupId>com.github.workerframework</groupId>
             <artifactId>worker-message-prioritization-distribution</artifactId>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>com.github.workerframework</groupId>
             <artifactId>worker-message-prioritization-rabbitmq</artifactId>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>com.rabbitmq</groupId>
             <artifactId>amqp-client</artifactId>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

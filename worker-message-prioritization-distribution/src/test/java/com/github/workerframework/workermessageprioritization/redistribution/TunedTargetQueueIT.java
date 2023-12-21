@@ -150,35 +150,41 @@ public class TunedTargetQueueIT extends DistributorTestBase {
 
                 mockK8sServer.start(InetAddress.getByName("localhost"), Integer.parseInt(System.getenv(MOCK_SERVER_PORT)));
 
-                mockK8sServer.enqueue(new MockResponse()
-                        .setResponseCode(200)
+                mockK8sServer.enqueue(new MockResponse.Builder()
+                        .code(200)
                         .setHeader("content-type", "application/json")
-                        .setBody(apiVersions));
+                        .body(apiVersions)
+                        .build());
 
-                mockK8sServer.enqueue(new MockResponse()
-                        .setResponseCode(200)
+                mockK8sServer.enqueue(new MockResponse.Builder()
+                        .code(200)
                         .setHeader("content-type", "application/json")
-                        .setBody(apiResourceList));
+                        .body(apiResourceList)
+                        .build());
 
-                mockK8sServer.enqueue(new MockResponse()
-                        .setResponseCode(200)
+                mockK8sServer.enqueue(new MockResponse.Builder()
+                        .code(200)
                         .setHeader("content-type", "application/json")
-                        .setBody(apiGroupList));
+                        .body(apiGroupList)
+                        .build());
 
-                IntStream.range(1, 21).forEach(i -> mockK8sServer.enqueue(new MockResponse()
-                        .setResponseCode(200)
+                IntStream.range(1, 21).forEach(i -> mockK8sServer.enqueue(new MockResponse.Builder()
+                        .code(200)
                         .setHeader("content-type", "application/json")
-                        .setBody(apiResourceList)));
+                        .body(apiResourceList)
+                        .build()));
 
-                mockK8sServer.enqueue(new MockResponse()
-                        .setResponseCode(200)
+                mockK8sServer.enqueue(new MockResponse.Builder()
+                        .code(200)
                         .setHeader("content-type", "application/json")
-                        .setBody(deploymentList));
+                        .body(deploymentList)
+                        .build());
 
-                mockK8sServer.enqueue(new MockResponse()
-                        .setResponseCode(200)
+                mockK8sServer.enqueue(new MockResponse.Builder()
+                        .code(200)
                         .setHeader("content-type", "application/json")
-                        .setBody(deploymentList));
+                        .body(deploymentList)
+                        .build());
 
                 final Injector injector = Guice.createInjector(new DistributorModule());
                 final TargetQueueSettingsProvider k8sTargetQueueSettingsProvider =

@@ -22,8 +22,8 @@ import com.google.gson.ToNumberPolicy;
 /**
  * Provides custom configuration for Gson.
  */
-@javax.ws.rs.ext.Provider
-final class GsonConfigurator implements javax.ws.rs.ext.ContextResolver<Gson>
+@jakarta.ws.rs.ext.Provider
+final class GsonConfigurator implements jakarta.ws.rs.ext.ContextResolver<Gson>
 {
     private final Gson mapper;
 
