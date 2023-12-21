@@ -29,12 +29,12 @@
   <parent>
     <groupId>com.github.cafapi</groupId>
     <artifactId>caf-common-parent</artifactId>
-    <version>2.3.0-212</version>
+    <version>5.0.0-431</version>
   </parent>
   
   <groupId>com.github.workerframework</groupId>
   <artifactId>worker-message-prioritization-aggregator</artifactId>
-  <version>1.4.0-SNAPSHOT</version>
+  <version>2.0.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>worker-message-prioritization-aggregator</name>
@@ -42,167 +42,462 @@
   <inceptionYear>2022</inceptionYear>
   
   <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <copyrightYear>2024</copyrightYear>
-    <copyrightNotice>Copyright ${project.inceptionYear}-${copyrightYear} Open Text.</copyrightNotice>
-    <enforceCorrectDependencies>true</enforceCorrectDependencies>
-      <maven.compiler.source>8</maven.compiler.source>
-      <maven.compiler.target>8</maven.compiler.target>
   </properties>
 
-  <dependencies>
-  </dependencies>
-  
   <dependencyManagement>
     <dependencies>
       <dependency>
-        <groupId>commons-io</groupId>
-        <artifactId>commons-io</artifactId>
-        <version>2.6</version>
+        <groupId>ch.qos.logback</groupId>
+        <artifactId>logback-classic</artifactId>
+        <version>1.4.14</version>
       </dependency>
       <dependency>
-        <groupId>com.google.guava</groupId>
-        <artifactId>guava</artifactId>
-        <version>32.1.2-jre</version>
+        <groupId>ch.qos.logback</groupId>
+        <artifactId>logback-core</artifactId>
+        <version>1.4.14</version>
       </dependency>
       <dependency>
-        <groupId>com.google.inject</groupId>
-        <artifactId>guice</artifactId>
-        <version>5.1.0</version>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-annotations</artifactId>
+        <version>2.16.0</version>
       </dependency>
       <dependency>
-        <groupId>com.github.cafapi</groupId>
-        <artifactId>caf-dependency-management-bom</artifactId>
-        <version>3.4.0-604</version>
-        <type>pom</type>
-        <scope>import</scope>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-core</artifactId>
+        <version>2.16.0</version>
       </dependency>
       <dependency>
-        <groupId>com.github.cafapi</groupId>
-        <artifactId>caf-common</artifactId>
-        <version>1.20.0-288</version>
-        <type>pom</type>
-        <scope>import</scope>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-databind</artifactId>
+        <version>2.16.0</version>
       </dependency>
       <dependency>
-          <groupId>com.github.workerframework</groupId>
-          <artifactId>worker-message-prioritization-distribution</artifactId>
-          <version>${project.version}</version>
+        <groupId>com.flipkart.zjsonpatch</groupId>
+        <artifactId>zjsonpatch</artifactId>
+        <version>0.4.16</version>
+      </dependency>
+      <dependency>
+        <groupId>com.github.ben-manes.caffeine</groupId>
+        <artifactId>caffeine</artifactId>
+        <version>3.1.8</version>
+      </dependency>
+      <dependency>
+        <groupId>com.github.cafapi.logging</groupId>
+        <artifactId>caf-logging-common</artifactId>
+        <version>2.0.0-238</version>
+      </dependency>
+      <dependency>
+        <groupId>com.github.cafapi.logging</groupId>
+        <artifactId>caf-logging-logback</artifactId>
+        <version>2.0.0-238</version>
+      </dependency>
+      <dependency>
+        <groupId>com.github.cafapi.logging</groupId>
+        <artifactId>caf-logging-logback-converters</artifactId>
+        <version>2.0.0-238</version>
+      </dependency>
+      <dependency>
+        <groupId>com.github.cafapi.util</groupId>
+        <artifactId>util-process-identifier</artifactId>
+        <version>3.0.0-549</version>
+      </dependency>
+      <dependency>
+        <groupId>com.github.cafdataprocessing</groupId>
+        <artifactId>worker-document-interface</artifactId>
+        <version>6.0.0-1308</version>
+      </dependency>
+      <dependency>
+        <groupId>com.github.vladimir-bukhtoyarov</groupId>
+        <artifactId>bucket4j-core</artifactId>
+        <version>7.6.0</version>
+      </dependency>
+      <dependency>
+        <groupId>com.github.workerframework</groupId>
+        <artifactId>worker-message-prioritization-distribution</artifactId>
+        <version>2.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.github.workerframework</groupId>
         <artifactId>worker-message-prioritization-rabbitmq</artifactId>
-        <version>${project.version}</version>
+        <version>2.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.github.workerframework</groupId>
         <artifactId>worker-message-prioritization-target-capacity-calculators</artifactId>
-        <version>${project.version}</version>
+        <version>2.0.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.code.findbugs</groupId>
+        <artifactId>jsr305</artifactId>
+        <version>3.0.2</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.code.gson</groupId>
+        <artifactId>gson</artifactId>
+        <version>2.10.1</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.errorprone</groupId>
+        <artifactId>error_prone_annotations</artifactId>
+        <version>2.23.0</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>failureaccess</artifactId>
+        <version>1.0.2</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>33.0.0-jre</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>listenablefuture</artifactId>
+        <version>9999.0-empty-to-avoid-conflict-with-guava</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.inject</groupId>
+        <artifactId>guice</artifactId>
+        <version>7.0.0</version>
+        <exclusions>
+          <exclusion>
+            <groupId>aopalliance</groupId>
+            <artifactId>aopalliance</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>com.google.j2objc</groupId>
+        <artifactId>j2objc-annotations</artifactId>
+        <version>2.8</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.protobuf</groupId>
+        <artifactId>protobuf-java</artifactId>
+        <version>3.25.1</version>
+      </dependency>
+      <dependency>
+        <groupId>com.rabbitmq</groupId>
+        <artifactId>amqp-client</artifactId>
+        <version>5.20.0</version>
       </dependency>
       <dependency>
         <groupId>com.squareup.okhttp3</groupId>
-        <artifactId>okhttp</artifactId>
-        <version>5.0.0-alpha.11</version>
-      </dependency>
-      <dependency>
-        <groupId>com.squareup.okhttp3</groupId>
-        <artifactId>okhttp-jvm</artifactId>
-        <version>5.0.0-alpha.11</version>
+        <artifactId>logging-interceptor</artifactId>
+        <version>5.0.0-alpha.12</version>
       </dependency>
       <dependency>
         <groupId>com.squareup.okhttp3</groupId>
         <artifactId>mockwebserver3</artifactId>
-        <version>5.0.0-alpha.11</version>
+        <version>5.0.0-alpha.12</version>
       </dependency>
       <dependency>
         <groupId>com.squareup.okhttp3</groupId>
         <artifactId>mockwebserver3-junit5</artifactId>
-        <version>5.0.0-alpha.11</version>
+        <version>5.0.0-alpha.12</version>
       </dependency>
       <dependency>
-          <groupId>io.kubernetes</groupId>
-          <artifactId>client-java</artifactId>
-          <version>17.0.1</version>
+        <groupId>com.squareup.okhttp3</groupId>
+        <artifactId>okhttp</artifactId>
+        <version>5.0.0-alpha.12</version>
       </dependency>
       <dependency>
-          <groupId>io.kubernetes</groupId>
-          <artifactId>client-java-api</artifactId>
-          <version>17.0.1</version>
+        <groupId>com.squareup.okhttp3</groupId>
+        <artifactId>okhttp-jvm</artifactId>
+        <version>5.0.0-alpha.12</version>
       </dependency>
       <dependency>
-          <groupId>io.kubernetes</groupId>
-          <artifactId>client-java-extended</artifactId>
-          <version>17.0.1</version>
+        <groupId>com.squareup.okio</groupId>
+        <artifactId>okio-jvm</artifactId>
+        <version>3.7.0</version>
       </dependency>
       <dependency>
-          <groupId>jakarta.activation</groupId>
-          <artifactId>jakarta.activation-api</artifactId>
-          <version>1.2.2</version>
+        <groupId>commons-codec</groupId>
+        <artifactId>commons-codec</artifactId>
+        <version>1.16.0</version>
       </dependency>
       <dependency>
-          <groupId>net.jodah</groupId>
-          <artifactId>expiringmap</artifactId>
-          <version>0.5.10</version>
+        <groupId>commons-io</groupId>
+        <artifactId>commons-io</artifactId>
+        <version>2.15.1</version>
       </dependency>
       <dependency>
-          <groupId>org.awaitility</groupId>
-          <artifactId>awaitility</artifactId>
-          <version>4.2.0</version>
+        <groupId>io.gsonfire</groupId>
+        <artifactId>gson-fire</artifactId>
+        <version>1.9.0</version>
+      </dependency>
+      <dependency>
+        <groupId>io.kubernetes</groupId>
+        <artifactId>client-java</artifactId>
+        <version>19.0.0</version>
+      </dependency>
+      <dependency>
+        <groupId>io.kubernetes</groupId>
+        <artifactId>client-java-api</artifactId>
+        <version>19.0.0</version>
+        <exclusions>
+          <exclusion>
+            <groupId>javax.annotation</groupId>
+            <artifactId>javax.annotation-api</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>io.kubernetes</groupId>
+        <artifactId>client-java-api-fluent</artifactId>
+        <version>19.0.0</version>
+      </dependency>
+      <dependency>
+        <groupId>io.kubernetes</groupId>
+        <artifactId>client-java-extended</artifactId>
+        <version>19.0.0</version>
+      </dependency>
+      <dependency>
+        <groupId>io.kubernetes</groupId>
+        <artifactId>client-java-proto</artifactId>
+        <version>19.0.0</version>
+      </dependency>
+      <dependency>
+        <groupId>io.prometheus</groupId>
+        <artifactId>simpleclient</artifactId>
+        <version>0.16.0</version>
+      </dependency>
+      <dependency>
+        <groupId>io.prometheus</groupId>
+        <artifactId>simpleclient_common</artifactId>
+        <version>0.16.0</version>
+      </dependency>
+      <dependency>
+        <groupId>io.prometheus</groupId>
+        <artifactId>simpleclient_httpserver</artifactId>
+        <version>0.16.0</version>
+      </dependency>
+      <dependency>
+        <groupId>io.prometheus</groupId>
+        <artifactId>simpleclient_tracer_common</artifactId>
+        <version>0.16.0</version>
+      </dependency>
+      <dependency>
+        <groupId>io.prometheus</groupId>
+        <artifactId>simpleclient_tracer_otel</artifactId>
+        <version>0.16.0</version>
+      </dependency>
+      <dependency>
+        <groupId>io.prometheus</groupId>
+        <artifactId>simpleclient_tracer_otel_agent</artifactId>
+        <version>0.16.0</version>
+      </dependency>
+      <dependency>
+        <groupId>io.swagger</groupId>
+        <artifactId>swagger-annotations</artifactId>
+        <version>1.6.12</version>
+      </dependency>
+      <dependency>
+        <groupId>jakarta.activation</groupId>
+        <artifactId>jakarta.activation-api</artifactId>
+        <version>2.1.2</version>
+      </dependency>
+      <dependency>
+        <groupId>jakarta.annotation</groupId>
+        <artifactId>jakarta.annotation-api</artifactId>
+        <version>2.1.1</version>
+      </dependency>
+      <dependency>
+        <groupId>jakarta.inject</groupId>
+        <artifactId>jakarta.inject-api</artifactId>
+        <version>2.0.1.MR</version>
+      </dependency>
+      <dependency>
+        <groupId>jakarta.ws.rs</groupId>
+        <artifactId>jakarta.ws.rs-api</artifactId>
+        <version>3.1.0</version>
+      </dependency>
+      <dependency>
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <version>4.13.2</version>
+      </dependency>
+      <dependency>
+        <groupId>net.bytebuddy</groupId>
+        <artifactId>byte-buddy</artifactId>
+        <version>1.14.11</version>
+      </dependency>
+      <dependency>
+        <groupId>net.bytebuddy</groupId>
+        <artifactId>byte-buddy-agent</artifactId>
+        <version>1.14.11</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-collections4</artifactId>
+        <version>4.4</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-compress</artifactId>
+        <version>1.25.0</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-lang3</artifactId>
+        <version>3.14.0</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-text</artifactId>
+        <version>1.11.0</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apiguardian</groupId>
+        <artifactId>apiguardian-api</artifactId>
+        <version>1.1.2</version>
+      </dependency>
+      <dependency>
+        <groupId>org.awaitility</groupId>
+        <artifactId>awaitility</artifactId>
+        <version>4.2.0</version>
+      </dependency>
+      <dependency>
+        <groupId>org.bitbucket.b_c</groupId>
+        <artifactId>jose4j</artifactId>
+        <version>0.9.4</version>
+      </dependency>
+      <dependency>
+        <groupId>org.bouncycastle</groupId>
+        <artifactId>bcpkix-jdk18on</artifactId>
+        <version>1.77</version>
+      </dependency>
+      <dependency>
+        <groupId>org.bouncycastle</groupId>
+        <artifactId>bcprov-jdk18on</artifactId>
+        <version>1.77</version>
+      </dependency>
+      <dependency>
+        <groupId>org.bouncycastle</groupId>
+        <artifactId>bcutil-jdk18on</artifactId>
+        <version>1.77</version>
+      </dependency>
+      <dependency>
+        <groupId>org.checkerframework</groupId>
+        <artifactId>checker-qual</artifactId>
+        <version>3.42.0</version>
+      </dependency>
+      <dependency>
+        <groupId>org.glassfish.hk2</groupId>
+        <artifactId>hk2-api</artifactId>
+        <version>3.0.5</version>
+      </dependency>
+      <dependency>
+        <groupId>org.glassfish.hk2</groupId>
+        <artifactId>hk2-locator</artifactId>
+        <version>3.0.5</version>
+      </dependency>
+      <dependency>
+        <groupId>org.glassfish.hk2</groupId>
+        <artifactId>hk2-utils</artifactId>
+        <version>3.0.5</version>
+      </dependency>
+      <dependency>
+        <groupId>org.glassfish.hk2</groupId>
+        <artifactId>osgi-resource-locator</artifactId>
+        <version>1.0.3</version>
+      </dependency>
+      <dependency>
+        <groupId>org.glassfish.hk2.external</groupId>
+        <artifactId>aopalliance-repackaged</artifactId>
+        <version>3.0.5</version>
       </dependency>
       <dependency>
         <groupId>org.glassfish.jersey.core</groupId>
         <artifactId>jersey-client</artifactId>
-        <version>2.26</version>
+        <version>3.1.5</version>
+      </dependency>
+      <dependency>
+        <groupId>org.glassfish.jersey.core</groupId>
+        <artifactId>jersey-common</artifactId>
+        <version>3.1.5</version>
       </dependency>
       <dependency>
         <groupId>org.glassfish.jersey.inject</groupId>
         <artifactId>jersey-hk2</artifactId>
-        <version>2.34</version>
+        <version>3.1.5</version>
       </dependency>
       <dependency>
         <groupId>org.glassfish.jersey.media</groupId>
         <artifactId>jersey-media-json-gson</artifactId>
-        <version>2.37</version>
+        <version>3.1.5</version>
       </dependency>
       <dependency>
         <groupId>org.hamcrest</groupId>
         <artifactId>hamcrest</artifactId>
-        <version>2.1</version>
+        <version>2.2</version>
       </dependency>
       <dependency>
         <groupId>org.hamcrest</groupId>
         <artifactId>hamcrest-core</artifactId>
-        <version>2.1</version>
+        <version>2.2</version>
+      </dependency>
+      <dependency>
+        <groupId>org.javassist</groupId>
+        <artifactId>javassist</artifactId>
+        <version>3.30.1-GA</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jetbrains</groupId>
+        <artifactId>annotations</artifactId>
+        <version>24.1.0</version>
       </dependency>
       <dependency>
         <groupId>org.jetbrains.kotlin</groupId>
         <artifactId>kotlin-stdlib</artifactId>
-        <version>1.9.0</version>
+        <version>1.9.21</version>
       </dependency>
       <dependency>
-        <groupId>org.jetbrains.kotlin</groupId>
-        <artifactId>kotlin-stdlib-common</artifactId>
-        <version>1.9.0</version>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter-api</artifactId>
+        <version>5.10.1</version>
       </dependency>
       <dependency>
-        <groupId>org.jetbrains.kotlin</groupId>
-        <artifactId>kotlin-stdlib-jdk7</artifactId>
-        <version>1.9.0</version>
-      </dependency>
-      <dependency>
-        <groupId>org.jetbrains.kotlin</groupId>
-        <artifactId>kotlin-stdlib-jdk8</artifactId>
-        <version>1.9.0</version>
+        <groupId>org.junit.platform</groupId>
+        <artifactId>junit-platform-commons</artifactId>
+        <version>1.10.1</version>
       </dependency>
       <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-core</artifactId>
-        <version>4.2.0</version>
+        <version>5.8.0</version>
+      </dependency>
+      <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-inline</artifactId>
+        <version>5.2.0</version>
+      </dependency>
+      <dependency>
+        <groupId>org.objenesis</groupId>
+        <artifactId>objenesis</artifactId>
+        <version>3.3</version>
+      </dependency>
+      <dependency>
+        <groupId>org.opentest4j</groupId>
+        <artifactId>opentest4j</artifactId>
+        <version>1.3.0</version>
       </dependency>
       <dependency>
         <groupId>org.slf4j</groupId>
-        <artifactId>slf4j-jdk14</artifactId>
-        <version>1.7.30</version>
+        <artifactId>slf4j-api</artifactId>
+        <version>2.0.9</version>
+      </dependency>
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-simple</artifactId>
+        <version>2.0.9</version>
+      </dependency>
+      <dependency>
+        <groupId>org.yaml</groupId>
+        <artifactId>snakeyaml</artifactId>
+        <version>2.2</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -213,7 +508,7 @@
         <plugin>
           <groupId>io.fabric8</groupId>
           <artifactId>docker-maven-plugin</artifactId>
-          <version>0.40.2</version>
+          <version>0.43.4</version>
         </plugin>
       </plugins>
     </pluginManagement>

@@ -15,11 +15,11 @@
  */
 package com.github.workerframework.workermessageprioritization.rabbitmq;
 
-import javax.ws.rs.ProcessingException;
-import javax.ws.rs.client.Invocation;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.ProcessingException;
+import jakarta.ws.rs.client.Invocation;
+import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import com.google.gson.JsonElement;
 
