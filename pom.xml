@@ -412,22 +412,22 @@
       <dependency>
         <groupId>org.glassfish.jersey.core</groupId>
         <artifactId>jersey-client</artifactId>
-        <version>3.1.5</version>
+        <version>3.0.12</version>
       </dependency>
       <dependency>
         <groupId>org.glassfish.jersey.core</groupId>
         <artifactId>jersey-common</artifactId>
-        <version>3.1.5</version>
+        <version>3.0.12</version>
       </dependency>
       <dependency>
         <groupId>org.glassfish.jersey.inject</groupId>
         <artifactId>jersey-hk2</artifactId>
-        <version>3.1.5</version>
+        <version>3.0.12</version>
       </dependency>
       <dependency>
         <groupId>org.glassfish.jersey.media</groupId>
         <artifactId>jersey-media-json-gson</artifactId>
-        <version>3.1.5</version>
+        <version>3.0.12</version>
       </dependency>
       <dependency>
         <groupId>org.hamcrest</groupId>
