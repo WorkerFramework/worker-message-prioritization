@@ -23,7 +23,6 @@ import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.core.Response;
 
 import org.glassfish.jersey.client.ClientProperties;
-import org.glassfish.jersey.gson.JsonGsonFeature;
 
 public abstract class RabbitManagementApi {
 
@@ -36,8 +35,7 @@ public abstract class RabbitManagementApi {
 
     public RabbitManagementApi(final String endpoint, final String user, final String password) {
         this.client = ClientBuilder.newClient();
-        this.client.register(JsonGsonFeature.class);
-        this.client.register(GsonConfigurator.class);
+        this.client.register(JacksonConfigurator.class);
         client.property(ClientProperties.CONNECT_TIMEOUT, CONNECT_TIMEOUT_MILLISECONDS);
         client.property(ClientProperties.READ_TIMEOUT, READ_TIMEOUT_MILLISECONDS);
 
