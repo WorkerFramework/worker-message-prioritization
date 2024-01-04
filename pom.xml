@@ -73,6 +73,11 @@
         <version>2.16.0</version>
       </dependency>
       <dependency>
+        <groupId>com.fasterxml.jackson.module</groupId>
+        <artifactId>jackson-module-jakarta-xmlbind-annotations</artifactId>
+        <version>2.16.0</version>
+      </dependency>
+      <dependency>
         <groupId>com.flipkart.zjsonpatch</groupId>
         <artifactId>zjsonpatch</artifactId>
         <version>0.4.16</version>
@@ -214,6 +219,11 @@
         <version>3.7.0</version>
       </dependency>
       <dependency>
+        <groupId>com.sun.activation</groupId>
+        <artifactId>jakarta.activation</artifactId>
+        <version>2.0.1</version>
+      </dependency>
+      <dependency>
         <groupId>commons-codec</groupId>
         <artifactId>commons-codec</artifactId>
         <version>1.16.0</version>
@@ -295,11 +305,6 @@
         <version>1.6.12</version>
       </dependency>
       <dependency>
-        <groupId>jakarta.activation</groupId>
-        <artifactId>jakarta.activation-api</artifactId>
-        <version>2.1.2</version>
-      </dependency>
-      <dependency>
         <groupId>jakarta.annotation</groupId>
         <artifactId>jakarta.annotation-api</artifactId>
         <version>2.1.1</version>
@@ -313,6 +318,11 @@
         <groupId>jakarta.ws.rs</groupId>
         <artifactId>jakarta.ws.rs-api</artifactId>
         <version>3.1.0</version>
+      </dependency>
+      <dependency>
+        <groupId>jakarta.xml.bind</groupId>
+        <artifactId>jakarta.xml.bind-api</artifactId>
+        <version>3.0.1</version>
       </dependency>
       <dependency>
         <groupId>junit</groupId>
@@ -417,6 +427,11 @@
       <dependency>
         <groupId>org.glassfish.jersey.core</groupId>
         <artifactId>jersey-common</artifactId>
+        <version>3.0.12</version>
+      </dependency>
+      <dependency>
+        <groupId>org.glassfish.jersey.ext</groupId>
+        <artifactId>jersey-entity-filtering</artifactId>
         <version>3.0.12</version>
       </dependency>
       <dependency>
