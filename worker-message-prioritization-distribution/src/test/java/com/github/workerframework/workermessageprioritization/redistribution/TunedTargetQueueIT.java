@@ -100,7 +100,7 @@ public class TunedTargetQueueIT extends DistributorTestBase {
                         .deliveryMode(2)
                         .build();
 
-                final String body = gson.toJson(new Object());
+                final String body = "{}";
 
                 channel.basicPublish("", stagingQueue1Name, properties, body.getBytes(StandardCharsets.UTF_8));
                 channel.basicPublish("", stagingQueue2Name, properties, body.getBytes(StandardCharsets.UTF_8));

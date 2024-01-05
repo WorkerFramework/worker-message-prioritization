@@ -70,7 +70,7 @@ public class LowLevelDistributorIT extends DistributorTestBase {
                     .deliveryMode(2)
                     .build();
 
-            final String body = gson.toJson(new Object());
+            final String body = "{}";
 
             // Publish 500 messages to each staging queue, 1000 in total (note using large numbers of messages here as some issues only
             // present themselves when there are large numbers of messages)
@@ -220,7 +220,7 @@ public class LowLevelDistributorIT extends DistributorTestBase {
                     .deliveryMode(2)
                     .build();
 
-            final String body = gson.toJson(new Object());
+            final String body = "{}";
 
             // Publish 1 message to the staging queue
             channel.basicPublish("", stagingQueueName, properties, body.getBytes(StandardCharsets.UTF_8));

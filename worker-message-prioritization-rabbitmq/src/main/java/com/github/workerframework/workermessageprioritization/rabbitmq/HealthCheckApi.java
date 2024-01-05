@@ -15,9 +15,9 @@
  */
 package com.github.workerframework.workermessageprioritization.rabbitmq;
 
-import com.google.gson.JsonElement;
+import com.fasterxml.jackson.databind.JsonNode;
 
 public interface HealthCheckApi
 {
-    JsonElement checkHealth();
+    JsonNode checkHealth();
 }

@@ -15,7 +15,7 @@
  */
 package com.github.workerframework.workermessageprioritization.rabbitmq;
 
-import com.google.gson.annotations.SerializedName;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Component<T> {
 
@@ -24,8 +24,8 @@ public class Component<T> {
         this.name = name;
         this.value = value;
     }
-    
-    @SerializedName("component")
+
+    @JsonProperty("component")
     private String componentName;
     private String name;
     private T value;
