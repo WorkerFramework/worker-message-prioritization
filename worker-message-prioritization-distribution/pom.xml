@@ -37,11 +37,6 @@
             <scope>runtime</scope>  <!-- Used by the unit tests but has to be declared runtime-scope because it is also transitive -->
         </dependency>
         <dependency>
-            <groupId>com.google.code.gson</groupId>
-            <artifactId>gson</artifactId>
-            <scope>runtime</scope>  <!-- Used by the unit tests but has to be declared runtime-scope because it is also transitive -->
-        </dependency>
-        <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
         </dependency>

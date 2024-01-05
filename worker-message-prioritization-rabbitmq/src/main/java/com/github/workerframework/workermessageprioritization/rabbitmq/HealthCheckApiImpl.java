@@ -21,7 +21,7 @@ import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-import com.google.gson.JsonElement;
+import com.fasterxml.jackson.databind.JsonNode;
 
 public final class HealthCheckApiImpl extends RabbitManagementApi implements HealthCheckApi {
 
@@ -30,7 +30,7 @@ public final class HealthCheckApiImpl extends RabbitManagementApi implements Hea
     }
 
     @Override
-    public JsonElement checkHealth() {
+    public JsonNode checkHealth() {
         // Responds with a 200 OK if all virtual hosts and running on the target node, otherwise responds with a 503 Service Unavailable.
         final String url = endpoint + "/api/health/checks/virtual-hosts";
         try {
@@ -39,7 +39,7 @@ public final class HealthCheckApiImpl extends RabbitManagementApi implements Hea
                     .header(HttpHeaders.AUTHORIZATION, authorizationHeaderValue);
 
             final Response response = builder.get();
-            return response.readEntity(JsonElement.class);
+            return response.readEntity(JsonNode.class);
         } catch (final ProcessingException e) {
             throw new RuntimeException(prepareErrorMessage(url, null, e), e);
         }

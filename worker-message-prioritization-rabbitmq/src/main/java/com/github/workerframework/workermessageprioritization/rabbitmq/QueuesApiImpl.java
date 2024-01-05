@@ -82,7 +82,7 @@ public final class QueuesApiImpl extends RabbitManagementApi implements QueuesAp
         try {
             final WebTarget webTarget = client.target(url);
 
-            if(columnsCsvString != null) {
+            if (columnsCsvString != null && !columnsCsvString.isBlank()) {
                 webTarget.queryParam("columns", URLEncoder.encode(columnsCsvString, StandardCharsets.UTF_8.name()));
             }
 

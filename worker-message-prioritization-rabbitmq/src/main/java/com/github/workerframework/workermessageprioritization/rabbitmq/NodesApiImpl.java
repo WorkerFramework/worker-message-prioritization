@@ -22,6 +22,7 @@ import java.util.List;
 
 import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.client.Invocation;
+import jakarta.ws.rs.client.WebTarget;
 import jakarta.ws.rs.core.GenericType;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
@@ -38,10 +39,13 @@ public final class NodesApiImpl extends RabbitManagementApi  implements NodesApi
         final String url = endpoint + "/api/nodes/";
 
         try {
-            final Invocation.Builder builder = client.target(url)
-                    .queryParam("columns", URLEncoder.encode(columnsCsvString, StandardCharsets.UTF_8.name()))
-                    .request(MediaType.APPLICATION_JSON)
-                    .header(HttpHeaders.AUTHORIZATION, authorizationHeaderValue);
+            final WebTarget target = client.target(url);
+            if (columnsCsvString != null && !columnsCsvString.isBlank())
+            {
+                target.queryParam("columns", URLEncoder.encode(columnsCsvString, StandardCharsets.UTF_8.name()));
+            }
+            final Invocation.Builder builder = target.request(MediaType.APPLICATION_JSON)
+                .header(HttpHeaders.AUTHORIZATION, authorizationHeaderValue);
 
             final Response response = builder.get();
             return response.readEntity(new GenericType<List<Node>>() {});

@@ -73,6 +73,11 @@
         <version>2.16.0</version>
       </dependency>
       <dependency>
+        <groupId>com.fasterxml.jackson.module</groupId>
+        <artifactId>jackson-module-jakarta-xmlbind-annotations</artifactId>
+        <version>2.16.0</version>
+      </dependency>
+      <dependency>
         <groupId>com.flipkart.zjsonpatch</groupId>
         <artifactId>zjsonpatch</artifactId>
         <version>0.4.16</version>
@@ -131,11 +136,6 @@
         <groupId>com.google.code.findbugs</groupId>
         <artifactId>jsr305</artifactId>
         <version>3.0.2</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.code.gson</groupId>
-        <artifactId>gson</artifactId>
-        <version>2.10.1</version>
       </dependency>
       <dependency>
         <groupId>com.google.errorprone</groupId>
@@ -212,6 +212,11 @@
         <groupId>com.squareup.okio</groupId>
         <artifactId>okio-jvm</artifactId>
         <version>3.7.0</version>
+      </dependency>
+      <dependency>
+        <groupId>com.sun.activation</groupId>
+        <artifactId>jakarta.activation</artifactId>
+        <version>2.0.1</version>
       </dependency>
       <dependency>
         <groupId>commons-codec</groupId>
@@ -295,11 +300,6 @@
         <version>1.6.12</version>
       </dependency>
       <dependency>
-        <groupId>jakarta.activation</groupId>
-        <artifactId>jakarta.activation-api</artifactId>
-        <version>2.1.2</version>
-      </dependency>
-      <dependency>
         <groupId>jakarta.annotation</groupId>
         <artifactId>jakarta.annotation-api</artifactId>
         <version>2.1.1</version>
@@ -313,6 +313,11 @@
         <groupId>jakarta.ws.rs</groupId>
         <artifactId>jakarta.ws.rs-api</artifactId>
         <version>3.1.0</version>
+      </dependency>
+      <dependency>
+        <groupId>jakarta.xml.bind</groupId>
+        <artifactId>jakarta.xml.bind-api</artifactId>
+        <version>3.0.1</version>
       </dependency>
       <dependency>
         <groupId>junit</groupId>
@@ -420,13 +425,18 @@
         <version>3.0.12</version>
       </dependency>
       <dependency>
+        <groupId>org.glassfish.jersey.ext</groupId>
+        <artifactId>jersey-entity-filtering</artifactId>
+        <version>3.0.12</version>
+      </dependency>
+      <dependency>
         <groupId>org.glassfish.jersey.inject</groupId>
         <artifactId>jersey-hk2</artifactId>
         <version>3.0.12</version>
       </dependency>
       <dependency>
         <groupId>org.glassfish.jersey.media</groupId>
-        <artifactId>jersey-media-json-gson</artifactId>
+        <artifactId>jersey-media-json-jackson</artifactId>
         <version>3.0.12</version>
       </dependency>
       <dependency>

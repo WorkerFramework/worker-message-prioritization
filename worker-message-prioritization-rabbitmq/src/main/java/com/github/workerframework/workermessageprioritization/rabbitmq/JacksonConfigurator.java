@@ -15,9 +15,29 @@
  */
 package com.github.workerframework.workermessageprioritization.rabbitmq;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-public interface HealthCheckApi
+import jakarta.ws.rs.ext.ContextResolver;
+import jakarta.ws.rs.ext.Provider;
+
+/**
+ * Provides custom configuration for jackson.
+ */
+@Provider
+public final class JacksonConfigurator implements ContextResolver<ObjectMapper>
 {
-    JsonNode checkHealth();
+    private final ObjectMapper mapper;
+
+    public JacksonConfigurator()
+    {
+        mapper = new ObjectMapper();
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    }
+
+    @Override
+    public ObjectMapper getContext(final Class<?> type)
+    {
+        return mapper;
+    }
 }

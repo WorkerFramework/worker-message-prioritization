@@ -20,7 +20,6 @@ import java.util.concurrent.Callable;
 import com.github.workerframework.workermessageprioritization.rabbitmq.NodesApi;
 import com.github.workerframework.workermessageprioritization.rabbitmq.NodesApiImpl;
 import com.google.common.base.Strings;
-import com.google.gson.Gson;
 import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApi;
 import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApiImpl;
 import com.rabbitmq.client.ConnectionFactory;
@@ -31,8 +30,7 @@ public class DistributorTestBase {
     protected static final String T2_STAGING_QUEUE_NAME = "tenant2";
     protected static final String TARGET_QUEUE_NAME = "target";
     protected static final String VHOST = "/";
-    
-    protected final Gson gson = new Gson();
+
     protected ConnectionFactory connectionFactory;
     protected int managementPort;
     protected QueuesApi queuesApi;
