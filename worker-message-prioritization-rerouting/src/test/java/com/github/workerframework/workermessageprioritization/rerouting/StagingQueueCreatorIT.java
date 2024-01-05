@@ -25,6 +25,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
@@ -71,6 +72,10 @@ public final class StagingQueueCreatorIT extends RerouterTestBase {
                                     targetQueueAutoDelete, stagingQueue.isAuto_delete());
                 Assert.assertEquals("Staging queue should have been created with the same arguments as the target queue",
                                     targetQueueArguments, stagingQueue.getArguments());
+
+                final List<Queue> queues = queuesApi.getQueues();
+                Assert.assertEquals("Two queues not found", 2, queues.size());
+
             }
         }
     }

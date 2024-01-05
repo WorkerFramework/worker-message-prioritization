@@ -17,7 +17,6 @@ package com.github.workerframework.workermessageprioritization.rerouting;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.github.workerframework.workermessageprioritization.rabbitmq.Node;
-import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -28,19 +27,13 @@ public final class RabbitManagementApiIT extends RerouterTestBase {
     @Test
     public void healthCheckTest() {
         final JsonNode health = healthCheckApi.checkHealth();
-        Assert.assertEquals("Health check is ok", "ok", health.get("status").asText());
-    }
-
-    @Test
-    public void getQueuesTest() {
-        final List<Queue> queues = queuesApi.getQueues();
-        Assert.assertEquals("One queue found", 1, queues.size());
+        Assert.assertEquals("Health check not ok", "ok", health.get("status").asText());
     }
 
     @Test
     public void getNodesTest() {
         final List<Node> nodes = nodesApi.getNodes(null);
-        Assert.assertEquals("One node found", 1, nodes.size());
+        Assert.assertEquals("One node not found", 1, nodes.size());
     }
 
 }
