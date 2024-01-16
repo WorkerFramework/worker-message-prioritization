@@ -326,6 +326,10 @@ public class StagingQueueTargetQueuePair {
         return stagingQueueConsumer.getShutdownSignalException();
     }
 
+    public String getStagingQueueName() {
+        return this.stagingQueue.getName();
+    }
+
     public long getConsumptionLimit() {
         return consumptionLimit;
     }

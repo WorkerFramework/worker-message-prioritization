@@ -46,6 +46,7 @@ public class LowLevelDistributor extends MessageDistributor {
     private final String connectionDetails;
     private final long distributorRunIntervalMilliseconds;
     private final long consumerPublisherPairLastDoneWorkTimeoutMilliseconds;
+    private final QueuesApi queuesApi;
 
     @Inject
     public LowLevelDistributor(final QueuesApi queuesApi,
@@ -55,6 +56,8 @@ public class LowLevelDistributor extends MessageDistributor {
                                @Named("DistributorRunIntervalMilliseconds") final long distributorRunIntervalMilliseconds,
                                @Named("ConsumerPublisherPairLastDoneWorkTimeoutMilliseconds") final long consumerPublisherPairLastDoneWorkTimeoutMilliseconds) {
         super(queuesApi);
+        this.queuesApi = queuesApi;
+
         this.connectionFactory = connectionFactory;
         this.connectionDetails = String.format(
             "Host: %s, Port: %s, Virtual Host: %s, SSL: %s",
@@ -123,12 +126,16 @@ public class LowLevelDistributor extends MessageDistributor {
 
             } else if (existingStagingQueueTargetQueuePair.hasExceededLastDoneWorkTimeout()) {
 
+                final long numMessagesInStagingQueue = queuesApi.getQueue("/", existingStagingQueueTargetQueuePair.getStagingQueueName()).getMessages();
+
                 closeAndRemoveFailedStagingQueueTargetQueuePair(
                         existingStagingQueueTargetQueuePair,
                         existingStagingQueueTargetQueuePairsIterator,
                         String.format(
-                                "%s milliseconds have elapsed since it last done work, so assuming that it is stuck",
-                                consumerPublisherPairLastDoneWorkTimeoutMilliseconds)
+                                "%s milliseconds have elapsed since it last done work, so assuming that it is stuck. " +
+                                "%s messages remaining in staging queue",
+                                consumerPublisherPairLastDoneWorkTimeoutMilliseconds,
+                                numMessagesInStagingQueue)
                 );
 
             } else if (existingStagingQueueTargetQueuePair.isConsumerCompleted() &&
