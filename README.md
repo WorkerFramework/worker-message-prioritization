@@ -1,4 +1,4 @@
-# worker-message-prioritization
+# worker-message-prioritization - doing a checkin
 
 The project attempts to _fairly_ distribute work to workers built with the 
 [Document Worker Framework](https://github.com/CAFDataProcessing/worker-document).
