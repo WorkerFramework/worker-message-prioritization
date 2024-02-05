@@ -94,14 +94,12 @@ public class LowLevelDistributor extends MessageDistributor {
     
     public void runOnce(final Connection connection) throws IOException {
 
-        LOGGER.info("Existing StagingQueueTargetQueuePairs: {}", existingStagingQueueTargetQueuePairs);
-
         // Check if any existing StagingQueueTargetQueuePairs need to be closed (either because they have completed or failed)
         final Iterator<StagingQueueTargetQueuePair> existingStagingQueueTargetQueuePairsIterator =
                 existingStagingQueueTargetQueuePairs.values().iterator();
 
         while (existingStagingQueueTargetQueuePairsIterator.hasNext()) {
-
+            LOGGER.info("Existing StagingQueueTargetQueuePairs: {}", existingStagingQueueTargetQueuePairs);
             final StagingQueueTargetQueuePair existingStagingQueueTargetQueuePair = existingStagingQueueTargetQueuePairsIterator.next();
 
             if (existingStagingQueueTargetQueuePair.getShutdownSignalException() != null)  {
