@@ -1,5 +1,3 @@
-!not-ready-for-release!
-
 #### Version Number
 ${version-number}
 
@@ -19,3 +17,4 @@ ${version-number}
 - **US870109:** Replaced okhttp with jersey to make RabbitMQ Management API calls.
 
 #### Known Issues
+- None
