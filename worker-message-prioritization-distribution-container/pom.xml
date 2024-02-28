@@ -205,9 +205,6 @@
                             </build>
                             <!-- Run the image for this module -->
                             <run>
-                                <ports>
-                                    <port>45005:5005</port>
-                                </ports>
                                 <env>
                                     <CAF_RABBITMQ_USERNAME>guest</CAF_RABBITMQ_USERNAME>
                                     <CAF_RABBITMQ_PASSWORD>guest</CAF_RABBITMQ_PASSWORD>
@@ -227,7 +224,6 @@
                                     <TUNED_TARGET_LOG_LEVEL>INFO</TUNED_TARGET_LOG_LEVEL>
                                     <CAF_CONSUMPTION_TARGET_CALCULATOR_MODE>EqualConsumption</CAF_CONSUMPTION_TARGET_CALCULATOR_MODE>
                                     <FAST_LANE_LOG_LEVEL>WARN</FAST_LANE_LOG_LEVEL>
-                                    <_JAVA_OPTIONS>-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005</_JAVA_OPTIONS>
                                 </env>
                                 <dependsOn>
                                     <container>rabbitmq</container>
