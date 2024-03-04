@@ -163,7 +163,9 @@ public class DistributorModule extends AbstractModule {
 
         try {
             if (messageDistributorConfig.getRabbitmqProtocol().equalsIgnoreCase("amqps")) {
-                final String tmfAlgorithm = System.getProperty(TRUST_MANAGER_FACTORY_ALGORITHM, TrustManagerFactory.getDefaultAlgorithm());
+                final String tmfAlgorithm = System.getProperty(
+                        TRUST_MANAGER_FACTORY_ALGORITHM, TrustManagerFactory.getDefaultAlgorithm()
+                );
                 final TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(tmfAlgorithm);
                 trustManagerFactory.init((KeyStore) null);
 
