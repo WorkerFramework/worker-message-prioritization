@@ -242,6 +242,10 @@
                                     <CAF_RABBITMQ_PASSWORD>guest</CAF_RABBITMQ_PASSWORD>
                                     <CAF_RABBITMQ_MGMT_USERNAME>guest</CAF_RABBITMQ_MGMT_USERNAME>
                                     <CAF_RABBITMQ_MGMT_PASSWORD>guest</CAF_RABBITMQ_MGMT_PASSWORD>
+                                    <CAF_RABBITMQ_PROTOCOL>amqps</CAF_RABBITMQ_PROTOCOL>
+                                    <CAF_RABBITMQ_PORT>5671</CAF_RABBITMQ_PORT>
+                                    <SSL_CA_CRT_DIR>/test-keystore</SSL_CA_CRT_DIR>
+                                    <SSL_CA_CRT>ca_certificate.pem</SSL_CA_CRT>
                                     <CAF_LOG_LEVEL>DEBUG</CAF_LOG_LEVEL>
                                     <CAF_WMP_KUBERNETES_NAMESPACES>private</CAF_WMP_KUBERNETES_NAMESPACES>
                                     <CAF_ENABLE_TARGET_QUEUE_LENGTH_TUNING>false</CAF_ENABLE_TARGET_QUEUE_LENGTH_TUNING>
@@ -271,6 +275,11 @@
                                     <time>120000</time>
                                     <shutdown>500</shutdown>
                                 </wait>
+                                <volumes>
+                                    <from>
+                                        <image>keystore</image>
+                                    </from>
+                                </volumes>
                             </run>
                         </image>
                     </images>
