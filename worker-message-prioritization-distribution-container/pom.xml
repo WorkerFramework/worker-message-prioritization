@@ -174,7 +174,7 @@
                         <!-- Run the RabbitMQ image -->
                         <image>
                             <alias>rabbitmq</alias>
-                            <name>${dockerHubPublic}/library/rabbitmq:3-management-tls</name>
+                            <name>${project.artifactId}-rabbitmq:${project.version}</name>
                             <build>
                                 <dockerFileDir>.</dockerFileDir>
                             </build>
