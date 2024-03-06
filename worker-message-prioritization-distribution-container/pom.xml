@@ -176,7 +176,7 @@
                             <alias>rabbitmq</alias>
                             <name>${project.artifactId}-rabbitmq:${project.version}</name>
                             <build>
-                                <dockerFileDir>.</dockerFileDir>
+                                <contextDir>${project.basedir}/src/test/docker</contextDir>
                             </build>
                             <run>
                                 <ports>
