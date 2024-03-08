@@ -40,9 +40,13 @@ import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import com.rabbitmq.client.ConnectionFactory;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManagerFactory;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.KeyManagementException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
@@ -156,13 +160,25 @@ public class DistributorModule extends AbstractModule {
         ConnectionFactory connectionFactory = new ConnectionFactory();
 
         try {
+            if (messageDistributorConfig.getRabbitmqProtocol().equalsIgnoreCase("amqps")) {
+                final String tmfAlgorithm = TrustManagerFactory.getDefaultAlgorithm();
+
+                final TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(tmfAlgorithm);
+                trustManagerFactory.init((KeyStore) null);
+
+                final SSLContext context = SSLContext.getInstance("TLS");
+                context.init(null, trustManagerFactory.getTrustManagers(), null);
+
+                connectionFactory.useSslProtocol(context);
+            }
+
             final URI rabbitUrl = new URI(String.format("%s://%s:%s",
                     messageDistributorConfig.getRabbitmqProtocol(),
                     messageDistributorConfig.getRabbitMQHost(),
                     messageDistributorConfig.getRabbitMQPort()
             ));
             connectionFactory.setUri(rabbitUrl);
-        } catch (final URISyntaxException | NoSuchAlgorithmException | KeyManagementException e) {
+        } catch (final URISyntaxException | NoSuchAlgorithmException | KeyManagementException | KeyStoreException e) {
             throw new RuntimeException("Failed to set Rabbit Connection Factory URL: " + e);
         }
 
