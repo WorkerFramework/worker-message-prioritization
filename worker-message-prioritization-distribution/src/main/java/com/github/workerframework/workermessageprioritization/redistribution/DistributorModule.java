@@ -52,8 +52,6 @@ import java.util.List;
 
 public class DistributorModule extends AbstractModule {
 
-    private static final String TRUST_MANAGER_FACTORY_ALGORITHM = "ssl.trustManagerFactory.algorithm";
-
     @Provides
     @Named("KubernetesNamespaces")
     List<String> provideKubernetesNamespaces(final MessageDistributorConfig messageDistributorConfig) {
@@ -163,9 +161,8 @@ public class DistributorModule extends AbstractModule {
 
         try {
             if (messageDistributorConfig.getRabbitmqProtocol().equalsIgnoreCase("amqps")) {
-                final String tmfAlgorithm = System.getProperty(
-                        TRUST_MANAGER_FACTORY_ALGORITHM, TrustManagerFactory.getDefaultAlgorithm()
-                );
+                final String tmfAlgorithm = TrustManagerFactory.getDefaultAlgorithm();
+
                 final TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(tmfAlgorithm);
                 trustManagerFactory.init((KeyStore) null);
 
