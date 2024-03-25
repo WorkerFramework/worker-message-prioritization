@@ -21,7 +21,6 @@
     <modules>
       <module>worker-message-prioritization-distribution</module>
       <module>worker-message-prioritization-distribution-container</module>
-      <module>worker-message-prioritization-rerouting</module>
       <module>worker-message-prioritization-rabbitmq</module>
       <module>worker-message-prioritization-target-capacity-calculators</module>
     </modules>
