@@ -296,12 +296,12 @@
       <dependency>
         <groupId>io.kubernetes</groupId>
         <artifactId>client-java</artifactId>
-        <version>20.0.1-legacy</version>
+        <version>20.0.1</version>
       </dependency>
       <dependency>
         <groupId>io.kubernetes</groupId>
         <artifactId>client-java-api</artifactId>
-        <version>20.0.1-legacy</version>
+        <version>20.0.1</version>
         <exclusions>
           <exclusion>
             <groupId>javax.annotation</groupId>
@@ -312,17 +312,17 @@
       <dependency>
         <groupId>io.kubernetes</groupId>
         <artifactId>client-java-api-fluent</artifactId>
-        <version>20.0.1-legacy</version>
+        <version>20.0.1</version>
       </dependency>
       <dependency>
         <groupId>io.kubernetes</groupId>
         <artifactId>client-java-extended</artifactId>
-        <version>20.0.1-legacy</version>
+        <version>20.0.1</version>
       </dependency>
       <dependency>
         <groupId>io.kubernetes</groupId>
         <artifactId>client-java-proto</artifactId>
-        <version>20.0.1-legacy</version>
+        <version>20.0.1</version>
       </dependency>
       <dependency>
         <groupId>io.prometheus</groupId>
