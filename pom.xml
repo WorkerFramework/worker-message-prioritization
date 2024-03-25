@@ -21,7 +21,6 @@
     <modules>
       <module>worker-message-prioritization-distribution</module>
       <module>worker-message-prioritization-distribution-container</module>
-      <module>worker-message-prioritization-rerouting</module>
       <module>worker-message-prioritization-rabbitmq</module>
       <module>worker-message-prioritization-target-capacity-calculators</module>
     </modules>
@@ -60,17 +59,17 @@
       <dependency>
         <groupId>com.amazonaws</groupId>
         <artifactId>aws-java-sdk-core</artifactId>
-        <version>1.12.686</version>
+        <version>1.12.687</version>
       </dependency>
       <dependency>
         <groupId>com.amazonaws</groupId>
         <artifactId>aws-java-sdk-sts</artifactId>
-        <version>1.12.686</version>
+        <version>1.12.687</version>
       </dependency>
       <dependency>
         <groupId>com.amazonaws</groupId>
         <artifactId>jmespath-java</artifactId>
-        <version>1.12.686</version>
+        <version>1.12.687</version>
       </dependency>
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
@@ -281,7 +280,7 @@
       <dependency>
         <groupId>commons-logging</groupId>
         <artifactId>commons-logging</artifactId>
-        <version>1.3.0</version>
+        <version>1.3.1</version>
       </dependency>
       <dependency>
         <groupId>io.gsonfire</groupId>
