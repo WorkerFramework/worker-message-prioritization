@@ -284,11 +284,6 @@
         <version>2.15.1</version>
       </dependency>
       <dependency>
-        <groupId>commons-logging</groupId>
-        <artifactId>commons-logging</artifactId>
-        <version>99.0-does-not-exist</version>
-      </dependency>
-      <dependency>
         <groupId>io.gsonfire</groupId>
         <artifactId>gson-fire</artifactId>
         <version>1.9.0</version>
