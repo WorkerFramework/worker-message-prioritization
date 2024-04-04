@@ -30,8 +30,6 @@
     <url>http://maven.apache.org</url> 
 
     <properties>
-        <maven.install.skip>true</maven.install.skip>
-        <skipNexusStagingDeployMojo>true</skipNexusStagingDeployMojo>
         <dockerHubOrganization>workerframework</dockerHubOrganization>
         <dockerWorkerFrameworkOrg>${dockerImagePrefix}${dockerHubOrganization}${dockerOrgSeperator}</dockerWorkerFrameworkOrg>
         <dockerProjectVersion>${dockerVersionSeperator}${project.version}</dockerProjectVersion>
