@@ -148,7 +148,7 @@
                             <alias>keystore</alias>
                             <name>${project.artifactId}-keystore:${project.version}</name>
                             <build>
-                                <from>${dockerHubPublic}/cafapi/opensuse-jre11:3.0.0</from>
+                                <from>${projectDockerRegistry}/cafapi/opensuse-jre11</from>
                                 <runCmds>
                                     <runCmd>mkdir /test-keystore</runCmd>
                                     <runCmd>openssl genrsa -out /test-keystore/ca_key.pem 2048</runCmd>
@@ -205,7 +205,7 @@
                             <name>${dockerWorkerFrameworkOrg}worker-message-distribution${dockerProjectVersion}</name>
                             <!-- Build the image for this module -->
                             <build>
-                                <from>${dockerHubPublic}/cafapi/opensuse-jre17:1</from>
+                                <from>${projectDockerRegistry}/cafapi/opensuse-jre17</from>
                                 <labels>
                                     <Build.Number>${project.version}</Build.Number>
                                     <Build.Date>${maven.build.timestamp}</Build.Date>
