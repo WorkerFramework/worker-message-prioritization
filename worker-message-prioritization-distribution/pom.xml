@@ -223,7 +223,7 @@
                         <!-- Run the RabbitMQ image -->
                         <image>
                             <alias>rabbitmq</alias>
-                            <name>${dockerHubPublic}/library/rabbitmq:3-management</name>
+                            <name>${projectDockerRegistry}/library/rabbitmq</name>
                             <run>
                                 <ports>
                                     <port>${rabbitmq.ctrl.port}:15672</port>
