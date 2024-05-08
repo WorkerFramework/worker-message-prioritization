@@ -629,6 +629,7 @@
             <image>
               <repository>${dockerHubPublic}/cafapi/opensuse-jre11</repository>
               <tag>3.0.0</tag>
+              <digest>sha256:8db07658c8a74c3c00747288744f57526788580402b709fe2e093ef0207cff63</digest>
             </image>
             <image>
               <repository>${dockerHubPublic}/cafapi/opensuse-jre17</repository>
@@ -638,6 +639,7 @@
             <image>
               <repository>${dockerHubPublic}/library/rabbitmq</repository>
               <tag>3-management</tag>
+              <digest>sha256:eee9afbc17c32424ba6309dfd2d9efc9b9b1863ffe231b3d2be2815758b0d649</digest>
             </image>
           </imageManagement>
         </configuration>
