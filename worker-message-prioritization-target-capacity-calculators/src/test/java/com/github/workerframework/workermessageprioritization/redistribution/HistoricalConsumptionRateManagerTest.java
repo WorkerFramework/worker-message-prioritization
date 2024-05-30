@@ -16,15 +16,14 @@
 package com.github.workerframework.workermessageprioritization.redistribution;
 
 import com.github.workerframework.workermessageprioritization.targetqueue.HistoricalConsumptionRateManager;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.IntStream;
-
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 public class HistoricalConsumptionRateManagerTest {
     private final int maximumConsumptionRateHistorySize = 100;
@@ -33,6 +32,7 @@ public class HistoricalConsumptionRateManagerTest {
     private final String targetQueue2 = "targetQueue2";
 
     @Test
+    @SuppressWarnings("ThrowableResultIgnored")
     public void getErrorWhenMinConsumptionRateHistorySizeLargerThanMaxConsumptionRateHistorySizeTest() {
 
         assertThrows(IllegalArgumentException.class, () -> {
@@ -43,6 +43,7 @@ public class HistoricalConsumptionRateManagerTest {
     }
 
     @Test
+    @SuppressWarnings("ThrowableResultIgnored")
     public void getErrorWhenQueueDoesNotExistTest() {
 
         final HistoricalConsumptionRateManager historicalConsumptionRateManager = 
@@ -80,10 +81,10 @@ public class HistoricalConsumptionRateManagerTest {
         final boolean isSufficientHistoryAvailableQueue2 = 
                 historicalConsumptionRateManager.isSufficientHistoryAvailable(targetQueue2);
 
-        assertTrue("Should return true as this is set to provide the minimum consumption rate history.",
-                isSufficientHistoryAvailableQueue1);
-        assertTrue("Should return true as this is set to provide above the minimum consumption rate history.",
-                isSufficientHistoryAvailableQueue2);
+        assertTrue(isSufficientHistoryAvailableQueue1,
+                "Should return true as this is set to provide the minimum consumption rate history.");
+        assertTrue(isSufficientHistoryAvailableQueue2,
+                "Should return true as this is set to provide above the minimum consumption rate history.");
     }
 
     @Test
@@ -98,8 +99,8 @@ public class HistoricalConsumptionRateManagerTest {
         final boolean noMinimumRequiredHistorySet = 
                 historicalConsumptionRateManager.isSufficientHistoryAvailable(targetQueue1);
 
-        assertTrue("Should return true as minimum required consumption rate history has been set to zero.", 
-                noMinimumRequiredHistorySet);
+        assertTrue(noMinimumRequiredHistorySet,
+                "Should return true as minimum required consumption rate history has been set to zero.");
     }
 
     @Test
@@ -129,10 +130,10 @@ public class HistoricalConsumptionRateManagerTest {
                 historicalConsumptionRateManager.recordCurrentConsumptionRateHistoryAndGetAverage(targetQueue2,
                         theoreticalConsumptionRate2, messageBytesReady);
 
-        assertEquals("This should return the average consumption rate for target queue 1.", 2.5,
-                theoreticalConsumptionRateHistoryQueue1Average, 0.001);
-        assertEquals("This should return the average consumption rate for target queue 2", 5.0,
-                theoreticalConsumptionRateHistoryQueue2Average, 0.001);
+        assertEquals(2.5, theoreticalConsumptionRateHistoryQueue1Average, 0.001,
+                "This should return the average consumption rate for target queue 1.");
+        assertEquals(5.0, theoreticalConsumptionRateHistoryQueue2Average, 0.001,
+                "This should return the average consumption rate for target queue 2");
     }
 
     @Test
@@ -168,10 +169,10 @@ public class HistoricalConsumptionRateManagerTest {
                 historicalConsumptionRateManager.recordCurrentConsumptionRateHistoryAndGetAverage(targetQueue2,
                         theoreticalConsumptionRate2, messageBytesReady);
 
-        assertEquals("This should return the average consumption rate for target queue 1", 4.791,
-                theoreticalConsumptionRateHistoryQueue1Average, 0.001);
-        assertEquals("This should return the average consumption rate for target queue 2", 7.352,
-                theoreticalConsumptionRateHistoryQueue2Average, 0.001);
+        assertEquals(4.791, theoreticalConsumptionRateHistoryQueue1Average, 0.001,
+                "This should return the average consumption rate for target queue 1");
+        assertEquals(7.352, theoreticalConsumptionRateHistoryQueue2Average, 0.001,
+                "This should return the average consumption rate for target queue 2");
     }
 
     @Test
@@ -196,11 +197,10 @@ public class HistoricalConsumptionRateManagerTest {
                 historicalConsumptionRateManager.recordCurrentConsumptionRateHistoryAndGetAverage(targetQueue1,
                         theoreticalConsumptionRate1, messageBytesReady);
 
-        assertEquals(
+        assertEquals(2.5, theoreticalConsumptionRateHistoryQueue1Average, 0.001,
                 "For a queue with no message bytes ready, only the first consumption rate should be recorded " +
                         "to ensure the queue exists and has a history. The rest of the consumption rates should be " +
                         "discarded. In this case the average consumption rate should be equal to the first " +
-                        "consumption rate passed.", 2.5,
-                theoreticalConsumptionRateHistoryQueue1Average, 0.001);
+                        "consumption rate passed.");
     }
 }

@@ -15,14 +15,12 @@
  */
 package com.github.workerframework.workermessageprioritization.targetqueue;
 
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.Collections;
 import java.util.List;
 
-import org.junit.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
@@ -37,6 +35,8 @@ import io.kubernetes.client.openapi.models.V1Deployment;
 import io.kubernetes.client.openapi.models.V1DeploymentSpec;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
 import io.kubernetes.client.util.ClientBuilder;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.Test;
 
 public class K8sTargetQueueSettingsProviderTest
 {
@@ -84,27 +84,27 @@ public class K8sTargetQueueSettingsProviderTest
             final TargetQueueSettings appResourcesWorkerTargetQueueSettings = k8sTargetQueueSettingsProvider.get(appResourcesWorkerQueue);
 
             // Assert
-            assertEquals("Unexpected value for current instances",
-                    3, elasticQueryWorkerTargetQueueSettings.getCurrentInstances(), 0.0);
-            assertEquals("Unexpected value for max instances",
-                    3, elasticQueryWorkerTargetQueueSettings.getMaxInstances(), 0.0);
-            assertEquals("Unexpected value for current max length",
-                    3000, elasticQueryWorkerTargetQueueSettings.getCurrentMaxLength());
-            assertEquals("Unexpected value for eligible for refill percentage",
-                    30, elasticQueryWorkerTargetQueueSettings.getEligibleForRefillPercentage());
-            assertEquals("Unexpected value for capacity",
-                    3000, elasticQueryWorkerTargetQueueSettings.getCapacity());
+            assertEquals(3, elasticQueryWorkerTargetQueueSettings.getCurrentInstances(), 0.0,
+                    "Unexpected value for current instances");
+            assertEquals(3, elasticQueryWorkerTargetQueueSettings.getMaxInstances(), 0.0,
+                    "Unexpected value for max instances");
+            assertEquals(3000, elasticQueryWorkerTargetQueueSettings.getCurrentMaxLength(),
+                    "Unexpected value for current max length");
+            assertEquals(30, elasticQueryWorkerTargetQueueSettings.getEligibleForRefillPercentage(),
+                    "Unexpected value for eligible for refill percentage");
+            assertEquals(3000, elasticQueryWorkerTargetQueueSettings.getCapacity(),
+                    "Unexpected value for capacity");
 
-            assertEquals("Unexpected value for current instances",
-                    2, appResourcesWorkerTargetQueueSettings.getCurrentInstances(), 0.0);
-            assertEquals("Unexpected value for max instances",
-                    2, appResourcesWorkerTargetQueueSettings.getMaxInstances(), 0.0);
-            assertEquals("Unexpected value for current max length",
-                    10000, appResourcesWorkerTargetQueueSettings.getCurrentMaxLength());
-            assertEquals("Unexpected value for eligible for refill percentage",
-                    20, appResourcesWorkerTargetQueueSettings.getEligibleForRefillPercentage());
-            assertEquals("Unexpected value for capacity",
-                    10000, appResourcesWorkerTargetQueueSettings.getCapacity());
+            assertEquals(2, appResourcesWorkerTargetQueueSettings.getCurrentInstances(), 0.0,
+                    "Unexpected value for current instances");
+            assertEquals(2, appResourcesWorkerTargetQueueSettings.getMaxInstances(), 0.0,
+                    "Unexpected value for max instances");
+            assertEquals(10000, appResourcesWorkerTargetQueueSettings.getCurrentMaxLength(),
+                    "Unexpected value for current max length");
+            assertEquals(20, appResourcesWorkerTargetQueueSettings.getEligibleForRefillPercentage(),
+                    "Unexpected value for eligible for refill percentage");
+            assertEquals(10000, appResourcesWorkerTargetQueueSettings.getCapacity(),
+                    "Unexpected value for capacity");
         }
     }
 
@@ -133,16 +133,16 @@ public class K8sTargetQueueSettingsProviderTest
             final TargetQueueSettings appResourcesWorkerTargetQueueSettings = k8sTargetQueueSettingsProvider.get(appResourcesWorkerQueue);
 
             // Assert
-            assertEquals("Unexpected value for current instances",
-                    1, appResourcesWorkerTargetQueueSettings.getCurrentInstances(), 0.0);
-            assertEquals("Unexpected value for max instances",
-                    1, appResourcesWorkerTargetQueueSettings.getMaxInstances(), 0.0);
-            assertEquals("Unexpected value for current max length",
-                    1000, appResourcesWorkerTargetQueueSettings.getCurrentMaxLength());
-            assertEquals("Unexpected value for eligible for refill percentage",
-                    10, appResourcesWorkerTargetQueueSettings.getEligibleForRefillPercentage());
-            assertEquals("Unexpected value for capacity",
-                    1000, appResourcesWorkerTargetQueueSettings.getCapacity());
+            assertEquals(1, appResourcesWorkerTargetQueueSettings.getCurrentInstances(), 0.0,
+                    "Unexpected value for current instances");
+            assertEquals(1, appResourcesWorkerTargetQueueSettings.getMaxInstances(), 0.0,
+                    "Unexpected value for max instances");
+            assertEquals(1000, appResourcesWorkerTargetQueueSettings.getCurrentMaxLength(),
+                    "Unexpected value for current max length");
+            assertEquals(10, appResourcesWorkerTargetQueueSettings.getEligibleForRefillPercentage(),
+                    "Unexpected value for eligible for refill percentage");
+            assertEquals(1000, appResourcesWorkerTargetQueueSettings.getCapacity(),
+                    "Unexpected value for capacity");
         }
     }
 
@@ -166,16 +166,16 @@ public class K8sTargetQueueSettingsProviderTest
             final TargetQueueSettings elasticQueryWorkerTargetQueueSettings = k8sTargetQueueSettingsProvider.get(elasticQueryWorkerQueue);
 
             // Assert
-            assertEquals("Unexpected value for current instances",
-                    1, elasticQueryWorkerTargetQueueSettings.getCurrentInstances(), 0.0);
-            assertEquals("Unexpected value for max instances",
-                    1, elasticQueryWorkerTargetQueueSettings.getMaxInstances(), 0.0);
-            assertEquals("Unexpected value for current max length",
-                    1000, elasticQueryWorkerTargetQueueSettings.getCurrentMaxLength());
-            assertEquals("Unexpected value for eligible for refill percentage",
-                    10, elasticQueryWorkerTargetQueueSettings.getEligibleForRefillPercentage());
-            assertEquals("Unexpected value for capacity",
-                    1000, elasticQueryWorkerTargetQueueSettings.getCapacity());
+            assertEquals(1, elasticQueryWorkerTargetQueueSettings.getCurrentInstances(), 0.0,
+                    "Unexpected value for current instances");
+            assertEquals(1, elasticQueryWorkerTargetQueueSettings.getMaxInstances(), 0.0,
+                    "Unexpected value for max instances");
+            assertEquals(1000, elasticQueryWorkerTargetQueueSettings.getCurrentMaxLength(),
+                    "Unexpected value for current max length");
+            assertEquals(10, elasticQueryWorkerTargetQueueSettings.getEligibleForRefillPercentage(),
+                    "Unexpected value for eligible for refill percentage");
+            assertEquals(1000, elasticQueryWorkerTargetQueueSettings.getCapacity(),
+                    "Unexpected value for capacity");
         }
     }
 

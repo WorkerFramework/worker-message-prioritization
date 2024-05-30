@@ -33,8 +33,6 @@ import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 
-import org.junit.Assert;
-import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.internal.util.collections.Sets;
 
@@ -45,6 +43,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.Test;
 
 public class LowLevelDistributorIT extends DistributorTestBase {
 
@@ -104,17 +104,17 @@ public class LowLevelDistributorIT extends DistributorTestBase {
             // targetQueue:              0 messages
             // targetQueueMaxLength:     200
             // Expected result:          100 messages from each staging queue moved to target queue
-            Assert.assertEquals(
-                    "Expected 0 StagingQueueTargetQueuePairs before running the distributor for the 1st time",
+            assertEquals(
                     0,
-                    lowLevelDistributor.getExistingStagingQueueTargetQueuePairs().size());
+                    lowLevelDistributor.getExistingStagingQueueTargetQueuePairs().size(),
+                    "Expected 0 StagingQueueTargetQueuePairs before running the distributor for the 1st time");
 
             lowLevelDistributor.runOnce(connection);
 
-            Assert.assertEquals(
-                    "Expected 2 StagingQueueTargetQueuePairs to be created after running the distributor for the 1st time",
+            assertEquals(
                     2,
-                    lowLevelDistributor.getExistingStagingQueueTargetQueuePairs().size());
+                    lowLevelDistributor.getExistingStagingQueueTargetQueuePairs().size(),
+                    "Expected 2 StagingQueueTargetQueuePairs to be created after running the distributor for the 1st time");
 
             await().alias(String.format("Waiting for target queue named %s to contain 100 messages", targetQueueName))
                     .atMost(100, SECONDS)
@@ -139,12 +139,12 @@ public class LowLevelDistributorIT extends DistributorTestBase {
             // Expected result:          0 messages from each staging queue moved to target queue because target queue is full
             lowLevelDistributor.runOnce(connection);
 
-            Assert.assertEquals(
+            assertEquals(
+                    0,
+                    lowLevelDistributor.getExistingStagingQueueTargetQueuePairs().size(),
                     "Expected 0 StagingQueueTargetQueuePairs after running the distributor for the 2nd time (because the " +
                             "initial 2 StagingQueueTargetQueuePairs should have been closed and removed as they have completed, " +
-                            "and no more StagingQueueTargetQueuePairs should have been created because the target queue is full)",
-                    0,
-                    lowLevelDistributor.getExistingStagingQueueTargetQueuePairs().size());
+                            "and no more StagingQueueTargetQueuePairs should have been created because the target queue is full)");
 
             await().alias(String.format("Waiting for target queue named %s to contain 200 messages", targetQueueName))
                     .atMost(100, SECONDS)
@@ -176,11 +176,11 @@ public class LowLevelDistributorIT extends DistributorTestBase {
 
             lowLevelDistributor.runOnce(connection);
 
-            Assert.assertEquals(
-                    "Expected 2 StagingQueueTargetQueuePairs to be created after running the distributor for the 3rd time (because the " +
-                            "target queue has been purged and so now has capacity for more messages)",
+            assertEquals(
                     2,
-                    lowLevelDistributor.getExistingStagingQueueTargetQueuePairs().size());
+                    lowLevelDistributor.getExistingStagingQueueTargetQueuePairs().size(),
+                     "Expected 2 StagingQueueTargetQueuePairs to be created after running the distributor for the 3rd time (because the " +
+                            "target queue has been purged and so now has capacity for more messages)");
 
             await().alias(String.format("Waiting for target queue named %s to contain 200 messages", targetQueueName))
                     .atMost(100, SECONDS)
@@ -282,17 +282,17 @@ public class LowLevelDistributorIT extends DistributorTestBase {
                     consumerPublisherPairLastDoneWorkTimeoutMilliseconds);
 
             // Run the distributor (1st time)
-            Assert.assertEquals(
-                    "Expected 0 StagingQueueTargetQueuePairs before running the distributor for the 1st time",
+            assertEquals(
                     0,
-                    lowLevelDistributor.getExistingStagingQueueTargetQueuePairs().size());
+                    lowLevelDistributor.getExistingStagingQueueTargetQueuePairs().size(),
+                    "Expected 0 StagingQueueTargetQueuePairs before running the distributor for the 1st time");
 
             lowLevelDistributor.runOnce(connection);
 
-            Assert.assertEquals(
-                    "Expected 1 StagingQueueTargetQueuePair to be created after running the distributor for the 1st time",
+            assertEquals(
                     1,
-                    lowLevelDistributor.getExistingStagingQueueTargetQueuePairs().size());
+                    lowLevelDistributor.getExistingStagingQueueTargetQueuePairs().size(),
+                    "Expected 1 StagingQueueTargetQueuePair to be created after running the distributor for the 1st time");
 
             // Wait for more than the consumerPublisherPairLastWorkTimeoutMilliseconds
             Thread.sleep(consumerPublisherPairLastDoneWorkTimeoutMilliseconds + 5000);
@@ -300,12 +300,12 @@ public class LowLevelDistributorIT extends DistributorTestBase {
             // Run the distributor (2nd time)
             lowLevelDistributor.runOnce(connection);
 
-            Assert.assertEquals(
+            assertEquals(
+                    0,
+                    lowLevelDistributor.getExistingStagingQueueTargetQueuePairs().size(),
                     "Expected the StagingQueueTargetQueuePair to be closed and removed after the " +
                             "consumerPublisherPairLastWorkTimeoutMilliseconds has been exceeded but it was not: "
-                            + lowLevelDistributor.getExistingStagingQueueTargetQueuePairs(),
-                    0,
-                    lowLevelDistributor.getExistingStagingQueueTargetQueuePairs().size());
+                            + lowLevelDistributor.getExistingStagingQueueTargetQueuePairs());
         }
     }
 }

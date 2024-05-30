@@ -16,12 +16,11 @@
 package com.github.workerframework.workermessageprioritization.redistribution.consumption;
 
 import com.github.workerframework.workermessageprioritization.redistribution.EnvVariableCollector;
-import org.junit.Test;
 
 import java.util.Map;
 import java.util.HashMap;
-
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.Test;
 
 public class QueueWeightEnvVariableCollectorTest {
 
@@ -45,9 +44,9 @@ public class QueueWeightEnvVariableCollectorTest {
         final Map<String, String> refinedValues =
                 EnvVariableCollector.getQueueWeightEnvVariables(envVariables);
 
-        assertEquals("There are only 5 environment variables which match the " +
-                        "CAF_ADJUST_QUEUE_WEIGHT naming convention. Only these should be returned.",
-                5, refinedValues.size());
+        assertEquals(5, refinedValues.size(),
+                "There are only 5 environment variables which match the " +
+                        "CAF_ADJUST_QUEUE_WEIGHT naming convention. Only these should be returned.");
     }
 
 }
