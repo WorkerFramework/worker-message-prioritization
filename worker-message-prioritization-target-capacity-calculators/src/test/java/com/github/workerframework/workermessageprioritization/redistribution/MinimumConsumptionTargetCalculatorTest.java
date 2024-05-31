@@ -19,9 +19,9 @@ import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueSettings;
 import com.github.workerframework.workermessageprioritization.targetqueue.MinimumCapacityCalculator;
 import com.github.workerframework.workermessageprioritization.targetqueue.CapacityCalculatorBase;
-import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.Test;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -48,8 +48,8 @@ public final class MinimumConsumptionTargetCalculatorTest
         when(capacityCalculatorBase.refine(any(), any())).thenReturn(targetQueueSettings);
 
         final MinimumCapacityCalculator minimumCapacityCalculator = new MinimumCapacityCalculator(null);
-        assertEquals("Adequate percentage of message space available therefore this capacity is returned.", 250,
-                minimumCapacityCalculator.refine(targetQueue, targetQueueSettings).getCapacity());
+        assertEquals(250, minimumCapacityCalculator.refine(targetQueue, targetQueueSettings).getCapacity(),
+                "Adequate percentage of message space available therefore this capacity is returned.");
     }
 
     /**
@@ -72,9 +72,7 @@ public final class MinimumConsumptionTargetCalculatorTest
 
         final MinimumCapacityCalculator minimumCapacityCalculator = new MinimumCapacityCalculator(capacityCalculatorBase);
 
-        assertEquals(
-                "The space available is less than the percentage of space required for refill, therefore 0 returned.", 
-                0,
-                minimumCapacityCalculator.refine(targetQueue, targetQueueSettings).getCapacity());
+        assertEquals(0, minimumCapacityCalculator.refine(targetQueue, targetQueueSettings).getCapacity(),
+                "The space available is less than the percentage of space required for refill, therefore 0 returned.");
     }
 }

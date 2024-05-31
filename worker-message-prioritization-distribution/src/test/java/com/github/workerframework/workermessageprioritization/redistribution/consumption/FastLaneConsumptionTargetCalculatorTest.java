@@ -20,16 +20,16 @@ import com.github.workerframework.workermessageprioritization.redistribution.Dis
 import com.github.workerframework.workermessageprioritization.targetqueue.CapacityCalculatorBase;
 import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueSettings;
 import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueSettingsProvider;
-import org.junit.Test;
 
 import java.util.Set;
 import java.util.HashSet;
 import java.util.HashMap;
 import java.util.Arrays;
 import java.util.Map;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.mock;
@@ -81,14 +81,14 @@ public final class FastLaneConsumptionTargetCalculatorTest {
         final long queue1Result = consumptionTargets.get(q1);
         final long queue2Result = consumptionTargets.get(q2);
 
-        assertEquals("Queue 1 has more than 500 messages, therefore it should be offered " +
-                "the rest of the capacity that queue 2 does not need",
-                950, queue1Result);
-        assertEquals("Queue 2 only has less than 500 messages therefore the capacity of the " +
-                "target queue it will fill is the size of its staging queue.",
-                50, queue2Result);
-        assertEquals("Confirm the total target queue capacity has been used",
-                targetQueueCapacity, queue1Result + queue2Result);
+        assertEquals(950, queue1Result,
+                "Queue 1 has more than 500 messages, therefore it should be offered " +
+                "the rest of the capacity that queue 2 does not need");
+        assertEquals(50, queue2Result,
+                "Queue 2 only has less than 500 messages therefore the capacity of the " +
+                "target queue it will fill is the size of its staging queue.");
+        assertEquals(targetQueueCapacity, queue1Result + queue2Result,
+                "Confirm the total target queue capacity has been used");
     }
 
     @Test
@@ -135,14 +135,14 @@ public final class FastLaneConsumptionTargetCalculatorTest {
         final long queue1Result = consumptionTargets.get(q1);
         final long queue2Result = consumptionTargets.get(q2);
 
-        assertEquals("Queue 1 gets capacity to fill half of the available targetQueueCapacity",
-                500, queue1Result);
-        assertEquals("Queue 1 gets capacity to fill half of the available targetQueueCapacity",
-                500, queue2Result);
-        assertEquals("Both queues are larger than half of the target queue capacity therefore " +
+        assertEquals(500, queue1Result,
+                "Queue 1 gets capacity to fill half of the available targetQueueCapacity");
+        assertEquals(500, queue2Result,
+                "Queue 1 gets capacity to fill half of the available targetQueueCapacity");
+        assertEquals(targetQueueCapacity, queue1Result + queue2Result,
+                "Both queues are larger than half of the target queue capacity therefore " +
                 "each are given half of the available target queue capacity, regardless of the fact that " +
-                "staging queue 2 is much larger than staging queue 1.",
-                targetQueueCapacity, queue1Result + queue2Result);
+                "staging queue 2 is much larger than staging queue 1.");
     }
 
     @Test
@@ -222,12 +222,12 @@ public final class FastLaneConsumptionTargetCalculatorTest {
 
         final boolean q1ConsumptionRateIncrease = queue1Result > (targetQueueCapacity / stagingQueues.size());
 
-        assertEquals("Sum of each staging queue consumption target is the total capacity " +
-                "available on the target queue",
-                targetQueueCapacity, queueConsumptionTargetSum);
-        assertTrue("Consumption rate of queue 1 should be greater than the original equal " +
-                "consumption, as multiple queues are smaller than the targetQueueCapacity / num of staging queues.",
-                q1ConsumptionRateIncrease);
+        assertEquals(targetQueueCapacity, queueConsumptionTargetSum,
+                "Sum of each staging queue consumption target is the total capacity " +
+                "available on the target queue");
+        assertTrue(q1ConsumptionRateIncrease,
+                "Consumption rate of queue 1 should be greater than the original equal " +
+                "consumption, as multiple queues are smaller than the targetQueueCapacity / num of staging queues.");
     }
 
     @Test
@@ -287,9 +287,9 @@ public final class FastLaneConsumptionTargetCalculatorTest {
         final long queueConsumptionTargetSum =
                 queue1Result + queue2Result + queue3Result + queue4Result;
         
-        assertEquals("Sum of each staging queue consumption target is the total capacity " +
-                        "available on the target queue",
-                targetQueueCapacity, queueConsumptionTargetSum, 1.0);
+        assertEquals(targetQueueCapacity, queueConsumptionTargetSum, 1.0,
+                "Sum of each staging queue consumption target is the total capacity " +
+                        "available on the target queue");
     }
 
     @Test
@@ -343,11 +343,11 @@ public final class FastLaneConsumptionTargetCalculatorTest {
         final long totalQueueMessages =
                 q1.getMessages() + q2.getMessages() + q3.getMessages();
 
-        assertEquals("In the case that the sum of the staging queues does not fill " +
+        assertEquals(totalQueueMessages, queueConsumptionTargetSum, 0.0,
+                "In the case that the sum of the staging queues does not fill " +
                     "the capacity of target queue available. The staging queue should be given capacity" +
                     " equal to its length. In other words the queueConsumptionTargetSum should be equal " +
-                    "to the total of all messages on the staging queues regardless of queue size.",
-                totalQueueMessages, queueConsumptionTargetSum, 0.0);
+                    "to the total of all messages on the staging queues regardless of queue size.");
     }
 
     @Test
@@ -404,17 +404,17 @@ public final class FastLaneConsumptionTargetCalculatorTest {
 
         final long weightedValueExpected = queue3Result * 10;
 
-        assertEquals("The total consumption of each queue should add up to the total " +
-                        "target queue capacity available.",
-                targetQueueCapacity, queueConsumptionTargetSum, 2.0);
+        assertEquals(targetQueueCapacity, queueConsumptionTargetSum, 2.0,
+                "The total consumption of each queue should add up to the total " +
+                        "target queue capacity available.");
 
-        assertEquals("Queue 1 has been weighted 10 and sq3 weighted 1. " +
-                        "This means queue 1 should be given 10 times the message capacity of queue 3.",
-                weightedValueExpected, queue1Result, 2.0);
+        assertEquals(weightedValueExpected, queue1Result, 2.0,
+                "Queue 1 has been weighted 10 and sq3 weighted 1. " +
+                        "This means queue 1 should be given 10 times the message capacity of queue 3.");
 
-        assertEquals("Queue 2 has been weighted 0. This means it should be given no " +
-                        "target queue capacity",
-                0, queue2Result, 0.0);
+        assertEquals(0, queue2Result, 0.0,
+                "Queue 2 has been weighted 0. This means it should be given no " +
+                        "target queue capacity");
     }
 
     private static Queue getQueue(final String name, final long messages) {

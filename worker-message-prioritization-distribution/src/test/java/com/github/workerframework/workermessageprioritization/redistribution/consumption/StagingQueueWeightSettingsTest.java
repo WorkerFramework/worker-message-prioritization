@@ -18,7 +18,6 @@ package com.github.workerframework.workermessageprioritization.redistribution.co
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 import com.github.workerframework.workermessageprioritization.redistribution.DistributorWorkItem;
 import com.github.workerframework.workermessageprioritization.redistribution.EnvVariableCollector;
-import org.junit.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
@@ -31,8 +30,9 @@ import java.util.List;
 import java.util.Collections;
 
 import static java.util.stream.Collectors.toList;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.junit.jupiter.api.Test;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -78,18 +78,16 @@ public class StagingQueueWeightSettingsTest {
             final Map<String, Double> stagingQueueWeightMap =
                     stagingQueueWeightSettingsProvider.getStagingQueueWeights(stagingQueueNames);
 
-            assertEquals("Weight of queue should be set by environment variable matching more of string." +
-                            "Which in this case is the tenant regex which matches the whole string.",
-                    (Double)0D, stagingQueueWeightMap.get("bulk-indexer-in»/clynch/enrichment-workflow"));
-            assertEquals("Weight of queue should be set by environment variable matching the longest length of string." +
-                            "Which in this case is the workflow at the end of the string",
-                    (Double)10D, stagingQueueWeightMap.get("bulk-indexer-in»/rory3/enrichment-workflow"));
-            assertEquals("No weight set to match this string therefore should default to 1.",
-                    (Double)1D, stagingQueueWeightMap.get("dataprocessing-classification-in»/rory3/update-entities-workflow"));
-            assertEquals("Two strings matched of same length with different weights should set to larger weight.",
-                    (Double)6D, stagingQueueWeightMap.get("bulk-indexer-in»/rtorney/maheshh"));
-            assertEquals("Weight should be a decimal value below 1.",
-                    (Double)0.5D, stagingQueueWeightMap.get("bulk-indexer-in»/jmcc02/repository-initialization-workflow"));
+            assertEquals((Double)0D, stagingQueueWeightMap.get("bulk-indexer-in»/clynch/enrichment-workflow"));
+            assertEquals((Double)10D, stagingQueueWeightMap.get("bulk-indexer-in»/rory3/enrichment-workflow"),
+                    "Weight of queue should be set by environment variable matching the longest length of string." +
+                            "Which in this case is the workflow at the end of the string");
+            assertEquals((Double)1D, stagingQueueWeightMap.get("dataprocessing-classification-in»/rory3/update-entities-workflow"),
+                    "No weight set to match this string therefore should default to 1.");
+            assertEquals((Double)6D, stagingQueueWeightMap.get("bulk-indexer-in»/rtorney/maheshh"),
+                    "Two strings matched of same length with different weights should set to larger weight.");
+            assertEquals((Double)0.5D, stagingQueueWeightMap.get("bulk-indexer-in»/jmcc02/repository-initialization-workflow"),
+                    "Weight should be a decimal value below 1.");
         }
     }
 
