@@ -19,8 +19,7 @@ import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueSettingsProvider;
 import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueSettings;
 import com.github.workerframework.workermessageprioritization.targetqueue.CapacityCalculatorBase;
-
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Answers.CALLS_REAL_METHODS;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -48,8 +47,8 @@ public final class ConsumptionTargetCalculatorBaseTest
             ConsumptionTargetCalculatorBase.class,
             withSettings().useConstructor(targetQueueSettingsProvider, capacityCalculatorBase).defaultAnswer(CALLS_REAL_METHODS));
 
-        assertEquals("Message capacity available returned regardless of the eligible for refill percentage set.", 200,
-                calculator.getTargetQueueCapacity(targetQueue));
+        assertEquals(200, calculator.getTargetQueueCapacity(targetQueue),
+                "Message capacity available returned regardless of the eligible for refill percentage set.");
     }
 
 //    @Test
@@ -71,8 +70,8 @@ public final class ConsumptionTargetCalculatorBaseTest
                 withSettings().useConstructor(targetQueueSettingsProvider, capacityCalculatorBase).defaultAnswer(CALLS_REAL_METHODS));
 
 
-        assertEquals("There are more messages on the queue than the set maximum target queue length available therefore no space " +
-                        "available and 0 returned.", 0,
-                calculator.getTargetQueueCapacity(targetQueue));
+        assertEquals(0, calculator.getTargetQueueCapacity(targetQueue),
+                "There are more messages on the queue than the set maximum target queue length available therefore no space " +
+                        "available and 0 returned.");
     }
 }

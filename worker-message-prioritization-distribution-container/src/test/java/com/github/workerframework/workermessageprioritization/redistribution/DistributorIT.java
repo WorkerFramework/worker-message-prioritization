@@ -22,14 +22,13 @@ import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitQue
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
+import org.junit.jupiter.api.Test;
 
 // This test will use whatever distributor implementation (low level) has been set as the mainClass in the maven-jar-plugin in
 // worker-message-prioritization-distribution/pom.xml.

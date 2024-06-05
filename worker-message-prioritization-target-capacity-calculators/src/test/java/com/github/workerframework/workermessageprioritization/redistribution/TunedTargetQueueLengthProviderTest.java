@@ -20,9 +20,9 @@ import com.github.workerframework.workermessageprioritization.targetqueue.Histor
 import com.github.workerframework.workermessageprioritization.targetqueue.QueueInformationProvider;
 import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueLengthRounder;
 import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueSettings;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.withSettings;
@@ -73,8 +73,9 @@ public class TunedTargetQueueLengthProviderTest {
 
         final long tunedTargetQueueLength = getTunedTargetQueueLength(targetQueue1, targetQueue, targetQueueSettings);
 
-        assertEquals("Tuning is disabled: Target queue length should not have changed. Suggested adjustment for the target queue length" +
-                " should still be logged.", targetQueueLength, tunedTargetQueueLength);
+        assertEquals(targetQueueLength, tunedTargetQueueLength, 
+                "Tuning is disabled: Target queue length should not have changed. Suggested adjustment for the target queue length" +
+                " should still be logged.");
     }
 
     @Test
@@ -107,8 +108,9 @@ public class TunedTargetQueueLengthProviderTest {
 
         final long tunedTargetQueueLength = getTunedTargetQueueLength(targetQueue1, targetQueue, targetQueueSettings);
 
-        assertEquals("isSufficientHistoryAvailable set to false: Not enough consumption rate history. Target queue length should not " +
-                        "change.", targetQueueLength, tunedTargetQueueLength);
+        assertEquals(targetQueueLength, tunedTargetQueueLength, 
+                "isSufficientHistoryAvailable set to false: Not enough consumption rate history. Target queue length should not " +
+                        "change.");
     }
 
 
@@ -157,12 +159,13 @@ public class TunedTargetQueueLengthProviderTest {
 
         final long tunedTargetQueueLength2 = getTunedTargetQueueLength(targetQueue2, targetQueue, targetQueueSettings);
 
-        assertEquals("isSufficientHistoryAvailable set to true: Consumption rate history has been provided: Target queue length " +
+        assertEquals(300, repeatTunedTargetQueueLength,
+                "isSufficientHistoryAvailable set to true: Consumption rate history has been provided: Target queue length " +
                 "should be adjusted. Once the tuned target queue length has been adjusted, when trying to get the target tuned length " +
-                "again, the logs should state 'Target queue is already set to optimum length: 300. No action required.' ",
-                300, repeatTunedTargetQueueLength);
-        assertEquals("isSufficientHistoryAvailable set to true: Consumption rate history has been provided: Target queue length " +
-                "should be adjusted.", 3000, tunedTargetQueueLength2);
+                "again, the logs should state 'Target queue is already set to optimum length: 300. No action required.' ");
+        assertEquals(3000, tunedTargetQueueLength2,
+                "isSufficientHistoryAvailable set to true: Consumption rate history has been provided: Target queue length " +
+                "should be adjusted.");
     }
 
     @Test
@@ -207,10 +210,12 @@ public class TunedTargetQueueLengthProviderTest {
         final long tunedTargetQueueLength1 = getTunedTargetQueueLength(targetQueue1, targetQueue, targetQueueSettings);
         final long tunedTargetQueueLength2 = getTunedTargetQueueLength(targetQueue2, targetQueue, targetQueueSettings);
 
-        assertEquals("isSufficientHistoryAvailable set to true: Consumption rate history has been provided: Target queue length " +
-                "should be adjusted to the minimum.", minTargetQueueLength, tunedTargetQueueLength1);
-        assertEquals("isSufficientHistoryAvailable set to true: Consumption rate history has been provided: Target queue length " +
-                "should be adjusted to the maximum.", maxTargetQueueLength, tunedTargetQueueLength2);
+        assertEquals(minTargetQueueLength, tunedTargetQueueLength1,
+                "isSufficientHistoryAvailable set to true: Consumption rate history has been provided: Target queue length " +
+                "should be adjusted to the minimum.");
+        assertEquals(maxTargetQueueLength, tunedTargetQueueLength2,
+                "isSufficientHistoryAvailable set to true: Consumption rate history has been provided: Target queue length " +
+                "should be adjusted to the maximum.");
     }
 
     private long getTunedTargetQueueLength(final String queueName, final TunedTargetQueueLengthProvider targetQueue,
