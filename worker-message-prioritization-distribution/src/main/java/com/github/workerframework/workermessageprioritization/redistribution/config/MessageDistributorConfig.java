@@ -17,14 +17,23 @@ package com.github.workerframework.workermessageprioritization.redistribution.co
 
 import static java.util.stream.Collectors.toList;
 
+import java.lang.reflect.Type;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
+import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitQueueConstants;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
+import com.google.common.reflect.TypeToken;
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import com.google.inject.Inject;
 
 public final class MessageDistributorConfig {
+
+    private static final Gson GSON = new Gson();
+    private static final Type MAP_TYPE = new TypeToken<Map<String, Object>>() {}.getType();
 
     private static final String CAF_RABBITMQ_VHOST = "CAF_RABBITMQ_VHOST";
     private static final String CAF_RABBITMQ_VHOST_DEFAULT = "/";
@@ -80,6 +89,17 @@ public final class MessageDistributorConfig {
     private static final int CAF_QUEUE_PROCESSING_TIME_GOAL_SECONDS_DEFAULT = 300;
     private static final String CAF_CONSUMPTION_TARGET_CALCULATOR_MODE = "CAF_CONSUMPTION_TARGET_CALCULATOR_MODE";
     private static final String CAF_CONSUMPTION_TARGET_CALCULATOR_MODE_DEFAULT = "EqualConsumption";
+
+    private static final String CAF_WMP_TARGET_QUEUE_DURABLE = "CAF_WMP_TARGET_QUEUE_DURABLE";
+    private static final boolean CAF_WMP_TARGET_QUEUE_DURABLE_DEFAULT = true;
+    private static final String CAF_WMP_TARGET_QUEUE_EXCLUSIVE = "CAF_WMP_TARGET_QUEUE_EXCLUSIVE";
+    private static final boolean CAF_WMP_TARGET_QUEUE_EXCLUSIVE_DEFAULT = false;
+    private static final String CAF_WMP_TARGET_QUEUE_AUTO_DELETE = "CAF_WMP_TARGET_QUEUE_AUTO_DELETE";
+    private static final boolean CAF_WMP_TARGET_QUEUE_AUTO_DELETE_DEFAULT = false;
+    private static final String CAF_WMP_TARGET_QUEUE_ARGS = "CAF_WMP_TARGET_QUEUE_ARGS";
+    private static final Map<String, Object> CAF_WMP_TARGET_QUEUE_ARGS_DEFAULT = Map.of(
+            RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE, RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE_QUORUM);
+
     private final String rabbitMQVHost;
     private final String rabbitMQProtocol;
     private final String rabbitMQHost;
@@ -102,6 +122,10 @@ public final class MessageDistributorConfig {
     private final int minConsumptionRateHistorySize;
     private final int queueProcessingTimeGoalSeconds;
     private final String consumptionTargetCalculatorMode;
+    private final boolean targetQueueDurable;
+    private final boolean targetQueueExclusive;
+    private final boolean targetQueueAutoDelete;
+    private final Map<String, Object> targetQueueArgs;
 
     @Inject
     public MessageDistributorConfig() {
@@ -138,6 +162,10 @@ public final class MessageDistributorConfig {
                 CAF_QUEUE_PROCESSING_TIME_GOAL_SECONDS_DEFAULT);
         consumptionTargetCalculatorMode = getEnvOrDefault(CAF_CONSUMPTION_TARGET_CALCULATOR_MODE,
                 CAF_CONSUMPTION_TARGET_CALCULATOR_MODE_DEFAULT);
+        targetQueueDurable = getEnvOrDefault(CAF_WMP_TARGET_QUEUE_DURABLE, CAF_WMP_TARGET_QUEUE_DURABLE_DEFAULT);
+        targetQueueExclusive = getEnvOrDefault(CAF_WMP_TARGET_QUEUE_EXCLUSIVE, CAF_WMP_TARGET_QUEUE_EXCLUSIVE_DEFAULT);
+        targetQueueAutoDelete = getEnvOrDefault(CAF_WMP_TARGET_QUEUE_AUTO_DELETE, CAF_WMP_TARGET_QUEUE_AUTO_DELETE_DEFAULT);
+        targetQueueArgs = getEnvOrDefault(CAF_WMP_TARGET_QUEUE_ARGS, CAF_WMP_TARGET_QUEUE_ARGS_DEFAULT);
     }
 
     public String getRabbitMQVHost() {
@@ -204,6 +232,22 @@ public final class MessageDistributorConfig {
     public int getQueueProcessingTimeGoalSeconds(){return queueProcessingTimeGoalSeconds;}
     public String getConsumptionTargetCalculatorMode(){return consumptionTargetCalculatorMode;}
 
+    public boolean isTargetQueueDurable() {
+        return targetQueueDurable;
+    }
+
+    public boolean isTargetQueueExclusive() {
+        return targetQueueExclusive;
+    }
+
+    public boolean isTargetQueueAutoDelete() {
+        return targetQueueAutoDelete;
+    }
+
+    public Map<String,Object> getTargetQueueArgs() {
+        return targetQueueArgs;
+    }
+
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
@@ -228,6 +272,10 @@ public final class MessageDistributorConfig {
             .add(CAF_MAX_CONSUMPTION_RATE_HISTORY_SIZE, maxConsumptionRateHistorySize)
             .add(CAF_MIN_CONSUMPTION_RATE_HISTORY_SIZE, minConsumptionRateHistorySize)
             .add(CAF_QUEUE_PROCESSING_TIME_GOAL_SECONDS, queueProcessingTimeGoalSeconds)
+            .add(CAF_WMP_TARGET_QUEUE_DURABLE, targetQueueDurable)
+            .add(CAF_WMP_TARGET_QUEUE_EXCLUSIVE, targetQueueExclusive)
+            .add(CAF_WMP_TARGET_QUEUE_AUTO_DELETE, targetQueueAutoDelete)
+            .add(CAF_WMP_TARGET_QUEUE_ARGS, targetQueueArgs)
             .toString();
     }
 
@@ -253,6 +301,21 @@ public final class MessageDistributorConfig {
         final String value = System.getenv(name);
 
         return !Strings.isNullOrEmpty(value) ? Boolean.parseBoolean(value) : defaultValue;
+    }
+
+    private static Map<String, Object> getEnvOrDefault(final String name, final Map<String, Object> defaultValue) {
+        final String value = System.getenv(name);
+
+        if (!Strings.isNullOrEmpty(value)) {
+            try {
+                return GSON.fromJson(value, MAP_TYPE);
+            } catch (final JsonSyntaxException e) {
+                throw new RuntimeException(String.format("The %s=%s environment variable was not able to be deserialized to JSON",
+                        name, value), e);
+            }
+        } else {
+            return defaultValue;
+        }
     }
 
     private static List<String> getEnvOrThrow(final String name) {

@@ -17,6 +17,7 @@ package com.github.workerframework.workermessageprioritization.redistribution;
 
 import java.util.concurrent.Callable;
 
+import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 import com.github.workerframework.workermessageprioritization.rabbitmq.QueuesApiImpl;
 import com.rabbitmq.client.ConnectionFactory;
 
@@ -53,6 +54,10 @@ public class DistributorTestBase {
 
     protected String getStagingQueueName(final String targetQueueName, final String stagingQueueName) {
         return targetQueueName + MessageDistributor.LOAD_BALANCED_INDICATOR + stagingQueueName;
+    }
+
+    protected Callable<Boolean> queueExists(final String queueName) {
+        return () -> queuesApi.getQueues().stream().map(Queue::getName).anyMatch(name -> name.equals(queueName));
     }
 
     protected Callable<Boolean> queueContainsNumMessages(final String queueName, final int numMessages) {

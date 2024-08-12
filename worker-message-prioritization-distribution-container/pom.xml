@@ -258,6 +258,10 @@
                                     <TUNED_TARGET_LOG_LEVEL>INFO</TUNED_TARGET_LOG_LEVEL>
                                     <CAF_CONSUMPTION_TARGET_CALCULATOR_MODE>EqualConsumption</CAF_CONSUMPTION_TARGET_CALCULATOR_MODE>
                                     <FAST_LANE_LOG_LEVEL>WARN</FAST_LANE_LOG_LEVEL>
+                                    <CAF_WMP_TARGET_QUEUE_DURABLE>true</CAF_WMP_TARGET_QUEUE_DURABLE>
+                                    <CAF_WMP_TARGET_QUEUE_EXCLUSIVE>false</CAF_WMP_TARGET_QUEUE_EXCLUSIVE>
+                                    <CAF_WMP_TARGET_QUEUE_AUTO_DELETE>false</CAF_WMP_TARGET_QUEUE_AUTO_DELETE>
+                                    <CAF_WMP_TARGET_QUEUE_ARGS>{"x-queue-type":"quorum"}</CAF_WMP_TARGET_QUEUE_ARGS>
                                 </env>
                                 <dependsOn>
                                     <container>rabbitmq</container>

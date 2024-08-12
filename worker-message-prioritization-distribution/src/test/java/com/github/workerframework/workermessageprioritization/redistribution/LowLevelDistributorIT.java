@@ -96,7 +96,8 @@ public class LowLevelDistributorIT extends DistributorTestBase {
                             capacityCalculatorBase);
             final StagingTargetPairProvider stagingTargetPairProvider = injector.getInstance(StagingTargetPairProvider.class);
             final LowLevelDistributor lowLevelDistributor = new LowLevelDistributor(queuesApi, connectionFactory,
-                    consumptionTargetCalculator, stagingTargetPairProvider, 10000, 600000);
+                    consumptionTargetCalculator, stagingTargetPairProvider, 10000, 600000, true, false, false,
+                    Map.of("x-queue-type", "quorum"));
 
             // Run the distributor (1st time).
             // stagingQueue1:            500 messages
@@ -279,7 +280,8 @@ public class LowLevelDistributorIT extends DistributorTestBase {
 
             final LowLevelDistributor lowLevelDistributor = new LowLevelDistributor(queuesApi, connectionFactory,
                     consumptionTargetCalculator, stagingTargetPairProviderMock, 10000,
-                    consumerPublisherPairLastDoneWorkTimeoutMilliseconds);
+                    consumerPublisherPairLastDoneWorkTimeoutMilliseconds, true, false, false,
+                    Map.of(RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE, RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE_QUORUM));
 
             // Run the distributor (1st time)
             assertEquals(

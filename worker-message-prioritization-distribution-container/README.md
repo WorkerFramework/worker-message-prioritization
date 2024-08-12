@@ -108,3 +108,20 @@ This repository consists of the source to build a container that includes the
   staging queues that are to be weighted to increase or decrease processing. This should be set using a string of regex followed by a 
   number. See more information on the required formatting 
   [here](https://github.com/WorkerFramework/worker-message-prioritization/blob/main/worker-message-prioritization-distribution-container/fast-lane-processing.md#format-to-follow-when-setting-staging-queue-weights).
+
+* `CAF_WMP_TARGET_QUEUE_DURABLE`  
+  **Default**: true.   
+  **Description**: Used when creating a target queue. Set to `true` if declaring a durable queue (the queue will survive a server restart).
+
+* `CAF_WMP_TARGET_QUEUE_EXCLUSIVE`  
+  **Default**: false.   
+  **Description**: Used when creating a target queue. Set to `true` if declaring an exclusive queue (restricted to this connection).
+
+* `CAF_WMP_TARGET_QUEUE_AUTO_DELETE`  
+  **Default**: false.   
+  **Description**: Used when creating a target queue. Set to `true` if declaring an autodelete queue (server will delete it when 
+  no longer in use).
+
+* `CAF_WMP_TARGET_QUEUE_ARGS`  
+  **Default**: {"x-queue-type":"quorum"}.   
+  **Description**: Used when creating a target queue. Other properties (construction arguments) for the queue.
