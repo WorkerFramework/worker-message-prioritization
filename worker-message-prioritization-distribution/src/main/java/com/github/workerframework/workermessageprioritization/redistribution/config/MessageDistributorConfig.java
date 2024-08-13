@@ -310,7 +310,7 @@ public final class MessageDistributorConfig {
             try {
                 return GSON.fromJson(value, MAP_TYPE);
             } catch (final JsonSyntaxException e) {
-                throw new RuntimeException(String.format("The %s=%s environment variable was not able to be deserialized to JSON",
+                throw new RuntimeException(String.format("The %s=%s environment variable was not able to be deserialized from JSON",
                         name, value), e);
             }
         } else {
