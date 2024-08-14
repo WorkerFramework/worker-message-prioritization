@@ -205,7 +205,7 @@
                             <name>${dockerWorkerFrameworkOrg}worker-message-distribution${dockerProjectVersion}</name>
                             <!-- Build the image for this module -->
                             <build>
-                                <from>${projectDockerRegistry}/cafapi/opensuse-jre21</from>
+                                <from>${projectDockerRegistry}/cafapi/oraclelinux-jre21</from>
                                 <labels>
                                     <Build.Number>${project.version}</Build.Number>
                                     <Build.Date>${maven.build.timestamp}</Build.Date>
