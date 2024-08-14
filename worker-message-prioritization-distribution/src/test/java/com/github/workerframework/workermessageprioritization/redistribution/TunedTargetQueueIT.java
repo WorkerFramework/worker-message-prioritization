@@ -202,7 +202,11 @@ public class TunedTargetQueueIT extends DistributorTestBase {
                         consumptionTargetCalculator,
                         stagingTargetPairProvider,
                         10000,
-                        600000);
+                        600000,
+                        true,
+                        false,
+                        false,
+                        Map.of(RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE, RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE_QUORUM));
 
                 lowLevelDistributor.runOnce(connection);
 

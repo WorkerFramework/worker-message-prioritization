@@ -53,8 +53,12 @@ public class LowLevelDistributor extends MessageDistributor {
                                final ConsumptionTargetCalculator consumptionTargetCalculator,
                                final StagingTargetPairProvider stagingTargetPairProvider,
                                @Named("DistributorRunIntervalMilliseconds") final long distributorRunIntervalMilliseconds,
-                               @Named("ConsumerPublisherPairLastDoneWorkTimeoutMilliseconds") final long consumerPublisherPairLastDoneWorkTimeoutMilliseconds) {
-        super(queuesApi);
+                               @Named("ConsumerPublisherPairLastDoneWorkTimeoutMilliseconds") final long consumerPublisherPairLastDoneWorkTimeoutMilliseconds,
+                               @Named("TargetQueueDurable") final boolean targetQueueDurable,
+                               @Named("TargetQueueExclusive") final boolean targetQueueExclusive,
+                               @Named("TargetQueueAutoDelete") final boolean targetQueueAutoDelete,
+                               @Named("TargetQueueArgs") final Map<String,Object> targetQueueArgs) {
+        super(queuesApi, targetQueueDurable, targetQueueExclusive, targetQueueAutoDelete, targetQueueArgs);
         this.connectionFactory = connectionFactory;
         this.connectionDetails = String.format(
             "Host: %s, Port: %s, Virtual Host: %s, SSL: %s",
@@ -142,7 +146,7 @@ public class LowLevelDistributor extends MessageDistributor {
 
         final Set<DistributorWorkItem> distributorWorkItems;
         try {
-            distributorWorkItems = getDistributorWorkItems();
+            distributorWorkItems = getDistributorWorkItems(connection);
         } catch (final Exception e) {
             final String errorMessage = String.format(
                     "Failed to get a list of distributor work items. Will try again during the next run in %d milliseconds",

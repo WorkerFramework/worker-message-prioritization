@@ -49,6 +49,7 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
+import java.util.Map;
 
 public class DistributorModule extends AbstractModule {
 
@@ -194,6 +195,30 @@ public class DistributorModule extends AbstractModule {
 
         return injector.getInstance(Key.get(ConsumptionTargetCalculator.class,
                 Names.named(messageDistributorConfig.getConsumptionTargetCalculatorMode())));
+    }
+
+    @Provides
+    @Named("TargetQueueDurable")
+    boolean provideTargetQueueDurable(final MessageDistributorConfig messageDistributorConfig){
+        return messageDistributorConfig.isTargetQueueDurable();
+    }
+
+    @Provides
+    @Named("TargetQueueExclusive")
+    boolean provideTargetQueueExclusive(final MessageDistributorConfig messageDistributorConfig){
+        return messageDistributorConfig.isTargetQueueExclusive();
+    }
+
+    @Provides
+    @Named("TargetQueueAutoDelete")
+    boolean provideTargetQueueAutoDelete(final MessageDistributorConfig messageDistributorConfig){
+        return messageDistributorConfig.isTargetQueueAutoDelete();
+    }
+
+    @Provides
+    @Named("TargetQueueArgs")
+    Map<String,Object> provideTargetQueueArgs(final MessageDistributorConfig messageDistributorConfig){
+        return messageDistributorConfig.getTargetQueueArgs();
     }
 
     @Override

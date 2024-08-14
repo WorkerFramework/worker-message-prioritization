@@ -5,5 +5,6 @@ ${version-number}
 
 #### New Features
 - US929026: Updated to run on Java 21.
+- US946052: Target queues will now be created if they do not already exist.
 
 #### Known Issues
