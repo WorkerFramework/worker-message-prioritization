@@ -18,7 +18,6 @@ package com.github.workerframework.workermessageprioritization.redistribution;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 
-import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitQueueConstants;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
@@ -28,9 +27,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.TimeoutException;
-import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
 

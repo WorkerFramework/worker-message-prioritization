@@ -17,23 +17,22 @@ package com.github.workerframework.workermessageprioritization.redistribution.co
 
 import static java.util.stream.Collectors.toList;
 
-import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitQueueConstants;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
-import com.google.common.reflect.TypeToken;
-import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
 import com.google.inject.Inject;
 
 public final class MessageDistributorConfig {
 
-    private static final Gson GSON = new Gson();
-    private static final Type MAP_TYPE = new TypeToken<Map<String, Object>>() {}.getType();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final TypeReference<Map<String, Object>> MAP_TYPE = new TypeReference<Map<String, Object>>() {};
 
     private static final String CAF_RABBITMQ_VHOST = "CAF_RABBITMQ_VHOST";
     private static final String CAF_RABBITMQ_VHOST_DEFAULT = "/";
@@ -308,8 +307,8 @@ public final class MessageDistributorConfig {
 
         if (!Strings.isNullOrEmpty(value)) {
             try {
-                return GSON.fromJson(value, MAP_TYPE);
-            } catch (final JsonSyntaxException e) {
+                return OBJECT_MAPPER.readValue(value, MAP_TYPE);
+            } catch (final JsonProcessingException e) {
                 throw new RuntimeException(String.format("The %s=%s environment variable was not able to be deserialized from JSON",
                         name, value), e);
             }

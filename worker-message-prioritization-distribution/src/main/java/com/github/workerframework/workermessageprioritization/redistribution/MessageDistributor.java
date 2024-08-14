@@ -58,7 +58,7 @@ public abstract class MessageDistributor
         this.targetQueueArgs = targetQueueArgs;
     }
 
-    protected Set<DistributorWorkItem> getDistributorWorkItems(final Connection connection)
+    protected Set<DistributorWorkItem> getDistributorWorkItems(final Connection connection) throws IOException
     {
         final List<Queue> queues = queuesApi.getQueues();
 
@@ -88,7 +88,7 @@ public abstract class MessageDistributor
         return distributorWorkItems;
     }
 
-    private Set<Queue> getTargetQueues(final Connection connection, final List<Queue> queues)
+    private Set<Queue> getTargetQueues(final Connection connection, final List<Queue> queues) throws IOException
     {
         // The set of target queues that already exist
         final Set<Queue> targetQueuesAlreadyCreated = queues
@@ -105,18 +105,12 @@ public abstract class MessageDistributor
             LOGGER.info("Target queue(s) to be created: {}", targetQueuesToBeCreated);
 
             // Create RabbitMQ channel
-            final Channel channel;
-            try {
-                channel = connection.createChannel();
-            } catch (final IOException e) {
-                throw new RuntimeException("IO Exception encountered trying to create a RabbitMQ channel", e);
-            }
+            try (final Channel channel = connection.createChannel()) {
 
-            // Create target queues
-            for (final String targetQueueToBeCreated : targetQueuesToBeCreated) {
-                try {
+                // Create target queues
+                for (final String targetQueueToBeCreated : targetQueuesToBeCreated) {
                     LOGGER.info(String.format("Creating target queue by calling channel.queueDeclare(%s, %s, %s, %s, %s)",
-                                    targetQueueToBeCreated, targetQueueDurable, targetQueueExclusive, targetQueueAutoDelete,
+                            targetQueueToBeCreated, targetQueueDurable, targetQueueExclusive, targetQueueAutoDelete,
                             targetQueueArgs));
 
                     channel.queueDeclare(
@@ -125,18 +119,9 @@ public abstract class MessageDistributor
                             targetQueueExclusive,
                             targetQueueAutoDelete,
                             targetQueueArgs);
-                } catch (final IOException e) {
-                    throw new RuntimeException(String.format(
-                            "IOException thrown trying to create target queue when calling channel.queueDeclare(%s, %s, %s, %s, %s)",
-                            targetQueueToBeCreated, targetQueueDurable, targetQueueExclusive, targetQueueAutoDelete, targetQueueArgs), e);
                 }
-            }
-
-            // Close RabbitMQ channel
-            try {
-                channel.close();
-            } catch (final IOException | TimeoutException e) {
-                LOGGER.warn("Exception thrown trying to close RabbitMQ channel", e);
+            } catch (final TimeoutException e) {
+                LOGGER.warn("TimeoutException thrown trying to close RabbitMQ channel", e);
             }
 
             // Return the updated set of target queues
@@ -150,17 +135,12 @@ public abstract class MessageDistributor
         }
     }
 
-    public Set<String> getTargetQueuesToBeCreated(final List<Queue> queues, final Set<Queue> targetQueuesAlreadyCreated)
+    private Set<String> getTargetQueuesToBeCreated(final List<Queue> queues, final Set<Queue> targetQueuesAlreadyCreated)
     {
-        // All staging and target queues returned by the RabbitMQ API
-        final Set<String> targetQueuesAndStagingQueues = queues
+        // Parse target queues from staging queues
+        final Set<String> targetQueuesParsedFromStagingQueues = queues
                 .stream()
                 .map(Queue::getName)
-                .collect(Collectors.toSet());
-
-        // Parse target queues from staging queues
-        final Set<String> targetQueuesParsedFromStagingQueues = targetQueuesAndStagingQueues
-                .stream()
                 .filter(name -> name.contains(LOAD_BALANCED_INDICATOR))
                 .map(name -> name.split(LOAD_BALANCED_INDICATOR)[0])
                 .collect(Collectors.toSet());
