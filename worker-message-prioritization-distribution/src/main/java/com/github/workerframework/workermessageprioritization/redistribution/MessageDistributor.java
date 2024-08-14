@@ -135,7 +135,7 @@ public abstract class MessageDistributor
         }
     }
 
-    private Set<String> getTargetQueuesToBeCreated(final List<Queue> queues, final Set<Queue> targetQueuesAlreadyCreated)
+    private static Set<String> getTargetQueuesToBeCreated(final List<Queue> queues, final Set<Queue> targetQueuesAlreadyCreated)
     {
         // Parse target queues from staging queues
         final Set<String> targetQueuesParsedFromStagingQueues = queues
