@@ -16,15 +16,15 @@
 package com.github.workerframework.workermessageprioritization.targetqueue;
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
+import com.github.workerframework.workermessageprioritization.restclients.kubernetes.model.IoK8sApimachineryPkgApisMetaV1ObjectMeta;
 import com.google.common.base.Suppliers;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import io.kubernetes.client.extended.kubectl.Kubectl;
 import io.kubernetes.client.extended.kubectl.exception.KubectlException;
-import io.kubernetes.client.openapi.Configuration;
-import io.kubernetes.client.openapi.models.V1Deployment;
-import io.kubernetes.client.openapi.models.V1DeploymentSpec;
-import io.kubernetes.client.openapi.models.V1ObjectMeta;
+import com.github.workerframework.workermessageprioritization.restclients.kubernetes.client.Configuration;
+import com.github.workerframework.workermessageprioritization.restclients.kubernetes.model.IoK8sApiAppsV1Deployment;
+import com.github.workerframework.workermessageprioritization.restclients.kubernetes.model.IoK8sApiAppsV1DeploymentSpec;
 import io.kubernetes.client.util.ClientBuilder;
 
 import org.slf4j.Logger;
@@ -105,9 +105,9 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
         for (final String kubernetesNamespace : kubernetesNamespaces) {
 
             // Get all deployments in this namespace
-            final List<V1Deployment> deployments;
+            final List<IoK8sApiAppsV1Deployment> deployments;
             try {
-                deployments = Kubectl.get(V1Deployment.class).namespace(kubernetesNamespace).execute();
+                deployments = Kubectl.get(IoK8sApiAppsV1Deployment.class).namespace(kubernetesNamespace).execute();
             }  catch (final KubectlException kubectlException) {
                 LOGGER.error(String.format(
                         "Cannot get settings for the target queues in the %s namespace as the Kubernetes API threw an exception.",
@@ -118,16 +118,16 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
             }
 
             // Loop through all deployments
-            for (final V1Deployment deployment : deployments) {
+            for (final IoK8sApiAppsV1Deployment deployment : deployments) {
 
                 // Get the metadata
-                final V1ObjectMeta metadata = deployment.getMetadata();
+                final IoK8sApimachineryPkgApisMetaV1ObjectMeta metadata = deployment.getMetadata();
                 if (metadata == null) {
                     continue;
                 }
 
                 // Get the spec
-                final V1DeploymentSpec spec = deployment.getSpec();
+                final IoK8sApiAppsV1DeploymentSpec spec = deployment.getSpec();
 
                 // Get the labels from the metadata
                 final Map<String, String> labels = metadata.getLabels();

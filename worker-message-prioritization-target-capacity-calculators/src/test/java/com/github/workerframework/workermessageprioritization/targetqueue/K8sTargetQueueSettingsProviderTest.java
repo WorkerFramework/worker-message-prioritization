@@ -25,6 +25,8 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
+import com.github.workerframework.workermessageprioritization.restclients.kubernetes.model.IoK8sApiAppsV1Deployment;
+import com.github.workerframework.workermessageprioritization.restclients.kubernetes.model.IoK8sApiAppsV1DeploymentSpec;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
@@ -44,7 +46,7 @@ public class K8sTargetQueueSettingsProviderTest
     public void testExpectedSettingsAreProvidedWhenWorkerHasAllLabels() throws Exception
     {
         // Arrange
-        final V1Deployment elasticQueryWorkerDeployment = createDeploymentWithLabels(
+        final IoK8sApiAppsV1Deployment elasticQueryWorkerDeployment = createDeploymentWithLabels(
                 "dataprocessing-elasticquery-worker",
                 "private",
                 "1",
@@ -179,7 +181,7 @@ public class K8sTargetQueueSettingsProviderTest
         }
     }
 
-    private static V1Deployment createDeploymentWithLabels(
+    private static IoK8sApiAppsV1Deployment createDeploymentWithLabels(
             final String name,
             final String namespace,
             final String minInstances,
@@ -189,7 +191,7 @@ public class K8sTargetQueueSettingsProviderTest
             final String targetQueueEligibleForRefillPercentage,
             final int replicas)
     {
-        final V1Deployment deployment = new V1Deployment();
+        final IoK8sApiAppsV1Deployment deployment = new IoK8sApiAppsV1Deployment();
 
         deployment.setMetadata(new V1ObjectMeta());
         deployment.getMetadata().setName(name);
@@ -201,7 +203,7 @@ public class K8sTargetQueueSettingsProviderTest
                 .put("messageprioritization.targetqueuemaxlength", targetQueueMaxLength)
                 .put("messageprioritization.targetqueueeligibleforrefillpercentage", targetQueueEligibleForRefillPercentage)
                 .build());
-        deployment.setSpec(new V1DeploymentSpec());
+        deployment.setSpec(new IoK8sApiAppsV1DeploymentSpec());
         deployment.getSpec().setReplicas(replicas);
 
         return deployment;

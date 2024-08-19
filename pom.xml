@@ -22,6 +22,8 @@
       <module>worker-message-prioritization-distribution</module>
       <module>worker-message-prioritization-distribution-container</module>
       <module>worker-message-prioritization-rabbitmq</module>
+      <module>worker-message-prioritization-rest-clients</module>
+      <module>worker-message-prioritization-kubernetes-util</module>
       <module>worker-message-prioritization-target-capacity-calculators</module>
     </modules>
 
@@ -43,6 +45,7 @@
   <properties>
     <copyrightYear>2024</copyrightYear>
     <projectDockerRegistry>worker-message-prioritization-${project.version}.project-registries.local</projectDockerRegistry>
+    <kubernetesOpenApiSpecVersion>release-1.31</kubernetesOpenApiSpecVersion>
   </properties>
 
   <dependencyManagement>
@@ -104,6 +107,11 @@
         <version>2.17.2</version>
       </dependency>
       <dependency>
+        <groupId>com.fasterxml.jackson.datatype</groupId>
+        <artifactId>jackson-datatype-jsr310</artifactId>
+        <version>2.17.2</version>
+      </dependency>
+      <dependency>
         <groupId>com.fasterxml.jackson.module</groupId>
         <artifactId>jackson-module-jakarta-xmlbind-annotations</artifactId>
         <version>2.17.2</version>
@@ -146,6 +154,11 @@
       <dependency>
         <groupId>com.github.workerframework</groupId>
         <artifactId>worker-message-prioritization-distribution</artifactId>
+        <version>2.1.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>com.github.workerframework</groupId>
+        <artifactId>worker-message-prioritization-rest-clients</artifactId>
         <version>2.1.0-SNAPSHOT</version>
       </dependency>
       <dependency>
@@ -254,37 +267,37 @@
         <artifactId>gson-fire</artifactId>
         <version>1.9.0</version>
       </dependency>
-      <dependency>
-        <groupId>io.kubernetes</groupId>
-        <artifactId>client-java</artifactId>
-        <version>21.0.1</version>
-      </dependency>
-      <dependency>
-        <groupId>io.kubernetes</groupId>
-        <artifactId>client-java-api</artifactId>
-        <version>21.0.1</version>
-        <exclusions>
-          <exclusion>
-            <groupId>javax.annotation</groupId>
-            <artifactId>javax.annotation-api</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>io.kubernetes</groupId>
-        <artifactId>client-java-api-fluent</artifactId>
-        <version>21.0.1</version>
-      </dependency>
-      <dependency>
-        <groupId>io.kubernetes</groupId>
-        <artifactId>client-java-extended</artifactId>
-        <version>21.0.1</version>
-      </dependency>
-      <dependency>
-        <groupId>io.kubernetes</groupId>
-        <artifactId>client-java-proto</artifactId>
-        <version>21.0.1</version>
-      </dependency>
+<!--      <dependency>-->
+<!--        <groupId>io.kubernetes</groupId>-->
+<!--        <artifactId>client-java</artifactId>-->
+<!--        <version>21.0.1</version>-->
+<!--      </dependency>-->
+<!--      <dependency>-->
+<!--        <groupId>io.kubernetes</groupId>-->
+<!--        <artifactId>client-java-api</artifactId>-->
+<!--        <version>21.0.1</version>-->
+<!--        <exclusions>-->
+<!--          <exclusion>-->
+<!--            <groupId>javax.annotation</groupId>-->
+<!--            <artifactId>javax.annotation-api</artifactId>-->
+<!--          </exclusion>-->
+<!--        </exclusions>-->
+<!--      </dependency>-->
+<!--      <dependency>-->
+<!--        <groupId>io.kubernetes</groupId>-->
+<!--        <artifactId>client-java-api-fluent</artifactId>-->
+<!--        <version>21.0.1</version>-->
+<!--      </dependency>-->
+<!--      <dependency>-->
+<!--        <groupId>io.kubernetes</groupId>-->
+<!--        <artifactId>client-java-extended</artifactId>-->
+<!--        <version>21.0.1</version>-->
+<!--      </dependency>-->
+<!--      <dependency>-->
+<!--        <groupId>io.kubernetes</groupId>-->
+<!--        <artifactId>client-java-proto</artifactId>-->
+<!--        <version>21.0.1</version>-->
+<!--      </dependency>-->
       <dependency>
         <groupId>io.prometheus</groupId>
         <artifactId>simpleclient</artifactId>
@@ -482,6 +495,11 @@
         <version>3.1.8</version>
       </dependency>
       <dependency>
+        <groupId>org.glassfish.jersey.media</groupId>
+        <artifactId>jersey-media-multipart</artifactId>
+        <version>3.1.8</version>
+      </dependency>
+      <dependency>
         <groupId>org.hamcrest</groupId>
         <artifactId>hamcrest</artifactId>
         <version>3.0</version>
@@ -530,6 +548,11 @@
         <groupId>org.objenesis</groupId>
         <artifactId>objenesis</artifactId>
         <version>3.4</version>
+      </dependency>
+      <dependency>
+        <groupId>org.openapitools</groupId>
+        <artifactId>jackson-databind-nullable</artifactId>
+        <version>0.2.6</version>
       </dependency>
       <dependency>
         <groupId>org.opentest4j</groupId>
@@ -592,6 +615,16 @@
             </image>
           </imageManagement>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <version>3.5.0</version>
+      </plugin>
+      <plugin>
+        <groupId>org.openapitools</groupId>
+        <artifactId>openapi-generator-maven-plugin</artifactId>
+        <version>7.2.0</version>
       </plugin>
     </plugins>
   </build>
