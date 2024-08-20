@@ -26,7 +26,7 @@
         <version>2.1.0-SNAPSHOT</version>
     </parent>
     
-    <artifactId>worker-message-prioritization-rest-clients</artifactId>
+    <artifactId>worker-message-prioritization-kubernetes-client</artifactId>
     
     <dependencies>
         <!-- Jersey 3 -->

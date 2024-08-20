@@ -31,7 +31,7 @@
     <dependencies>
         <dependency>
             <groupId>com.github.workerframework</groupId>
-            <artifactId>worker-message-prioritization-rest-clients</artifactId>
+            <artifactId>worker-message-prioritization-kubernetes-client</artifactId>
         </dependency>
         <dependency>
             <groupId>com.github.workerframework</groupId>

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.workerframework.workermessageprioritization.kubernetes.util;
+package com.github.workerframework.workermessageprioritization.restclients;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -27,7 +27,6 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
 
 import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.jackson.internal.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import org.glassfish.jersey.jackson.internal.jackson.jaxrs.json.JacksonJsonProvider;
 
 import com.fasterxml.jackson.databind.ObjectMapper;

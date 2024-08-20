@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.workerframework.workermessageprioritization.kubernetes.util;
+package com.github.workerframework.workermessageprioritization.restclients;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
