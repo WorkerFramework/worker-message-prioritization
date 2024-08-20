@@ -15,8 +15,8 @@
  */
 package com.github.workerframework.workermessageprioritization.restclients;
 
-import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.net.URI;
 import java.security.KeyStore;
 import java.security.SecureRandom;
@@ -39,8 +39,10 @@ import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
 
 /**
- * This class is loosely based on <a href="https://github.com/kubernetes-client/java/blob/automated-release-21.0.1/util/src/main/java/io/kubernetes/client/util/ClientBuilder.java#L70">io.kubernetes.client.util.ClientBuilder.java</a>,
- * which we stopped using because it brought in a lot of unwanted dependencies (such as the AWS SDK, Google Protocol Buffers, and the Bouncy Castle libraries).
+ * This class is loosely based on
+ * <a href="https://github.com/kubernetes-client/java/blob/automated-release-21.0.1/util/src/main/java/io/kubernetes/client/util/ClientBuilder.java#L70">io.kubernetes.client.util.ClientBuilder.java</a>,
+ * which we stopped using because it brought in a lot of unwanted dependencies (such as the AWS SDK, Google Protocol Buffers, and the
+ * Bouncy Castle libraries).
  */
 public final class KubernetesClientFactory
 {
@@ -91,12 +93,12 @@ public final class KubernetesClientFactory
     {
         final String host = System.getenv(ENV_SERVICE_HOST);
         if (host == null || host.isEmpty()) {
-            throw new RuntimeException(String.format("Environment variable not set: %s", ENV_SERVICE_HOST));
+            throw new RuntimeException("Environment variable not set: " + ENV_SERVICE_HOST);
         }
 
         final String port = System.getenv(ENV_SERVICE_PORT);
         if (port == null || port.isEmpty()) {
-            throw new RuntimeException(String.format("Environment variable not set: %s", ENV_SERVICE_PORT));
+            throw new RuntimeException("Environment variable not set: " + ENV_SERVICE_PORT);
         }
 
         return createClientWithCertAndToken(
@@ -107,6 +109,7 @@ public final class KubernetesClientFactory
         );
     }
 
+    // Visible for testing
     public static ApiClient createClientWithCertAndToken(
             final String caCertPath,
             final String tokenPath,
@@ -114,21 +117,13 @@ public final class KubernetesClientFactory
             final int port
     ) throws Exception
     {
-        final File caCertFile = new File(caCertPath);
-        if (!caCertFile.exists()) {
-            throw new RuntimeException(String.format("No cert file found at: %s", caCertPath));
-        }
-
-        final File tokenFile = new File(tokenPath);
-        if (!tokenFile.exists()) {
-            throw new RuntimeException(String.format("No token file found at: %s", tokenPath));
-        }
-
         // Load the CA certificate
+        final CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
         final Certificate caCert;
-        try (final FileInputStream caCertFileInputStream = new FileInputStream(caCertFile.getAbsolutePath())) {
-            final CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
+        try (final FileInputStream caCertFileInputStream = new FileInputStream(caCertPath)) {
             caCert = certificateFactory.generateCertificate(caCertFileInputStream);
+        } catch (final IOException e) {
+            throw new RuntimeException("Cannot read ca cert file: " + caCertPath, e);
         }
 
         // Create a KeyStore with the CA certificate

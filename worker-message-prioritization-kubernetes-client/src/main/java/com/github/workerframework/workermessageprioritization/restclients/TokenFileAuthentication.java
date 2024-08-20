@@ -46,7 +46,7 @@ final class TokenFileAuthentication implements ClientRequestFilter
                 this.token = new String(Files.readAllBytes(Paths.get(this.file)), Charset.defaultCharset()).trim();
                 expiry = Instant.now().plusSeconds(60);
             } catch (final IOException ie) {
-                throw new RuntimeException("Cannot read file: " + this.file, ie);
+                throw new RuntimeException("Cannot read token file: " + this.file, ie);
             }
         }
         return this.token;
