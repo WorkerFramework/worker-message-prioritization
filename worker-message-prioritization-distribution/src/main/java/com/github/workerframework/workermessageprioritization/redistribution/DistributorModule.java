@@ -54,6 +54,12 @@ import java.util.Map;
 public class DistributorModule extends AbstractModule {
 
     @Provides
+    @Named("KubernetesEnabled")
+    boolean provideKubernetesEnabled(final MessageDistributorConfig messageDistributorConfig) {
+        return messageDistributorConfig.getKubernetesEnabled();
+    }
+
+    @Provides
     @Named("KubernetesNamespaces")
     List<String> provideKubernetesNamespaces(final MessageDistributorConfig messageDistributorConfig) {
         return messageDistributorConfig.getKubernetesNamespaces();

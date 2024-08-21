@@ -16,21 +16,20 @@
 package com.github.workerframework.workermessageprioritization.targetqueue;
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
+import com.github.workerframework.workermessageprioritization.restclients.KubernetesClientFactory;
+import com.github.workerframework.workermessageprioritization.restclients.kubernetes.api.AppsV1Api;
+import com.github.workerframework.workermessageprioritization.restclients.kubernetes.client.ApiClient;
+import com.github.workerframework.workermessageprioritization.restclients.kubernetes.client.ApiException;
 import com.github.workerframework.workermessageprioritization.restclients.kubernetes.model.IoK8sApimachineryPkgApisMetaV1ObjectMeta;
 import com.google.common.base.Suppliers;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import io.kubernetes.client.extended.kubectl.Kubectl;
-import io.kubernetes.client.extended.kubectl.exception.KubectlException;
-import com.github.workerframework.workermessageprioritization.restclients.kubernetes.client.Configuration;
 import com.github.workerframework.workermessageprioritization.restclients.kubernetes.model.IoK8sApiAppsV1Deployment;
 import com.github.workerframework.workermessageprioritization.restclients.kubernetes.model.IoK8sApiAppsV1DeploymentSpec;
-import io.kubernetes.client.util.ClientBuilder;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +39,9 @@ import java.util.function.Supplier;
 public final class K8sTargetQueueSettingsProvider implements TargetQueueSettingsProvider
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(K8sTargetQueueSettingsProvider.class);
+    // Set this to true if running in an environment where we cannot connect to Kubernetes, such as the integration tests
+    private final static boolean KUBERNETES_REQUESTS_DISABLED =
+            Boolean.parseBoolean(System.getenv("CAF_WMP_KUBERNETES_REQUESTS_DISABLED"));
     private static final String MESSAGE_PRIORITIZATION_TARGET_QUEUE_NAME_LABEL = 
             "messageprioritization.targetqueuename";
     private static final String MESSAGE_PRIORITIZATION_TARGET_QUEUE_MAX_LENGTH_LABEL = 
@@ -61,38 +63,54 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
             CAPACITY_FALLBACK);
     private final List<String> kubernetesNamespaces;
     private final Supplier<Map<String, TargetQueueSettings>> memoizedTargetQueueSettingsSupplier;
+    private final AppsV1Api appsV1Api;
 
     @Inject
     public K8sTargetQueueSettingsProvider(
             @Named("KubernetesNamespaces") final List<String> kubernetesNamespaces, 
             @Named("KubernetesLabelCacheExpiryMinutes") final int kubernetesLabelCacheExpiryMinutes)
     {
-        try {
-            Configuration.setDefaultApiClient(ClientBuilder.standard().build());
-        } catch (final IOException ioException) {
-            throw new RuntimeException("IOException thrown trying to create a Kubernetes client", ioException);
-        }
+        if (KUBERNETES_REQUESTS_DISABLED) {
+            this.appsV1Api = null;
+            this.kubernetesNamespaces = null;
+            this.memoizedTargetQueueSettingsSupplier = null;
+        } else {
+            try {
+                final ApiClient clientWithCertAndToken = KubernetesClientFactory.createClientWithCertAndToken();
+                this.appsV1Api = new AppsV1Api(clientWithCertAndToken);
+            } catch (final Exception e) {
+                throw new RuntimeException("Exception thrown trying to create a Kubernetes client", e);
+            }
 
-        this.kubernetesNamespaces = kubernetesNamespaces;
-        this.memoizedTargetQueueSettingsSupplier = Suppliers.memoizeWithExpiration(
-                this::getTargetQueueSettingsFromKubernetes, kubernetesLabelCacheExpiryMinutes, TimeUnit.MINUTES);
+            this.kubernetesNamespaces = kubernetesNamespaces;
+            this.memoizedTargetQueueSettingsSupplier = Suppliers.memoizeWithExpiration(
+                    this::getTargetQueueSettingsFromKubernetes, kubernetesLabelCacheExpiryMinutes, TimeUnit.MINUTES);
+        }
     }
 
     @Override
     public TargetQueueSettings get(final Queue targetQueue)
     {
-        final TargetQueueSettings targetQueueSettings = memoizedTargetQueueSettingsSupplier.get().get(targetQueue.getName());
-
-        if (targetQueueSettings == null) {
-            LOGGER.warn("Cannot get settings for the {} queue. Using fallback settings: {}",
+        if (KUBERNETES_REQUESTS_DISABLED) {
+            LOGGER.warn("Cannot get settings for the {} queue as Kubernetes requests have been disabled. Using fallback settings: {}",
                     targetQueue.getName(),
                     FALLBACK_TARGET_QUEUE_SETTINGS);
 
             return FALLBACK_TARGET_QUEUE_SETTINGS;
         } else {
-            LOGGER.debug("Got settings for the {} queue: {}", targetQueue.getName(), targetQueueSettings);
+            final TargetQueueSettings targetQueueSettings = memoizedTargetQueueSettingsSupplier.get().get(targetQueue.getName());
 
-            return targetQueueSettings;
+            if (targetQueueSettings == null) {
+                LOGGER.warn("Cannot get settings for the {} queue. Using fallback settings: {}",
+                        targetQueue.getName(),
+                        FALLBACK_TARGET_QUEUE_SETTINGS);
+
+                return FALLBACK_TARGET_QUEUE_SETTINGS;
+            } else {
+                LOGGER.debug("Got settings for the {} queue: {}", targetQueue.getName(), targetQueueSettings);
+
+                return targetQueueSettings;
+            }
         }
     }
 
@@ -107,11 +125,23 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
             // Get all deployments in this namespace
             final List<IoK8sApiAppsV1Deployment> deployments;
             try {
-                deployments = Kubectl.get(IoK8sApiAppsV1Deployment.class).namespace(kubernetesNamespace).execute();
-            }  catch (final KubectlException kubectlException) {
+                deployments = appsV1Api.listAppsV1NamespacedDeployment(
+                        "private",
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        0,
+                        null).getItems();
+            }  catch (final ApiException e) {
                 LOGGER.error(String.format(
                         "Cannot get settings for the target queues in the %s namespace as the Kubernetes API threw an exception.",
-                        kubernetesNamespace), kubectlException);
+                        kubernetesNamespace), e);
 
                 // Try the next namespace
                 continue;

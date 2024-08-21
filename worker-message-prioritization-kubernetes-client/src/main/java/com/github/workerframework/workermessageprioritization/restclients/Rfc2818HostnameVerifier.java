@@ -76,30 +76,55 @@ final class Rfc2818HostnameVerifier implements HostnameVerifier
         return false;
     }
 
-    private boolean verifyHostname(String hostname, String pattern)
-    {
+//    private boolean verifyHostname(String hostname, String pattern)
+//    {
+//        if (hostname == null || pattern == null || hostname.isEmpty() || pattern.isEmpty()) {
+//            return false;
+//        }
+//
+//        if (!hostname.endsWith(".")) hostname += ".";
+//        if (!pattern.endsWith(".")) pattern += ".";
+//
+//        if (!pattern.contains("*")) {
+//            return hostname.equals(pattern);
+//        }
+//
+//        if (!pattern.startsWith("*.") || pattern.indexOf('*', 1) != -1) {
+//            return false;
+//        }
+//
+//        final String suffix = pattern.substring(1);
+//        if (!hostname.endsWith(suffix)) {
+//            return false;
+//        }
+//
+//        final int suffixStartIndex = hostname.length() - suffix.length();
+//        return suffixStartIndex == 0 || hostname.lastIndexOf('.', suffixStartIndex - 1) == -1;
+//    }
+
+    private boolean verifyHostname(String hostname, String pattern) {
         if (hostname == null || pattern == null || hostname.isEmpty() || pattern.isEmpty()) {
             return false;
         }
 
-        if (!hostname.endsWith(".")) hostname += ".";
-        if (!pattern.endsWith(".")) pattern += ".";
+        String normalizedHostname = hostname.endsWith(".") ? hostname : hostname + ".";
+        String normalizedPattern = pattern.endsWith(".") ? pattern : pattern + ".";
 
-        if (!pattern.contains("*")) {
-            return hostname.equals(pattern);
+        if (!normalizedPattern.contains("*")) {
+            return normalizedHostname.equals(normalizedPattern);
         }
 
-        if (!pattern.startsWith("*.") || pattern.indexOf('*', 1) != -1) {
+        if (!normalizedPattern.startsWith("*.") || normalizedPattern.indexOf('*', 1) != -1) {
             return false;
         }
 
-        final String suffix = pattern.substring(1);
-        if (!hostname.endsWith(suffix)) {
+        final String suffix = normalizedPattern.substring(1);
+        if (!normalizedHostname.endsWith(suffix)) {
             return false;
         }
 
-        final int suffixStartIndex = hostname.length() - suffix.length();
-        return suffixStartIndex == 0 || hostname.lastIndexOf('.', suffixStartIndex - 1) == -1;
+        final int suffixStartIndex = normalizedHostname.length() - suffix.length();
+        return suffixStartIndex == 0 || normalizedHostname.lastIndexOf('.', suffixStartIndex - 1) == -1;
     }
 
     private boolean isIpAddress(final String host)
