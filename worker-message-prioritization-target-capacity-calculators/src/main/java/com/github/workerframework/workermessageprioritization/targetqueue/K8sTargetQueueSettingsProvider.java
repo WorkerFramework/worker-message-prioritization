@@ -15,6 +15,8 @@
  */
 package com.github.workerframework.workermessageprioritization.targetqueue;
 
+import static com.github.workerframework.workermessageprioritization.targetqueue.Constants.*;
+
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 import com.github.workerframework.workermessageprioritization.restclients.KubernetesClientFactory;
 import com.github.workerframework.workermessageprioritization.restclients.kubernetes.api.AppsV1Api;
@@ -39,9 +41,7 @@ import java.util.function.Supplier;
 public final class K8sTargetQueueSettingsProvider implements TargetQueueSettingsProvider
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(K8sTargetQueueSettingsProvider.class);
-    // Set this to true if running in an environment where we cannot connect to Kubernetes, such as the integration tests
-    private final static boolean KUBERNETES_REQUESTS_DISABLED =
-            Boolean.parseBoolean(System.getenv("CAF_WMP_KUBERNETES_REQUESTS_DISABLED"));
+
     private static final String MESSAGE_PRIORITIZATION_TARGET_QUEUE_NAME_LABEL = 
             "messageprioritization.targetqueuename";
     private static final String MESSAGE_PRIORITIZATION_TARGET_QUEUE_MAX_LENGTH_LABEL = 
@@ -50,17 +50,6 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
     private static final String MESSAGE_PRIORITIZATION_TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_LABEL
         = "messageprioritization.targetqueueeligibleforrefillpercentage";
     private static final String CURRENT_INSTANCES_LABEL = "spec.replicas";
-    private static final long TARGET_QUEUE_MAX_LENGTH_FALLBACK = 1000;
-    private static final long TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK = 10;
-    private static final int CURRENT_INSTANCE_FALLBACK = 1;
-    private static final int MAX_INSTANCES_FALLBACK = 1;
-    private static final long CAPACITY_FALLBACK = 1000;
-    private static final TargetQueueSettings FALLBACK_TARGET_QUEUE_SETTINGS = new TargetQueueSettings(
-            TARGET_QUEUE_MAX_LENGTH_FALLBACK,
-            TARGET_QUEUE_ELIGIBLE_FOR_REFILL_PERCENTAGE_FALLBACK,
-            MAX_INSTANCES_FALLBACK,
-            CURRENT_INSTANCE_FALLBACK,
-            CAPACITY_FALLBACK);
     private final List<String> kubernetesNamespaces;
     private final Supplier<Map<String, TargetQueueSettings>> memoizedTargetQueueSettingsSupplier;
     private final AppsV1Api appsV1Api;
@@ -70,47 +59,33 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
             @Named("KubernetesNamespaces") final List<String> kubernetesNamespaces, 
             @Named("KubernetesLabelCacheExpiryMinutes") final int kubernetesLabelCacheExpiryMinutes)
     {
-        if (KUBERNETES_REQUESTS_DISABLED) {
-            this.appsV1Api = null;
-            this.kubernetesNamespaces = null;
-            this.memoizedTargetQueueSettingsSupplier = null;
-        } else {
-            try {
-                final ApiClient clientWithCertAndToken = KubernetesClientFactory.createClientWithCertAndToken();
-                this.appsV1Api = new AppsV1Api(clientWithCertAndToken);
-            } catch (final Exception e) {
-                throw new RuntimeException("Exception thrown trying to create a Kubernetes client", e);
-            }
-
-            this.kubernetesNamespaces = kubernetesNamespaces;
-            this.memoizedTargetQueueSettingsSupplier = Suppliers.memoizeWithExpiration(
-                    this::getTargetQueueSettingsFromKubernetes, kubernetesLabelCacheExpiryMinutes, TimeUnit.MINUTES);
+        try {
+            final ApiClient clientWithCertAndToken = KubernetesClientFactory.createClientWithCertAndToken();
+            this.appsV1Api = new AppsV1Api(clientWithCertAndToken);
+        } catch (final Exception e) {
+            throw new RuntimeException("Exception thrown trying to create a Kubernetes client", e);
         }
+
+        this.kubernetesNamespaces = kubernetesNamespaces;
+        this.memoizedTargetQueueSettingsSupplier = Suppliers.memoizeWithExpiration(
+                this::getTargetQueueSettingsFromKubernetes, kubernetesLabelCacheExpiryMinutes, TimeUnit.MINUTES);
     }
 
     @Override
     public TargetQueueSettings get(final Queue targetQueue)
     {
-        if (KUBERNETES_REQUESTS_DISABLED) {
-            LOGGER.warn("Cannot get settings for the {} queue as Kubernetes requests have been disabled. Using fallback settings: {}",
+        final TargetQueueSettings targetQueueSettings = memoizedTargetQueueSettingsSupplier.get().get(targetQueue.getName());
+
+        if (targetQueueSettings == null) {
+            LOGGER.warn("Cannot get settings for the {} queue. Using fallback settings: {}",
                     targetQueue.getName(),
                     FALLBACK_TARGET_QUEUE_SETTINGS);
 
             return FALLBACK_TARGET_QUEUE_SETTINGS;
         } else {
-            final TargetQueueSettings targetQueueSettings = memoizedTargetQueueSettingsSupplier.get().get(targetQueue.getName());
+            LOGGER.debug("Got settings for the {} queue: {}", targetQueue.getName(), targetQueueSettings);
 
-            if (targetQueueSettings == null) {
-                LOGGER.warn("Cannot get settings for the {} queue. Using fallback settings: {}",
-                        targetQueue.getName(),
-                        FALLBACK_TARGET_QUEUE_SETTINGS);
-
-                return FALLBACK_TARGET_QUEUE_SETTINGS;
-            } else {
-                LOGGER.debug("Got settings for the {} queue: {}", targetQueue.getName(), targetQueueSettings);
-
-                return targetQueueSettings;
-            }
+            return targetQueueSettings;
         }
     }
 

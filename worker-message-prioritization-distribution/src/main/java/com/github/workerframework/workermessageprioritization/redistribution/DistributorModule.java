@@ -230,7 +230,8 @@ public class DistributorModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(MessageDistributorConfig.class).in(Scopes.SINGLETON);
-        bind(TargetQueueSettingsProvider.class).to(K8sTargetQueueSettingsProvider.class);
+        bind(TargetQueueSettingsProvider.class)
+                .toProvider(TargetQueueSettingsProviderProvider.class);
         bind(HistoricalConsumptionRateManager.class);
         bind(TargetQueueLengthRounder.class);
         bind(QueueInformationProvider.class);
