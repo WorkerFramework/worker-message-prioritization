@@ -111,7 +111,7 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
                         null,
                         null,
                         null,
-                        0,
+                        null,
                         null).getItems();
             }  catch (final ApiException e) {
                 LOGGER.error(String.format(

@@ -44,7 +44,6 @@
   <properties>
     <copyrightYear>2024</copyrightYear>
     <projectDockerRegistry>worker-message-prioritization-${project.version}.project-registries.local</projectDockerRegistry>
-    <kubernetesOpenApiSpecVersion>release-1.31</kubernetesOpenApiSpecVersion>
   </properties>
 
   <dependencyManagement>

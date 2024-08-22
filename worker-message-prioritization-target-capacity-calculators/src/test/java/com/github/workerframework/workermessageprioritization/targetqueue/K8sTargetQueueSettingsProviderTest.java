@@ -81,7 +81,7 @@ public class K8sTargetQueueSettingsProviderTest
                          null,
                          null,
                          null,
-                         0,
+                         null,
                          null
                  )).thenReturn(deploymentList);
              })
@@ -151,7 +151,7 @@ public class K8sTargetQueueSettingsProviderTest
                          null,
                          null,
                          null,
-                         0,
+                         null,
                          null
                  )).thenReturn(deploymentList);
              })
@@ -202,7 +202,7 @@ public class K8sTargetQueueSettingsProviderTest
                          null,
                          null,
                          null,
-                         0,
+                         null,
                          null
                  )).thenReturn(deploymentList);
              })

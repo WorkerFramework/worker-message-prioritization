@@ -70,37 +70,6 @@
             <groupId>org.openapitools</groupId>
             <artifactId>jackson-databind-nullable</artifactId>
         </dependency>
-        
-        <!-- GSON + okhttp -->
-<!--        <dependency>-->
-<!--            <groupId>jakarta.annotation</groupId>-->
-<!--            <artifactId>jakarta.annotation-api</artifactId>-->
-<!--            <scope>provided</scope>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>com.fasterxml.jackson.core</groupId>-->
-<!--            <artifactId>jackson-annotations</artifactId>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>com.google.code.gson</groupId>-->
-<!--            <artifactId>gson</artifactId>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>com.squareup.okhttp3</groupId>-->
-<!--            <artifactId>logging-interceptor</artifactId>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>com.squareup.okhttp3</groupId>-->
-<!--            <artifactId>okhttp</artifactId>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>com.squareup.okio</groupId>-->
-<!--            <artifactId>okio-jvm</artifactId>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>io.gsonfire</groupId>-->
-<!--            <artifactId>gson-fire</artifactId>-->
-<!--        </dependency>-->
     </dependencies>
     
     <build>
@@ -116,7 +85,7 @@
                             <goal>generate</goal>
                         </goals>
                         <configuration>
-                            <inputSpec>https://raw.githubusercontent.com/kubernetes/kubernetes/${kubernetesOpenApiSpecVersion}/api/openapi-spec/swagger.json</inputSpec>
+                            <inputSpec>${project.basedir}/src/main/resources/swagger.yaml</inputSpec>
                             <generatorName>java</generatorName>
                             <output>${project.build.directory}/openapi-codegen/kubernetes</output>
                             <apiPackage>com.github.workerframework.workermessageprioritization.restclients.kubernetes.api</apiPackage>

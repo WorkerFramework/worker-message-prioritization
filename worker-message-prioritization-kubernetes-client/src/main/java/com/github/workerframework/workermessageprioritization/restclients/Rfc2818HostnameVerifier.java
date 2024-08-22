@@ -76,39 +76,13 @@ final class Rfc2818HostnameVerifier implements HostnameVerifier
         return false;
     }
 
-//    private boolean verifyHostname(String hostname, String pattern)
-//    {
-//        if (hostname == null || pattern == null || hostname.isEmpty() || pattern.isEmpty()) {
-//            return false;
-//        }
-//
-//        if (!hostname.endsWith(".")) hostname += ".";
-//        if (!pattern.endsWith(".")) pattern += ".";
-//
-//        if (!pattern.contains("*")) {
-//            return hostname.equals(pattern);
-//        }
-//
-//        if (!pattern.startsWith("*.") || pattern.indexOf('*', 1) != -1) {
-//            return false;
-//        }
-//
-//        final String suffix = pattern.substring(1);
-//        if (!hostname.endsWith(suffix)) {
-//            return false;
-//        }
-//
-//        final int suffixStartIndex = hostname.length() - suffix.length();
-//        return suffixStartIndex == 0 || hostname.lastIndexOf('.', suffixStartIndex - 1) == -1;
-//    }
-
-    private boolean verifyHostname(String hostname, String pattern) {
+    private boolean verifyHostname(final String hostname, final String pattern) {
         if (hostname == null || pattern == null || hostname.isEmpty() || pattern.isEmpty()) {
             return false;
         }
 
-        String normalizedHostname = hostname.endsWith(".") ? hostname : hostname + ".";
-        String normalizedPattern = pattern.endsWith(".") ? pattern : pattern + ".";
+        final String normalizedHostname = hostname.endsWith(".") ? hostname : hostname + ".";
+        final String normalizedPattern = pattern.endsWith(".") ? pattern : pattern + ".";
 
         if (!normalizedPattern.contains("*")) {
             return normalizedHostname.equals(normalizedPattern);

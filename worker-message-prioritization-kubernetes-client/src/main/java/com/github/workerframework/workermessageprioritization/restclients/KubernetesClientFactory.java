@@ -54,6 +54,24 @@ public final class KubernetesClientFactory
     {
     }
 
+    /**
+     * Creates a Kubernetes client with a CA cert and Bearer token.
+     * <p>
+     * This method expects the following environment variables to be preset:
+     * <ul>
+     *   <li>KUBERNETES_SERVICE_HOST</li>
+     *   <li>KUBERNETES_SERVICE_PORT</li>
+     * </ul>
+     * <p>
+     * and the following files to be present:
+     * <ul>
+     *   <li>/var/run/secrets/kubernetes.io/serviceaccount/ca.crt</li>
+     *   <li>/var/run/secrets/kubernetes.io/serviceaccount/token</li>
+     * </ul>
+     *
+     * @return a client configured to communicate with Kubernetes using a CA cert and Bearer token.
+     * @throws Exception if the client could not be created for any reason.
+     */
     public static ApiClient createClientWithCertAndToken() throws Exception
     {
         final String host = System.getenv(ENV_SERVICE_HOST);
@@ -82,9 +100,9 @@ public final class KubernetesClientFactory
             final int port
     ) throws Exception
     {
-        ///////////////////////////////////////////////////////////
+        //
         // SSLContext
-        ///////////////////////////////////////////////////////////
+        //
 
         final CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
         final Certificate caCert;
@@ -103,17 +121,17 @@ public final class KubernetesClientFactory
         final SSLContext sslContext = SSLContext.getInstance("TLS");
         sslContext.init(null, trustManagerFactory.getTrustManagers(), new SecureRandom());
 
-        ///////////////////////////////////////////////////////////
+        //
         // ObjectMapper
-        ///////////////////////////////////////////////////////////
+        //
 
         final ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
         final JacksonJsonProvider jacksonJsonProvider = new JacksonJsonProvider(objectMapper);
 
-        ///////////////////////////////////////////////////////////
+        //
         // ApiClient
-        ///////////////////////////////////////////////////////////
+        //
 
         final ApiClient apiClient = new ApiClient();
         apiClient.setBasePath(new URI("https", null, host, port, null, null, null).toString());
