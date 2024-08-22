@@ -30,8 +30,8 @@
     
     <dependencies>
         <dependency>
-            <groupId>com.github.workerframework</groupId>
-            <artifactId>worker-message-prioritization-kubernetes-client</artifactId>
+            <groupId>com.github.cafapi.kubernetes</groupId>
+            <artifactId>caf-kubernetes-client</artifactId>
         </dependency>
         <dependency>
             <groupId>com.github.workerframework</groupId>

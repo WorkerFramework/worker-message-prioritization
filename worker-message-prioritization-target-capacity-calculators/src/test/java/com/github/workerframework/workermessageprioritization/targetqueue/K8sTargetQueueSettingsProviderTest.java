@@ -25,13 +25,13 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
-import com.github.workerframework.workermessageprioritization.restclients.KubernetesClientFactory;
-import com.github.workerframework.workermessageprioritization.restclients.kubernetes.api.AppsV1Api;
-import com.github.workerframework.workermessageprioritization.restclients.kubernetes.client.ApiClient;
-import com.github.workerframework.workermessageprioritization.restclients.kubernetes.model.IoK8sApiAppsV1Deployment;
-import com.github.workerframework.workermessageprioritization.restclients.kubernetes.model.IoK8sApiAppsV1DeploymentList;
-import com.github.workerframework.workermessageprioritization.restclients.kubernetes.model.IoK8sApiAppsV1DeploymentSpec;
-import com.github.workerframework.workermessageprioritization.restclients.kubernetes.model.IoK8sApimachineryPkgApisMetaV1ObjectMeta;
+import com.github.cafapi.kubernetes.client.KubernetesClientFactory;
+import com.github.cafapi.kubernetes.client.api.AppsV1Api;
+import com.github.cafapi.kubernetes.client.client.ApiClient;
+import com.github.cafapi.kubernetes.client.model.IoK8sApiAppsV1Deployment;
+import com.github.cafapi.kubernetes.client.model.IoK8sApiAppsV1DeploymentList;
+import com.github.cafapi.kubernetes.client.model.IoK8sApiAppsV1DeploymentSpec;
+import com.github.cafapi.kubernetes.client.model.IoK8sApimachineryPkgApisMetaV1ObjectMeta;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
