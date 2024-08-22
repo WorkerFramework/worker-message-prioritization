@@ -26,7 +26,7 @@ import jakarta.ws.rs.client.ClientRequestFilter;
 
 /**
  * A Jersey implementation of <a href="https://github.com/kubernetes-client/java/blob/automated-release-21.0.1/util/src/main/java/io/kubernetes/client/util/credentials/TokenFileAuthentication.java">io.kubernetes.client.util.credentials.TokenFileAuthentication</a>.
- *
+ * <p>
  * Comment taken from the above class:
  * TODO: prefer OpenAPI backed Authentication once it is available. see details in
  * <a href="https://github.com/OpenAPITools/openapi-generator/pull/6036">https://github.com/OpenAPITools/openapi-generator/pull/6036</a>. currently, the
