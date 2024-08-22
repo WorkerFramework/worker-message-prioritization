@@ -29,7 +29,6 @@
     <artifactId>worker-message-prioritization-kubernetes-client</artifactId>
     
     <dependencies>
-        <!-- Jersey 3 -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-annotations</artifactId>
