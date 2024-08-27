@@ -58,32 +58,6 @@
         <version>1.5.7</version>
       </dependency>
       <dependency>
-        <groupId>com.amazonaws</groupId>
-        <artifactId>aws-java-sdk-core</artifactId>
-        <version>1.12.770</version>
-        <exclusions>
-          <exclusion>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>com.amazonaws</groupId>
-        <artifactId>aws-java-sdk-sts</artifactId>
-        <version>1.12.770</version>
-      </dependency>
-      <dependency>
-        <groupId>com.amazonaws</groupId>
-        <artifactId>jmespath-java</artifactId>
-        <version>1.12.770</version>
-      </dependency>
-      <dependency>
-        <groupId>com.bucket4j</groupId>
-        <artifactId>bucket4j-core</artifactId>
-        <version>8.10.1</version>
-      </dependency>
-      <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-annotations</artifactId>
         <version>2.17.2</version>
@@ -99,24 +73,9 @@
         <version>2.17.2</version>
       </dependency>
       <dependency>
-        <groupId>com.fasterxml.jackson.dataformat</groupId>
-        <artifactId>jackson-dataformat-cbor</artifactId>
-        <version>2.17.2</version>
-      </dependency>
-      <dependency>
         <groupId>com.fasterxml.jackson.module</groupId>
         <artifactId>jackson-module-jakarta-xmlbind-annotations</artifactId>
         <version>2.17.2</version>
-      </dependency>
-      <dependency>
-        <groupId>com.flipkart.zjsonpatch</groupId>
-        <artifactId>zjsonpatch</artifactId>
-        <version>0.4.16</version>
-      </dependency>
-      <dependency>
-        <groupId>com.github.ben-manes.caffeine</groupId>
-        <artifactId>caffeine</artifactId>
-        <version>3.1.8</version>
       </dependency>
       <dependency>
         <groupId>com.github.cafapi.kubernetes</groupId>
@@ -169,11 +128,6 @@
         <version>3.0.2</version>
       </dependency>
       <dependency>
-        <groupId>com.google.code.gson</groupId>
-        <artifactId>gson</artifactId>
-        <version>2.11.0</version>
-      </dependency>
-      <dependency>
         <groupId>com.google.errorprone</groupId>
         <artifactId>error_prone_annotations</artifactId>
         <version>2.30.0</version>
@@ -210,19 +164,9 @@
         <version>3.0.0</version>
       </dependency>
       <dependency>
-        <groupId>com.google.protobuf</groupId>
-        <artifactId>protobuf-java</artifactId>
-        <version>4.27.3</version>
-      </dependency>
-      <dependency>
         <groupId>com.rabbitmq</groupId>
         <artifactId>amqp-client</artifactId>
         <version>5.21.0</version>
-      </dependency>
-      <dependency>
-        <groupId>com.squareup.okhttp3</groupId>
-        <artifactId>logging-interceptor</artifactId>
-        <version>5.0.0-alpha.14</version>
       </dependency>
       <dependency>
         <groupId>com.squareup.okhttp3</groupId>
@@ -245,54 +189,9 @@
         <version>3.9.0</version>
       </dependency>
       <dependency>
-        <groupId>commons-codec</groupId>
-        <artifactId>commons-codec</artifactId>
-        <version>1.17.1</version>
-      </dependency>
-      <dependency>
         <groupId>commons-io</groupId>
         <artifactId>commons-io</artifactId>
         <version>2.16.1</version>
-      </dependency>
-      <dependency>
-        <groupId>io.gsonfire</groupId>
-        <artifactId>gson-fire</artifactId>
-        <version>1.9.0</version>
-      </dependency>
-      <dependency>
-        <groupId>io.prometheus</groupId>
-        <artifactId>simpleclient</artifactId>
-        <version>0.16.0</version>
-      </dependency>
-      <dependency>
-        <groupId>io.prometheus</groupId>
-        <artifactId>simpleclient_common</artifactId>
-        <version>0.16.0</version>
-      </dependency>
-      <dependency>
-        <groupId>io.prometheus</groupId>
-        <artifactId>simpleclient_httpserver</artifactId>
-        <version>0.16.0</version>
-      </dependency>
-      <dependency>
-        <groupId>io.prometheus</groupId>
-        <artifactId>simpleclient_tracer_common</artifactId>
-        <version>0.16.0</version>
-      </dependency>
-      <dependency>
-        <groupId>io.prometheus</groupId>
-        <artifactId>simpleclient_tracer_otel</artifactId>
-        <version>0.16.0</version>
-      </dependency>
-      <dependency>
-        <groupId>io.prometheus</groupId>
-        <artifactId>simpleclient_tracer_otel_agent</artifactId>
-        <version>0.16.0</version>
-      </dependency>
-      <dependency>
-        <groupId>io.swagger</groupId>
-        <artifactId>swagger-annotations</artifactId>
-        <version>1.6.14</version>
       </dependency>
       <dependency>
         <groupId>jakarta.activation</groupId>
@@ -320,11 +219,6 @@
         <version>4.0.2</version>
       </dependency>
       <dependency>
-        <groupId>joda-time</groupId>
-        <artifactId>joda-time</artifactId>
-        <version>2.12.7</version>
-      </dependency>
-      <dependency>
         <groupId>net.bytebuddy</groupId>
         <artifactId>byte-buddy</artifactId>
         <version>1.15.0</version>
@@ -333,16 +227,6 @@
         <groupId>net.bytebuddy</groupId>
         <artifactId>byte-buddy-agent</artifactId>
         <version>1.15.0</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.commons</groupId>
-        <artifactId>commons-collections4</artifactId>
-        <version>4.4</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.commons</groupId>
-        <artifactId>commons-compress</artifactId>
-        <version>1.27.1</version>
       </dependency>
       <dependency>
         <groupId>org.apache.commons</groupId>
@@ -355,22 +239,6 @@
         <version>1.12.0</version>
       </dependency>
       <dependency>
-        <groupId>org.apache.httpcomponents</groupId>
-        <artifactId>httpclient</artifactId>
-        <version>4.5.14</version>
-        <exclusions>
-          <exclusion>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.httpcomponents</groupId>
-        <artifactId>httpcore</artifactId>
-        <version>4.4.16</version>
-      </dependency>
-      <dependency>
         <groupId>org.apiguardian</groupId>
         <artifactId>apiguardian-api</artifactId>
         <version>1.1.2</version>
@@ -379,26 +247,6 @@
         <groupId>org.awaitility</groupId>
         <artifactId>awaitility</artifactId>
         <version>4.2.2</version>
-      </dependency>
-      <dependency>
-        <groupId>org.bitbucket.b_c</groupId>
-        <artifactId>jose4j</artifactId>
-        <version>0.9.6</version>
-      </dependency>
-      <dependency>
-        <groupId>org.bouncycastle</groupId>
-        <artifactId>bcpkix-jdk18on</artifactId>
-        <version>1.78.1</version>
-      </dependency>
-      <dependency>
-        <groupId>org.bouncycastle</groupId>
-        <artifactId>bcprov-jdk18on</artifactId>
-        <version>1.78.1</version>
-      </dependency>
-      <dependency>
-        <groupId>org.bouncycastle</groupId>
-        <artifactId>bcutil-jdk18on</artifactId>
-        <version>1.78.1</version>
       </dependency>
       <dependency>
         <groupId>org.checkerframework</groupId>
@@ -519,11 +367,6 @@
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-simple</artifactId>
         <version>2.0.16</version>
-      </dependency>
-      <dependency>
-        <groupId>org.yaml</groupId>
-        <artifactId>snakeyaml</artifactId>
-        <version>2.2</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
