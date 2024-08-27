@@ -68,22 +68,15 @@ public class K8sTargetQueueSettingsProviderTest
         final IoK8sApiAppsV1DeploymentList deploymentList = new IoK8sApiAppsV1DeploymentList();
         deploymentList.setItems(Lists.newArrayList(elasticQueryWorkerDeployment, appResourcesWorkerDeployment));
 
+        final AppsV1Api.APIlistAppsV1NamespacedDeploymentRequest apilistAppsV1NamespacedDeploymentRequestMock =
+                mock(AppsV1Api.APIlistAppsV1NamespacedDeploymentRequest.class);
+
+        when(apilistAppsV1NamespacedDeploymentRequestMock.execute()).thenReturn(deploymentList);
+
         try (MockedStatic<KubernetesClientFactory> clientFactoryStaticMock = Mockito.mockStatic(KubernetesClientFactory.class);
              MockedConstruction<AppsV1Api> mockedAppsV1Api = Mockito.mockConstruction(AppsV1Api.class, (mock, context) -> {
-                 when(mock.listAppsV1NamespacedDeployment(
-                         "private",
-                         null,
-                         null,
-                         null,
-                         null,
-                         null,
-                         null,
-                         null,
-                         null,
-                         null,
-                         null,
-                         null
-                 )).thenReturn(deploymentList);
+
+                 when(mock.listAppsV1NamespacedDeployment("private")).thenReturn(apilistAppsV1NamespacedDeploymentRequestMock);
              })
         ) {
             final ApiClient apiClientMock = mock(ApiClient.class);
@@ -138,22 +131,15 @@ public class K8sTargetQueueSettingsProviderTest
         final IoK8sApiAppsV1DeploymentList deploymentList = new IoK8sApiAppsV1DeploymentList();
         deploymentList.setItems(Lists.newArrayList(appResourcesWorkerDeployment, appResourcesWorkerDeployment));
 
+        final AppsV1Api.APIlistAppsV1NamespacedDeploymentRequest apilistAppsV1NamespacedDeploymentRequestMock =
+                mock(AppsV1Api.APIlistAppsV1NamespacedDeploymentRequest.class);
+
+        when(apilistAppsV1NamespacedDeploymentRequestMock.execute()).thenReturn(deploymentList);
+
         try (MockedStatic<KubernetesClientFactory> clientFactoryStaticMock = Mockito.mockStatic(KubernetesClientFactory.class);
              MockedConstruction<AppsV1Api> mockedAppsV1Api = Mockito.mockConstruction(AppsV1Api.class, (mock, context) -> {
-                 when(mock.listAppsV1NamespacedDeployment(
-                         "private",
-                         null,
-                         null,
-                         null,
-                         null,
-                         null,
-                         null,
-                         null,
-                         null,
-                         null,
-                         null,
-                         null
-                 )).thenReturn(deploymentList);
+
+                 when(mock.listAppsV1NamespacedDeployment("private")).thenReturn(apilistAppsV1NamespacedDeploymentRequestMock);
              })
         ) {
             final ApiClient apiClientMock = mock(ApiClient.class);
@@ -189,22 +175,15 @@ public class K8sTargetQueueSettingsProviderTest
         final IoK8sApiAppsV1DeploymentList deploymentList = new IoK8sApiAppsV1DeploymentList();
         deploymentList.setItems(Collections.emptyList());
 
+        final AppsV1Api.APIlistAppsV1NamespacedDeploymentRequest apilistAppsV1NamespacedDeploymentRequestMock =
+                mock(AppsV1Api.APIlistAppsV1NamespacedDeploymentRequest.class);
+
+        when(apilistAppsV1NamespacedDeploymentRequestMock.execute()).thenReturn(deploymentList);
+
         try (MockedStatic<KubernetesClientFactory> clientFactoryStaticMock = Mockito.mockStatic(KubernetesClientFactory.class);
              MockedConstruction<AppsV1Api> mockedAppsV1Api = Mockito.mockConstruction(AppsV1Api.class, (mock, context) -> {
-                 when(mock.listAppsV1NamespacedDeployment(
-                         "private",
-                         null,
-                         null,
-                         null,
-                         null,
-                         null,
-                         null,
-                         null,
-                         null,
-                         null,
-                         null,
-                         null
-                 )).thenReturn(deploymentList);
+
+                 when(mock.listAppsV1NamespacedDeployment("private")).thenReturn(apilistAppsV1NamespacedDeploymentRequestMock);
              })
         ) {
             final ApiClient apiClientMock = mock(ApiClient.class);

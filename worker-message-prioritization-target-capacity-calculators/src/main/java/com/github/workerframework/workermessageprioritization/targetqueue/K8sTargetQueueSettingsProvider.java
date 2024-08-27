@@ -100,19 +100,7 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
             // Get all deployments in this namespace
             final List<IoK8sApiAppsV1Deployment> deployments;
             try {
-                deployments = appsV1Api.listAppsV1NamespacedDeployment(
-                        "private",
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null).getItems();
+                deployments = appsV1Api.listAppsV1NamespacedDeployment("private").execute().getItems();
             }  catch (final ApiException e) {
                 LOGGER.error(String.format(
                         "Cannot get settings for the target queues in the %s namespace as the Kubernetes API threw an exception.",
