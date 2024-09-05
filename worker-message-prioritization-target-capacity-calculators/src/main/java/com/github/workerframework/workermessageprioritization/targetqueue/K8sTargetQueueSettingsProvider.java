@@ -17,6 +17,7 @@ package com.github.workerframework.workermessageprioritization.targetqueue;
 
 import static com.github.workerframework.workermessageprioritization.targetqueue.Constants.*;
 
+import com.github.cafapi.kubernetes.client.FailedToCreateKubernetesClientException;
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 import com.github.cafapi.kubernetes.client.KubernetesClientFactory;
 import com.github.cafapi.kubernetes.client.api.AppsV1Api;
@@ -62,7 +63,7 @@ public final class K8sTargetQueueSettingsProvider implements TargetQueueSettings
         try {
             final ApiClient clientWithCertAndToken = KubernetesClientFactory.createClientWithCertAndToken();
             this.appsV1Api = new AppsV1Api(clientWithCertAndToken);
-        } catch (final Exception e) {
+        } catch (final FailedToCreateKubernetesClientException e) {
             throw new RuntimeException("Exception thrown trying to create a Kubernetes client", e);
         }
 
