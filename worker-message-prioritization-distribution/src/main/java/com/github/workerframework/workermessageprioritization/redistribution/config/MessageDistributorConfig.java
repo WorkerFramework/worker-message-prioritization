@@ -66,6 +66,9 @@ public final class MessageDistributorConfig {
     private static final long CAF_WMP_CONSUMER_PUBLISHER_PAIR_LAST_DONE_WORK_TIMEOUT_MILLISECONDS_DEFAULT
             = 600000;
 
+    private static final String CAF_WMP_KUBERNETES_ENABLED = "CAF_WMP_KUBERNETES_ENABLED";
+    private static final boolean CAF_WMP_KUBERNETES_ENABLED_DEFAULT = true;
+
     private static final String CAF_WMP_KUBERNETES_NAMESPACES = "CAF_WMP_KUBERNETES_NAMESPACES";
 
     private static final String CAF_WMP_KUBERNETES_LABEL_CACHE_EXPIRY_MINUTES = "CAF_WMP_KUBERNETES_LABEL_CACHE_EXPIRY_MINUTES";
@@ -111,6 +114,7 @@ public final class MessageDistributorConfig {
     private final int rabbitMQMaxNodeCount;
     private final long distributorRunIntervalMilliseconds;
     private final long consumerPublisherPairLastDoneWorkTimeoutMilliseconds;
+    private final boolean kubernetesEnabled;
     private final List<String> kubernetesNamespaces;
     private final int kubernetesLabelCacheExpiryMinutes;
     private final boolean enableTargetQueueLengthTuning;
@@ -144,6 +148,7 @@ public final class MessageDistributorConfig {
         consumerPublisherPairLastDoneWorkTimeoutMilliseconds = getEnvOrDefault(
                 CAF_WMP_CONSUMER_PUBLISHER_PAIR_LAST_DONE_WORK_TIMEOUT_MILLISECONDS,
                 CAF_WMP_CONSUMER_PUBLISHER_PAIR_LAST_DONE_WORK_TIMEOUT_MILLISECONDS_DEFAULT);
+        kubernetesEnabled = getEnvOrDefault(CAF_WMP_KUBERNETES_ENABLED, CAF_WMP_KUBERNETES_ENABLED_DEFAULT);
         kubernetesNamespaces = getEnvOrThrow(CAF_WMP_KUBERNETES_NAMESPACES);
         kubernetesLabelCacheExpiryMinutes = getEnvOrDefault(
                 CAF_WMP_KUBERNETES_LABEL_CACHE_EXPIRY_MINUTES,
@@ -215,6 +220,10 @@ public final class MessageDistributorConfig {
         return consumerPublisherPairLastDoneWorkTimeoutMilliseconds;
     }
 
+    public boolean getKubernetesEnabled() {
+        return kubernetesEnabled;
+    }
+
     public List<String> getKubernetesNamespaces() {
         return kubernetesNamespaces;
     }
@@ -263,6 +272,7 @@ public final class MessageDistributorConfig {
             .add(CAF_WMP_DISTRIBUTOR_RUN_INTERVAL_MILLISECONDS, distributorRunIntervalMilliseconds)
             .add(CAF_WMP_CONSUMER_PUBLISHER_PAIR_LAST_DONE_WORK_TIMEOUT_MILLISECONDS,
                     consumerPublisherPairLastDoneWorkTimeoutMilliseconds)
+            .add(CAF_WMP_KUBERNETES_ENABLED, kubernetesEnabled)
             .add(CAF_WMP_KUBERNETES_NAMESPACES, kubernetesNamespaces)
             .add(CAF_WMP_KUBERNETES_LABEL_CACHE_EXPIRY_MINUTES, kubernetesLabelCacheExpiryMinutes)
             .add(CAF_MIN_TARGET_QUEUE_LENGTH, minTargetQueueLength)

@@ -30,6 +30,10 @@
     
     <dependencies>
         <dependency>
+            <groupId>com.github.cafapi.kubernetes</groupId>
+            <artifactId>caf-kubernetes-client</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.github.workerframework</groupId>
             <artifactId>worker-message-prioritization-rabbitmq</artifactId>
         </dependency>
@@ -40,18 +44,6 @@
         <dependency>
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
-        </dependency>        
-        <dependency>
-            <groupId>io.kubernetes</groupId>
-            <artifactId>client-java</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.kubernetes</groupId>
-            <artifactId>client-java-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.kubernetes</groupId>
-            <artifactId>client-java-extended</artifactId>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>

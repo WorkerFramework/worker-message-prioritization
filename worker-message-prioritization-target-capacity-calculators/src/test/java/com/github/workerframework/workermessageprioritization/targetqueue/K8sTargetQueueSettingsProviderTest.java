@@ -19,23 +19,24 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.Collections;
-import java.util.List;
 
+import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
+import com.github.cafapi.kubernetes.client.KubernetesClientFactory;
+import com.github.cafapi.kubernetes.client.api.AppsV1Api;
+import com.github.cafapi.kubernetes.client.client.ApiClient;
+import com.github.cafapi.kubernetes.client.model.IoK8sApiAppsV1Deployment;
+import com.github.cafapi.kubernetes.client.model.IoK8sApiAppsV1DeploymentList;
+import com.github.cafapi.kubernetes.client.model.IoK8sApiAppsV1DeploymentSpec;
+import com.github.cafapi.kubernetes.client.model.IoK8sApimachineryPkgApisMetaV1ObjectMeta;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
-import io.kubernetes.client.extended.kubectl.Kubectl;
-import io.kubernetes.client.extended.kubectl.KubectlGet;
-import io.kubernetes.client.extended.kubectl.exception.KubectlException;
-import io.kubernetes.client.openapi.models.V1Deployment;
-import io.kubernetes.client.openapi.models.V1DeploymentSpec;
-import io.kubernetes.client.openapi.models.V1ObjectMeta;
-import io.kubernetes.client.util.ClientBuilder;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import org.junit.jupiter.api.Test;
 
 public class K8sTargetQueueSettingsProviderTest
@@ -44,7 +45,7 @@ public class K8sTargetQueueSettingsProviderTest
     public void testExpectedSettingsAreProvidedWhenWorkerHasAllLabels() throws Exception
     {
         // Arrange
-        final V1Deployment elasticQueryWorkerDeployment = createDeploymentWithLabels(
+        final IoK8sApiAppsV1Deployment elasticQueryWorkerDeployment = createDeploymentWithLabels(
                 "dataprocessing-elasticquery-worker",
                 "private",
                 "1",
@@ -54,7 +55,7 @@ public class K8sTargetQueueSettingsProviderTest
                 "30",
                 3);
 
-        final V1Deployment appResourcesWorkerDeployment = createDeploymentWithLabels(
+        final IoK8sApiAppsV1Deployment appResourcesWorkerDeployment = createDeploymentWithLabels(
                 "appresources-worker",
                 "private",
                 "1",
@@ -64,14 +65,23 @@ public class K8sTargetQueueSettingsProviderTest
                 "20",
                 2);
 
-        final List<V1Deployment> deployments = Lists.newArrayList(elasticQueryWorkerDeployment, appResourcesWorkerDeployment);
+        final IoK8sApiAppsV1DeploymentList deploymentList = new IoK8sApiAppsV1DeploymentList();
+        deploymentList.setItems(Lists.newArrayList(elasticQueryWorkerDeployment, appResourcesWorkerDeployment));
 
-        try (MockedStatic<ClientBuilder> clientBuilderStaticMock = Mockito.mockStatic(ClientBuilder.class);
-             MockedStatic<Kubectl> kubectlStaticMock = Mockito.mockStatic(Kubectl.class)) {
+        final AppsV1Api.APIlistAppsV1NamespacedDeploymentRequest apilistAppsV1NamespacedDeploymentRequestMock =
+                mock(AppsV1Api.APIlistAppsV1NamespacedDeploymentRequest.class);
 
-            setupMocks(clientBuilderStaticMock, kubectlStaticMock, deployments);
+        when(apilistAppsV1NamespacedDeploymentRequestMock.execute()).thenReturn(deploymentList);
 
-            // Act
+        try (MockedStatic<KubernetesClientFactory> clientFactoryStaticMock = Mockito.mockStatic(KubernetesClientFactory.class);
+             MockedConstruction<AppsV1Api> mockedAppsV1Api = Mockito.mockConstruction(AppsV1Api.class, (mock, context) -> {
+
+                 when(mock.listAppsV1NamespacedDeployment("private")).thenReturn(apilistAppsV1NamespacedDeploymentRequestMock);
+             })
+        ) {
+            final ApiClient apiClientMock = mock(ApiClient.class);
+            clientFactoryStaticMock.when(KubernetesClientFactory::createClientWithCertAndToken).thenReturn(apiClientMock);
+
             final K8sTargetQueueSettingsProvider k8sTargetQueueSettingsProvider =
                     new K8sTargetQueueSettingsProvider(Lists.newArrayList("private"), 60);
 
@@ -108,21 +118,32 @@ public class K8sTargetQueueSettingsProviderTest
         }
     }
 
+
     @Test
-    public void testFallbackSettingsAreProvidedWhenWorkerIsMissingLabels() throws KubectlException
+    public void testFallbackSettingsAreProvidedWhenWorkerIsMissingLabels() throws Exception
     {
         // Arrange
-        final V1Deployment appResourcesWorkerDeployment = createDeploymentWithoutLabels(
+        final IoK8sApiAppsV1Deployment appResourcesWorkerDeployment = createDeploymentWithoutLabels(
                 "appresources-worker",
                 "private",
                 2);
 
-        final List<V1Deployment> deployments = Lists.newArrayList(appResourcesWorkerDeployment);
+        final IoK8sApiAppsV1DeploymentList deploymentList = new IoK8sApiAppsV1DeploymentList();
+        deploymentList.setItems(Lists.newArrayList(appResourcesWorkerDeployment, appResourcesWorkerDeployment));
 
-        try (MockedStatic<ClientBuilder> clientBuilderStaticMock = Mockito.mockStatic(ClientBuilder.class);
-             MockedStatic<Kubectl> kubectlStaticMock = Mockito.mockStatic(Kubectl.class)) {
+        final AppsV1Api.APIlistAppsV1NamespacedDeploymentRequest apilistAppsV1NamespacedDeploymentRequestMock =
+                mock(AppsV1Api.APIlistAppsV1NamespacedDeploymentRequest.class);
 
-            setupMocks(clientBuilderStaticMock, kubectlStaticMock, deployments);
+        when(apilistAppsV1NamespacedDeploymentRequestMock.execute()).thenReturn(deploymentList);
+
+        try (MockedStatic<KubernetesClientFactory> clientFactoryStaticMock = Mockito.mockStatic(KubernetesClientFactory.class);
+             MockedConstruction<AppsV1Api> mockedAppsV1Api = Mockito.mockConstruction(AppsV1Api.class, (mock, context) -> {
+
+                 when(mock.listAppsV1NamespacedDeployment("private")).thenReturn(apilistAppsV1NamespacedDeploymentRequestMock);
+             })
+        ) {
+            final ApiClient apiClientMock = mock(ApiClient.class);
+            clientFactoryStaticMock.when(KubernetesClientFactory::createClientWithCertAndToken).thenReturn(apiClientMock);
 
             // Act
             final K8sTargetQueueSettingsProvider k8sTargetQueueSettingsProvider =
@@ -130,7 +151,8 @@ public class K8sTargetQueueSettingsProviderTest
 
             final Queue appResourcesWorkerQueue = new Queue();
             appResourcesWorkerQueue.setName("appresources-worker-in");
-            final TargetQueueSettings appResourcesWorkerTargetQueueSettings = k8sTargetQueueSettingsProvider.get(appResourcesWorkerQueue);
+            final TargetQueueSettings appResourcesWorkerTargetQueueSettings = k8sTargetQueueSettingsProvider.get
+                    (appResourcesWorkerQueue);
 
             // Assert
             assertEquals(1, appResourcesWorkerTargetQueueSettings.getCurrentInstances(), 0.0,
@@ -147,15 +169,25 @@ public class K8sTargetQueueSettingsProviderTest
     }
 
     @Test
-    public void testFallbackSettingsAreProvidedWhenWorkerIsMissingFromDeployment() throws KubectlException
+    public void testFallbackSettingsAreProvidedWhenWorkerIsMissingFromDeployment() throws Exception
     {
         // Arrange
-        final List<V1Deployment> deployments = Collections.emptyList();
+        final IoK8sApiAppsV1DeploymentList deploymentList = new IoK8sApiAppsV1DeploymentList();
+        deploymentList.setItems(Collections.emptyList());
 
-        try (MockedStatic<ClientBuilder> clientBuilderStaticMock = Mockito.mockStatic(ClientBuilder.class);
-             MockedStatic<Kubectl> kubectlStaticMock = Mockito.mockStatic(Kubectl.class)) {
+        final AppsV1Api.APIlistAppsV1NamespacedDeploymentRequest apilistAppsV1NamespacedDeploymentRequestMock =
+                mock(AppsV1Api.APIlistAppsV1NamespacedDeploymentRequest.class);
 
-            setupMocks(clientBuilderStaticMock, kubectlStaticMock, deployments);
+        when(apilistAppsV1NamespacedDeploymentRequestMock.execute()).thenReturn(deploymentList);
+
+        try (MockedStatic<KubernetesClientFactory> clientFactoryStaticMock = Mockito.mockStatic(KubernetesClientFactory.class);
+             MockedConstruction<AppsV1Api> mockedAppsV1Api = Mockito.mockConstruction(AppsV1Api.class, (mock, context) -> {
+
+                 when(mock.listAppsV1NamespacedDeployment("private")).thenReturn(apilistAppsV1NamespacedDeploymentRequestMock);
+             })
+        ) {
+            final ApiClient apiClientMock = mock(ApiClient.class);
+            clientFactoryStaticMock.when(KubernetesClientFactory::createClientWithCertAndToken).thenReturn(apiClientMock);
 
             // Act
             final K8sTargetQueueSettingsProvider k8sTargetQueueSettingsProvider =
@@ -163,7 +195,8 @@ public class K8sTargetQueueSettingsProviderTest
 
             final Queue elasticQueryWorkerQueue = new Queue();
             elasticQueryWorkerQueue.setName("appresources-worker-in");
-            final TargetQueueSettings elasticQueryWorkerTargetQueueSettings = k8sTargetQueueSettingsProvider.get(elasticQueryWorkerQueue);
+            final TargetQueueSettings elasticQueryWorkerTargetQueueSettings = k8sTargetQueueSettingsProvider.get
+                    (elasticQueryWorkerQueue);
 
             // Assert
             assertEquals(1, elasticQueryWorkerTargetQueueSettings.getCurrentInstances(), 0.0,
@@ -179,7 +212,7 @@ public class K8sTargetQueueSettingsProviderTest
         }
     }
 
-    private static V1Deployment createDeploymentWithLabels(
+    private static IoK8sApiAppsV1Deployment createDeploymentWithLabels(
             final String name,
             final String namespace,
             final String minInstances,
@@ -189,9 +222,9 @@ public class K8sTargetQueueSettingsProviderTest
             final String targetQueueEligibleForRefillPercentage,
             final int replicas)
     {
-        final V1Deployment deployment = new V1Deployment();
+        final IoK8sApiAppsV1Deployment deployment = new IoK8sApiAppsV1Deployment();
 
-        deployment.setMetadata(new V1ObjectMeta());
+        deployment.setMetadata(new IoK8sApimachineryPkgApisMetaV1ObjectMeta());
         deployment.getMetadata().setName(name);
         deployment.getMetadata().setNamespace(namespace);
         deployment.getMetadata().setLabels(ImmutableMap.<String,String>builder()
@@ -201,41 +234,25 @@ public class K8sTargetQueueSettingsProviderTest
                 .put("messageprioritization.targetqueuemaxlength", targetQueueMaxLength)
                 .put("messageprioritization.targetqueueeligibleforrefillpercentage", targetQueueEligibleForRefillPercentage)
                 .build());
-        deployment.setSpec(new V1DeploymentSpec());
+        deployment.setSpec(new IoK8sApiAppsV1DeploymentSpec());
         deployment.getSpec().setReplicas(replicas);
 
         return deployment;
     }
 
-    private static V1Deployment createDeploymentWithoutLabels(
+    private static IoK8sApiAppsV1Deployment createDeploymentWithoutLabels(
             final String name,
             final String namespace,
             final int replicas)
     {
-        final V1Deployment deployment = new V1Deployment();
+        final IoK8sApiAppsV1Deployment deployment = new IoK8sApiAppsV1Deployment();
 
-        deployment.setMetadata(new V1ObjectMeta());
+        deployment.setMetadata(new IoK8sApimachineryPkgApisMetaV1ObjectMeta());
         deployment.getMetadata().setName(name);
         deployment.getMetadata().setNamespace(namespace);
-        deployment.setSpec(new V1DeploymentSpec());
+        deployment.setSpec(new IoK8sApiAppsV1DeploymentSpec());
         deployment.getSpec().setReplicas(replicas);
 
         return deployment;
-    }
-
-    private static void setupMocks(
-            final MockedStatic<ClientBuilder> clientBuilderStaticMock,
-            final MockedStatic<Kubectl> kubectlStaticMock,
-            final List<V1Deployment> deployments) throws KubectlException
-    {
-        final ClientBuilder clientBuilderMock = mock(ClientBuilder.class);
-        clientBuilderStaticMock.when(() -> ClientBuilder.standard()).thenReturn(clientBuilderMock);
-        when(clientBuilderMock.build()).thenReturn(null);
-
-        final KubectlGet<V1Deployment> getMock = mock(KubectlGet.class);
-        kubectlStaticMock.when(() -> Kubectl.get(V1Deployment.class)).thenReturn(getMock);
-        final KubectlGet<V1Deployment> namespaceMock = mock(KubectlGet.class);
-        when(getMock.namespace("private")).thenReturn(namespaceMock);
-        when(namespaceMock.execute()).thenReturn(deployments);
     }
 }

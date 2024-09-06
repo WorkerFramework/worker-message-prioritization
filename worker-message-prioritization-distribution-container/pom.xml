@@ -262,6 +262,7 @@
                                     <CAF_WMP_TARGET_QUEUE_EXCLUSIVE>false</CAF_WMP_TARGET_QUEUE_EXCLUSIVE>
                                     <CAF_WMP_TARGET_QUEUE_AUTO_DELETE>false</CAF_WMP_TARGET_QUEUE_AUTO_DELETE>
                                     <CAF_WMP_TARGET_QUEUE_ARGS>{"x-queue-type":"quorum"}</CAF_WMP_TARGET_QUEUE_ARGS>
+                                    <CAF_WMP_KUBERNETES_ENABLED>false</CAF_WMP_KUBERNETES_ENABLED>
                                 </env>
                                 <dependsOn>
                                     <container>rabbitmq</container>

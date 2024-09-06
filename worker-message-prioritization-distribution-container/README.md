@@ -49,6 +49,11 @@ This repository consists of the source to build a container that includes the
     queue publisher pair. This is used to clean up staging queue consumer/target queue publisher pairs that may have become stuck.
     Set to 0 to disable this feature.
 
+* `CAF_WMP_KUBERNETES_ENABLED`  
+    **Default**: true.  
+    **Description**: Used to specify whether Kubernetes is enabled. If `false`, then fallback settings (for information about a worker's 
+    target queue such as its maximum length) will be used in place of the labels that would have been retrieved from Kubernetes.
+
 * `CAF_WMP_KUBERNETES_NAMESPACES`  
     **Default**: None.  
     **Description**: Used to specify the Kubernetes namespaces, comma separated, in which to search for a worker's labels. These

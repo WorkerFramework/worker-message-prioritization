@@ -22,7 +22,6 @@ import com.github.workerframework.workermessageprioritization.redistribution.con
 import com.github.workerframework.workermessageprioritization.redistribution.consumption.EqualConsumptionTargetCalculator;
 import com.github.workerframework.workermessageprioritization.redistribution.consumption.FastLaneConsumptionTargetCalculator;
 import com.github.workerframework.workermessageprioritization.redistribution.lowlevel.StagingTargetPairProvider;
-import com.github.workerframework.workermessageprioritization.targetqueue.K8sTargetQueueSettingsProvider;
 import com.github.workerframework.workermessageprioritization.targetqueue.TunedTargetQueueLengthProvider;
 import com.github.workerframework.workermessageprioritization.targetqueue.TargetQueueSettingsProvider;
 import com.github.workerframework.workermessageprioritization.targetqueue.HistoricalConsumptionRateManager;
@@ -52,6 +51,12 @@ import java.util.List;
 import java.util.Map;
 
 public class DistributorModule extends AbstractModule {
+
+    @Provides
+    @Named("KubernetesEnabled")
+    boolean provideKubernetesEnabled(final MessageDistributorConfig messageDistributorConfig) {
+        return messageDistributorConfig.getKubernetesEnabled();
+    }
 
     @Provides
     @Named("KubernetesNamespaces")
@@ -224,7 +229,8 @@ public class DistributorModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(MessageDistributorConfig.class).in(Scopes.SINGLETON);
-        bind(TargetQueueSettingsProvider.class).to(K8sTargetQueueSettingsProvider.class);
+        bind(TargetQueueSettingsProvider.class)
+                .toProvider(TargetQueueSettingsProviderProvider.class);
         bind(HistoricalConsumptionRateManager.class);
         bind(TargetQueueLengthRounder.class);
         bind(QueueInformationProvider.class);
