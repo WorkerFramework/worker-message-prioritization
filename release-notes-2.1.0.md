@@ -1,5 +1,3 @@
-!not-ready-for-release!
-
 #### Version Number
 ${version-number}
 
@@ -13,3 +11,4 @@ ${version-number}
   to `true`.
 
 #### Known Issues
+- None
