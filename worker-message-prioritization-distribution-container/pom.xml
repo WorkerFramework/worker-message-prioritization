@@ -225,9 +225,9 @@
                                     <arg>--</arg>
                                     <arg>/startup/startup.sh</arg>
                                     <arg>java</arg>
+                                    <arg>${env.CAF_WORKER_JAVA_OPTS}</arg>
                                     <arg>-jar</arg>
                                     <arg>/maven/worker-message-prioritization-distribution-${project.version}.jar</arg>
-                                    <arg>${env.CAF_WORKER_JAVA_OPTS}</arg>
                                 </entryPoint>
                                 <assembly>
                                     <mode>tar</mode>
