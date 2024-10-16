@@ -131,5 +131,6 @@ This repository consists of the source to build a container that includes the
   **Default**: {"x-queue-type":"quorum"}.   
   **Description**: Used when creating a target queue. Other properties (construction arguments) for the queue.
 
-* `CAF_WORKER_JAVA_OPTS`  
+* `CAF_WORKER_JAVA_OPTS`
+  **Default**: None. 
   **Description**: Used to pass configuration options and parameters to the Java Virtual Machine (JVM).
