@@ -17,6 +17,7 @@ package com.github.workerframework.workermessageprioritization.redistribution.co
 
 import static java.util.stream.Collectors.toList;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -28,6 +29,7 @@ import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitQue
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
+import com.hpe.caf.secret.SecretUtil;
 
 public final class MessageDistributorConfig {
 
@@ -131,16 +133,16 @@ public final class MessageDistributorConfig {
     private final Map<String, Object> targetQueueArgs;
 
     @Inject
-    public MessageDistributorConfig() {
+    public MessageDistributorConfig() throws IOException {
         rabbitMQVHost = getEnvOrDefault(CAF_RABBITMQ_VHOST, CAF_RABBITMQ_VHOST_DEFAULT);
         rabbitMQProtocol = getEnvOrDefault(CAF_RABBITMQ_PROTOCOL, CAF_RABBITMQ_PROTOCOL_DEFAULT);
         rabbitMQHost = getEnvOrDefault(CAF_RABBITMQ_HOST, CAF_RABBITMQ_HOST_DEFAULT);
         rabbitMQPort = getEnvOrDefault(CAF_RABBITMQ_PORT, CAF_RABBITMQ_PORT_DEFAULT);
         rabbitMQUsername = getStrEnvOrThrow(CAF_RABBITMQ_USERNAME_ENVVAR);
-        rabbitMQPassword = getStrEnvOrThrow(CAF_RABBITMQ_PASSWORD_ENVVAR);
+        rabbitMQPassword = SecretUtil.getSecret(CAF_RABBITMQ_PASSWORD_ENVVAR);
         rabbitMQMgmtUrl = getEnvOrDefault(CAF_RABBITMQ_MGMT_URL, CAF_RABBITMQ_MGMT_URL_DEFAULT);
         rabbitMQMgmtUsername = getStrEnvOrThrow(CAF_RABBITMQ_MGMT_USERNAME_ENVVAR);
-        rabbitMQMgmtPassword = getStrEnvOrThrow(CAF_RABBITMQ_MGMT_PASSWORD_ENVVAR);
+        rabbitMQMgmtPassword = SecretUtil.getSecret(CAF_RABBITMQ_MGMT_PASSWORD_ENVVAR);
         rabbitMQMaxNodeCount = getEnvOrDefault(CAF_RABBITMQ_MAX_NODE_COUNT, CAF_RABBITMQ_MAX_NODE_COUNT_DEFAULT);
         distributorRunIntervalMilliseconds = getEnvOrDefault(
             CAF_WMP_DISTRIBUTOR_RUN_INTERVAL_MILLISECONDS,
