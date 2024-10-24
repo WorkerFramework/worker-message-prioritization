@@ -105,7 +105,12 @@
       <dependency>
         <groupId>com.github.cafapi.util</groupId>
         <artifactId>util-process-identifier</artifactId>
-        <version>3.1.0-596</version>
+        <version>3.2.0-684</version>
+      </dependency>
+      <dependency>
+        <groupId>com.github.cafapi.util</groupId>
+        <artifactId>util-secret</artifactId>
+        <version>3.2.0-684</version>
       </dependency>
       <dependency>
         <groupId>com.github.cafdataprocessing</groupId>
