@@ -429,9 +429,9 @@
               <digest>sha256:4754976f9125c15e2ab42987d8817bd7d22b2944fe8270e77ba800f7a2c24c69</digest>
             </image>
             <image>
-                <repository>${dockerHubPublic}/cafapi/oraclelinux-jre21</repository>
-                <tag>1.1.0</tag>
-                <digest>sha256:ed8093edcab86b8d35e3b6db21f7f136d36068cddd67a9ce728661b6266f3eb4</digest>
+              <repository>${dockerHubPublic}/cafapi/oraclelinux-jre21</repository>
+              <tag>1.1.0</tag>
+              <digest>sha256:ed8093edcab86b8d35e3b6db21f7f136d36068cddd67a9ce728661b6266f3eb4</digest>
             </image>
             <image>
               <repository>${dockerHubPublic}/library/rabbitmq</repository>
