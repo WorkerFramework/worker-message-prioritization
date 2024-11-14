@@ -29,7 +29,7 @@ import com.github.workerframework.workermessageprioritization.rabbitmq.RabbitQue
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
-import com.hpe.caf.secret.SecretUtil;
+import com.github.cafapi.common.util.secret.SecretUtil;
 
 public final class MessageDistributorConfig {
 

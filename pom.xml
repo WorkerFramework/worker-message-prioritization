@@ -83,6 +83,16 @@
         <version>2.18.1</version>
       </dependency>
       <dependency>
+        <groupId>com.github.cafapi.common</groupId>
+        <artifactId>util-process-identifier</artifactId>
+        <version>4.0.1-694</version>
+      </dependency>
+      <dependency>
+        <groupId>com.github.cafapi.common</groupId>
+        <artifactId>util-secret</artifactId>
+        <version>4.0.1-694</version>
+      </dependency>
+      <dependency>
         <groupId>com.github.cafapi.kubernetes</groupId>
         <artifactId>caf-kubernetes-client</artifactId>
         <version>1.0.0-20</version>
@@ -101,16 +111,6 @@
         <groupId>com.github.cafapi.logging</groupId>
         <artifactId>caf-logging-logback-converters</artifactId>
         <version>2.1.0-374</version>
-      </dependency>
-      <dependency>
-        <groupId>com.github.cafapi.util</groupId>
-        <artifactId>util-process-identifier</artifactId>
-        <version>3.2.0-684</version>
-      </dependency>
-      <dependency>
-        <groupId>com.github.cafapi.util</groupId>
-        <artifactId>util-secret</artifactId>
-        <version>3.2.0-684</version>
       </dependency>
       <dependency>
         <groupId>com.github.cafdataprocessing.workers.document</groupId>
