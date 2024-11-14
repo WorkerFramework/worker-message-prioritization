@@ -113,7 +113,7 @@
         <version>3.2.0-684</version>
       </dependency>
       <dependency>
-        <groupId>com.github.cafdataprocessing</groupId>
+        <groupId>com.github.cafdataprocessing.workers.document</groupId>
         <artifactId>worker-document-interface</artifactId>
         <version>7.0.0-1496</version>
       </dependency>
