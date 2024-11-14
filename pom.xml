@@ -115,7 +115,7 @@
       <dependency>
         <groupId>com.github.cafdataprocessing</groupId>
         <artifactId>worker-document-interface</artifactId>
-        <version>6.1.1-1480</version>
+        <version>7.0.0-1496</version>
       </dependency>
       <dependency>
         <groupId>com.github.workerframework</groupId>
