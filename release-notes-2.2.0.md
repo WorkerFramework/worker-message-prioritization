@@ -1,5 +1,3 @@
-!not-ready-for-release!
-
 #### Version Number
 ${version-number}
 
@@ -9,5 +7,8 @@ ${version-number}
     - Environment variables (direct value) - enabled via `CAF_ENABLE_ENV_SECRETS` (defaults to `true`)
     - File content (path specified by environment variable with `_FILE` suffix) - enabled via `CAF_ENABLE_FILE_SECRETS` (defaults to `false`)
 - US975260: Refactor to remove HPE references in package names
+- US974184: The `CAF_WORKER_JAVA_OPTS` environment variable is now supported.  
+  - This environment variable can be used to pass configuration options and parameters to the Java Virtual Machine (JVM).
 
 #### Known Issues
+- None
