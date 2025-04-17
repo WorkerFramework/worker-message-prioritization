@@ -172,7 +172,7 @@ public class DistributorModule extends AbstractModule {
                 final TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(tmfAlgorithm);
                 trustManagerFactory.init((KeyStore) null);
 
-                final SSLContext context = SSLContext.getInstance("TLSv1.2");
+                final SSLContext context = SSLContext.getInstance("TLSv1.3");
                 context.init(null, trustManagerFactory.getTrustManagers(), null);
 
                 connectionFactory.useSslProtocol(context);
