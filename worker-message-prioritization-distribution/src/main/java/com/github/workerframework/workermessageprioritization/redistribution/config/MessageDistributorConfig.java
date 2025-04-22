@@ -42,6 +42,9 @@ public final class MessageDistributorConfig {
     private static final String CAF_RABBITMQ_PROTOCOL = "CAF_RABBITMQ_PROTOCOL";
     private static final String CAF_RABBITMQ_PROTOCOL_DEFAULT = "amqp";
 
+    private static final String CAF_RABBITMQ_TLS_PROTOCOL_VERSION = "CAF_RABBITMQ_TLS_PROTOCOL_VERSION";
+    private static final String CAF_RABBITMQ_TLS_PROTOCOL_VERSION_DEFAULT = "TLSv1.2";
+
     private static final String CAF_RABBITMQ_HOST = "CAF_RABBITMQ_HOST";
     private static final String CAF_RABBITMQ_HOST_DEFAULT = "rabbitmq";
 
@@ -106,6 +109,7 @@ public final class MessageDistributorConfig {
 
     private final String rabbitMQVHost;
     private final String rabbitMQProtocol;
+    private final String rabbitTlsProtocolVersion;
     private final String rabbitMQHost;
     private final int rabbitMQPort;
     private final String rabbitMQUsername;
@@ -136,6 +140,7 @@ public final class MessageDistributorConfig {
     public MessageDistributorConfig() throws IOException {
         rabbitMQVHost = getEnvOrDefault(CAF_RABBITMQ_VHOST, CAF_RABBITMQ_VHOST_DEFAULT);
         rabbitMQProtocol = getEnvOrDefault(CAF_RABBITMQ_PROTOCOL, CAF_RABBITMQ_PROTOCOL_DEFAULT);
+        rabbitTlsProtocolVersion = getEnvOrDefault(CAF_RABBITMQ_TLS_PROTOCOL_VERSION, CAF_RABBITMQ_TLS_PROTOCOL_VERSION_DEFAULT);
         rabbitMQHost = getEnvOrDefault(CAF_RABBITMQ_HOST, CAF_RABBITMQ_HOST_DEFAULT);
         rabbitMQPort = getEnvOrDefault(CAF_RABBITMQ_PORT, CAF_RABBITMQ_PORT_DEFAULT);
         rabbitMQUsername = getStrEnvOrThrow(CAF_RABBITMQ_USERNAME_ENVVAR);
@@ -180,6 +185,10 @@ public final class MessageDistributorConfig {
 
     public String getRabbitmqProtocol() {
         return rabbitMQProtocol;
+    }
+
+    public String getRabbitmqTlsProtocolVersion() {
+        return rabbitTlsProtocolVersion;
     }
 
     public String getRabbitMQHost() {
@@ -263,6 +272,7 @@ public final class MessageDistributorConfig {
         return MoreObjects.toStringHelper(this)
             .add(CAF_RABBITMQ_VHOST, rabbitMQVHost)
             .add(CAF_RABBITMQ_PROTOCOL, rabbitMQProtocol)
+            .add(CAF_RABBITMQ_TLS_PROTOCOL_VERSION, rabbitTlsProtocolVersion)
             .add(CAF_RABBITMQ_HOST, rabbitMQHost)
             .add(CAF_RABBITMQ_PORT, rabbitMQPort)
             .add(CAF_RABBITMQ_USERNAME_ENVVAR, rabbitMQUsername)
