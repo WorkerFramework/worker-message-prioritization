@@ -420,13 +420,13 @@
           <imageManagement>
             <image>
               <repository>${dockerHubPublic}/cafapi/opensuse-jre11</repository>
-              <tag>4.2.6</tag>
-              <digest>sha256:8bb58b7aad4109778388d933ec76566f4ede2a8255e18d39cb20c4f99cc22ac6</digest>
+              <tag>4.2.7</tag>
+              <digest>sha256:ed6b0651538868e18fc9c2a33fb06cde17f1cf95a23a09c689f0149e7e86a882</digest>
             </image>
             <image>
               <repository>${dockerHubPublic}/cafapi/oraclelinux-jre21</repository>
-              <tag>1.1.11</tag>
-              <digest>sha256:dc3121ea4d101bdf87c5336079fbe5291ec741c50bbf36645b60546fd17d46fd</digest>
+              <tag>1.1.12</tag>
+              <digest>sha256:8eb5136a2ab064831c855eb4ebaf10e2c09f075aa8c2003b8644a9dbbcbe3ac5</digest>
             </image>
             <image>
               <repository>${dockerHubPublic}/library/rabbitmq</repository>
