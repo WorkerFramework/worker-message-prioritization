@@ -152,6 +152,7 @@ public class StagingQueueTargetQueuePair {
 
 
         AMQP.BasicProperties basicProperties = new AMQP.BasicProperties.Builder()
+                .headers(properties.getHeaders())
                 .contentType(properties.getContentType())
                 .deliveryMode(properties.getDeliveryMode())
                 .build();
