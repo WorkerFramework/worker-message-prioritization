@@ -191,7 +191,7 @@
       <dependency>
         <groupId>com.squareup.okio</groupId>
         <artifactId>okio-jvm</artifactId>
-        <version>3.11.0</version>
+        <version>3.12.0</version>
       </dependency>
       <dependency>
         <groupId>commons-io</groupId>
@@ -346,12 +346,12 @@
       <dependency>
         <groupId>org.junit.jupiter</groupId>
         <artifactId>junit-jupiter-api</artifactId>
-        <version>5.12.2</version>
+        <version>5.13.0</version>
       </dependency>
       <dependency>
         <groupId>org.junit.platform</groupId>
         <artifactId>junit-platform-commons</artifactId>
-        <version>1.12.2</version>
+        <version>1.13.0</version>
       </dependency>
       <dependency>
         <groupId>org.jvnet.mimepull</groupId>
@@ -361,7 +361,7 @@
       <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-core</artifactId>
-        <version>5.17.0</version>
+        <version>5.18.0</version>
       </dependency>
       <dependency>
         <groupId>org.mockito</groupId>
@@ -425,8 +425,8 @@
             </image>
             <image>
               <repository>${dockerHubPublic}/cafapi/oraclelinux-jre21</repository>
-              <tag>1.1.13</tag>
-              <digest>sha256:c0e4c7ac7a0bc8dfd378c3d965079c6c6ed8597613521b229ef4d0c7f0d39ac1</digest>
+              <tag>1.2.0</tag>
+              <digest>sha256:f7ed6ed0caa4b51c04bebf83bb381c796fb319b923dd68d88f873f8c03f3f353</digest>
             </image>
             <image>
               <repository>${dockerHubPublic}/library/rabbitmq</repository>
