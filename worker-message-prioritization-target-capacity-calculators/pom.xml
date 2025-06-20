@@ -27,6 +27,7 @@
     </parent>
 
     <artifactId>worker-message-prioritization-target-capacity-calculators</artifactId>
+    <name>worker-message-prioritization-target-capacity-calculators</name>
     
     <dependencies>
         <dependency>
