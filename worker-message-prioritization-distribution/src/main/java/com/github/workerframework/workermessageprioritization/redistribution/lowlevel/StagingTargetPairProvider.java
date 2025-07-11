@@ -18,6 +18,8 @@ package com.github.workerframework.workermessageprioritization.redistribution.lo
 import com.github.workerframework.workermessageprioritization.rabbitmq.Queue;
 import com.github.workerframework.workermessageprioritization.redistribution.DistributorWorkItem;
 import com.rabbitmq.client.Connection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -27,6 +29,8 @@ import java.util.Set;
  * Moves messages from staging queues to the target queue
  */
 public class StagingTargetPairProvider {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(StagingTargetPairProvider.class);
 
     public StagingTargetPairProvider() {
     }
@@ -42,12 +46,23 @@ public class StagingTargetPairProvider {
         final long overallConsumptionTarget = consumptionTargets.values().stream().mapToLong(Long::longValue).sum();
         
         if(overallConsumptionTarget <= 0) {
+            LOGGER.debug("Not creating any StagingQueueTargetQueuePairs as the overallConsumptionTarget is <= 0: {}",
+                    overallConsumptionTarget);
             return stagingQueueTargetQueuePairs;
         }
         
         for(final Queue stagingQueue: distributorWorkItem.getStagingQueues()) {
             
             final Long consumptionTarget = consumptionTargets.get(stagingQueue);
+
+            if (consumptionTarget == null || consumptionTarget <= 0) {
+                LOGGER.debug("Not creating a StagingQueueTargetQueuePair for staging queue '{}' and target queue '{}' " +
+                                "as the consumption target is null or <= 0: {}",
+                        stagingQueue.getName(),
+                        distributorWorkItem.getTargetQueue().getName(),
+                        consumptionTarget);
+                continue;
+            }
 
             final StagingQueueTargetQueuePair stagingQueueTargetQueuePair = 
                     new StagingQueueTargetQueuePair(connection, 
