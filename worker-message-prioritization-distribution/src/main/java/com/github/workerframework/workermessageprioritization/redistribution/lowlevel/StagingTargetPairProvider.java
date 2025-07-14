@@ -42,7 +42,7 @@ public class StagingTargetPairProvider {
         final long overallConsumptionTarget = consumptionTargets.values().stream().mapToLong(Long::longValue).sum();
         
         if(overallConsumptionTarget <= 0) {
-            return stagingQueueTargetQueuePairs;
+            //return stagingQueueTargetQueuePairs;
         }
         
         for(final Queue stagingQueue: distributorWorkItem.getStagingQueues()) {
