@@ -46,27 +46,27 @@ import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.DeliverCallback;
 import mockwebserver3.MockResponse;
 import mockwebserver3.MockWebServer;
-import mockwebserver3.junit5.internal.MockWebServerExtension;
+import mockwebserver3.junit5.StartStop;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.IntStream;
 
-@ExtendWith(MockWebServerExtension.class)
 public class TunedTargetQueueIT extends DistributorTestBase {
-    public static final String MOCK_SERVER_PORT = "CAF_MOCK_SERVER_PORT";
     final String queueName = "elastic-query-worker";
     final String stagingQueue1Name = getStagingQueueName(queueName, T1_STAGING_QUEUE_NAME);
     final String stagingQueue2Name = getStagingQueueName(queueName, T2_STAGING_QUEUE_NAME);
+
+    @StartStop
+    private MockWebServer mockK8sServer = new MockWebServer();
 
     // This test is for development purposes only
     // This test is to observe the consumption rate altering the recommended target queue length.
@@ -78,140 +78,137 @@ public class TunedTargetQueueIT extends DistributorTestBase {
 
         try (final Connection connection = connectionFactory.newConnection()) {
 
-            try (final MockWebServer mockK8sServer = new MockWebServer()) {
-                final int queueSize = 500000;
-                final int sleepTime = 100;
 
-                Channel channel = connection.createChannel();
 
-                final Map<String, Object> args = new HashMap<>();
-                args.put(RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE, RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE_QUORUM);
+            final int queueSize = 500000;
+            final int sleepTime = 100;
 
-                channel.queueDeclare(queueName, true, false, false, args);
-                channel.queueDeclare(stagingQueue1Name, true, false, false, args);
-                channel.queueDeclare(stagingQueue2Name, true, false, false, args);
+            Channel channel = connection.createChannel();
 
-                Assertions.assertNotNull(queuesApi.getQueue("/", queueName), "Queue was not found via REST API");
-                Assertions.assertNotNull(queuesApi.getQueue("/", stagingQueue1Name), "Staging queue was not found via REST API");
-                Assertions.assertNotNull(queuesApi.getQueue("/", stagingQueue2Name), "Staging queue was not found via REST API");
+            final Map<String, Object> args = new HashMap<>();
+            args.put(RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE, RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE_QUORUM);
 
-                final AMQP.BasicProperties properties = new AMQP.BasicProperties.Builder()
-                        .contentType("application/json")
-                        .deliveryMode(2)
-                        .build();
+            channel.queueDeclare(queueName, true, false, false, args);
+            channel.queueDeclare(stagingQueue1Name, true, false, false, args);
+            channel.queueDeclare(stagingQueue2Name, true, false, false, args);
 
-                final String body = "{}";
+            Assertions.assertNotNull(queuesApi.getQueue("/", queueName), "Queue was not found via REST API");
+            Assertions.assertNotNull(queuesApi.getQueue("/", stagingQueue1Name), "Staging queue was not found via REST API");
+            Assertions.assertNotNull(queuesApi.getQueue("/", stagingQueue2Name), "Staging queue was not found via REST API");
 
-                channel.basicPublish("", stagingQueue1Name, properties, body.getBytes(StandardCharsets.UTF_8));
-                channel.basicPublish("", stagingQueue2Name, properties, body.getBytes(StandardCharsets.UTF_8));
+            final AMQP.BasicProperties properties = new AMQP.BasicProperties.Builder()
+                    .contentType("application/json")
+                    .deliveryMode(2)
+                    .build();
 
-                // Verify the target queue was created successfully
-                final Queue targetQueue = queuesApi.getQueue("/", queueName);
-                Assertions.assertNotNull(targetQueue, "Target queue was not found via REST API");
+            final String body = "{}";
 
-                String message = "Hello World!";
-                IntStream.range(1, queueSize).forEach(i -> {
-                    try {
-                        channel.basicPublish("", queueName, null, message.getBytes());
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                });
+            channel.basicPublish("", stagingQueue1Name, properties, body.getBytes(StandardCharsets.UTF_8));
+            channel.basicPublish("", stagingQueue2Name, properties, body.getBytes(StandardCharsets.UTF_8));
 
-                DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-                    try {
-                        Thread.sleep(2000);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
-                    channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
-                    final String messageBody = new String(delivery.getBody(), StandardCharsets.UTF_8);
-                    LOGGER.debug("Message body: " + messageBody);
-                };
-                channel.basicConsume(queueName, false, deliverCallback, consumerTag -> {
-                    LOGGER.debug("Consumer cancelled");
-                });
+            // Verify the target queue was created successfully
+            final Queue targetQueue = queuesApi.getQueue("/", queueName);
+            Assertions.assertNotNull(targetQueue, "Target queue was not found via REST API");
 
-                // Sleep to allow time for the messages to start being consumed.
+            String message = "Hello World!";
+            IntStream.range(1, queueSize).forEach(i -> {
                 try {
-                    Thread.sleep(sleepTime);
+                    channel.basicPublish("", queueName, null, message.getBytes());
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+
+            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+                try {
+                    Thread.sleep(2000);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
+                channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
+                final String messageBody = new String(delivery.getBody(), StandardCharsets.UTF_8);
+                LOGGER.debug("Message body: " + messageBody);
+            };
+            channel.basicConsume(queueName, false, deliverCallback, consumerTag -> {
+                LOGGER.debug("Consumer cancelled");
+            });
 
-                final String deploymentList = IOUtils.resourceToString("k8s/deploymentList.json", StandardCharsets.UTF_8,
-                        getClass().getClassLoader());
-                final String apiVersions = IOUtils.resourceToString("k8s/apiVersions.json", StandardCharsets.UTF_8,
-                        getClass().getClassLoader());
-                final String apiResourceList = IOUtils.resourceToString("k8s/apiResourceList.json", StandardCharsets.UTF_8,
-                        getClass().getClassLoader());
-                final String apiGroupList = IOUtils.resourceToString("k8s/apiGroupList.json", StandardCharsets.UTF_8,
-                        getClass().getClassLoader());
-
-                mockK8sServer.start(InetAddress.getByName("localhost"), Integer.parseInt(System.getenv(MOCK_SERVER_PORT)));
-
-                mockK8sServer.enqueue(new MockResponse.Builder()
-                        .code(200)
-                        .setHeader("content-type", "application/json")
-                        .body(apiVersions)
-                        .build());
-
-                mockK8sServer.enqueue(new MockResponse.Builder()
-                        .code(200)
-                        .setHeader("content-type", "application/json")
-                        .body(apiResourceList)
-                        .build());
-
-                mockK8sServer.enqueue(new MockResponse.Builder()
-                        .code(200)
-                        .setHeader("content-type", "application/json")
-                        .body(apiGroupList)
-                        .build());
-
-                IntStream.range(1, 21).forEach(i -> mockK8sServer.enqueue(new MockResponse.Builder()
-                        .code(200)
-                        .setHeader("content-type", "application/json")
-                        .body(apiResourceList)
-                        .build()));
-
-                mockK8sServer.enqueue(new MockResponse.Builder()
-                        .code(200)
-                        .setHeader("content-type", "application/json")
-                        .body(deploymentList)
-                        .build());
-
-                mockK8sServer.enqueue(new MockResponse.Builder()
-                        .code(200)
-                        .setHeader("content-type", "application/json")
-                        .body(deploymentList)
-                        .build());
-
-                final Injector injector = Guice.createInjector(new DistributorModule());
-                final TargetQueueSettingsProvider k8sTargetQueueSettingsProvider =
-                        injector.getInstance(TargetQueueSettingsProvider.class);
-
-                final CapacityCalculatorBase capacityCalculatorBase = injector.getInstance(CapacityCalculatorBase.class);
-
-                final ConsumptionTargetCalculator consumptionTargetCalculator =
-                        new EqualConsumptionTargetCalculator(k8sTargetQueueSettingsProvider, capacityCalculatorBase);
-                final StagingTargetPairProvider stagingTargetPairProvider = new StagingTargetPairProvider();
-
-                final LowLevelDistributor lowLevelDistributor = new LowLevelDistributor(
-                        queuesApi,
-                        connectionFactory,
-                        consumptionTargetCalculator,
-                        stagingTargetPairProvider,
-                        10000,
-                        600000,
-                        true,
-                        false,
-                        false,
-                        Map.of(RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE, RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE_QUORUM));
-
-                lowLevelDistributor.runOnce(connection);
-
-                mockK8sServer.shutdown();
+            // Sleep to allow time for the messages to start being consumed.
+            try {
+                Thread.sleep(sleepTime);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
             }
+
+            final String deploymentList = IOUtils.resourceToString("k8s/deploymentList.json", StandardCharsets.UTF_8,
+                    getClass().getClassLoader());
+            final String apiVersions = IOUtils.resourceToString("k8s/apiVersions.json", StandardCharsets.UTF_8,
+                    getClass().getClassLoader());
+            final String apiResourceList = IOUtils.resourceToString("k8s/apiResourceList.json", StandardCharsets.UTF_8,
+                    getClass().getClassLoader());
+            final String apiGroupList = IOUtils.resourceToString("k8s/apiGroupList.json", StandardCharsets.UTF_8,
+                    getClass().getClassLoader());
+
+
+            mockK8sServer.enqueue(new MockResponse.Builder()
+                    .code(200)
+                    .setHeader("content-type", "application/json")
+                    .body(apiVersions)
+                    .build());
+
+            mockK8sServer.enqueue(new MockResponse.Builder()
+                    .code(200)
+                    .setHeader("content-type", "application/json")
+                    .body(apiResourceList)
+                    .build());
+
+            mockK8sServer.enqueue(new MockResponse.Builder()
+                    .code(200)
+                    .setHeader("content-type", "application/json")
+                    .body(apiGroupList)
+                    .build());
+
+            IntStream.range(1, 21).forEach(i -> mockK8sServer.enqueue(new MockResponse.Builder()
+                    .code(200)
+                    .setHeader("content-type", "application/json")
+                    .body(apiResourceList)
+                    .build()));
+
+            mockK8sServer.enqueue(new MockResponse.Builder()
+                    .code(200)
+                    .setHeader("content-type", "application/json")
+                    .body(deploymentList)
+                    .build());
+
+            mockK8sServer.enqueue(new MockResponse.Builder()
+                    .code(200)
+                    .setHeader("content-type", "application/json")
+                    .body(deploymentList)
+                    .build());
+
+            final Injector injector = Guice.createInjector(new DistributorModule());
+            final TargetQueueSettingsProvider k8sTargetQueueSettingsProvider =
+                    injector.getInstance(TargetQueueSettingsProvider.class);
+
+            final CapacityCalculatorBase capacityCalculatorBase = injector.getInstance(CapacityCalculatorBase.class);
+
+            final ConsumptionTargetCalculator consumptionTargetCalculator =
+                    new EqualConsumptionTargetCalculator(k8sTargetQueueSettingsProvider, capacityCalculatorBase);
+            final StagingTargetPairProvider stagingTargetPairProvider = new StagingTargetPairProvider();
+
+            final LowLevelDistributor lowLevelDistributor = new LowLevelDistributor(
+                    queuesApi,
+                    connectionFactory,
+                    consumptionTargetCalculator,
+                    stagingTargetPairProvider,
+                    10000,
+                    600000,
+                    true,
+                    false,
+                    false,
+                    Map.of(RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE, RabbitQueueConstants.RABBIT_PROP_QUEUE_TYPE_QUORUM));
+
+            lowLevelDistributor.runOnce(connection);
         }
     }
 }
