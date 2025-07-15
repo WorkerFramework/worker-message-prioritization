@@ -189,6 +189,8 @@
                         <CAF_QUEUE_PROCESSING_TIME_GOAL_SECONDS>300</CAF_QUEUE_PROCESSING_TIME_GOAL_SECONDS>
                         <TUNED_TARGET_LOG_LEVEL>DEBUG</TUNED_TARGET_LOG_LEVEL>
                         <CAF_RABBITMQ_MGMT_URL>http://${docker.host.address}:${rabbitmq.ctrl.port}</CAF_RABBITMQ_MGMT_URL>
+                        <KUBERNETES_SERVICE_HOST>localhost</KUBERNETES_SERVICE_HOST>
+                        <KUBERNETES_SERVICE_PORT>63669</KUBERNETES_SERVICE_PORT>
                     </environmentVariables>
                 </configuration>
             </plugin>
