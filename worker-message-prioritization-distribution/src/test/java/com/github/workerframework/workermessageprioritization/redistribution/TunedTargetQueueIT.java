@@ -54,7 +54,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
@@ -72,7 +71,7 @@ public class TunedTargetQueueIT extends DistributorTestBase {
     // This test is for development purposes only
     // This test is to observe the consumption rate altering the recommended target queue length.
     // Console outputs and debugger should be used to see these dynamic changes.
-    @Test
+//    @Test
     public void tunedTargetQueueTuningDisabledTest() throws TimeoutException, IOException {
 
         final Logger LOGGER = LoggerFactory.getLogger(TunedTargetQueueIT.class);
@@ -150,8 +149,6 @@ public class TunedTargetQueueIT extends DistributorTestBase {
             final String apiGroupList = IOUtils.resourceToString("k8s/apiGroupList.json", StandardCharsets.UTF_8,
                     getClass().getClassLoader());
 
-
-            mockK8sServer.start();
 
             mockK8sServer.enqueue(new MockResponse.Builder()
                     .code(200)
