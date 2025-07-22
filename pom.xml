@@ -60,27 +60,27 @@
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-annotations</artifactId>
-        <version>2.19.1</version>
+        <version>2.19.2</version>
       </dependency>
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-core</artifactId>
-        <version>2.19.1</version>
+        <version>2.19.2</version>
       </dependency>
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-databind</artifactId>
-        <version>2.19.1</version>
+        <version>2.19.2</version>
       </dependency>
       <dependency>
         <groupId>com.fasterxml.jackson.datatype</groupId>
         <artifactId>jackson-datatype-jsr310</artifactId>
-        <version>2.19.1</version>
+        <version>2.19.2</version>
       </dependency>
       <dependency>
         <groupId>com.fasterxml.jackson.module</groupId>
         <artifactId>jackson-module-jakarta-xmlbind-annotations</artifactId>
-        <version>2.19.1</version>
+        <version>2.19.2</version>
       </dependency>
       <dependency>
         <groupId>com.github.cafapi.common</groupId>
@@ -196,7 +196,7 @@
       <dependency>
         <groupId>commons-io</groupId>
         <artifactId>commons-io</artifactId>
-        <version>2.19.0</version>
+        <version>2.20.0</version>
       </dependency>
       <dependency>
         <groupId>jakarta.activation</groupId>
@@ -346,12 +346,12 @@
       <dependency>
         <groupId>org.junit.jupiter</groupId>
         <artifactId>junit-jupiter-api</artifactId>
-        <version>5.13.3</version>
+        <version>5.13.4</version>
       </dependency>
       <dependency>
         <groupId>org.junit.platform</groupId>
         <artifactId>junit-platform-commons</artifactId>
-        <version>1.13.3</version>
+        <version>1.13.4</version>
       </dependency>
       <dependency>
         <groupId>org.jvnet.mimepull</groupId>
@@ -425,8 +425,8 @@
             </image>
             <image>
               <repository>${dockerHubPublic}/cafapi/oraclelinux-jre21</repository>
-              <tag>1.3.1</tag>
-              <digest>sha256:d1bfe30ea939208c4f8ed2e1479268a90fba4f1de584dfcb05d84ca81062d812</digest>
+              <tag>1.3.3</tag>
+              <digest>sha256:ced11d43bcbbc88ec2065a2884683f8ec630c93e7cbfff79b0b6e07e00c776c6</digest>
             </image>
             <image>
               <repository>${dockerHubPublic}/library/rabbitmq</repository>
