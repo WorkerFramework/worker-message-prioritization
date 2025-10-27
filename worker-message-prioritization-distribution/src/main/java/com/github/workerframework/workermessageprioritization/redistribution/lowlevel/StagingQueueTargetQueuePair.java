@@ -211,24 +211,28 @@ public class StagingQueueTargetQueuePair {
         }
 
         if (multiple) {
-            final ConcurrentNavigableMap<Long, Long> confirmed = outstandingConfirms.headMap(
-                    deliveryTag, true
-            );
+            synchronized (outstandingConfirms) {
+                final ConcurrentNavigableMap<Long, Long> confirmed = outstandingConfirms.headMap(
+                        deliveryTag, true
+                );
 
-            LOGGER.trace("Ack (multiple) message source delivery {} from {} after publish confirm {} of message to {}",
-                    confirmed.lastKey(), stagingQueue.getName(), outstandingConfirms.get(deliveryTag),
-                    targetQueue.getName());
+                LOGGER.trace("Ack (multiple) message source delivery {} from {} after publish confirm {} of message to {}",
+                        confirmed.lastKey(), stagingQueue.getName(), outstandingConfirms.get(deliveryTag),
+                        targetQueue.getName());
 
-            stagingQueueChannel.basicAck(confirmed.lastKey(), true);
-            confirmed.clear();
+                stagingQueueChannel.basicAck(confirmed.lastKey(), true);
+                confirmed.clear();
+            }
             timeSinceLastDoneWork = Instant.now();
         } else {
-            LOGGER.trace("Ack message source delivery {} from {} after publish confirm {} of message to {}",
-                    outstandingConfirms.get(deliveryTag), stagingQueue.getName(), outstandingConfirms.get(deliveryTag),
-                    targetQueue.getName());
+            synchronized (outstandingConfirms) {
+                LOGGER.trace("Ack message source delivery {} from {} after publish confirm {} of message to {}",
+                        outstandingConfirms.get(deliveryTag), stagingQueue.getName(), outstandingConfirms.get(deliveryTag),
+                        targetQueue.getName());
 
-            stagingQueueChannel.basicAck(outstandingConfirms.get(deliveryTag), false);
-            outstandingConfirms.remove(deliveryTag);
+                stagingQueueChannel.basicAck(outstandingConfirms.get(deliveryTag), false);
+                outstandingConfirms.remove(deliveryTag);
+            }
             timeSinceLastDoneWork = Instant.now();
         }
     }
@@ -256,18 +260,22 @@ public class StagingQueueTargetQueuePair {
                 targetQueue.getName());
         
         if (multiple) {
-            final ConcurrentNavigableMap<Long, Long> confirmed = outstandingConfirms.headMap(
-                    deliveryTag, true
-            );
-
-            for(final Long messageDeliveryTagToNack: confirmed.values()) {
-                stagingQueueChannel.basicNack(messageDeliveryTagToNack, true, true);
+            synchronized (outstandingConfirms) {
+                final ConcurrentNavigableMap<Long, Long> confirmed = outstandingConfirms.headMap(
+                        deliveryTag, true
+                );
+                
+                if (!confirmed.isEmpty()) {
+                    stagingQueueChannel.basicNack(confirmed.lastEntry().getValue(), true, true);
+                }
+                
+                confirmed.clear();
             }
-
-            confirmed.clear();
         } else {
-            stagingQueueChannel.basicNack(outstandingConfirms.get(deliveryTag), false, true);
-            outstandingConfirms.remove(deliveryTag);
+            synchronized (outstandingConfirms) {
+                stagingQueueChannel.basicNack(outstandingConfirms.get(deliveryTag), false, true);
+                outstandingConfirms.remove(deliveryTag);
+            }
         }        
     }
 
