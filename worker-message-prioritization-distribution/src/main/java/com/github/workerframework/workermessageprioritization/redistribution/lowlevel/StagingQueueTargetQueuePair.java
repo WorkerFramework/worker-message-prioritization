@@ -263,6 +263,12 @@ public class StagingQueueTargetQueuePair {
                     confirmed.lastKey(), stagingQueue.getName(), outstandingConfirms.get(deliveryTag),
                     targetQueue.getName());
             
+            /// Using stagingQueueChannel.basicNack(confirmed.lastKey(), true, true); is preferred over looping and nacking each message individually because:
+            /// Efficiency: The multiple=true flag tells RabbitMQ to nack all messages up to and including lastKey in a single network call, reducing protocol overhead and improving performance.
+            /// Atomicity: It ensures all relevant messages are nacked together, avoiding race conditions or partial failures that could occur if nacking in a loop.
+            /// Simplicity: The code is simpler, easier to read, and less error-prone than managing a loop and multiple nack calls.
+            /// Consistency: This approach matches the semantics of how RabbitMQ delivers multiple acks/nacks, ensuring message order and state are handled as expected.
+            /// In summary, using the multiple flag with a single nack is more efficient, reliable, and idiomatic for RabbitMQ.
             stagingQueueChannel.basicNack(confirmed.lastKey(), true, true);
 
             confirmed.clear();
