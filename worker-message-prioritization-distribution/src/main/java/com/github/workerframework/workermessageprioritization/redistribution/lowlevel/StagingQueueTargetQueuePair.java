@@ -215,7 +215,7 @@ public class StagingQueueTargetQueuePair {
                     deliveryTag, true
             );
 
-            LOGGER.trace("Ack (multiple) message source delivery {} from {} after publish confirm {} of message to {}",
+            LOGGER.debug("Ack (multiple) message source delivery {} from {} after publish confirm {} of message to {}",
                     confirmed.lastKey(), stagingQueue.getName(), outstandingConfirms.get(deliveryTag),
                     targetQueue.getName());
 
@@ -223,7 +223,7 @@ public class StagingQueueTargetQueuePair {
             confirmed.clear();
             timeSinceLastDoneWork = Instant.now();
         } else {
-            LOGGER.trace("Ack message source delivery {} from {} after publish confirm {} of message to {}",
+            LOGGER.debug("Ack message source delivery {} from {} after publish confirm {} of message to {}",
                     outstandingConfirms.get(deliveryTag), stagingQueue.getName(), outstandingConfirms.get(deliveryTag),
                     targetQueue.getName());
 
@@ -259,10 +259,11 @@ public class StagingQueueTargetQueuePair {
             final ConcurrentNavigableMap<Long, Long> confirmed = outstandingConfirms.headMap(
                     deliveryTag, true
             );
-
-            for(final Long messageDeliveryTagToNack: confirmed.values()) {
-                stagingQueueChannel.basicNack(messageDeliveryTagToNack, true, true);
-            }
+            LOGGER.debug("Nack (multiple) message source delivery {} from {} after publish confirm {} of message to {}",
+                    confirmed.lastKey(), stagingQueue.getName(), outstandingConfirms.get(deliveryTag),
+                    targetQueue.getName());
+            
+            stagingQueueChannel.basicNack(confirmed.lastKey(), true, true);
 
             confirmed.clear();
         } else {
