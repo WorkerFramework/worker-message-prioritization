@@ -215,7 +215,7 @@ public class StagingQueueTargetQueuePair {
                     deliveryTag, true
             );
 
-            LOGGER.trace("Ack (multiple) message source delivery {} from {} after publish confirm {} of message to {}",
+            LOGGER.debug("Ack (multiple) message source delivery {} from {} after publish confirm {} of message to {}",
                     confirmed.lastKey(), stagingQueue.getName(), outstandingConfirms.get(deliveryTag),
                     targetQueue.getName());
 
@@ -223,7 +223,7 @@ public class StagingQueueTargetQueuePair {
             confirmed.clear();
             timeSinceLastDoneWork = Instant.now();
         } else {
-            LOGGER.trace("Ack message source delivery {} from {} after publish confirm {} of message to {}",
+            LOGGER.debug("Ack message source delivery {} from {} after publish confirm {} of message to {}",
                     outstandingConfirms.get(deliveryTag), stagingQueue.getName(), outstandingConfirms.get(deliveryTag),
                     targetQueue.getName());
 
@@ -259,10 +259,17 @@ public class StagingQueueTargetQueuePair {
             final ConcurrentNavigableMap<Long, Long> confirmed = outstandingConfirms.headMap(
                     deliveryTag, true
             );
-
-            for(final Long messageDeliveryTagToNack: confirmed.values()) {
-                stagingQueueChannel.basicNack(messageDeliveryTagToNack, true, true);
-            }
+            LOGGER.debug("Nack (multiple) message source delivery {} from {} after publish confirm {} of message to {}",
+                    confirmed.lastKey(), stagingQueue.getName(), outstandingConfirms.get(deliveryTag),
+                    targetQueue.getName());
+            
+            /// Using stagingQueueChannel.basicNack(confirmed.lastKey(), true, true); is preferred over looping and nacking each message individually because:
+            /// Efficiency: The multiple=true flag tells RabbitMQ to nack all messages up to and including lastKey in a single network call, reducing protocol overhead and improving performance.
+            /// Atomicity: It ensures all relevant messages are nacked together, avoiding race conditions or partial failures that could occur if nacking in a loop.
+            /// Simplicity: The code is simpler, easier to read, and less error-prone than managing a loop and multiple nack calls.
+            /// Consistency: This approach matches the semantics of how RabbitMQ delivers multiple acks/nacks, ensuring message order and state are handled as expected.
+            /// In summary, using the multiple flag with a single nack is more efficient, reliable, and idiomatic for RabbitMQ.
+            stagingQueueChannel.basicNack(confirmed.lastKey(), true, true);
 
             confirmed.clear();
         } else {
