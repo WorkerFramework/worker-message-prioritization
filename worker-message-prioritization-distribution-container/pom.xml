@@ -154,10 +154,11 @@
                                     <runCmd>openssl genrsa -out /test-keystore/ca_key.pem 2048</runCmd>
                                     <runCmd>openssl req -x509 -new -key /test-keystore/ca_key.pem -out /test-keystore/ca_certificate.pem -days 3650 -subj "/CN=myname/OU=myorganisational.unit/O=myorganisation/L=mycity/S=myprovince/C=GB"</runCmd>
                                     <runCmd>openssl genrsa -out /test-keystore/server_key.pem 2048</runCmd>
-                                    <runCmd>openssl req -new -key /test-keystore/server_key.pem -out /test-keystore/server.csr -subj "/CN=myname/OU=myorganisational.unit/O=myorganisation/L=mycity/S=myprovince/C=GB"</runCmd>
+                                    <runCmd>printf 'subjectAltName=DNS:rabbitmq\n' > /test-keystore/server.ext</runCmd>
+                                    <runCmd>openssl req -new -key /test-keystore/server_key.pem -out /test-keystore/server.csr -subj "/CN=rabbitmq/OU=myorganisational.unit/O=myorganisation/L=mycity/S=myprovince/C=GB"</runCmd>
                                     <runCmd>chmod 777 /test-keystore/ca_certificate.pem</runCmd>
                                     <runCmd>chmod 777 /test-keystore/server_key.pem</runCmd>
-                                    <runCmd>openssl x509 -req -in /test-keystore/server.csr -CA /test-keystore/ca_certificate.pem -CAkey /test-keystore/ca_key.pem -CAcreateserial -out /test-keystore/server_certificate.pem -days 3650</runCmd>
+                                    <runCmd>openssl x509 -req -in /test-keystore/server.csr -CA /test-keystore/ca_certificate.pem -CAkey /test-keystore/ca_key.pem -CAcreateserial -out /test-keystore/server_certificate.pem -days 3650 -extfile /test-keystore/server.ext</runCmd>
                                     <runCmd>chmod 777 /test-keystore/server_certificate.pem</runCmd>
                                 </runCmds>
                                 <volumes>
