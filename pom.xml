@@ -50,37 +50,37 @@
       <dependency>
         <groupId>ch.qos.logback</groupId>
         <artifactId>logback-classic</artifactId>
-        <version>1.5.32</version>
+        <version>1.5.38</version>
       </dependency>
       <dependency>
         <groupId>ch.qos.logback</groupId>
         <artifactId>logback-core</artifactId>
-        <version>1.5.32</version>
+        <version>1.5.38</version>
       </dependency>
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-annotations</artifactId>
-        <version>2.21</version>
+        <version>2.22</version>
       </dependency>
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-core</artifactId>
-        <version>2.21.3</version>
+        <version>2.22.1</version>
       </dependency>
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-databind</artifactId>
-        <version>2.21.3</version>
+        <version>2.22.1</version>
       </dependency>
       <dependency>
         <groupId>com.fasterxml.jackson.datatype</groupId>
         <artifactId>jackson-datatype-jsr310</artifactId>
-        <version>2.21.3</version>
+        <version>2.22.1</version>
       </dependency>
       <dependency>
         <groupId>com.fasterxml.jackson.module</groupId>
         <artifactId>jackson-module-jakarta-xmlbind-annotations</artifactId>
-        <version>2.21.3</version>
+        <version>2.22.1</version>
       </dependency>
       <dependency>
         <groupId>com.github.cafapi.common</groupId>
@@ -135,7 +135,7 @@
       <dependency>
         <groupId>com.google.errorprone</groupId>
         <artifactId>error_prone_annotations</artifactId>
-        <version>2.49.0</version>
+        <version>2.50.0</version>
       </dependency>
       <dependency>
         <groupId>com.google.guava</groupId>
@@ -171,22 +171,22 @@
       <dependency>
         <groupId>com.rabbitmq</groupId>
         <artifactId>amqp-client</artifactId>
-        <version>5.30.0</version>
+        <version>5.34.0</version>
       </dependency>
       <dependency>
         <groupId>com.squareup.okhttp3</groupId>
         <artifactId>mockwebserver3</artifactId>
-        <version>5.3.2</version>
+        <version>5.4.0</version>
       </dependency>
       <dependency>
         <groupId>com.squareup.okhttp3</groupId>
         <artifactId>mockwebserver3-junit5</artifactId>
-        <version>5.3.2</version>
+        <version>5.4.0</version>
       </dependency>
       <dependency>
         <groupId>com.squareup.okhttp3</groupId>
         <artifactId>okhttp-jvm</artifactId>
-        <version>5.3.2</version>
+        <version>5.4.0</version>
       </dependency>
       <dependency>
         <groupId>com.squareup.okio</groupId>
@@ -201,57 +201,57 @@
       <dependency>
         <groupId>io.netty</groupId>
         <artifactId>netty-buffer</artifactId>
-        <version>4.2.14.Final</version>
+        <version>4.2.16.Final</version>
       </dependency>
       <dependency>
         <groupId>io.netty</groupId>
         <artifactId>netty-codec</artifactId>
-        <version>4.2.14.Final</version>
+        <version>4.2.16.Final</version>
       </dependency>
       <dependency>
         <groupId>io.netty</groupId>
         <artifactId>netty-codec-base</artifactId>
-        <version>4.2.14.Final</version>
+        <version>4.2.16.Final</version>
       </dependency>
       <dependency>
         <groupId>io.netty</groupId>
         <artifactId>netty-codec-compression</artifactId>
-        <version>4.2.14.Final</version>
+        <version>4.2.16.Final</version>
       </dependency>
       <dependency>
         <groupId>io.netty</groupId>
         <artifactId>netty-codec-marshalling</artifactId>
-        <version>4.2.14.Final</version>
+        <version>4.2.16.Final</version>
       </dependency>
       <dependency>
         <groupId>io.netty</groupId>
         <artifactId>netty-codec-protobuf</artifactId>
-        <version>4.2.14.Final</version>
+        <version>4.2.16.Final</version>
       </dependency>
       <dependency>
         <groupId>io.netty</groupId>
         <artifactId>netty-common</artifactId>
-        <version>4.2.14.Final</version>
+        <version>4.2.16.Final</version>
       </dependency>
       <dependency>
         <groupId>io.netty</groupId>
         <artifactId>netty-handler</artifactId>
-        <version>4.2.14.Final</version>
+        <version>4.2.16.Final</version>
       </dependency>
       <dependency>
         <groupId>io.netty</groupId>
         <artifactId>netty-resolver</artifactId>
-        <version>4.2.14.Final</version>
+        <version>4.2.16.Final</version>
       </dependency>
       <dependency>
         <groupId>io.netty</groupId>
         <artifactId>netty-transport</artifactId>
-        <version>4.2.14.Final</version>
+        <version>4.2.16.Final</version>
       </dependency>
       <dependency>
         <groupId>io.netty</groupId>
         <artifactId>netty-transport-native-unix-common</artifactId>
-        <version>4.2.14.Final</version>
+        <version>4.2.16.Final</version>
       </dependency>
       <dependency>
         <groupId>jakarta.activation</groupId>
@@ -266,7 +266,7 @@
       <dependency>
         <groupId>jakarta.inject</groupId>
         <artifactId>jakarta.inject-api</artifactId>
-        <version>2.0.1.MR</version>
+        <version>2.0.1</version>
       </dependency>
       <dependency>
         <groupId>jakarta.ws.rs</groupId>
@@ -281,12 +281,12 @@
       <dependency>
         <groupId>net.bytebuddy</groupId>
         <artifactId>byte-buddy</artifactId>
-        <version>1.18.8-jdk5</version>
+        <version>1.18.11-jdk5</version>
       </dependency>
       <dependency>
         <groupId>net.bytebuddy</groupId>
         <artifactId>byte-buddy-agent</artifactId>
-        <version>1.18.8-jdk5</version>
+        <version>1.18.11-jdk5</version>
       </dependency>
       <dependency>
         <groupId>org.apache.commons</groupId>
@@ -336,37 +336,37 @@
       <dependency>
         <groupId>org.glassfish.jersey.connectors</groupId>
         <artifactId>jersey-jdk-connector</artifactId>
-        <version>3.1.11</version>
+        <version>3.1.12</version>
       </dependency>
       <dependency>
         <groupId>org.glassfish.jersey.core</groupId>
         <artifactId>jersey-client</artifactId>
-        <version>3.1.11</version>
+        <version>3.1.12</version>
       </dependency>
       <dependency>
         <groupId>org.glassfish.jersey.core</groupId>
         <artifactId>jersey-common</artifactId>
-        <version>3.1.11</version>
+        <version>3.1.12</version>
       </dependency>
       <dependency>
         <groupId>org.glassfish.jersey.ext</groupId>
         <artifactId>jersey-entity-filtering</artifactId>
-        <version>3.1.11</version>
+        <version>3.1.12</version>
       </dependency>
       <dependency>
         <groupId>org.glassfish.jersey.inject</groupId>
         <artifactId>jersey-hk2</artifactId>
-        <version>3.1.11</version>
+        <version>3.1.12</version>
       </dependency>
       <dependency>
         <groupId>org.glassfish.jersey.media</groupId>
         <artifactId>jersey-media-json-jackson</artifactId>
-        <version>3.1.11</version>
+        <version>3.1.12</version>
       </dependency>
       <dependency>
         <groupId>org.glassfish.jersey.media</groupId>
         <artifactId>jersey-media-multipart</artifactId>
-        <version>3.1.11</version>
+        <version>3.1.12</version>
       </dependency>
       <dependency>
         <groupId>org.hamcrest</groupId>
@@ -381,7 +381,7 @@
       <dependency>
         <groupId>org.javassist</groupId>
         <artifactId>javassist</artifactId>
-        <version>3.31.0-GA</version>
+        <version>3.32.0-GA</version>
       </dependency>
       <dependency>
         <groupId>org.jetbrains</groupId>
@@ -391,7 +391,7 @@
       <dependency>
         <groupId>org.jetbrains.kotlin</groupId>
         <artifactId>kotlin-stdlib</artifactId>
-        <version>2.3.21</version>
+        <version>2.4.0</version>
       </dependency>
       <dependency>
         <groupId>org.jspecify</groupId>
@@ -401,12 +401,12 @@
       <dependency>
         <groupId>org.junit.jupiter</groupId>
         <artifactId>junit-jupiter-api</artifactId>
-        <version>6.1.0</version>
+        <version>6.1.1</version>
       </dependency>
       <dependency>
         <groupId>org.junit.platform</groupId>
         <artifactId>junit-platform-commons</artifactId>
-        <version>6.1.0</version>
+        <version>6.1.1</version>
       </dependency>
       <dependency>
         <groupId>org.jvnet.mimepull</groupId>
@@ -480,8 +480,8 @@
             </image>
             <image>
               <repository>${dockerHubPublic}/cafapi/oraclelinux-jre21</repository>
-              <tag>2.2.1</tag>
-              <digest>sha256:7c766b0ce3fd64295fca070e89a83d143e1c3494364977e002ba43ca3199ade7</digest>
+              <tag>2.2.5</tag>
+              <digest>sha256:8c02daf2155cdfcd81350e40b8b596266a5618580c0e115331a6b8de652e41cb</digest>
             </image>
             <image>
               <repository>${dockerHubPublic}/library/rabbitmq</repository>
