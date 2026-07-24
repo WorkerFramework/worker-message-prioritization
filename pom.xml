@@ -33,7 +33,7 @@
   
   <groupId>com.github.workerframework</groupId>
   <artifactId>worker-message-prioritization-aggregator</artifactId>
-  <version>2.3.9-SNAPSHOT</version>
+  <version>2.4.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>worker-message-prioritization-aggregator</name>
@@ -120,17 +120,17 @@
       <dependency>
         <groupId>com.github.workerframework</groupId>
         <artifactId>worker-message-prioritization-distribution</artifactId>
-        <version>2.3.9-SNAPSHOT</version>
+        <version>2.4.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.github.workerframework</groupId>
         <artifactId>worker-message-prioritization-rabbitmq</artifactId>
-        <version>2.3.9-SNAPSHOT</version>
+        <version>2.4.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.github.workerframework</groupId>
         <artifactId>worker-message-prioritization-target-capacity-calculators</artifactId>
-        <version>2.3.9-SNAPSHOT</version>
+        <version>2.4.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.google.errorprone</groupId>
@@ -479,9 +479,9 @@
               <digest>sha256:492a5b6e1ecd548d18268f6f76a96064e06cd99856b1966d498be27b13ed8aaf</digest>
             </image>
             <image>
-              <repository>${dockerHubPublic}/cafapi/oraclelinux-jre21</repository>
+              <repository>${dockerHubPublic}/cafapi/oraclelinux-jre25</repository>
               <tag>2.2.6</tag>
-              <digest>sha256:64c05cf2405ff5875d1c95a39d4bccf0b883d68c77573fd09cf06d361304aa3b</digest>
+              <digest>sha256:587641af277adbba9bbeb6b1e34df8687af5b6e0d37d0dbea687e387e8d79cd7</digest>
             </image>
             <image>
               <repository>${dockerHubPublic}/library/rabbitmq</repository>
