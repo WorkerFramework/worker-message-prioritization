@@ -479,9 +479,9 @@
               <digest>sha256:492a5b6e1ecd548d18268f6f76a96064e06cd99856b1966d498be27b13ed8aaf</digest>
             </image>
             <image>
-              <repository>${dockerHubPublic}/cafapi/oraclelinux-jre25</repository>
-              <tag>2.2.6</tag>
-              <digest>sha256:587641af277adbba9bbeb6b1e34df8687af5b6e0d37d0dbea687e387e8d79cd7</digest>
+              <targetRepository>cafapi/oraclelinux-jre25-otel</targetRepository>
+              <repository>${dockerHubPublic}/cafapi/prereleases</repository>
+              <tag>oraclelinux-jre25-otel-2.4.0-SNAPSHOT</tag>
             </image>
             <image>
               <repository>${dockerHubPublic}/library/rabbitmq</repository>
