@@ -207,6 +207,9 @@
                             <!-- Build the image for this module -->
                             <build>
                                 <from>${projectDockerRegistry}/cafapi/oraclelinux-jre25-otel</from>
+                                <env>
+                                    <OTEL_SERVICE_NAME>message-distribution-worker</OTEL_SERVICE_NAME>
+                                </env>
                                 <labels>
                                     <Build.Number>${project.version}</Build.Number>
                                     <Build.Date>${maven.build.timestamp}</Build.Date>
@@ -224,7 +227,7 @@
                                 <entryPoint>
                                     <arg>/bin/sh</arg>
                                     <arg>-c</arg>
-                                    <arg>if [ $${OTEL_JAVAAGENT_ENABLED} = true ]; then export OTEL_SERVICE_NAME=email-job-monitor; fi; exec /tini -- /startup/startup.sh java $($${OTEL_GET_JAVA_TOOL_OPTIONS}) ${CAF_WORKER_JAVA_OPTS} -jar /maven/worker-message-prioritization-distribution-${project.version}.jar</arg>
+                                    <arg>exec /tini -- /startup/startup.sh java $($${OTEL_GET_JAVA_TOOL_OPTIONS}) ${CAF_WORKER_JAVA_OPTS} -jar /maven/worker-message-prioritization-distribution-${project.version}.jar</arg>
                                 </entryPoint>
                                 <assembly>
                                     <mode>tar</mode>
