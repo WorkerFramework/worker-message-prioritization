@@ -281,12 +281,12 @@
       <dependency>
         <groupId>net.bytebuddy</groupId>
         <artifactId>byte-buddy</artifactId>
-        <version>1.18.14-jdk5</version>
+        <version>1.18.15-jdk5</version>
       </dependency>
       <dependency>
         <groupId>net.bytebuddy</groupId>
         <artifactId>byte-buddy-agent</artifactId>
-        <version>1.18.14-jdk5</version>
+        <version>1.18.15-jdk5</version>
       </dependency>
       <dependency>
         <groupId>org.apache.commons</groupId>
@@ -480,8 +480,8 @@
             </image>
             <image>
               <repository>${dockerHubPublic}/cafapi/oraclelinux-jre25-otel</repository>
-              <tag>2.4.2</tag>
-              <digest>sha256:b21dcb1a91e7799a1097ab0681d6a3f49b9cc964a878ae97237d404533205e0b</digest>
+              <tag>2.4.3</tag>
+              <digest>sha256:8ef75d56357dae6a884d5fa8bc9feae312760848d0b0d6fb6939a7458d4646dc</digest>
             </image>
             <image>
               <repository>${dockerHubPublic}/library/rabbitmq</repository>
